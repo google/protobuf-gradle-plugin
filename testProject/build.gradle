@@ -1,0 +1,31 @@
+println """\
+Welcome to Gradle $gradle.gradleVersion - http://www.gradle.org
+Gradle home is set to: $gradle.gradleHomeDir
+Gradle user directory is set to: $gradle.gradleUserHomeDir
+
+Base directory: $projectDir
+Running script ${relativePath(buildFile)}
+"""
+
+buildscript {
+    dependencies {
+        classpath fileTree("../build/libs/")
+    }
+}
+
+apply plugin: 'ws.antonov.gradle.plugins.protobuf'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile group: 'com.google.protobuf', name: 'protobuf-java', version: '2.3.0'
+    testCompile 'junit:junit:4.7'
+}
+
+group = 'ws.antonov.gradle.plugins.protobuf.test'
+version = '1.0'
+manifest.mainAttributes(provider: 'gradle')
+
+protocPath = '/usr/local/bin/protoc'
