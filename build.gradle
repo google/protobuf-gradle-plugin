@@ -1,0 +1,37 @@
+println """\
+Welcome to Gradle $gradle.gradleVersion - http://www.gradle.org
+Gradle home is set to: $gradle.gradleHomeDir
+Gradle user directory is set to: $gradle.gradleUserHomeDir
+
+Base directory: $projectDir
+Running script ${relativePath(buildFile)}
+"""
+
+buildscript {
+    repositories {
+        mavenRepo urls: 'http://gradle.artifactoryonline.com/gradle/plugins'
+    }
+    dependencies {
+        classpath "org.gradle.plugins:gradle-idea-plugin:0.2"
+    }
+}
+
+apply plugin: 'org.gradle.idea'
+apply plugin: 'groovy'
+
+group = 'ws.antonov.gradle.plugins'
+version = '0.1.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile gradleApi()
+    testCompile group: 'junit', name: 'junit', version: '4.8.1', "org.spockframework:spock-core:0.4-groovy-1.7@jar"
+    groovy localGroovy()
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '0.9-rc-1'
+}
