@@ -3,8 +3,7 @@ package ws.antonov.gradle.plugins.protobuf
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.logging.LogLevel
 import org.gradle.util.GUtil
-import org.gradle.api.tasks.compile.Compile
-import org.gradle.api.tasks.compile.AbstractCompile
+import org.gradle.api.tasks.compile.AbstractCompile;
 
 public class ProtobufCompile extends AbstractCompile {
 
@@ -18,8 +17,9 @@ public class ProtobufCompile extends AbstractCompile {
         //println project.getConvention().getPlugin(JavaPluginConvention.class).getSourceSets().getByName(SourceSet.MAIN_SOURCE_SET_NAME).protobuf.class
         getDestinationDir().mkdir()
         def dirs = GUtil.join(getDefaultSource().srcDirs, " -I")
-        //println dirs
+        logger.debug "ProtobufCompile using directories ${dirs}"
         def files = GUtil.join(getDefaultSource().getFiles(), " ")
+        logger.debug "ProtobufCompile using files ${files}"
         def cmd = "${getProtocPath()} -I${dirs} --java_out=${getDestinationDir()} ${files}"
         logger.log(LogLevel.INFO, cmd)
         Process result = cmd.execute()

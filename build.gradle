@@ -17,10 +17,11 @@ buildscript {
 }
 
 apply plugin: 'org.gradle.idea'
+apply plugin: 'eclipse'
 apply plugin: 'groovy'
 
 group = 'ws.antonov.gradle.plugins'
-version = '0.1'
+version = '0.2'
 
 repositories {
     mavenCentral()
