@@ -3,9 +3,6 @@ package ws.antonov.gradle.plugins.protobuf
 import org.gradle.api.Project
 import org.gradle.api.Plugin
 import org.gradle.api.Task
-import org.gradle.api.tasks.SourceSet
-import org.gradle.api.tasks.compile.AbstractCompile
-import org.gradle.api.internal.ConventionMapping
 import org.gradle.api.tasks.ConventionValue
 import org.gradle.api.plugins.Convention
 import org.gradle.api.internal.IConventionAware
@@ -58,12 +55,13 @@ class ProtobufPlugin implements Plugin<Project> {
                 return sourceSet.getCompileClasspath();
             }
         });
+
+        def final defaultSource = new DefaultSourceDirectorySet("${sourceSet.displayName} Protobuf source", project.fileResolver);
+        defaultSource.include("**/*.proto")
+        defaultSource.filter.include("**/*.proto")
+        defaultSource.srcDir("src/${sourceSet.name}/proto")
         conventionMapping.map("defaultSource", new ConventionValue() {
             public Object getValue(Convention convention, IConventionAware conventionAwareObject) {
-                def defaultSource = new DefaultSourceDirectorySet("${sourceSet.displayName} Protobuf source", project.fileResolver);
-                defaultSource.include("**/*.proto")
-                defaultSource.filter.include("**/*.proto")
-                defaultSource.srcDir("src/${sourceSet.name}/proto")
                 return defaultSource
             }
         });
