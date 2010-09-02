@@ -21,7 +21,7 @@ apply plugin: 'eclipse'
 apply plugin: 'groovy'
 
 group = 'ws.antonov.gradle.plugins'
-version = '0.2'
+version = '0.3'
 
 repositories {
     mavenCentral()
