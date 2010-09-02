@@ -2,73 +2,79 @@ package ws.antonov.gradle.plugins.protobuf
 
 import org.gradle.api.Project
 import org.gradle.api.Plugin
-import org.gradle.api.Task
-import org.gradle.api.tasks.ConventionValue
-import org.gradle.api.plugins.Convention
-import org.gradle.api.internal.IConventionAware
+import org.gradle.api.tasks.SourceSet;
+import org.gradle.api.tasks.compile.Compile;
+import org.gradle.api.plugins.JavaPluginConvention;
+import org.gradle.api.file.SourceDirectorySet;
 import org.gradle.api.internal.file.DefaultSourceDirectorySet
+import org.gradle.api.internal.file.FileResolver;
 
 class ProtobufPlugin implements Plugin<Project> {
     void apply(final Project project) {
-        //println "*** --- Initializing ProtobufPlugin --- ***"
-        project.apply plugin: 'base' // We apply the base plugin to have the clean<taskname> rule
         project.apply plugin: 'java'
 
         project.convention.plugins.protobuf = new ProtobufConvention();
-
-        project.convention.plugins.java.sourceSets.each {
-            def srcSetName = it.name
-            it.java.srcDir("${project.buildDir}/proto-generated/${srcSetName}")
-            //println "${project.buildDir}/proto-generated/${srcSetName}"
-
-            def compileProtobufTaskName = it.getCompileTaskName("proto")
-            //println compileProtobufTaskName
-            
-            ProtobufCompile compileProtobufTask = project.tasks.add(compileProtobufTaskName, ProtobufCompile.class);
-
-            String compileJavaTaskName = it.getCompileTaskName("java");
-            //println compileJavaTaskName
-            
-            Task compileJavaTask = project.tasks.getByName(compileJavaTaskName);
-            compileJavaTask.dependsOn(compileProtobufTask)
-            compileProtobufTask.description = "Compiles the ${srcSetName} Protobuf source."
-
-            configureProtoc(project, compileProtobufTask)
-            configureForSourceSet(project, it, compileProtobufTask)
+        def protobufConfig = project.configurations.add('protobuf') {
+            visible = false
+            transitive = false
+            extendsFrom = []
         }
-        //println "*** --- Done Initializing ProtobufPlugin --- ***\n\n"
+        project.configurations['compile'].extendsFrom = (project.configurations['compile'].extendsFrom + protobufConfig) as Set
+        project.sourceSets.allObjects { sourceSet ->
+            ProtobufSourceSet protobufSourceSet = new ProtobufSourceSet(sourceSet.displayName, project.fileResolver)
+            sourceSet.convention.plugins.put('protobuf', protobufSourceSet)
+            protobufSourceSet.protobuf.srcDir("src/${sourceSet.name}/protobuf")
+            def generateJavaTaskName = sourceSet.getTaskName('generate', 'proto')
+            def compileProtobufTaskName = sourceSet.getCompileTaskName("proto")
+            project.logger.info "adding protobuf task named ${compileProtobufTaskName}"
+            ProtobufCompile generateJavaTask = project.tasks.add(generateJavaTaskName, ProtobufCompile)
+            configureForSourceSet project, sourceSet, generateJavaTask
+
+            Compile compileProtoTask = project.tasks.add(compileProtobufTaskName, Compile)
+            compileProtoTask.conventionMapping.map('defaultSource') {
+                project.fileTree(dir: "${project.buildDir}/proto-generated/${sourceSet.name}", includes: ['**/*.java'])
+            }
+            compileProtoTask.conventionMapping.map('classpath') {
+                return sourceSet.compileClasspath
+            }
+            compileProtoTask.conventionMapping.map('destinationDir') {
+                return sourceSet.classesDir
+            }
+            compileProtoTask.dependsOn generateJavaTaskName
+            configureProtoc(project, generateJavaTask)
+        }
+
     }
 
     void configureProtoc(final project, compile) {
         def conventionMapping = compile.getConventionMapping();
-        conventionMapping.map("protocPath", new ConventionValue() {
-            public Object getValue(Convention convention, IConventionAware conventionAwareObject) {
-                return project.convention.plugins.protobuf.protocPath
-            }
-        });
+        conventionMapping.map("protocPath") {
+            return project.convention.plugins.protobuf.protocPath
+        }
     }
 
-    void configureForSourceSet(final project, final sourceSet, compile) {
+    void configureForSourceSet(Project project, final SourceSet sourceSet, compile) {
         def conventionMapping = compile.getConventionMapping();
-        conventionMapping.map("classpath", new ConventionValue() {
-            public Object getValue(Convention convention, IConventionAware conventionAwareObject) {
-                return sourceSet.getCompileClasspath();
-            }
-        });
+        conventionMapping.map("classpath") {
+            return sourceSet.getCompileClasspath()
+        }
 
         def final defaultSource = new DefaultSourceDirectorySet("${sourceSet.displayName} Protobuf source", project.fileResolver);
         defaultSource.include("**/*.proto")
         defaultSource.filter.include("**/*.proto")
         defaultSource.srcDir("src/${sourceSet.name}/proto")
-        conventionMapping.map("defaultSource", new ConventionValue() {
-            public Object getValue(Convention convention, IConventionAware conventionAwareObject) {
-                return defaultSource
-            }
-        });
-        conventionMapping.map("destinationDir", new ConventionValue() {
-            public Object getValue(Convention convention, IConventionAware conventionAwareObject) {
-                return new File("${project.buildDir}/proto-generated/${sourceSet.name}")
-            }
-        });
+        conventionMapping.map('defaultSource') {
+            return defaultSource
+        }
+        conventionMapping.map('destinationDir') {
+            return new File("${project.buildDir}/proto-generated/${sourceSet.name}")
+        }
+    }
+}
+
+class ProtobufSourceSet {
+    SourceDirectorySet protobuf
+    def ProtobufSourceSet(String displayName, FileResolver fileResolver) {
+        protobuf = new DefaultSourceDirectorySet("${displayName} Protobuf source", fileResolver)
     }
 }
