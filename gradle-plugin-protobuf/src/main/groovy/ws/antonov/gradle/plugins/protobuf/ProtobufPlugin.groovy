@@ -2,9 +2,8 @@ package ws.antonov.gradle.plugins.protobuf
 
 import org.gradle.api.Project
 import org.gradle.api.Plugin
+import org.gradle.api.Task;
 import org.gradle.api.tasks.SourceSet;
-import org.gradle.api.tasks.compile.Compile;
-import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.file.SourceDirectorySet;
 import org.gradle.api.internal.file.DefaultSourceDirectorySet
 import org.gradle.api.internal.file.FileResolver;
@@ -19,57 +18,49 @@ class ProtobufPlugin implements Plugin<Project> {
             transitive = false
             extendsFrom = []
         }
-        project.configurations['compile'].extendsFrom = (project.configurations['compile'].extendsFrom + protobufConfig) as Set
-        project.sourceSets.allObjects { sourceSet ->
+        project.configurations['compile'].extendsFrom protobufConfig
+        project.sourceSets.allObjects { SourceSet sourceSet ->
             ProtobufSourceSet protobufSourceSet = new ProtobufSourceSet(sourceSet.displayName, project.fileResolver)
             sourceSet.convention.plugins.put('protobuf', protobufSourceSet)
             protobufSourceSet.protobuf.srcDir("src/${sourceSet.name}/protobuf")
             def generateJavaTaskName = sourceSet.getTaskName('generate', 'proto')
-            def compileProtobufTaskName = sourceSet.getCompileTaskName("proto")
-            project.logger.info "adding protobuf task named ${compileProtobufTaskName}"
             ProtobufCompile generateJavaTask = project.tasks.add(generateJavaTaskName, ProtobufCompile)
             configureForSourceSet project, sourceSet, generateJavaTask
-
-            Compile compileProtoTask = project.tasks.add(compileProtobufTaskName, Compile)
-            compileProtoTask.conventionMapping.map('defaultSource') {
-                project.fileTree(dir: "${project.buildDir}/proto-generated/${sourceSet.name}", includes: ['**/*.java'])
-            }
-            compileProtoTask.conventionMapping.map('classpath') {
-                return sourceSet.compileClasspath
-            }
-            compileProtoTask.conventionMapping.map('destinationDir') {
-                return sourceSet.classesDir
-            }
-            compileProtoTask.dependsOn generateJavaTaskName
-            configureProtoc(project, generateJavaTask)
+            
+            sourceSet.java.srcDir getGeneratedSourceDir(project, sourceSet)
+            String compileJavaTaskName = sourceSet.getCompileTaskName("java");
+            Task compileJavaTask = project.tasks.getByName(compileJavaTaskName);
+            compileJavaTask.dependsOn(generateJavaTask)
         }
 
     }
-
-    void configureProtoc(final project, compile) {
-        def conventionMapping = compile.getConventionMapping();
-        conventionMapping.map("protocPath") {
-            return project.convention.plugins.protobuf.protocPath
-        }
-    }
-
-    void configureForSourceSet(Project project, final SourceSet sourceSet, compile) {
-        def conventionMapping = compile.getConventionMapping();
-        conventionMapping.map("classpath") {
-            return sourceSet.getCompileClasspath()
-        }
-
+    
+    void configureForSourceSet(Project project, final SourceSet sourceSet, ProtobufCompile compile) {
         def final defaultSource = new DefaultSourceDirectorySet("${sourceSet.displayName} Protobuf source", project.fileResolver);
         defaultSource.include("**/*.proto")
         defaultSource.filter.include("**/*.proto")
         defaultSource.srcDir("src/${sourceSet.name}/proto")
-        conventionMapping.map('defaultSource') {
+        compile.conventionMapping.map("classpath") {
+            return sourceSet.getCompileClasspath()
+        }
+        compile.conventionMapping.map("protocPath") {
+            return project.convention.plugins.protobuf.protocPath
+        }
+        compile.conventionMapping.map('defaultSource') {
             return defaultSource
         }
-        conventionMapping.map('destinationDir') {
-            return new File("${project.buildDir}/proto-generated/${sourceSet.name}")
+        compile.conventionMapping.map('destinationDir') {
+            return new File(getGeneratedSourceDir(project, sourceSet))
         }
     }
+
+    private getGeneratedSourceDir(Project project, SourceSet sourceSet) {
+        def generatedSourceDir = 'generated-sources'
+        if (sourceSet.name != SourceSet.MAIN_SOURCE_SET_NAME)
+            generatedSourceDir = "${sourceSet.name}-generated-sources"
+        return "${project.buildDir}/${generatedSourceDir}"
+    }
+
 }
 
 class ProtobufSourceSet {
