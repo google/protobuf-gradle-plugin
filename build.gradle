@@ -7,16 +7,7 @@ Base directory: $projectDir
 Running script ${relativePath(buildFile)}
 """
 
-buildscript {
-    repositories {
-        mavenRepo urls: 'http://gradle.artifactoryonline.com/gradle/plugins'
-    }
-    dependencies {
-        classpath "org.gradle.plugins:gradle-idea-plugin:0.3.1"
-    }
-}
-
-apply plugin: 'org.gradle.idea'
+apply plugin: 'idea'
 apply plugin: 'eclipse'
 apply plugin: 'groovy'
 
