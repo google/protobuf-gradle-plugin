@@ -19,7 +19,7 @@ class ProtobufPlugin implements Plugin<Project> {
             extendsFrom = []
         }
         project.configurations['compile'].extendsFrom protobufConfig
-        project.sourceSets.allObjects { SourceSet sourceSet ->
+        project.sourceSets.all { SourceSet sourceSet ->
             ProtobufSourceSet protobufSourceSet = new ProtobufSourceSet(sourceSet.displayName, project.fileResolver)
             sourceSet.convention.plugins.put('protobuf', protobufSourceSet)
             protobufSourceSet.protobuf.srcDir("src/${sourceSet.name}/protobuf")
