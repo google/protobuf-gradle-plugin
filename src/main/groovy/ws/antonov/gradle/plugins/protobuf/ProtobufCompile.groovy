@@ -18,10 +18,10 @@ public class ProtobufCompile extends AbstractCompile {
         getDestinationDir().mkdir()
         def dirs = GUtil.join(getDefaultSource().srcDirs, " -I")
         logger.debug "ProtobufCompile using directories ${dirs}"
-        def files = GUtil.join(getDefaultSource().getFiles(), " ")
-        logger.debug "ProtobufCompile using files ${files}"
-        def cmd = "${getProtocPath()} -I${dirs} --java_out=${getDestinationDir()} ${files}"
-        logger.log(LogLevel.INFO, cmd)
+        logger.debug "ProtobufCompile using files ${getDefaultSource().getFiles()}"
+        def cmd = [ getProtocPath(), "-I${dirs}", "--java_out=${getDestinationDir()}" ]
+        cmd.addAll getDefaultSource().getFiles()
+        logger.log(LogLevel.INFO, cmd.toString())
         Process result = cmd.execute()
         result.waitFor()
         def sbout = new StringBuffer()
