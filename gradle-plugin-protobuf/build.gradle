@@ -56,16 +56,9 @@ task groovydocJar(type: Jar, dependsOn:groovydoc) {
      from groovydoc.destinationDir
 }
 
-// This is empty, but Sonatype requires it
-task javadocJar(type: Jar, dependsOn:javadoc) {
-     classifier = 'javadoc'
-     from javadoc.destinationDir
-}
-
 artifacts {
      archives sourcesJar
      archives groovydocJar
-     archives javadocJar
 }
 
 uploadArchives {
