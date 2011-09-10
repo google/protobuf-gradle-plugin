@@ -4,7 +4,7 @@ The Protobuf plugin provides protobuf compilation to your project.
 Usage
 To use the protobuf plugin, include in your build script:
 
-'''groovy
+```javascript
 apply plugin: ws.antonov.gradle.plugins.protobuf.ProtobufPlugin
 
 buildscript {
@@ -18,4 +18,4 @@ buildscript {
 
 // Optional - defaults to '/usr/local/bin/protoc'
 protocPath = '/usr/local/bin/protoc'
-'''
+```javascript
