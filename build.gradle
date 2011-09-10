@@ -81,7 +81,7 @@ uploadArchives {
           developer {
             id "aantono"
             name "Alex Antonov"
-            email "aantonov@orbitz.com"
+            email "alex@antonov.ws"
           }
           developer {
             id "valkolovos"
