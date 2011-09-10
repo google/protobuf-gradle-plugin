@@ -70,7 +70,7 @@ uploadArchives {
       pom.project {
         name project.name
         description "Gradle build plugin to handle Protocol Buffers automated code generation and compilation"
-        url "http://code.google.com/p/gradle-plugin-protobuf/"
+        url "https://github.com/aantono/gradle-plugin-protobuf"
         licenses {
           license {
             name "New BSD License"
@@ -95,9 +95,9 @@ uploadArchives {
           }
         }
         scm {
-          connection "scm:svn:http://gradle-plugin-protobuf.googlecode.com/svn/trunk/"
-          developerConnection "scm:svn:http://gradle-plugin-protobuf.googlecode.com/svn/trunk/"
-          url "http://gradle-plugin-protobuf.googlecode.com/svn/trunk/"
+          connection "scm:git:git://github.com/aantono/gradle-plugin-protobuf.git"
+          developerConnection "scm:git:git@github.com:aantono/gradle-plugin-protobuf.git"
+          url "https://github.com/aantono/gradle-plugin-protobuf"
         }
       }
     }
