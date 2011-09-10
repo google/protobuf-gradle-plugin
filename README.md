@@ -1,7 +1,7 @@
-Protobuf Plugin for Gradle
+# Protobuf Plugin for Gradle
 The Protobuf plugin provides protobuf compilation to your project.
 
-Usage
+## Usage
 To use the protobuf plugin, include in your build script:
 
 ```javascript
