@@ -15,7 +15,7 @@ apply plugin: 'maven'
 apply plugin: de.huxhorn.gradle.pgp.PgpPlugin
 
 group = 'ws.antonov.gradle.plugins'
-version = '0.4'
+version = '0.5'
 
 buildscript {
     repositories {
