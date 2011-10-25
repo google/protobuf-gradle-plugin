@@ -13,14 +13,15 @@ buildscript {
     }
 }
 
-apply plugin: 'ws.antonov.gradle.plugins.protobuf'
+apply plugin: ws.antonov.gradle.plugins.protobuf.ProtobufPlugin
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    compile group: 'com.google.protobuf', name: 'protobuf-java', version: '2.3.0'
+    compile group: 'com.google.protobuf', name: 'protobuf-java', version: '2.4.1'
+    protobuf files("lib/protos.tar.gz")
     testCompile 'junit:junit:4.7'
 }
 
@@ -29,3 +30,7 @@ version = '1.0'
 manifest.mainAttributes(provider: 'gradle')
 
 protocPath = '/usr/local/bin/protoc'
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '1.0-milestone-3'
+}

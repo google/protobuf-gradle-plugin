@@ -1,18 +1,19 @@
 package ws.antonov.gradle.plugins.protobuf
 
-import org.gradle.api.Project
-import org.gradle.api.Plugin
+import org.gradle.api.Action;
+import org.gradle.api.Project;
+import org.gradle.api.Plugin;
 import org.gradle.api.Task;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.file.SourceDirectorySet;
-import org.gradle.api.internal.file.DefaultSourceDirectorySet
+import org.gradle.api.internal.file.DefaultSourceDirectorySet;
 import org.gradle.api.internal.file.FileResolver;
 
 class ProtobufPlugin implements Plugin<Project> {
     void apply(final Project project) {
         project.apply plugin: 'java'
 
-        project.convention.plugins.protobuf = new ProtobufConvention();
+        project.convention.plugins.protobuf = new ProtobufConvention(project);
         def protobufConfig = project.configurations.add('protobuf') {
             visible = false
             transitive = false
@@ -26,6 +27,20 @@ class ProtobufPlugin implements Plugin<Project> {
             def generateJavaTaskName = sourceSet.getTaskName('generate', 'proto')
             ProtobufCompile generateJavaTask = project.tasks.add(generateJavaTaskName, ProtobufCompile)
             configureForSourceSet project, sourceSet, generateJavaTask
+            
+            def downloadProtosTaskName = sourceSet.getTaskName('download', 'proto')
+            def downloadProtosTask = project.tasks.add(downloadProtosTaskName) {
+                description = 'Downloads proto tar specified by \'protos\' configuration'
+                actions = [ 
+                {
+                    project.configurations['protobuf'].files.each { file ->
+                        ant.untar(src: file.path, dest: project.protoDirectory, compression: 'gzip')
+                    }
+                } as Action
+                ]
+            }
+            generateJavaTask.dependsOn(downloadProtosTask)
+            generateJavaTask.getDefaultSource().srcDir project.protoDirectory
             
             sourceSet.java.srcDir getGeneratedSourceDir(project, sourceSet)
             String compileJavaTaskName = sourceSet.getCompileTaskName("java");
