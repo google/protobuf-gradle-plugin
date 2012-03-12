@@ -4,12 +4,12 @@ import org.gradle.api.Project
 
 class ProtobufConvention {
     def ProtobufConvention(Project project) {
-        protoDirectory = "${project.buildDir.path}/downloaded-protos"
+        extractedProtosDir = "${project.buildDir.path}/extracted-protos"
     }
 
     def String protocPath = "protoc"
     /**
-     * Directory to download proto files to. Defaults to build/downloaded-protos
+     * Directory to extract proto files into
      */
-    def String protoDirectory
+    def String extractedProtosDir
 }
