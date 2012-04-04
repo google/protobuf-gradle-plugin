@@ -13,18 +13,16 @@ apply plugin: 'groovy'
 apply plugin: 'maven'
 apply plugin: 'git'
 
-//apply plugin: de.huxhorn.gradle.pgp.PgpPlugin
 apply plugin: 'signing'
 
 group = 'ws.antonov.gradle.plugins'
-version = '0.5-20120403-1712'
+version = '0.5'
 
 buildscript {
     repositories {
         mavenCentral()
     }
     dependencies {
-//        classpath 'de.huxhorn.gradle:de.huxhorn.gradle.pgp-plugin:0.0.3'
         classpath 'org.ajoberstar:gradle-git:0.1.0'
     }
 }
@@ -48,11 +46,6 @@ task wrapper(type: Wrapper) {
     gradleVersion = '1.0-milestone-9'
 }
 
-//pgp {
-//    secretKeyRingFile = new File("${System.properties['user.home']}/.gnupg/secring.gpg")
-    // keyId: specify with -PpgpKeyId=
-    // password: specify with -PpgpPassword=
-//}
 project.setProperty("signing.secretKeyRingFile", new File("${System.properties['user.home']}/.gnupg/secring.gpg"))
 
 task sourcesJar(type: Jar, dependsOn:classes) {
@@ -80,7 +73,6 @@ uploadArchives {
       repository(url: "http://oss.sonatype.org/service/local/staging/deploy/maven2/") {
         authentication(userName: System.getProperty('nexusUser'), password: System.getProperty('nexusPassword'))
       }
-      //beforeDeployment { MavenDeployment deployment -> signPom(it) }
       pom.project {
         name project.name
         description "Gradle build plugin to handle Protocol Buffers automated code generation and compilation"
