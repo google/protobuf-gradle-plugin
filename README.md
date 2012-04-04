@@ -5,17 +5,24 @@ The Protobuf plugin provides protobuf compilation to your project.
 To use the protobuf plugin, include in your build script:
 
 ```groovy
-apply plugin: ws.antonov.gradle.plugins.protobuf.ProtobufPlugin
+apply plugin: 'protobuf'
 
 buildscript {
     repositories {
         mavenCentral()
     }
     dependencies {
-        classpath 'ws.antonov.gradle.plugins:gradle-plugin-protobuf:0.4'
+        classpath 'ws.antonov.gradle.plugins:gradle-plugin-protobuf:0.5'
     }
 }
 
 // Optional - defaults to '/usr/local/bin/protoc'
 protocPath = '/usr/local/bin/protoc'
+
+dependencies {
+    // If you have your protos archived in a tar file, you can specify that as a dependency
+    protobuf files("lib/protos.tar.gz")
+    // Different configuration fileSets are supported
+    testProtobuf files("lib/protos.tar.gz")
+}
 ```
