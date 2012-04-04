@@ -18,6 +18,8 @@ apply plugin: 'signing'
 group = 'ws.antonov.gradle.plugins'
 version = '0.5'
 
+ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
+
 buildscript {
     repositories {
         mavenCentral()
@@ -64,12 +66,14 @@ artifacts {
 }
 
 signing {
+     required { isReleaseVersion && gradle.taskGraph.hasTask("uploadArchives") }
      sign configurations.archives
 }
 
 uploadArchives {
   repositories {
     mavenDeployer {
+      beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
       repository(url: "http://oss.sonatype.org/service/local/staging/deploy/maven2/") {
       //repository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
         authentication(userName: System.getProperty('nexusUser'), password: System.getProperty('nexusPassword'))
