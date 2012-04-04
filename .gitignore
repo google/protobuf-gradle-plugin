@@ -1,0 +1,5 @@
+.gradle
+gradle
+build
+gradle-plugin-protobuf.i*
+gradle.properties
