@@ -33,5 +33,5 @@ manifest.mainAttributes(provider: 'gradle')
 protocPath = '/usr/local/bin/protoc'
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '1.0-milestone-3'
+    gradleVersion = '1.0-milestone-9'
 }
