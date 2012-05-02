@@ -4,9 +4,7 @@ import org.gradle.api.Action
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
-import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.internal.file.DefaultSourceDirectorySet
-import org.gradle.api.internal.file.FileResolver
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.GradleException
 
@@ -16,9 +14,6 @@ class ProtobufPlugin implements Plugin<Project> {
 
         project.convention.plugins.protobuf = new ProtobufConvention(project);
         project.sourceSets.all { SourceSet sourceSet ->
-            ProtobufSourceSet protobufSourceSet = new ProtobufSourceSet(sourceSet.displayName, project.fileResolver)
-            sourceSet.convention.plugins.put('protobuf', protobufSourceSet)
-            protobufSourceSet.protobuf.srcDir("src/${sourceSet.name}/protobuf")
             def generateJavaTaskName = sourceSet.getTaskName('generate', 'proto')
             ProtobufCompile generateJavaTask = project.tasks.add(generateJavaTaskName, ProtobufCompile)
             configureForSourceSet project, sourceSet, generateJavaTask
@@ -97,11 +92,4 @@ class ProtobufPlugin implements Plugin<Project> {
         return "${project.buildDir}/${generatedSourceDir}/${sourceSet.name}"
     }
 
-}
-
-class ProtobufSourceSet {
-    SourceDirectorySet protobuf
-    def ProtobufSourceSet(String displayName, FileResolver fileResolver) {
-        protobuf = new DefaultSourceDirectorySet("${displayName} Protobuf source", fileResolver)
-    }
 }
