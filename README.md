@@ -12,7 +12,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'ws.antonov.gradle.plugins:gradle-plugin-protobuf:0.5'
+        classpath 'ws.antonov.gradle.plugins:gradle-plugin-protobuf:0.6'
     }
 }
 
@@ -21,8 +21,9 @@ protocPath = '/usr/local/bin/protoc'
 
 dependencies {
     // If you have your protos archived in a tar file, you can specify that as a dependency
+    //   ... alternative archive types supported are: jar, tar, tar.gz, tar.bz2, zip
     protobuf files("lib/protos.tar.gz")
     // Different configuration fileSets are supported
-    testProtobuf files("lib/protos.tar.gz")
+    testProtobuf files("lib/protos.tar")
 }
 ```

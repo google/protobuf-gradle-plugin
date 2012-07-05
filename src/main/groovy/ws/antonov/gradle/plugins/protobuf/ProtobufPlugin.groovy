@@ -30,7 +30,7 @@ class ProtobufPlugin implements Plugin<Project> {
                 actions = [ 
                 {
                     project.configurations[protobufConfigName].files.each { file ->
-                        if (file.path.endsWith('.jar')) {
+                        if (file.path.endsWith('.jar') || file.path.endsWith('.zip')) {
                             ant.unzip(src: file.path, dest: project.extractedProtosDir + "/" + sourceSet.getName())
                         } else {
                             def compression
