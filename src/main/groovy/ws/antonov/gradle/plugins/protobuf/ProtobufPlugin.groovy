@@ -1,14 +1,12 @@
 package ws.antonov.gradle.plugins.protobuf
 
-import org.gradle.api.Action;
-import org.gradle.api.Project;
-import org.gradle.api.Plugin;
-import org.gradle.api.Task;
-import org.gradle.api.tasks.SourceSet;
-import org.gradle.api.file.SourceDirectorySet;
-import org.gradle.api.internal.file.DefaultSourceDirectorySet;
-import org.gradle.api.internal.file.FileResolver;
-import org.gradle.util.GUtil;
+import org.gradle.api.Action
+import org.gradle.api.Plugin
+import org.gradle.api.Project
+import org.gradle.api.Task
+import org.gradle.api.internal.file.DefaultSourceDirectorySet
+import org.gradle.api.tasks.SourceSet
+import org.gradle.api.GradleException
 
 class ProtobufPlugin implements Plugin<Project> {
     void apply(final Project project) {
@@ -16,9 +14,6 @@ class ProtobufPlugin implements Plugin<Project> {
 
         project.convention.plugins.protobuf = new ProtobufConvention(project);
         project.sourceSets.all { SourceSet sourceSet ->
-            ProtobufSourceSet protobufSourceSet = new ProtobufSourceSet(sourceSet.displayName, project.fileResolver)
-            sourceSet.convention.plugins.put('protobuf', protobufSourceSet)
-            protobufSourceSet.protobuf.srcDir("src/${sourceSet.name}/protobuf")
             def generateJavaTaskName = sourceSet.getTaskName('generate', 'proto')
             ProtobufCompile generateJavaTask = project.tasks.add(generateJavaTaskName, ProtobufCompile)
             configureForSourceSet project, sourceSet, generateJavaTask
@@ -29,26 +24,46 @@ class ProtobufPlugin implements Plugin<Project> {
                 transitive = false
                 extendsFrom = []
             }
-            def downloadProtosTaskName = sourceSet.getTaskName('download', 'proto')
-            def downloadProtosTask = project.tasks.add(downloadProtosTaskName) {
-                description = 'Downloads proto tar specified by \'protos\' configuration'
+            def extractProtosTaskName = sourceSet.getTaskName('extract', 'proto')
+            def extractProtosTask = project.tasks.add(extractProtosTaskName) {
+                description = "Extracts proto files/dependencies specified by 'protobuf' configuration"
                 actions = [ 
                 {
                     project.configurations[protobufConfigName].files.each { file ->
-                        ant.untar(src: file.path, dest: project.protoDirectory + "/" + sourceSet.getName(), compression: 'gzip')
+                        if (file.path.endsWith('.jar')) {
+                            ant.unzip(src: file.path, dest: project.extractedProtosDir + "/" + sourceSet.getName())
+                        } else {
+                            def compression
+
+                            if (file.path.endsWith('.tar')) {
+                                 compression = 'none'
+                            } else
+                            if (file.path.endsWith('.tar.gz')) {
+                                compression = 'gzip'
+                            } else if (file.path.endsWith('.tar.bz2')) {
+                                compression = 'bzip2'
+                            } else {
+                                throw new GradleException(
+                                    "Unsupported file type (${file.path}); handles only jar, tar, tar.gz & tar.bz2")
+                            }
+
+                            ant.untar(
+                                src: file.path,
+                                dest: project.extractedProtosDir + "/" + sourceSet.getName(),
+                                compression: compression)
+                        }
                     }
                 } as Action
                 ]
             }
-            generateJavaTask.dependsOn(downloadProtosTask)
-            generateJavaTask.getSource().srcDir project.protoDirectory + "/" + sourceSet.getName()
+            generateJavaTask.dependsOn(extractProtosTask)
+            generateJavaTask.getSource().srcDir project.extractedProtosDir + "/" + sourceSet.getName()
             
             sourceSet.java.srcDir getGeneratedSourceDir(project, sourceSet)
             String compileJavaTaskName = sourceSet.getCompileTaskName("java");
             Task compileJavaTask = project.tasks.getByName(compileJavaTaskName);
             compileJavaTask.dependsOn(generateJavaTask)
         }
-
     }
     
     void configureForSourceSet(Project project, final SourceSet sourceSet, ProtobufCompile compile) {
@@ -77,11 +92,4 @@ class ProtobufPlugin implements Plugin<Project> {
         return "${project.buildDir}/${generatedSourceDir}/${sourceSet.name}"
     }
 
-}
-
-class ProtobufSourceSet {
-    SourceDirectorySet protobuf
-    def ProtobufSourceSet(String displayName, FileResolver fileResolver) {
-        protobuf = new DefaultSourceDirectorySet("${displayName} Protobuf source", fileResolver)
-    }
 }
