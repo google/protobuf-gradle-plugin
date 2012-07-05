@@ -16,7 +16,7 @@ apply plugin: 'git'
 apply plugin: 'signing'
 
 group = 'ws.antonov.gradle.plugins'
-version = '0.5'
+version = '0.6'
 
 ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
 
