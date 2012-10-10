@@ -16,7 +16,7 @@ buildscript {
     }
 }
 
-// Optional - defaults to '/usr/local/bin/protoc'
+// Optional - defaults to 'protoc' searching through your PATH
 protocPath = '/usr/local/bin/protoc'
 
 dependencies {
