@@ -16,7 +16,7 @@ apply plugin: 'git'
 apply plugin: 'signing'
 
 group = 'ws.antonov.gradle.plugins'
-version = '0.6'
+version = '0.7'
 
 ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
 
@@ -45,7 +45,7 @@ dependencies {
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '1.0-milestone-9'
+    gradleVersion = '1.3'
 }
 
 project.setProperty("signing.secretKeyRingFile", new File("${System.properties['user.home']}/.gnupg/secring.gpg"))
