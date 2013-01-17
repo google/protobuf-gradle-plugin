@@ -1,0 +1,11 @@
+/**
+ * Created with IntelliJ IDEA.
+ * User: aantonov
+ * Date: 1/17/13
+ * Time: 3:44 PM
+ * To change this template use File | Settings | File Templates.
+ */
+
+message Test1Msg {
+    optional string bar = 1;
+}

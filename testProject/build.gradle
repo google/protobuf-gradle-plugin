@@ -9,7 +9,7 @@ Running script ${relativePath(buildFile)}
 
 buildscript {
     dependencies {
-        classpath files("../build/libs/gradle-plugin-protobuf-0.5.jar")
+        classpath files("../build/libs/gradle-plugin-protobuf-0.8.jar")
     }
 }
 
@@ -22,6 +22,10 @@ repositories {
 dependencies {
     compile group: 'com.google.protobuf', name: 'protobuf-java', version: '2.4.1'
     protobuf files("lib/protos.tar.gz")
+    //protobuf files("ext/test1.proto", "ext/test2.proto")
+    protobuf fileTree("ext/") {
+        //exclude 'more.proto'
+    }
     testProtobuf files("lib/protos.tar.gz")
     testCompile 'junit:junit:4.7'
 }
@@ -33,5 +37,5 @@ manifest.mainAttributes(provider: 'gradle')
 protocPath = '/usr/local/bin/protoc'
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '1.0-milestone-9'
+    gradleVersion = '1.3'
 }

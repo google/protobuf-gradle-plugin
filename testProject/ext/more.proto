@@ -1,0 +1,7 @@
+message MoreMsg {
+    optional string bar = 1;
+}
+
+message Foo {
+    optional string stuff = 1;
+}
