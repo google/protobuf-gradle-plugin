@@ -12,4 +12,9 @@ class ProtobufConvention {
      * Directory to extract proto files into
      */
     def String extractedProtosDir
+		
+		/**
+		 *	Directory to save java files to
+		 */
+		def String generatedFileDir 
 }
