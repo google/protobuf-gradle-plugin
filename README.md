@@ -15,7 +15,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'ws.antonov.gradle.plugins:gradle-plugin-protobuf:0.6'
+        classpath 'ws.antonov.gradle.plugins:gradle-plugin-protobuf:0.8'
     }
 }
 
