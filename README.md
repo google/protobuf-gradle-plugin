@@ -18,6 +18,10 @@ buildscript {
 
 // Optional - defaults to 'protoc' searching through your PATH
 protocPath = '/usr/local/bin/protoc'
+// Optional - defaults to value below
+extractedProtosDir = "${project.buildDir.path}/extracted-protos"
+// Optional - defaults to "${project.buildDir}/generated-sources/${sourceSet.name}"
+generatedFileDir = "${projectDir}/src" // This directory will get the current sourceSet.name appended to it. i.e. src/main or src/test
 
 dependencies {
     // If you have your protos archived in a tar file, you can specify that as a dependency
