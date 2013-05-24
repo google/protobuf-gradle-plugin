@@ -1,6 +1,9 @@
 # Protobuf Plugin for Gradle
 The Protobuf plugin provides protobuf compilation to your project.
 
+## Latest Version
+ws.antonov.gradle.plugins:gradle-plugin-protobuf:0.8 - Available on Maven Central
+
 ## Usage
 To use the protobuf plugin, include in your build script:
 
