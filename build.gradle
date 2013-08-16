@@ -1,3 +1,5 @@
+import org.gradle.api.artifacts.maven.MavenDeployment
+
 println """\
 Welcome to Gradle $gradle.gradleVersion - http://www.gradle.org
 Gradle home is set to: $gradle.gradleHomeDir
@@ -103,6 +105,11 @@ uploadArchives {
             id "mleinartas"
             name "Michael Leinartas"
             email "mleinartas@gmail.com"
+          }
+          developer {
+            id "MRylander"
+            name "Michael Rylander"
+            email "msrylander@gmail.com"
           }
         }
         scm {
