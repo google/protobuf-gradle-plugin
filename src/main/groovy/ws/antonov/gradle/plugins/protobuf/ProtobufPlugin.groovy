@@ -15,17 +15,17 @@ class ProtobufPlugin implements Plugin<Project> {
         project.convention.plugins.protobuf = new ProtobufConvention(project);
         project.sourceSets.all { SourceSet sourceSet ->
             def generateJavaTaskName = sourceSet.getTaskName('generate', 'proto')
-            ProtobufCompile generateJavaTask = project.tasks.add(generateJavaTaskName, ProtobufCompile)
+            ProtobufCompile generateJavaTask = project.tasks.create(generateJavaTaskName, ProtobufCompile)
             configureForSourceSet project, sourceSet, generateJavaTask
             
             def protobufConfigName = (sourceSet.getName().equals(SourceSet.MAIN_SOURCE_SET_NAME) ? "protobuf" : sourceSet.getName() + "Protobuf")
-            project.configurations.add(protobufConfigName) {
+            project.configurations.create(protobufConfigName) {
                 visible = false
                 transitive = false
                 extendsFrom = []
             }
             def extractProtosTaskName = sourceSet.getTaskName('extract', 'proto')
-            def extractProtosTask = project.tasks.add(extractProtosTaskName) {
+            def extractProtosTask = project.tasks.create(extractProtosTaskName) {
                 description = "Extracts proto files/dependencies specified by 'protobuf' configuration"
                 actions = [ 
                 {
@@ -35,7 +35,7 @@ class ProtobufPlugin implements Plugin<Project> {
                                 file: file.path,
                                 toDir: project.extractedProtosDir + "/" + sourceSet.getName()
                             )
-                            //generateJavaTask.getSource().add(project.files(file))
+                            //generateJavaTask.getSource().create(project.files(file))
                         } else if (file.path.endsWith('.jar') || file.path.endsWith('.zip')) {
                             ant.unzip(src: file.path, dest: project.extractedProtosDir + "/" + sourceSet.getName())
                         } else {
