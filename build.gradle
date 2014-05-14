@@ -47,7 +47,7 @@ dependencies {
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '1.3'
+    gradleVersion = '1.12'
 }
 
 project.ext.set("signing.secretKeyRingFile", new File("${System.properties['user.home']}/.gnupg/secring.gpg"))
@@ -76,7 +76,7 @@ uploadArchives {
   repositories {
     mavenDeployer {
       beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-      repository(url: "http://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+      repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
       //repository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
         authentication(userName: System.getProperty('nexusUser'), password: System.getProperty('nexusPassword'))
       }
