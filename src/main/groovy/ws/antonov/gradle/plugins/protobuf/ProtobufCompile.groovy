@@ -14,6 +14,10 @@ public class ProtobufCompile extends AbstractCompile {
         return null
     }
 
+    public Set getPlugins() {
+        return null
+    }
+
     /**
      * Add a directory to protoc's include path.
      */
@@ -37,6 +41,25 @@ public class ProtobufCompile extends AbstractCompile {
         cmd.addAll(getSource().srcDirs*.path.collect {"-I${it}"})
         cmd.addAll(includeDirs*.path.collect {"-I${it}"})
         cmd += "--java_out=${getDestinationDir()}"
+        // Handle code generation plugins
+        if (getPlugins()) {
+            cmd.addAll(getPlugins().collect {
+                def name = it
+                if (it.indexOf(":") > 0) {
+                    name = it.split(":")[0]
+                }
+                "--${name}_out=${getDestinationDir()}"
+            })
+            cmd.addAll(getPlugins().collect {
+                if (it.indexOf(":") > 0) {
+                    def values = it.split(":")
+                    "--plugin=protoc-gen-${values[0]}=${values[1]}"
+                } else {
+                    "--plugin=protoc-gen-${it}=${project.projectDir}/protoc-gen-${it}"
+                }
+            })
+        }
+
         cmd.addAll getSource().getFiles()
         logger.log(LogLevel.INFO, cmd.toString())
         def output = new StringBuffer()

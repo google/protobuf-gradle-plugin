@@ -18,7 +18,7 @@ apply plugin: 'git'
 apply plugin: 'signing'
 
 group = 'ws.antonov.gradle.plugins'
-version = '0.8'
+version = '0.9'
 
 ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
 
@@ -43,7 +43,7 @@ repositories {
 dependencies {
     compile gradleApi()
     testCompile group: 'junit', name: 'junit', version: '4.8.1'
-    groovy localGroovy()
+    compile localGroovy()
 }
 
 task wrapper(type: Wrapper) {
@@ -105,11 +105,6 @@ uploadArchives {
             id "mleinartas"
             name "Michael Leinartas"
             email "mleinartas@gmail.com"
-          }
-          developer {
-            id "MRylander"
-            name "Michael Rylander"
-            email "msrylander@gmail.com"
           }
         }
         scm {
