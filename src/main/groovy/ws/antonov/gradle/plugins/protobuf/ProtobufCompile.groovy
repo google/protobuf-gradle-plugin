@@ -1,22 +1,19 @@
 package ws.antonov.gradle.plugins.protobuf
 
+import org.gradle.api.DefaultTask
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.tasks.Input
 import org.gradle.api.logging.LogLevel
+import org.gradle.api.tasks.TaskAction
 import org.gradle.util.CollectionUtils
-import org.gradle.api.tasks.compile.AbstractCompile;
 
-public class ProtobufCompile extends AbstractCompile {
+public class ProtobufCompile extends DefaultTask {
     @Input
     def includeDirs = []
 
-    public String getProtocPath() {
-        return null
-    }
+    String sourceSetName
 
-    public Set getPlugins() {
-        return null
-    }
+    String destinationDir
 
     /**
      * Add a directory to protoc's include path.
@@ -29,28 +26,33 @@ public class ProtobufCompile extends AbstractCompile {
         }
     }
 
-    protected void compile() {
-        //println "Compiling protos..."
-        //println "${sourceSets.main.java.srcDirs}"
-        //println project.getConvention().getPlugin(JavaPluginConvention.class).getSourceSets().getByName(SourceSet.MAIN_SOURCE_SET_NAME).protobuf.class
-        getDestinationDir().mkdir()
-        def dirs = CollectionUtils.join(" -I", getSource().srcDirs)
+    @TaskAction
+    def compile() {
+        def plugins = project.convention.plugins.protobuf.protobufCodeGenPlugins
+        def protoc = project.convention.plugins.protobuf.protocPath
+        File destinationDir = project.file(destinationDir)
+        def srcDirs = [project.file("src/${sourceSetName}/proto"), "${project.extractedProtosDir}/${sourceSetName}"]
+
+        destinationDir.mkdirs()
+        def dirs = CollectionUtils.join(" -I", srcDirs)
         logger.debug "ProtobufCompile using directories ${dirs}"
-        logger.debug "ProtobufCompile using files ${getSource().getFiles()}"
-        def cmd = [ getProtocPath() ]
-        cmd.addAll(getSource().srcDirs*.path.collect {"-I${it}"})
+        logger.debug "ProtobufCompile using files ${inputs.sourceFiles.files}"
+        def cmd = [ protoc ]
+
+        cmd.addAll(srcDirs.collect {"-I${it}"})
+        //TODO: Figure out how to add variable to a task
         cmd.addAll(includeDirs*.path.collect {"-I${it}"})
-        cmd += "--java_out=${getDestinationDir()}"
+        cmd += "--java_out=${destinationDir}"
         // Handle code generation plugins
-        if (getPlugins()) {
-            cmd.addAll(getPlugins().collect {
+        if (plugins) {
+            cmd.addAll(plugins.collect {
                 def name = it
                 if (it.indexOf(":") > 0) {
                     name = it.split(":")[0]
                 }
-                "--${name}_out=${getDestinationDir()}"
+                "--${name}_out=${destinationDir}"
             })
-            cmd.addAll(getPlugins().collect {
+            cmd.addAll(plugins.collect {
                 if (it.indexOf(":") > 0) {
                     def values = it.split(":")
                     "--plugin=protoc-gen-${values[0]}=${values[1]}"
@@ -60,7 +62,7 @@ public class ProtobufCompile extends AbstractCompile {
             })
         }
 
-        cmd.addAll getSource().getFiles()
+        cmd.addAll inputs.sourceFiles.files
         logger.log(LogLevel.INFO, cmd.toString())
         def output = new StringBuffer()
         Process result = cmd.execute()

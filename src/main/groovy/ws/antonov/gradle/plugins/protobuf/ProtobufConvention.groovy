@@ -25,5 +25,5 @@ class ProtobufConvention {
      *  -- Each name will be transformed into '--plugin=protoc-gen-<name>' and '--<name>_out=<generatedFileDir>'
      *  -- Names have to be unique
      */
-    def Set protobufCodeGenPlugins
+    def Set protobufCodeGenPlugins = Collections.emptySet()
 }
