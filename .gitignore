@@ -1,6 +1,6 @@
 .gradle
-gradle
-build
+/**/gradle
+/**/build
 gradle-plugin-protobuf.i*
 gradle.properties
-.idea
+/.idea
