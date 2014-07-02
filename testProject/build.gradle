@@ -9,7 +9,7 @@ Running script ${relativePath(buildFile)}
 
 buildscript {
     dependencies {
-        classpath files("../build/libs/gradle-plugin-protobuf-0.9.jar")
+        classpath files("../build/libs/gradle-plugin-protobuf-0.9.2.jar")
     }
 }
 
