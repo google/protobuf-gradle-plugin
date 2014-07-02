@@ -16,7 +16,7 @@ import org.gradle.util.CollectionUtils
 class ProtobufPlugin implements Plugin<Project> {
     void apply(final Project project) {
         def gv = project.gradle.gradleVersion =~ "(\\d*)\\.(\\d*).*"
-        if (!gv || !gv.matches() || gv.group(1) < "1" || gv.group(2) < "12") {
+        if (!gv || !gv.matches() || gv.group(1) < "1" || (gv.group(1) == "1" && gv.group(2) < "12")) {
             //throw new UnsupportedVersionException
             println("You are using Gradle ${project.gradle.gradleVersion}: This version of the protobuf plugin requires minimum Gradle version 1.12")
         }
