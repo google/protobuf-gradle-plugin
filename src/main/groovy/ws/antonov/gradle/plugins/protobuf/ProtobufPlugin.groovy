@@ -24,43 +24,53 @@ class ProtobufPlugin implements Plugin<Project> {
         project.apply plugin: 'java'
 
         project.convention.plugins.protobuf = new ProtobufConvention(project);
-        project.sourceSets.all { SourceSet sourceSet ->
-            def protobufConfigName = (sourceSet.getName().equals(SourceSet.MAIN_SOURCE_SET_NAME) ? "protobuf" : sourceSet.getName() + "Protobuf")
-
-            def generateJavaTaskName = sourceSet.getTaskName('generate', 'proto')
-            project.tasks.create(generateJavaTaskName, ProtobufCompile) {
-                description = "Compiles Proto source '${sourceSet.name}:proto'"
-                inputs.source project.fileTree("src/${sourceSet.name}/proto") {include "**/*.proto"}
-                inputs.source project.fileTree("${project.extractedProtosDir}/${sourceSet.name}") {include "**/*.proto"}
-                outputs.dir getGeneratedSourceDir(project, sourceSet)
-                //outputs.upToDateWhen {false}
-                sourceSetName = sourceSet.name
-                destinationDir = project.file(getGeneratedSourceDir(project, sourceSet))
-            }
-            def generateJavaTask = project.tasks.getByName(generateJavaTaskName)
-
-            project.configurations.create(protobufConfigName) {
-                visible = false
-                transitive = false
-                extendsFrom = []
-            }
-            def extractProtosTaskName = sourceSet.getTaskName('extract', 'proto')
-            project.tasks.create(extractProtosTaskName, ProtobufExtract) {
-                description = "Extracts proto files/dependencies specified by 'protobuf' configuration"
-                //TODO: Figure out why the configuration can't be used as input.  That makes declaring output invalid
-                //inputs.files project.configurations[protobufConfigName].files
-                //outputs.dir "${project.extractedProtosDir}/${sourceSet.name}"
-                extractedProtosDir = project.file("${project.extractedProtosDir}/${sourceSet.name}")
-                configName = protobufConfigName
-            }
-            def extractProtosTask = project.tasks.getByName(extractProtosTaskName)
-            generateJavaTask.dependsOn(extractProtosTask)
-
-            sourceSet.java.srcDir getGeneratedSourceDir(project, sourceSet)
-            String compileJavaTaskName = sourceSet.getCompileTaskName("java");
-            Task compileJavaTask = project.tasks.getByName(compileJavaTaskName);
-            compileJavaTask.dependsOn(generateJavaTask)
+        project.afterEvaluate {
+            addProtoTasks(project)
         }
+    }
+
+    private addProtoTasks(Project project) {
+        project.sourceSets.all { SourceSet sourceSet ->
+            addTasksToProjectForSourceSet(project, sourceSet)
+        }
+    }
+
+    private def addTasksToProjectForSourceSet(Project project, SourceSet sourceSet) {
+        def protobufConfigName = (sourceSet.getName().equals(SourceSet.MAIN_SOURCE_SET_NAME) ? "protobuf" : sourceSet.getName() + "Protobuf")
+
+        def generateJavaTaskName = sourceSet.getTaskName('generate', 'proto')
+        project.tasks.create(generateJavaTaskName, ProtobufCompile) {
+            description = "Compiles Proto source '${sourceSet.name}:proto'"
+            inputs.source project.fileTree("src/${sourceSet.name}/proto") {include "**/*.proto"}
+            inputs.source project.fileTree("${project.extractedProtosDir}/${sourceSet.name}") {include "**/*.proto"}
+            outputs.dir getGeneratedSourceDir(project, sourceSet)
+            //outputs.upToDateWhen {false}
+            sourceSetName = sourceSet.name
+            destinationDir = project.file(getGeneratedSourceDir(project, sourceSet))
+        }
+        def generateJavaTask = project.tasks.getByName(generateJavaTaskName)
+
+        project.configurations.create(protobufConfigName) {
+            visible = false
+            transitive = false
+            extendsFrom = []
+        }
+        def extractProtosTaskName = sourceSet.getTaskName('extract', 'proto')
+        project.tasks.create(extractProtosTaskName, ProtobufExtract) {
+            description = "Extracts proto files/dependencies specified by 'protobuf' configuration"
+            //TODO: Figure out why the configuration can't be used as input.  That makes declaring output invalid
+            //inputs.files project.configurations[protobufConfigName].files
+            //outputs.dir "${project.extractedProtosDir}/${sourceSet.name}"
+            extractedProtosDir = project.file("${project.extractedProtosDir}/${sourceSet.name}")
+            configName = protobufConfigName
+        }
+        def extractProtosTask = project.tasks.getByName(extractProtosTaskName)
+        generateJavaTask.dependsOn(extractProtosTask)
+
+        sourceSet.java.srcDir getGeneratedSourceDir(project, sourceSet)
+        String compileJavaTaskName = sourceSet.getCompileTaskName("java");
+        Task compileJavaTask = project.tasks.getByName(compileJavaTaskName);
+        compileJavaTask.dependsOn(generateJavaTask)
     }
 
     private getGeneratedSourceDir(Project project, SourceSet sourceSet) {
