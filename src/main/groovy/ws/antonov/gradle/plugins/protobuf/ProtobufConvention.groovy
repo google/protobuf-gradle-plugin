@@ -21,9 +21,20 @@ class ProtobufConvention {
     def String generatedFileDir
 
     /**
-     *  List of code generation plugin names
-     *  -- Each name will be transformed into '--plugin=protoc-gen-<name>' and '--<name>_out=<generatedFileDir>'
+     *  List of code generation plugin names and paths.
+     *  -- Each item is a '<name>:<path>'
+     *  -- Each name will be transformed into '--plugin=protoc-gen-<name>=<path>' and
+     *     '--<name>_out=<generatedFileDir>'
      *  -- Names have to be unique
      */
-    def Set protobufCodeGenPlugins = Collections.emptySet()
+    def Set protobufCodeGenPlugins = new HashSet()
+
+    /**
+     * List of native code generation plugins that is fetched from repositories.
+     * -- Each itme is a '<name>:<plugin-groupId>:<plugin-artifactId>:<version>'
+     * -- Each name will be transformed into '--plugin=protoc-gen-<name>=<path>' and
+     *    '--<name>_out=<generatedFileDir>'
+     * -- Names have to be unique
+     */
+    def Set protobufNativeCodeGenPluginDeps = Collections.emptySet()
 }

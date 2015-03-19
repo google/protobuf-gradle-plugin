@@ -5,6 +5,8 @@ import org.gradle.api.InvalidUserDataException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.Dependency
 import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.internal.file.DefaultSourceDirectorySet
 import org.gradle.api.logging.LogLevel
@@ -22,10 +24,53 @@ class ProtobufPlugin implements Plugin<Project> {
         }
 
         project.apply plugin: 'java'
+        // Provides the osdetector extension
+        project.apply plugin: 'osdetector'
 
         project.convention.plugins.protobuf = new ProtobufConvention(project);
         project.afterEvaluate {
-            addProtoTasks(project)
+          addProtoTasks(project)
+          resolveNativeCodeGenPlugins(project)
+        }
+    }
+
+    private resolveNativeCodeGenPlugins(Project project) {
+        Configuration config = project.configurations.create('protobufNativeCodeGenPlugins') {
+          visible = false
+          transitive = false
+          extendsFrom = []
+        }
+        def Map nameToDep = new HashMap()
+        for (key in project.convention.plugins.protobuf.protobufNativeCodeGenPluginDeps) {
+          def name, groupId, artifact, version
+            (name, groupId, artifact, version) = key.split(":")
+            def notation = [group: groupId,
+                            name: artifact,
+                            version: version,
+                            classifier: project.osdetector.classifier,
+                            ext: 'exe']
+            project.logger.info('Adding a native protobuf codegen plugin dependency: ' + notation)
+            Dependency dep = project.dependencies.add(config.name, notation)
+            nameToDep.put(name, dep);
+        }
+        for (e in nameToDep) {
+            Set<File> files = config.files(e.value);
+            File plugin = null
+            for (f in files) {
+                if (f.getName().endsWith('.exe')) {
+                    plugin = f
+                    break
+                }
+            }
+            if (plugin == null) {
+                throw new GradleException('Cannot resolve ' + e.value)
+            }
+            if (!plugin.canExecute() && !plugin.setExecutable(true)) {
+                throw new GradleException('Cannot make ' + plugin + ' executable')
+            }
+            project.logger.info('Resolved a native protobuf codegen plugin: ' + plugin)
+            project.convention.plugins.protobuf.protobufCodeGenPlugins.add(
+                e.key + ':' + plugin.getPath())
         }
     }
 
