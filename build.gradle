@@ -89,8 +89,8 @@ uploadArchives {
         url "https://github.com/aantono/gradle-plugin-protobuf"
         licenses {
           license {
-            name "New BSD License"
-            url "http://www.opensource.org/licenses/bsd-license.php"
+            name "GPL-3.0"
+            url "http://opensource.org/licenses/gpl-3.0.html"
           }
         }
         developers {
