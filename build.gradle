@@ -89,8 +89,8 @@ uploadArchives {
         url "https://github.com/aantono/gradle-plugin-protobuf"
         licenses {
           license {
-            name "GPL-3.0"
-            url "http://opensource.org/licenses/gpl-3.0.html"
+            name "New BSD License"
+            url "http://www.opensource.org/licenses/bsd-license.php"
           }
         }
         developers {
@@ -143,7 +143,7 @@ bintray {
         websiteUrl = 'https://github.com/aantono/gradle-plugin-protobuf'
         issueTrackerUrl = 'https://github.com/aantono/gradle-plugin-protobuf/issues'
         vcsUrl = 'https://github.com/aantono/gradle-plugin-protobuf.git'
-        licenses = ['GPL-3.0']
+        licenses = ['BSD New']
         labels = ['gradle', 'protobuf', 'plugin']
         publicDownloadNumbers = true
         attributes= ['gradle-plugin': 'protobuf:ws.antonov.gradle.plugins:gradle-plugin-protobuf'] //Optional package-level attributes
