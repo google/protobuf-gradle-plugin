@@ -18,8 +18,8 @@ apply plugin: 'com.jfrog.bintray'
 
 apply plugin: 'signing'
 
-group = 'ws.antonov.gradle.plugins'
-version = '0.9.2'
+group = 'com.google.protobuf'
+version = '0.1.0-SNAPSHOT'
 
 ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
 
@@ -55,8 +55,6 @@ task wrapper(type: Wrapper) {
     gradleVersion = '1.12'
 }
 
-project.ext.set("signing.secretKeyRingFile", new File("${System.properties['user.home']}/.gnupg/secring.gpg"))
-
 task sourcesJar(type: Jar, dependsOn:classes) {
      classifier = 'sources'
      from sourceSets.main.allSource
@@ -73,7 +71,7 @@ artifacts {
 }
 
 signing {
-//     required { isReleaseVersion && gradle.taskGraph.hasTask("uploadArchives") }
+     required { isReleaseVersion && gradle.taskGraph.hasTask("uploadArchives") }
      sign configurations.archives
 }
 
@@ -82,80 +80,33 @@ uploadArchives {
     mavenDeployer {
       beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
       repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-      //repository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-        authentication(userName: System.getProperty('nexusUser'), password: System.getProperty('nexusPassword'))
+        if (rootProject.hasProperty("ossrhUsername") && rootProject.hasProperty("ossrhPassword")) {
+          authentication(userName: ossrhUsername, password: ossrhPassword)
+        }
       }
       pom.project {
         name project.name
         description "Gradle build plugin to handle Protocol Buffers automated code generation and compilation"
-        url "https://github.com/aantono/gradle-plugin-protobuf"
+        url "https://github.com/google/protobuf-gradle-plugin"
         licenses {
           license {
-            name "New BSD License"
-            url "http://www.opensource.org/licenses/bsd-license.php"
+            name "BSD 3-Clause"
+            url "http://opensource.org/licenses/BSD-3-Clause"
           }
         }
         developers {
           developer {
-            id "aantono"
-            name "Alex Antonov"
-            email "alex@antonov.ws"
-          }
-          developer {
-            id "valkolovos"
-            name "Val Kolovos"
-            email "valkolovos@yahoo.com"
-          }
-          developer {
-            id "mleinartas"
-            name "Michael Leinartas"
-            email "mleinartas@gmail.com"
+            id "zhangkun83"
+            name "Kun Zhang"
+            email "zhangkun@google.com"
           }
         }
         scm {
-          connection "scm:git:git://github.com/aantono/gradle-plugin-protobuf.git"
-          developerConnection "scm:git:git@github.com:aantono/gradle-plugin-protobuf.git"
-          url "https://github.com/aantono/gradle-plugin-protobuf"
+          connection "scm:git:git://github.com/google/protobuf-gradle-plugin.git"
+          developerConnection "scm:git:git@github.com:google/protobuf-gradle-plugin.git"
+          url "https://github.com/google/protobuf-gradle-plugin"
         }
       }
     }
   }
-}
-
-bintray {
-    user = System.getProperty('bintrayUser')
-    key = System.getProperty('bintrayApiKey')
-
-    configurations = ['archives'] //When uploading configuration files
-    // - OR -
-    //publications = ['mavenStuff'] //When uploading Maven-based publication files
-    // - AND/OR -
-//    filesSpec { //When uploading any arbitrary files ('filesSpec' is a standard Gradle CopySpec)
-//        from 'arbitrary-files'
-//        into 'standalone_files/level1'
-//        rename '(.+)\\.(.+)', '$1-suffix.$2'
-//    }
-    dryRun = false //Whether to run this as dry-run, without deploying
-    publish = true //If version should be auto published after an upload
-    pkg {
-        repo = 'maven'
-        //userOrg = 'myorg' //An optional organization name when the repo belongs to one of the user's orgs
-        name = 'gradle-plugin-protobuf'
-        desc = 'Gradle Plugin for Google Protocol Buffers code generation/compilation.'
-        websiteUrl = 'https://github.com/aantono/gradle-plugin-protobuf'
-        issueTrackerUrl = 'https://github.com/aantono/gradle-plugin-protobuf/issues'
-        vcsUrl = 'https://github.com/aantono/gradle-plugin-protobuf.git'
-        licenses = ['BSD New']
-        labels = ['gradle', 'protobuf', 'plugin']
-        publicDownloadNumbers = true
-        attributes= ['gradle-plugin': 'protobuf:ws.antonov.gradle.plugins:gradle-plugin-protobuf'] //Optional package-level attributes
-        //Optional version descriptor
-        version {
-            name = '0.9.2' //Bintray logical version name
-            //desc = 'optional, version-specific description'
-            vcsTag = '0.9.2'
-            attributes = ['gradle-plugin': 'protobuf:ws.antonov.gradle.plugins:gradle-plugin-protobuf'] //Optional version-level attributes
-        }
-    }
-
 }

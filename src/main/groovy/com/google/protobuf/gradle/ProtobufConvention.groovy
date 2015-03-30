@@ -1,4 +1,4 @@
-package ws.antonov.gradle.plugins.protobuf
+package com.google.protobuf.gradle
 
 import org.gradle.api.Project
 
