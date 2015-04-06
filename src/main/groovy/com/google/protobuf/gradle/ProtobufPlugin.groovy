@@ -60,8 +60,46 @@ class ProtobufPlugin implements Plugin<Project> {
         project.convention.plugins.protobuf = new ProtobufConvention(project);
         project.afterEvaluate {
           addProtoTasks(project)
+          resolveProtocDep(project)
           resolveNativeCodeGenPlugins(project)
         }
+    }
+
+    private resolveProtocDep(Project project) {
+        String spec = project.convention.plugins.protobuf.protocDep;
+        if (spec == null) {
+          return;
+        }
+        Configuration config = project.configurations.create('protoc') {
+          visible = false
+          transitive = false
+          extendsFrom = []
+        }
+        def groupId, artifact, version
+        (groupId, artifact, version) = spec.split(":")
+        def notation = [group: groupId,
+                        name: artifact,
+                        version: version,
+                        classifier: project.osdetector.classifier,
+                        ext: 'exe']
+        project.logger.info('Adding protoc dependency: ' + notation)
+        Dependency dep = project.dependencies.add(config.name, notation)
+        Set<File> files = config.files(dep)
+        File protoc = null
+        for (f in files) {
+          if (f.getName().endsWith('.exe')) {
+            protoc = f
+            break
+          }
+        }
+        if (protoc == null) {
+          throw new GradleException('Cannot resolve ' + spec)
+        }
+        if (!protoc.canExecute() && !protoc.setExecutable(true)) {
+          throw new GradleException('Cannot make ' + protoc + ' executable')
+        }
+        project.logger.info('Resolved protoc: ' + protoc)
+        project.convention.plugins.protobuf.protocPath = protoc.getPath()
     }
 
     private resolveNativeCodeGenPlugins(Project project) {

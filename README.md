@@ -21,6 +21,9 @@ buildscript {
 
 // Optional - defaults to 'protoc' searching through your PATH
 protocPath = '/usr/local/bin/protoc'
+// Optional - specify a 'protoc' that is downloaded from repositories, this overrides 'protocPath'
+protocDep = 'com.google.protobuf:protoc:3.0.0-alpha2'
+
 // Optional - defaults to value below
 extractedProtosDir = "${project.buildDir.path}/extracted-protos"
 // Optional - defaults to "${project.buildDir}/generated-sources/${sourceSet.name}"

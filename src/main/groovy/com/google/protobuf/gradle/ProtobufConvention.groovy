@@ -41,6 +41,14 @@ class ProtobufConvention {
     def String protocPath = "protoc"
 
     /**
+     * The spec of a pre-compiled protoc plugin that is fetched from repositories.
+     * It overrides 'protocPath'.
+     * Spec format: '<groupId>:<artifactId>:<version>', e.g.,
+     *     'com.google.protobuf:protoc:3.0.0-alpha2'
+     */
+    def String protocDep
+
+    /**
      * Directory to extract proto files into
      */
     def String extractedProtosDir
