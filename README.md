@@ -22,6 +22,8 @@ buildscript {
 // Optional - defaults to 'protoc' searching through your PATH
 protocPath = '/usr/local/bin/protoc'
 // Optional - specify a 'protoc' that is downloaded from repositories, this overrides 'protocPath'
+// NOTE: we are still in the process of deploying 'protoc' artifacts to Maven
+// Central. Currently there are no read-to-use artifacts.
 protocDep = 'com.google.protobuf:protoc:3.0.0-alpha2'
 
 // Optional - defaults to value below
@@ -41,6 +43,8 @@ protobufCodeGenPlugins = ['foo:./protoc-gen-foo', 'bar']
 //  '<plugin-groupId>:<plugin-artifactId>:<version>' is resolved and downloaded
 //  from the repositories. Then this entry is transformed into a
 //  'protobufCodeGenPlugins' entry '<name>:<path-to-downloaded-plugin>'.
+// NOTE: we are still in the process of deploying the GRPC Java codegen to
+// Maven Central. Currently there are no read-to-use codegen artifacts.
 protobufNativeCodeGenPluginDeps = ["java_plugin:io.grpc:protoc-gen-grpc-java:0.1.0-SNAPSHOT"]
 
 dependencies {
