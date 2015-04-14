@@ -41,7 +41,7 @@ protobufCodeGenPlugins = ['foo:./protoc-gen-foo', 'bar']
 //  '<plugin-groupId>:<plugin-artifactId>:<version>' is resolved and downloaded
 //  from the repositories. Then this entry is transformed into a
 //  'protobufCodeGenPlugins' entry '<name>:<path-to-downloaded-plugin>'.
-protobufNativeCodeGenPluginDeps = ["java_plugin:io.grpc:grpc-compiler:0.1.0-SNAPSHOT"]
+protobufNativeCodeGenPluginDeps = ["java_plugin:io.grpc:protoc-gen-grpc-java:0.1.0-SNAPSHOT"]
 
 dependencies {
     // If you have your protos archived in a tar file, you can specify that as a dependency
