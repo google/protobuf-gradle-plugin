@@ -55,6 +55,13 @@ public class ProtobufCompile extends DefaultTask {
         }
     }
 
+    // '<name>:<path>' -> ['<name>', '<path>']
+    // '<name>' -> ['<name>']
+    // <path> may be in Windows format, e.g., spec='java:C:\path\to\...'
+    def String[] splitPluginSpec(String spec) {
+      return spec.split(':', 2)
+    }
+
     @TaskAction
     def compile() {
         def plugins = project.convention.plugins.protobuf.protobufCodeGenPlugins
@@ -75,18 +82,18 @@ public class ProtobufCompile extends DefaultTask {
         // Handle code generation plugins
         if (plugins) {
             cmd.addAll(plugins.collect {
-                def name = it
-                if (it.indexOf(":") > 0) {
-                    name = it.split(":")[0]
-                }
+                def splitSpec = splitPluginSpec(it)
+                def name = splitSpec[0]
                 "--${name}_out=${destinationDir}"
             })
             cmd.addAll(plugins.collect {
-                if (it.indexOf(":") > 0) {
-                    def values = it.split(":")
-                    "--plugin=protoc-gen-${values[0]}=${values[1]}"
+                def splitSpec = splitPluginSpec(it)
+                def name = splitSpec[0]
+                if (splitSpec.length > 1) {
+                    def path = splitSpec[1]
+                    "--plugin=protoc-gen-${name}=${path}"
                 } else {
-                    "--plugin=protoc-gen-${it}=${project.projectDir}/protoc-gen-${it}"
+                    "--plugin=protoc-gen-${name}=${project.projectDir}/protoc-gen-${name}"
                 }
             })
         }
