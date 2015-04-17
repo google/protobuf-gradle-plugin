@@ -22,9 +22,7 @@ buildscript {
 // Optional - defaults to 'protoc' searching through your PATH
 protocPath = '/usr/local/bin/protoc'
 // Optional - specify a 'protoc' that is downloaded from repositories, this overrides 'protocPath'
-// NOTE: we are still in the process of deploying 'protoc' artifacts to Maven
-// Central. Currently there are no read-to-use artifacts.
-protocDep = 'com.google.protobuf:protoc:3.0.0-alpha2'
+protocDep = 'com.google.protobuf:protoc:3.0.0-alpha-2'
 
 // Optional - defaults to value below
 extractedProtosDir = "${project.buildDir.path}/extracted-protos"
@@ -55,3 +53,7 @@ dependencies {
     testProtobuf files("lib/protos.tar")
 }
 ```
+
+## Pre-compiled ``protoc`` artifacts
+This [Maven Central directory](https://repo1.maven.org/maven2/com/google/protobuf/protoc/)
+lists pre-compiled ``protoc`` artifacts that can be used by this plugin.
