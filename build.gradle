@@ -52,7 +52,7 @@ dependencies {
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '1.12'
+    gradleVersion = '2.3'
 }
 
 task sourcesJar(type: Jar, dependsOn:classes) {
@@ -86,6 +86,11 @@ uploadArchives {
     mavenDeployer {
       beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
       repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+        if (rootProject.hasProperty("ossrhUsername") && rootProject.hasProperty("ossrhPassword")) {
+          authentication(userName: ossrhUsername, password: ossrhPassword)
+        }
+      }
+      snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
         if (rootProject.hasProperty("ossrhUsername") && rootProject.hasProperty("ossrhPassword")) {
           authentication(userName: ossrhUsername, password: ossrhPassword)
         }
