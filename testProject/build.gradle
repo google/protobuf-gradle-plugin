@@ -8,9 +8,13 @@ Running script ${relativePath(buildFile)}
 """
 
 buildscript {
-    dependencies {
-        classpath files("../build/libs/gradle-plugin-protobuf-0.9.2.jar")
-    }
+  repositories {
+    mavenCentral()
+    mavenLocal()
+  }
+  dependencies {
+    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.1.1-SNAPSHOT'
+  }
 }
 
 apply plugin: 'protobuf'
@@ -20,21 +24,19 @@ repositories {
 }
 
 dependencies {
-    compile group: 'com.google.protobuf', name: 'protobuf-java', version: '2.5.0'
+    compile 'com.google.protobuf:protobuf-java:2.6.1'
     protobuf files("lib/protos.tar.gz")
     //protobuf files("ext/test1.proto", "ext/test2.proto")
     protobuf fileTree("ext/") {
         //exclude 'more.proto'
     }
-    testProtobuf files("lib/protos.tar.gz")
+    testProtobuf files("lib/protos-test.tar.gz")
     testCompile 'junit:junit:4.7'
 }
 
-group = 'ws.antonov.gradle.plugins.protobuf.test'
-version = '1.0'
-manifest.mainAttributes(provider: 'gradle')
+group = 'com.google.protobuf.gradle.test'
 
-protocPath = '/usr/local/bin/protoc'
+protocDep = 'com.google.protobuf:protoc:2.6.1'
 //protobufCodeGenPlugins = ['foo:./protoc-gen-foo']
 
 task printDeps(dependsOn: build) << {
@@ -49,5 +51,5 @@ task printDeps(dependsOn: build) << {
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '1.12'
+    gradleVersion = '2.3'
 }

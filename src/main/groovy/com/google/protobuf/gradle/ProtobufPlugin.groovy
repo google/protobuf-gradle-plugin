@@ -58,11 +58,26 @@ class ProtobufPlugin implements Plugin<Project> {
         project.apply plugin: 'osdetector'
 
         project.convention.plugins.protobuf = new ProtobufConvention(project);
+        addProtoConfigurations(project)
         project.afterEvaluate {
           addProtoTasks(project)
           resolveProtocDep(project)
           resolveNativeCodeGenPlugins(project)
         }
+    }
+
+    private addProtoConfigurations(Project project) {
+        project.sourceSets.all { SourceSet sourceSet ->
+          project.configurations.create(protobufConfigName(sourceSet)) {
+            visible = false
+            transitive = false
+            extendsFrom = []
+          }
+        }
+    }
+
+    private String protobufConfigName(SourceSet sourceSet) {
+        return sourceSet.getName().equals(SourceSet.MAIN_SOURCE_SET_NAME) ? "protobuf" : sourceSet.getName() + "Protobuf"
     }
 
     private resolveProtocDep(Project project) {
@@ -142,6 +157,7 @@ class ProtobufPlugin implements Plugin<Project> {
         }
     }
 
+
     private addProtoTasks(Project project) {
         project.sourceSets.all { SourceSet sourceSet ->
             addTasksToProjectForSourceSet(project, sourceSet)
@@ -149,7 +165,6 @@ class ProtobufPlugin implements Plugin<Project> {
     }
 
     private def addTasksToProjectForSourceSet(Project project, SourceSet sourceSet) {
-        def protobufConfigName = (sourceSet.getName().equals(SourceSet.MAIN_SOURCE_SET_NAME) ? "protobuf" : sourceSet.getName() + "Protobuf")
 
         def generateJavaTaskName = sourceSet.getTaskName('generate', 'proto')
         project.tasks.create(generateJavaTaskName, ProtobufCompile) {
@@ -163,11 +178,6 @@ class ProtobufPlugin implements Plugin<Project> {
         }
         def generateJavaTask = project.tasks.getByName(generateJavaTaskName)
 
-        project.configurations.create(protobufConfigName) {
-            visible = false
-            transitive = false
-            extendsFrom = []
-        }
         def extractProtosTaskName = sourceSet.getTaskName('extract', 'proto')
         project.tasks.create(extractProtosTaskName, ProtobufExtract) {
             description = "Extracts proto files/dependencies specified by 'protobuf' configuration"
@@ -175,7 +185,7 @@ class ProtobufPlugin implements Plugin<Project> {
             //inputs.files project.configurations[protobufConfigName].files
             //outputs.dir "${project.extractedProtosDir}/${sourceSet.name}"
             extractedProtosDir = project.file("${project.extractedProtosDir}/${sourceSet.name}")
-            configName = protobufConfigName
+            configName = protobufConfigName(sourceSet)
         }
         def extractProtosTask = project.tasks.getByName(extractProtosTaskName)
         generateJavaTask.dependsOn(extractProtosTask)
