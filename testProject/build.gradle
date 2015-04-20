@@ -1,19 +1,10 @@
-println """\
-Welcome to Gradle $gradle.gradleVersion - http://www.gradle.org
-Gradle home is set to: $gradle.gradleHomeDir
-Gradle user directory is set to: $gradle.gradleUserHomeDir
-
-Base directory: $projectDir
-Running script ${relativePath(buildFile)}
-"""
-
 buildscript {
   repositories {
     mavenCentral()
     mavenLocal()
   }
   dependencies {
-    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.1.1-SNAPSHOT'
+    classpath "com.google.protobuf:protobuf-gradle-plugin:${rootProject.version}"
   }
 }
 
@@ -34,8 +25,6 @@ dependencies {
     testCompile 'junit:junit:4.7'
 }
 
-group = 'com.google.protobuf.gradle.test'
-
 protocDep = 'com.google.protobuf:protoc:2.6.1'
 //protobufCodeGenPlugins = ['foo:./protoc-gen-foo']
 
@@ -48,8 +37,4 @@ task printDeps(dependsOn: build) << {
   println tasks['compileJava'].source
   println project.buildDir
   println project.buildDir.path
-}
-
-task wrapper(type: Wrapper) {
-    gradleVersion = '2.3'
 }

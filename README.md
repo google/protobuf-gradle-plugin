@@ -57,3 +57,16 @@ dependencies {
 ## Pre-compiled ``protoc`` artifacts
 This [Maven Central directory](https://repo1.maven.org/maven2/com/google/protobuf/protoc/)
 lists pre-compiled ``protoc`` artifacts that can be used by this plugin.
+
+## Testing the plugin
+``testProject*`` are testing projects that uses this plugin to compile
+``.proto`` files. They also serve as usage examples.
+
+After you made any change to the plugin, be sure to run these tests.
+```
+$ ./gradlew install && ./gradlew clean test
+```
+The tests use the plugin installed in Maven local repo, so you must install
+it before testing it. We cannot make the tests depend the plugin project
+directly, because the test projects apply the plugin at evaluation time. At
+evaluation time the plugin project has not been compiled yet.
