@@ -24,6 +24,19 @@ protocPath = '/usr/local/bin/protoc'
 // Optional - specify a 'protoc' that is downloaded from repositories, this overrides 'protocPath'
 protocDep = 'com.google.protobuf:protoc:3.0.0-alpha-2'
 
+// Optional - the location of proto files for each Java sourceSet, defaults to
+// fileTree('src/<sourceSetName>/proto') {include '**/*.proto'}
+protoSources 'main', fileTree('src/main/protobuf') {
+  include '**/*.proto'
+  include '**/*.protodevel'
+}
+protoSources 'main', fileTree('src/main/protocolbuffers') {
+  include '**/*.proto'
+}
+protoSources 'test', fileTree('src/test/protobuf') {
+  include '**/*.protodevel'
+}
+
 // Optional - defaults to value below
 extractedProtosDir = "${project.buildDir.path}/extracted-protos"
 // Optional - defaults to "${project.buildDir}/generated-sources/${sourceSet.name}"
@@ -53,6 +66,8 @@ dependencies {
     testProtobuf files("lib/protos.tar")
 }
 ```
+
+More examples can be found in the test projects (``testProject*/``).
 
 ## Pre-compiled ``protoc`` artifacts
 This [Maven Central directory](https://repo1.maven.org/maven2/com/google/protobuf/protoc/)

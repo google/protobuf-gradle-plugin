@@ -67,16 +67,15 @@ public class ProtobufCompile extends DefaultTask {
         def plugins = project.convention.plugins.protobuf.protobufCodeGenPlugins
         def protoc = project.convention.plugins.protobuf.protocPath
         File destinationDir = project.file(destinationDir)
-        def srcDirs = [project.file("src/${sourceSetName}/proto"), "${project.extractedProtosDir}/${sourceSetName}"]
-
+        Set<File> protoFiles = inputs.sourceFiles.files
+        def srcDirs = protoFiles.collect {it.getParentFile()} as HashSet
         destinationDir.mkdirs()
         def dirs = CollectionUtils.join(" -I", srcDirs)
         logger.debug "ProtobufCompile using directories ${dirs}"
-        logger.debug "ProtobufCompile using files ${inputs.sourceFiles.files}"
+        logger.debug "ProtobufCompile using files ${protoFiles}"
         def cmd = [ protoc ]
 
         cmd.addAll(srcDirs.collect {"-I${it}"})
-        //TODO: Figure out how to add variable to a task
         cmd.addAll(includeDirs*.path.collect {"-I${it}"})
         cmd += "--java_out=${destinationDir}"
         // Handle code generation plugins
@@ -98,7 +97,7 @@ public class ProtobufCompile extends DefaultTask {
             })
         }
 
-        cmd.addAll inputs.sourceFiles.files
+        cmd.addAll protoFiles
         logger.log(LogLevel.INFO, cmd.toString())
         def output = new StringBuffer()
         Process result = cmd.execute()

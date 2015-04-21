@@ -1,0 +1,48 @@
+buildscript {
+  repositories {
+    mavenCentral()
+    mavenLocal()
+  }
+  dependencies {
+    classpath "com.google.protobuf:protobuf-gradle-plugin:${rootProject.version}"
+  }
+}
+
+apply plugin: 'protobuf'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile 'com.google.protobuf:protobuf-java:2.6.1'
+    testCompile 'junit:junit:4.7'
+}
+
+protocDep = 'com.google.protobuf:protoc:2.6.1'
+
+// Override the default 'src/main/proto' directory
+// You can specify multiple sources for a sourceSet
+protoSources 'main', fileTree('src/main/protobuf') {
+    include '**/*.proto'
+    include '**/*.protodevel'
+}
+protoSources 'main', fileTree('src/main/protocolbuffers') {
+    include '**/*.proto'
+}
+
+// Override the default 'src/test/proto' directory
+protoSources 'test', fileTree('src/test/protocolbuffers') {
+    include '**/*.proto'
+}
+
+task printDeps(dependsOn: build) << {
+  configurations.each { println it }
+  sourceSets.each { println it.getCompileTaskName("proto") }
+  sourceSets.each { println it.getCompileTaskName("java") }
+  sourceSets.each { println it }
+  println tasks['generateProto'].source
+  println tasks['compileJava'].source
+  println project.buildDir
+  println project.buildDir.path
+}

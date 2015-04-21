@@ -48,9 +48,9 @@ import org.gradle.util.CollectionUtils
 class ProtobufPlugin implements Plugin<Project> {
     void apply(final Project project) {
         def gv = project.gradle.gradleVersion =~ "(\\d*)\\.(\\d*).*"
-        if (!gv || !gv.matches() || gv.group(1) < "1" || (gv.group(1) == "1" && gv.group(2) < "12")) {
+        if (!gv || !gv.matches() || gv.group(1).toInteger() < 2 || gv.group(2).toInteger() < 2) {
             //throw new UnsupportedVersionException
-            println("You are using Gradle ${project.gradle.gradleVersion}: This version of the protobuf plugin requires minimum Gradle version 1.12")
+            println("You are using Gradle ${project.gradle.gradleVersion}: This version of the protobuf plugin requires minimum Gradle version 2.2")
         }
 
         project.apply plugin: 'java'
@@ -165,11 +165,17 @@ class ProtobufPlugin implements Plugin<Project> {
     }
 
     private def addTasksToProjectForSourceSet(Project project, SourceSet sourceSet) {
-
         def generateJavaTaskName = sourceSet.getTaskName('generate', 'proto')
         project.tasks.create(generateJavaTaskName, ProtobufCompile) {
             description = "Compiles Proto source '${sourceSet.name}:proto'"
-            inputs.source project.fileTree("src/${sourceSet.name}/proto") {include "**/*.proto"}
+            def List<?> protoSources = project.convention.plugins.protobuf.protoSources.get(sourceSet.name)
+            if (protoSources.isEmpty()) {
+              // if protoSources are not specified, use the default location
+              protoSources = [project.fileTree("src/${sourceSet.name}/proto") {include "**/*.proto"}] as List
+            }
+            protoSources.each() {
+              inputs.source it
+            }
             inputs.source project.fileTree("${project.extractedProtosDir}/${sourceSet.name}") {include "**/*.proto"}
             outputs.dir getGeneratedSourceDir(project, sourceSet)
             //outputs.upToDateWhen {false}
@@ -198,7 +204,6 @@ class ProtobufPlugin implements Plugin<Project> {
 
     private getGeneratedSourceDir(Project project, SourceSet sourceSet) {
         def generatedSourceDir = project.convention.plugins.protobuf.generatedFileDir
-				
         return "${generatedSourceDir}/${sourceSet.name}"
     }
 

@@ -30,6 +30,8 @@
 
 package com.google.protobuf.gradle
 
+import com.google.common.collect.ArrayListMultimap
+import com.google.common.collect.Multimap
 import org.gradle.api.Project
 
 class ProtobufConvention {
@@ -39,6 +41,32 @@ class ProtobufConvention {
     }
 
     def String protocPath = "protoc"
+
+    /**
+     * Maps sourceSet names (String) -> proto source files.
+     * If no value is set, generateProto tasks will use the default source
+     * location: "src/${sourceSet.name}/proto", and will include all *.proto
+     * files.
+     * If any value is set, the default will no longer be used. Instead, the
+     * values will be fed to inputs.source of the generateProto tasks.
+     */
+    private def Multimap<String, ?> protoSources = new ArrayListMultimap()
+
+    /**
+     * Overrides the default location of .proto files in the source. The
+     * default is *.proto under 'src/${sourceSet.name}/proto'.
+     *
+     * <p>Example:
+     * <pre>
+     * protoSources 'main', fileTree('src/main/protobuf') {
+     *   include '**' + '/' + '*.proto'
+     *   exclude 'src/main/protobuf/excluded.proto'
+     * }
+     * </pre>
+     */
+    def protoSources(String sourceSetName, Object sourceFiles) {
+      protoSources.get(sourceSetName).add(sourceFiles)
+    }
 
     /**
      * The spec of a pre-compiled protoc plugin that is fetched from repositories.

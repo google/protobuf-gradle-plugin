@@ -16,6 +16,8 @@ if ('test' in gradle.startParameter.taskNames) {
   logger.warn('To test the current code, make sure you have run "./gradlew install" first.')
   logger.warn('***************************************************************************')
   include ':testProject'
+  include ':testProjectCustomProtoDir'
   project(':testProject').projectDir = "$rootDir/testProject" as File
+  project(':testProjectCustomProtoDir').projectDir = "$rootDir/testProjectCustomProtoDir" as File
 }
 
