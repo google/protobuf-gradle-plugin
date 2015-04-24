@@ -19,7 +19,7 @@ apply plugin: 'com.jfrog.bintray'
 apply plugin: 'signing'
 
 group = 'com.google.protobuf'
-version = '0.2.1-SNAPSHOT'
+version = '0.2.2-SNAPSHOT'
 
 ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
 
