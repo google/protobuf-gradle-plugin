@@ -37,6 +37,7 @@ import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency
+import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.internal.file.DefaultSourceDirectorySet
 import org.gradle.api.logging.LogLevel
@@ -168,15 +169,19 @@ class ProtobufPlugin implements Plugin<Project> {
         def generateJavaTaskName = sourceSet.getTaskName('generate', 'proto')
         project.tasks.create(generateJavaTaskName, ProtobufCompile) {
             description = "Compiles Proto source '${sourceSet.name}:proto'"
-            def List<?> protoSources = project.convention.plugins.protobuf.protoSources.get(sourceSet.name)
+            def List<?> protoSources = new ArrayList<?>()
+            protoSources.addAll(project.convention.plugins.protobuf.protoSources.get(sourceSet.name))
             if (protoSources.isEmpty()) {
               // if protoSources are not specified, use the default location
               protoSources = [project.fileTree("src/${sourceSet.name}/proto") {include "**/*.proto"}] as List
             }
+            protoSources.add project.fileTree("${project.extractedProtosDir}/${sourceSet.name}") {include "**/*.proto"}
             protoSources.each() {
               inputs.source it
+              if (it instanceof ConfigurableFileTree) {
+                include it.dir
+              }
             }
-            inputs.source project.fileTree("${project.extractedProtosDir}/${sourceSet.name}") {include "**/*.proto"}
             outputs.dir getGeneratedSourceDir(project, sourceSet)
             //outputs.upToDateWhen {false}
             sourceSetName = sourceSet.name

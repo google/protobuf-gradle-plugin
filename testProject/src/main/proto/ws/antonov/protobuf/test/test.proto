@@ -1,5 +1,7 @@
 package ws.antonov.protobuf.test;
 
+import "com/example/tutorial/sample.proto";
+
 message TestMessage {
   required int32 id = 1;
   optional string name = 2;
@@ -17,6 +19,8 @@ message AnotherMessage {
 message Item {
   required string name = 1;
   optional string value = 2;
+  optional Msg msg = 3;
+  optional SecondMsg msg2 = 4;
 }
 message DataMap {
   repeated Item data_items = 1 [experimental_map_key="name"];

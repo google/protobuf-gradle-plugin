@@ -68,15 +68,13 @@ public class ProtobufCompile extends DefaultTask {
         def protoc = project.convention.plugins.protobuf.protocPath
         File destinationDir = project.file(destinationDir)
         Set<File> protoFiles = inputs.sourceFiles.files
-        def srcDirs = protoFiles.collect {it.getParentFile()} as HashSet
         destinationDir.mkdirs()
-        def dirs = CollectionUtils.join(" -I", srcDirs)
+        def dirs = includeDirs*.path.collect {"-I${it}"}
         logger.debug "ProtobufCompile using directories ${dirs}"
         logger.debug "ProtobufCompile using files ${protoFiles}"
         def cmd = [ protoc ]
 
-        cmd.addAll(srcDirs.collect {"-I${it}"})
-        cmd.addAll(includeDirs*.path.collect {"-I${it}"})
+        cmd.addAll(dirs)
         cmd += "--java_out=${destinationDir}"
         // Handle code generation plugins
         if (plugins) {
