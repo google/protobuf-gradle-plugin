@@ -44,16 +44,15 @@ class ProtobufConvention {
 
     /**
      * Maps sourceSet names (String) -> proto source files.
-     * If no value is set, generateProto tasks will use the default source
-     * location: "src/${sourceSet.name}/proto", and will include all *.proto
-     * files.
-     * If any value is set, the default will no longer be used. Instead, the
-     * values will be fed to inputs.source of the generateProto tasks.
+     *
+     * 'generateProto' tasks uses the default source location:
+     * "src/${sourceSet.name}/proto", and will include all *.proto files.
+     * Additional source locations can be added here.
      */
     private def Multimap<String, ?> protoSources = new ArrayListMultimap()
 
     /**
-     * Overrides the default location of .proto files in the source. The
+     * Adds additional .proto files in the source. The
      * default is *.proto under 'src/${sourceSet.name}/proto'.
      *
      * <p>Example:

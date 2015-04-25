@@ -170,12 +170,9 @@ class ProtobufPlugin implements Plugin<Project> {
         project.tasks.create(generateJavaTaskName, ProtobufCompile) {
             description = "Compiles Proto source '${sourceSet.name}:proto'"
             def List<?> protoSources = new ArrayList<?>()
-            protoSources.addAll(project.convention.plugins.protobuf.protoSources.get(sourceSet.name))
-            if (protoSources.isEmpty()) {
-              // if protoSources are not specified, use the default location
-              protoSources = [project.fileTree("src/${sourceSet.name}/proto") {include "**/*.proto"}] as List
-            }
+            protoSources.add project.fileTree("src/${sourceSet.name}/proto") {include "**/*.proto"}
             protoSources.add project.fileTree("${project.extractedProtosDir}/${sourceSet.name}") {include "**/*.proto"}
+            protoSources.addAll(project.convention.plugins.protobuf.protoSources.get(sourceSet.name))
             protoSources.each() {
               inputs.source it
               if (it instanceof ConfigurableFileTree) {
