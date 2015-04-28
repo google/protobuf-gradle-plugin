@@ -35,18 +35,31 @@ import org.gradle.api.InvalidUserDataException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
-import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.Dependency
+import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.file.ConfigurableFileTree
+import org.gradle.api.internal.tasks.DefaultSourceSet
 import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.internal.file.DefaultSourceDirectorySet
+import org.gradle.api.internal.file.FileResolver;
+import org.gradle.api.internal.plugins.DslObject
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.GradleException
 import org.gradle.tooling.UnsupportedVersionException
 import org.gradle.util.CollectionUtils
 
+import javax.inject.Inject
+
 class ProtobufPlugin implements Plugin<Project> {
+    private final FileResolver fileResolver
+
+    @Inject
+    public ProtobufPlugin(FileResolver fileResolver) {
+      this.fileResolver = fileResolver;
+    }
+
     void apply(final Project project) {
         def gv = project.gradle.gradleVersion =~ "(\\d*)\\.(\\d*).*"
         if (!gv || !gv.matches() || gv.group(1).toInteger() < 2 || gv.group(2).toInteger() < 2) {
@@ -60,6 +73,7 @@ class ProtobufPlugin implements Plugin<Project> {
 
         project.convention.plugins.protobuf = new ProtobufConvention(project);
         addProtoConfigurations(project)
+        addProtoSourceSets(project)
         project.afterEvaluate {
           addProtoTasks(project)
           resolveProtocDep(project)
@@ -79,6 +93,18 @@ class ProtobufPlugin implements Plugin<Project> {
 
     private String protobufConfigName(SourceSet sourceSet) {
         return sourceSet.getName().equals(SourceSet.MAIN_SOURCE_SET_NAME) ? "protobuf" : sourceSet.getName() + "Protobuf"
+    }
+
+    private addProtoSourceSets(Project project) {
+      project.getConvention().getPlugin(JavaPluginConvention.class).getSourceSets().all(new Action<SourceSet>() {
+        // The action applies to all source sets, typically 'main' and 'test'
+        public void execute(SourceSet sourceSet) {
+          final ProtobufSourceSet protobufSourceSet = new ProtobufSourceSet(((DefaultSourceSet) sourceSet).getDisplayName(), fileResolver);
+          // Add all the properties of ProtobufSourceSet to the DefaultSourceSet that you get from
+          // sourceSets.main etc. In other words, adds sourceSets.main.proto etc.
+          new DslObject(sourceSet).getConvention().getPlugins().put("proto", protobufSourceSet);
+        }
+      });
     }
 
     private resolveProtocDep(Project project) {
@@ -169,16 +195,20 @@ class ProtobufPlugin implements Plugin<Project> {
         def generateJavaTaskName = sourceSet.getTaskName('generate', 'proto')
         project.tasks.create(generateJavaTaskName, ProtobufCompile) {
             description = "Compiles Proto source '${sourceSet.name}:proto'"
-            def List<?> protoSources = new ArrayList<?>()
-            protoSources.add project.fileTree("src/${sourceSet.name}/proto") {include "**/*.proto"}
-            protoSources.add project.fileTree("${project.extractedProtosDir}/${sourceSet.name}") {include "**/*.proto"}
-            protoSources.addAll(project.convention.plugins.protobuf.protoSources.get(sourceSet.name))
-            protoSources.each() {
-              inputs.source it
-              if (it instanceof ConfigurableFileTree) {
-                include it.dir
-              }
+            // Include extracted sources
+            ConfigurableFileTree extractedProtoSources =
+                project.fileTree("${project.extractedProtosDir}/${sourceSet.name}") {
+                  include "**/*.proto"
+                }
+            inputs.source extractedProtoSources
+            include extractedProtoSources.dir
+            // Include sourceSet dirs
+            SourceDirectorySet sourceDirSet = project.sourceSets.maybeCreate(sourceSet.name).proto
+            inputs.source sourceDirSet
+            sourceDirSet.srcDirs.each { srcDir ->
+              include srcDir
             }
+
             outputs.dir getGeneratedSourceDir(project, sourceSet)
             //outputs.upToDateWhen {false}
             sourceSetName = sourceSet.name

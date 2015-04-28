@@ -43,31 +43,6 @@ class ProtobufConvention {
     def String protocPath = "protoc"
 
     /**
-     * Maps sourceSet names (String) -> proto source files.
-     *
-     * 'generateProto' tasks uses the default source location:
-     * "src/${sourceSet.name}/proto", and will include all *.proto files.
-     * Additional source locations can be added here.
-     */
-    private def Multimap<String, ?> protoSources = new ArrayListMultimap()
-
-    /**
-     * Adds additional .proto files in the source. The
-     * default is *.proto under 'src/${sourceSet.name}/proto'.
-     *
-     * <p>Example:
-     * <pre>
-     * protoSources 'main', fileTree('src/main/protobuf') {
-     *   include '**' + '/' + '*.proto'
-     *   exclude 'src/main/protobuf/excluded.proto'
-     * }
-     * </pre>
-     */
-    def protoSources(String sourceSetName, Object sourceFiles) {
-      protoSources.get(sourceSetName).add(sourceFiles)
-    }
-
-    /**
      * The spec of a pre-compiled protoc plugin that is fetched from repositories.
      * It overrides 'protocPath'.
      * Spec format: '<groupId>:<artifactId>:<version>', e.g.,
