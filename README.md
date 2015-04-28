@@ -2,7 +2,7 @@
 The Protobuf plugin provides protobuf compilation to your project.
 
 ## Latest Version
-com.google.protobuf:protobuf-gradle-plugin:0.2.1 - Available on Maven Central
+com.google.protobuf:protobuf-gradle-plugin:0.3.0 - Available on Maven Central
 
 ## Usage
 To use the protobuf plugin, include in your build script:
@@ -15,7 +15,28 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.2.1'
+        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.3.0'
+    }
+}
+
+// Optional - specify additional locations of .proto files.
+// The default is 'src/<sourceSetName>/proto' {include '**/*.proto'}, where
+// <sourceSetName> is typically 'main' and 'test' etc.
+sourceSets {
+    main {
+        proto {
+            // In addition to the default 'src/main/proto'
+            srcDir 'src/main/protobuf'
+            srcDir 'src/main/protocolbuffers'
+            // In addition to '**/*.proto'
+            include '**/*.protodevel'
+        }
+    }
+    test {
+        proto {
+            // In addition to the default 'src/test/proto'
+            srcDir 'src/test/protocolbuffers'
+        }
     }
 }
 
@@ -23,19 +44,6 @@ buildscript {
 protocPath = '/usr/local/bin/protoc'
 // Optional - specify a 'protoc' that is downloaded from repositories, this overrides 'protocPath'
 protocDep = 'com.google.protobuf:protoc:3.0.0-alpha-2'
-
-// Optional - the location of proto files for each Java sourceSet, defaults to
-// fileTree('src/<sourceSetName>/proto') {include '**/*.proto'}
-protoSources 'main', fileTree('src/main/protobuf') {
-  include '**/*.proto'
-  include '**/*.protodevel'
-}
-protoSources 'main', fileTree('src/main/protocolbuffers') {
-  include '**/*.proto'
-}
-protoSources 'test', fileTree('src/test/protobuf') {
-  include '**/*.protodevel'
-}
 
 // Optional - defaults to value below
 extractedProtosDir = "${project.buildDir.path}/extracted-protos"
