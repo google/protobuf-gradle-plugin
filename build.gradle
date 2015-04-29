@@ -15,11 +15,12 @@ apply plugin: 'groovy'
 apply plugin: 'maven'
 apply plugin: 'git'
 apply plugin: 'com.jfrog.bintray'
+apply plugin: "com.gradle.plugin-publish"
 
 apply plugin: 'signing'
 
 group = 'com.google.protobuf'
-version = '0.3.1-SNAPSHOT'
+version = '0.3.2-SNAPSHOT'
 
 ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
 
@@ -27,10 +28,14 @@ buildscript {
     repositories {
         mavenCentral()
         jcenter()
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
     }
     dependencies {
         classpath 'org.ajoberstar:gradle-git:0.1.0'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:0.5'
+        classpath "com.gradle.publish:plugin-publish-plugin:0.9.0"
     }
 }
 
@@ -119,5 +124,19 @@ uploadArchives {
         }
       }
     }
+  }
+}
+
+pluginBundle {
+  website = 'https://github.com/google/protobuf-gradle-plugin'
+  vcsUrl = 'https://github.com/google/protobuf-gradle-plugin'
+  description = 'The Protobuf plugin provides protobuf compilation to your project.'
+
+  plugins {
+      protobufPlugin {
+          id = 'com.google.protobuf'
+          displayName = 'Protobuf Plugin for Gradle'
+          tags = ['protobuf', 'protocol-buffers']
+      }
   }
 }

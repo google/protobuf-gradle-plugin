@@ -8,7 +8,7 @@ buildscript {
   }
 }
 
-apply plugin: 'protobuf'
+apply plugin: 'com.google.protobuf'
 
 repositories {
     mavenCentral()

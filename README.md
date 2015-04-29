@@ -2,20 +2,20 @@
 The Protobuf plugin provides protobuf compilation to your project.
 
 ## Latest Version
-com.google.protobuf:protobuf-gradle-plugin:0.3.0 - Available on Maven Central
+com.google.protobuf:protobuf-gradle-plugin:0.3.1 - Available on Maven Central.
 
 ## Usage
 To use the protobuf plugin, include in your build script:
 
 ```groovy
-apply plugin: 'protobuf'
+apply plugin: 'com.google.protobuf'
 
 buildscript {
     repositories {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.3.0'
+        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.3.1'
     }
 }
 
