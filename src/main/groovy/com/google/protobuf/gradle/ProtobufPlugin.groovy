@@ -99,12 +99,15 @@ class ProtobufPlugin implements Plugin<Project> {
       project.getConvention().getPlugin(JavaPluginConvention.class).getSourceSets().all(new Action<SourceSet>() {
         // The action applies to all source sets, typically 'main' and 'test'
         public void execute(SourceSet sourceSet) {
-          final ProtobufSourceSet protobufSourceSet = new ProtobufSourceSet(((DefaultSourceSet) sourceSet).getDisplayName(), fileResolver);
+          final ProtobufSourceSetConvention protobufSourceSetConvention =
+              new ProtobufSourceSetConvention(project, ((DefaultSourceSet) sourceSet).getName(),
+                  fileResolver)
           // Add all the properties of ProtobufSourceSet to the DefaultSourceSet that you get from
           // sourceSets.main etc. In other words, adds sourceSets.main.proto etc.
-          new DslObject(sourceSet).getConvention().getPlugins().put("proto", protobufSourceSet);
+          new DslObject(sourceSet).getConvention().getPlugins().put(
+              "proto", protobufSourceSetConvention)
         }
-      });
+      })
     }
 
     private resolveProtocDep(Project project) {
@@ -211,7 +214,7 @@ class ProtobufPlugin implements Plugin<Project> {
 
             outputs.dir getGeneratedSourceDir(project, sourceSet)
             //outputs.upToDateWhen {false}
-            sourceSetName = sourceSet.name
+            sourceDirectorySet = sourceSet.proto
             destinationDir = project.file(getGeneratedSourceDir(project, sourceSet))
         }
         def generateJavaTask = project.tasks.getByName(generateJavaTaskName)

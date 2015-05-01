@@ -1,3 +1,5 @@
+syntax = "proto3";
+
 message MoreMsg {
     optional string bar = 1;
 }

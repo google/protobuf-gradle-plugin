@@ -12,21 +12,84 @@ apply plugin: 'com.google.protobuf'
 
 repositories {
     mavenCentral()
+    maven {
+      url 'https://oss.sonatype.org/content/repositories/snapshots/'
+    }
 }
 
+configurations {
+    nanoCompile
+    grpcCompile
+}
+
+sourceSets {
+    nano {
+      proto {
+        builtins {
+          remove java
+          javanano {
+            option 'java_multiple_files=true'
+          }
+        }
+      }
+      compileClasspath += configurations.nanoCompile
+    }
+    grpc {
+      proto {
+        plugins {
+          // No options. Note the braces cannot be omitted, otherwise the plugin
+          // will not be added. This is because of the implicit way
+          // NamedDomainObjectContainer binds the methods.
+          grpc { }
+        }
+      }
+      compileClasspath += configurations.grpcCompile
+    }
+    grpc_nano {
+      proto {
+        builtins {
+          remove java
+          javanano {
+            option 'ignore_services=true'
+          }
+        }
+        plugins {
+          grpc {
+            option 'nano=true'
+          }
+        }
+      }
+      compileClasspath += configurations.grpcCompile
+    }
+    test {
+      compileClasspath += nano.output
+      compileClasspath += grpc.output
+      compileClasspath += grpc_nano.output
+      runtimeClasspath += nano.output
+      runtimeClasspath += grpc.output
+      runtimeClasspath += grpc_nano.output
+    }
+}
+
+def protobufDep = 'com.google.protobuf:protobuf-java:3.0.0-alpha-2'
+def protobufNanoDep = 'com.google.protobuf.nano:protobuf-javanano:3.0.0-alpha-2'
+def grpcDep = 'io.grpc:grpc-all:0.1.0-SNAPSHOT'
+
 dependencies {
-    compile 'com.google.protobuf:protobuf-java:2.6.1'
+    compile protobufDep
     protobuf files("lib/protos.tar.gz")
     //protobuf files("ext/test1.proto", "ext/test2.proto")
     protobuf fileTree("ext/") {
         //exclude 'more.proto'
     }
     testProtobuf files("lib/protos-test.tar.gz")
-    testCompile 'junit:junit:4.7'
+    testCompile 'junit:junit:4.7', protobufNanoDep
+    nanoCompile protobufNanoDep
+    grpcCompile protobufNanoDep, grpcDep
 }
 
-protocDep = 'com.google.protobuf:protoc:2.6.1'
-//protobufCodeGenPlugins = ['foo:./protoc-gen-foo']
+protocDep = 'com.google.protobuf:protoc:3.0.0-alpha-2'
+protobufNativeCodeGenPluginDeps = ['grpc:io.grpc:protoc-gen-grpc-java:0.1.0-SNAPSHOT']
 
 task printDeps(dependsOn: build) << {
   configurations.each { println it }

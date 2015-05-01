@@ -54,27 +54,24 @@ class ProtobufConvention {
      * Directory to extract proto files into
      */
     def String extractedProtosDir
-		
+
     /**
-     *	Directory to save java files to
+     * Directory to save java files to
      */
     def String generatedFileDir
 
     /**
-     *  List of code generation plugin names and paths.
+     *  List of code generation plugin names and paths. Plugins defined here
+     *  can be used in the proto block of the sourceSets.
      *  -- Each item is a '<name>:<path>'
-     *  -- Each name will be transformed into '--plugin=protoc-gen-<name>=<path>' and
-     *     '--<name>_out=<generatedFileDir>'
      *  -- Names have to be unique
      */
     def Set protobufCodeGenPlugins = new HashSet()
 
     /**
      * List of native code generation plugins that is fetched from repositories.
-     * -- Each itme is a '<name>:<plugin-groupId>:<plugin-artifactId>:<version>'
-     * -- Each name will be transformed into '--plugin=protoc-gen-<name>=<path>' and
-     *    '--<name>_out=<generatedFileDir>'
-     * -- Names have to be unique
+     * -- Each item is a '<name>:<plugin-groupId>:<plugin-artifactId>:<version>'
+     * It will be tranformed into a protobufCodeGenPlugins item once the plugin has been fetched.
      */
     def Set protobufNativeCodeGenPluginDeps = Collections.emptySet()
 }

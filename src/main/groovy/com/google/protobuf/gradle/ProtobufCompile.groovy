@@ -30,6 +30,7 @@
 package com.google.protobuf.gradle
 
 import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.tasks.Input
 import org.gradle.api.logging.LogLevel
@@ -40,7 +41,7 @@ public class ProtobufCompile extends DefaultTask {
     @Input
     def includeDirs = []
 
-    String sourceSetName
+    ProtobufSourceDirectorySet sourceDirectorySet
 
     String destinationDir
 
@@ -62,9 +63,37 @@ public class ProtobufCompile extends DefaultTask {
       return spec.split(':', 2)
     }
 
+    // protoc allows you to prefix comma-delimited options to the path in
+    // the --*_out flags, e.g.,
+    // - Without options: --java_out=/path/to/output
+    // - With options: --java_out=option1,option2:/path/to/output
+    // This method generates the prefix out of the given options.
+    def String makeOptionsPrefix(List<String> options) {
+      StringBuilder prefix = new StringBuilder()
+      if (!options.isEmpty()) {
+        options.each { option ->
+          if (prefix.length() > 0) {
+            prefix.append(',')
+          }
+          prefix.append(option)
+        }
+        prefix.append(':')
+      }
+      return prefix.toString()
+    }
+
     @TaskAction
     def compile() {
-        def plugins = project.convention.plugins.protobuf.protobufCodeGenPlugins
+        HashMap<String, String> pluginPaths = new HashMap<String, String>()
+        project.convention.plugins.protobuf.protobufCodeGenPlugins.each { pluginSpec ->
+          def splitSpec = splitPluginSpec(pluginSpec)
+          def name = splitSpec[0]
+          if (splitSpec.length < 2) {
+            throw new GradleException("Invalid protoc plugin spec '${pluginSpec}'. Must be 'name:path'")
+          }
+          def path = splitSpec[1]
+          pluginPaths.put(name, path)
+        }
         def protoc = project.convention.plugins.protobuf.protocPath
         File destinationDir = project.file(destinationDir)
         Set<File> protoFiles = inputs.sourceFiles.files
@@ -75,24 +104,24 @@ public class ProtobufCompile extends DefaultTask {
         def cmd = [ protoc ]
 
         cmd.addAll(dirs)
-        cmd += "--java_out=${destinationDir}"
+
+        // Handle code generation built-ins
+        sourceDirectorySet.builtins.each { builtin ->
+          String name = builtin.name
+          String outPrefix = makeOptionsPrefix(builtin.options)
+          cmd += "--${name}_out=${outPrefix}${destinationDir}"
+        }
         // Handle code generation plugins
-        if (plugins) {
-            cmd.addAll(plugins.collect {
-                def splitSpec = splitPluginSpec(it)
-                def name = splitSpec[0]
-                "--${name}_out=${destinationDir}"
-            })
-            cmd.addAll(plugins.collect {
-                def splitSpec = splitPluginSpec(it)
-                def name = splitSpec[0]
-                if (splitSpec.length > 1) {
-                    def path = splitSpec[1]
-                    "--plugin=protoc-gen-${name}=${path}"
-                } else {
-                    "--plugin=protoc-gen-${name}=${project.projectDir}/protoc-gen-${name}"
-                }
-            })
+        sourceDirectorySet.plugins.each { plugin ->
+          String name = plugin.name
+          String path = pluginPaths.get(name)
+          if (path == null) {
+            // If plugin path is not specified, use the conventional name.
+            path = "${project.projectDir}/protoc-gen-${name}"
+          }
+          String pluginOutPrefix = makeOptionsPrefix(plugin.options)
+          cmd += "--${name}_out=${pluginOutPrefix}${destinationDir}"
+          cmd += "--plugin=protoc-gen-${name}=${path}"
         }
 
         cmd.addAll protoFiles
