@@ -2,7 +2,7 @@
 The Protobuf plugin provides protobuf compilation to your project.
 
 ## Latest Version
-com.google.protobuf:protobuf-gradle-plugin:0.3.1 - Available on Maven Central.
+com.google.protobuf:protobuf-gradle-plugin:0.4.0 - Available on Maven Central.
 
 ## Usage
 To use the protobuf plugin, include in your build script:
@@ -15,7 +15,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.3.1'
+        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.4.0'
     }
 }
 
@@ -30,6 +30,41 @@ sourceSets {
             srcDir 'src/main/protocolbuffers'
             // In addition to '**/*.proto'
             include '**/*.protodevel'
+            // Optional - configure built-in outputs. Each block generates a
+            // '--<name>_out' flag to the command line.
+            builtins {
+                /*  // 'java' is there by default. Unless you want to add options,
+                    // you can omit this block.
+                java {
+                }
+                */
+                /*  // To remove the 'java' output
+                remove java
+                */
+                // Adds '--javanano_out'
+                javanano {
+                    // Options added to --javanano_out
+                    option 'java_multiple_files=true'
+                    option 'ignore_services=true'
+                }
+            }
+            // Optional - configure codegen plugins. Each block generates two flags
+            // to the protoc command line:
+            //  - '--plugin=protoc-gen-<name>:<plugin-path>' and
+            //  - '--<name>_out=<output-dir>
+            // If <name> is defined in protobufCodeGenPlugins, <plugin-path> will be from there.
+            // Otherwise, <plugin-path> will be '<projectDir>/protoc-gen-<name>'.
+            // <output-dir> is derived from generatedFileDir.
+            plugins {
+                // Adds --plugin=protoc-gen-grpc:<path> and --grpc_out
+                grpc {
+                  // Options added to --grpc_out
+                  option 'nano=true'
+                }
+                // Without options. DO NOT omit the braces. Otherwise the
+                // plugin won't be added.
+                xrpc { }
+            }
         }
     }
     test {
@@ -50,21 +85,18 @@ extractedProtosDir = "${project.buildDir.path}/extracted-protos"
 // Optional - defaults to "${project.buildDir}/generated-sources/${sourceSet.name}"
 generatedFileDir = "${projectDir}/src" // This directory will get the current sourceSet.name appended to it. i.e. src/main or src/test
 
-// Optional - defaults to empty collection => []
-//  If entry separated by ':', will translate into 'protoc' argument '--plugin=protoc-gen-${values[0]}=${values[1]}'
-//  If entry is anything else, will translate into 'protoc' argument '--plugin=protoc-gen-${it}=${project.projectDir}/protoc-gen-${it}'
-//
-//  To execute the plugin, you either need to point to the full path, or have an executable shell script in the project main dir
-protobufCodeGenPlugins = ['foo:./protoc-gen-foo', 'bar']
+// Optional - defines codegen plugins. Defaults to empty collection => []
+//  Each entry is a '<name>:<plugin-path>'
+protobufCodeGenPlugins = ['foo:./protoc-gen-foo', 'bar:./protoc-gen-bar']
 
-// Optional native codegen plugins from repositories
+// Optional - define native codegen plugins pulled from repositories
 //  Each entry is a '<name>:<plugin-groupId>:<plugin-artifactId>:<version>'.
 //  '<plugin-groupId>:<plugin-artifactId>:<version>' is resolved and downloaded
 //  from the repositories. Then this entry is transformed into a
 //  'protobufCodeGenPlugins' entry '<name>:<path-to-downloaded-plugin>'.
 // NOTE: we are still in the process of deploying the GRPC Java codegen to
 // Maven Central. Currently there are no read-to-use codegen artifacts.
-protobufNativeCodeGenPluginDeps = ["java_plugin:io.grpc:protoc-gen-grpc-java:0.1.0-SNAPSHOT"]
+protobufNativeCodeGenPluginDeps = ["grpc:io.grpc:protoc-gen-grpc-java:0.1.0-SNAPSHOT"]
 
 dependencies {
     // If you have your protos archived in a tar file, you can specify that as a dependency
