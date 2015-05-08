@@ -1,5 +1,9 @@
 # Protobuf Plugin for Gradle
-The Protobuf plugin provides protobuf compilation to your project.
+The Gradle plugin that compiles Protocol Buffer (aka. Protobuf) definition
+files (``*.proto``) in your project. The most important functionality of this
+plugin is assemble the Protobuf Compiler (``protoc``) command line and run it.
+For more information about the Protobuf Compiler, please refer to
+[Google Developers Site](https://developers.google.com/protocol-buffers/docs/reference/java-generated?csw=1).
 
 ## Latest Version
 com.google.protobuf:protobuf-gradle-plugin:0.4.0 - Available on Maven Central.
