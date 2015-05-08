@@ -81,12 +81,12 @@ artifacts {
      archives javadocJar
 }
 
-/*
 signing {
-     required { isReleaseVersion && gradle.taskGraph.hasTask("uploadArchives") }
+     required { isReleaseVersion
+                && gradle.taskGraph.hasTask("uploadArchives")
+                && !gradle.taskGraph.hasTask("publishPlugins")}
      sign configurations.archives
 }
-*/
 
 uploadArchives {
   repositories {
