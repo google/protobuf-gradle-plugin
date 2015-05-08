@@ -138,7 +138,7 @@ pluginBundle {
       protobufPlugin {
           id = 'com.google.protobuf'
           displayName = 'Protobuf Plugin for Gradle'
-          tags = ['protobuf', 'protocol-buffers']
+          tags = ['protobuf', 'protocol-buffers', 'protoc']
       }
   }
 }
