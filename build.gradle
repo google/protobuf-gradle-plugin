@@ -82,9 +82,9 @@ artifacts {
 }
 
 signing {
-     required { isReleaseVersion
-                && gradle.taskGraph.hasTask("uploadArchives")
-                && !gradle.taskGraph.hasTask("publishPlugins")}
+     required { isReleaseVersion &&
+                gradle.taskGraph.hasTask("uploadArchives") &&
+                !gradle.taskGraph.hasTask("publishPlugins")}
      sign configurations.archives
 }
 
