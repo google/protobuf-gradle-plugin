@@ -126,14 +126,15 @@ public class ProtobufCompile extends DefaultTask {
 
         cmd.addAll protoFiles
         logger.log(LogLevel.INFO, cmd.toString())
-        def output = new StringBuffer()
+        def stdout = new StringBuffer()
+        def stderr = new StringBuffer()
         Process result = cmd.execute()
-        result.consumeProcessOutput(output, output)
-        result.waitFor()
+        result.waitForProcessOutput(stdout, stderr)
+        def output = "protoc: stdout: ${stdout}. stderr: ${stderr}"
         if (result.exitValue() == 0) {
-            logger.log(LogLevel.INFO, output.toString())
+            logger.log(LogLevel.INFO, output)
         } else {
-            throw new InvalidUserDataException(output.toString())
+            throw new InvalidUserDataException(output)
         }
     }
 }
