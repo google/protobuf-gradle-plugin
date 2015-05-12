@@ -6,7 +6,7 @@ For more information about the Protobuf Compiler, please refer to
 [Google Developers Site](https://developers.google.com/protocol-buffers/docs/reference/java-generated?csw=1).
 
 ## Latest Version
-com.google.protobuf:protobuf-gradle-plugin:0.4.0 - Available on Maven Central.
+com.google.protobuf:protobuf-gradle-plugin:0.4.1 - Available on Maven Central.
 
 ## Usage
 To use the protobuf plugin, include in your build script:
@@ -19,7 +19,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.4.0'
+        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.4.1'
     }
 }
 
