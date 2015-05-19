@@ -67,7 +67,12 @@ class ProtobufPlugin implements Plugin<Project> {
             println("You are using Gradle ${project.gradle.gradleVersion}: This version of the protobuf plugin requires minimum Gradle version 2.2")
         }
 
-        project.apply plugin: 'java'
+        if (!project.plugins.hasPlugin('java')
+            && !project.plugins.hasPlugin('com.android.application')) {
+            throw new GradleException(
+                'Please apply the \'java\' plugin or the \'com.android.application\' plugin first')
+        }
+
         // Provides the osdetector extension
         project.apply plugin: 'osdetector'
 

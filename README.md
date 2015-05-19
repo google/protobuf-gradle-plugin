@@ -12,6 +12,12 @@ com.google.protobuf:protobuf-gradle-plugin:0.4.1 - Available on Maven Central.
 To use the protobuf plugin, include in your build script:
 
 ```groovy
+
+// For Java project, you must apply the java plugin first.
+apply plugin: 'java'
+// Or, for Android project, apply the Android plugin first.
+// apply plugin: 'com.android.application'
+
 apply plugin: 'com.google.protobuf'
 
 buildscript {
