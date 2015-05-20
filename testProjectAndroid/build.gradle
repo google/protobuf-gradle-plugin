@@ -1,0 +1,101 @@
+apply plugin: 'com.android.application'
+apply plugin: 'com.google.protobuf'
+
+buildscript {
+    repositories {
+        jcenter()
+        mavenLocal()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:1.1.0'
+        classpath "com.google.protobuf:protobuf-gradle-plugin:${rootProject.version}"
+    }
+}
+
+repositories {
+  jcenter()
+  mavenLocal()
+  mavenCentral()
+  maven {
+    url 'https://oss.sonatype.org/content/repositories/snapshots/'
+  }
+}
+
+android {
+    compileSdkVersion 21
+    buildToolsVersion "21.1.2"
+
+    defaultConfig {
+        applicationId "io.grpc.helloworldexample"
+        minSdkVersion 7
+        targetSdkVersion 21
+        versionCode 1
+        versionName "1.0"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    // TODO(zhangkun83): Android plugin uses this SourceSetContainer instead of
+    // the one on the project object. Ideally I should add a proto convention
+    // to the source sets here, but I haven't figured out how. Now the proto
+    // sources are configured in the standard source sets, while the generated
+    // directory is added here.
+    sourceSets {
+        main {
+           java {
+              srcDir 'build/generated-sources/main'
+           }
+        }
+    }
+}
+
+// TODO(zhangkun): This is the standard source sets, it should be moved to the
+// android {} block above.
+sourceSets {
+    main {
+        proto {
+            // Configure built-in outputs. Default is 'java'. Here we only
+            // build javanano.
+            builtins {
+                remove java
+                javanano {
+                  // Options added to --javanano_out
+                  option 'java_multiple_files=true'
+                    option 'ignore_services=true'
+                }
+            }
+            // Apply the 'grpc' plugin
+            plugins {
+                grpc {
+                    // Options added to --grpc_out
+                    option 'nano=true'
+                }
+            }
+        }
+    }
+}
+
+protobufNativeCodeGenPluginDeps = ["grpc:io.grpc:protoc-gen-grpc-java:0.1.0-SNAPSHOT"]
+
+// TODO(zhangkun): This should have been added automatically by the protobuf plugin.
+project.afterEvaluate {
+    compileDebugJava.dependsOn generateProto
+}
+
+dependencies {
+    compile 'com.android.support:appcompat-v7:21.0.3'
+    compile 'com.google.code.findbugs:jsr305:3.0.0'
+    compile 'com.squareup.okhttp:okhttp:2.2.0'
+    compile 'com.google.guava:guava:18.0'
+
+    // You need to build the https://github.com/grpc/grpc-java
+    // to obtain these libraries below.
+    compile 'io.grpc:grpc-core:0.1.0-SNAPSHOT'
+    compile 'io.grpc:grpc-protobuf-nano:0.1.0-SNAPSHOT'
+    compile 'io.grpc:grpc-okhttp:0.1.0-SNAPSHOT'
+    compile 'io.grpc:grpc-stub:0.1.0-SNAPSHOT'
+}

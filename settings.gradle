@@ -17,7 +17,8 @@ if ('test' in gradle.startParameter.taskNames) {
   logger.warn('***************************************************************************')
   include ':testProject'
   include ':testProjectCustomProtoDir'
+  include ':testProjectAndroid'
   project(':testProject').projectDir = "$rootDir/testProject" as File
-  project(':testProjectCustomProtoDir').projectDir = "$rootDir/testProjectCustomProtoDir" as File
+  project(':testProjectAndroid').projectDir = "$rootDir/testProjectAndroid" as File
 }
 
