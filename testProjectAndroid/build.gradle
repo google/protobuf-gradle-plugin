@@ -91,6 +91,7 @@ dependencies {
     compile 'com.google.code.findbugs:jsr305:3.0.0'
     compile 'com.squareup.okhttp:okhttp:2.2.0'
     compile 'com.google.guava:guava:18.0'
+    compile 'javax.annotation:javax.annotation-api:1.2'
 
     // You need to build the https://github.com/grpc/grpc-java
     // to obtain these libraries below.
