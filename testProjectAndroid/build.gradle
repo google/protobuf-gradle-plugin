@@ -39,18 +39,6 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-    // TODO(zhangkun83): Android plugin uses this SourceSetContainer instead of
-    // the one on the project object. Ideally I should add a proto convention
-    // to the source sets here, but I haven't figured out how. Now the proto
-    // sources are configured in the standard source sets, while the generated
-    // directory is added here.
-    sourceSets {
-        main {
-           java {
-              srcDir 'build/generated-sources/main'
-           }
-        }
-    }
 }
 
 // TODO(zhangkun): This is the standard source sets, it should be moved to the

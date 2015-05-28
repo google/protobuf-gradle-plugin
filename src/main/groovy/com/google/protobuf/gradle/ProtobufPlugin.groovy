@@ -79,6 +79,10 @@ class ProtobufPlugin implements Plugin<Project> {
         project.convention.plugins.protobuf = new ProtobufConvention(project);
         addProtoConfigurations(project)
         addProtoSourceSets(project)
+
+        if (project.hasProperty('android')) {
+            project.android.sourceSets.main.java.srcDir("build/generated-sources/main")
+        }
         project.afterEvaluate {
           addProtoTasks(project)
           resolveProtocDep(project)
@@ -236,7 +240,14 @@ class ProtobufPlugin implements Plugin<Project> {
         def extractProtosTask = project.tasks.getByName(extractProtosTaskName)
         generateJavaTask.dependsOn(extractProtosTask)
 
-        sourceSet.java.srcDir getGeneratedSourceDir(project, sourceSet)
+        // Add generated java sources to java source sets that will be compiled.
+        if (project.hasProperty('android')) {
+            // The android plugin uses its own SourceSetContainer for java source files.
+            project.android.sourceSets.maybeCreate(sourceSet.name).java.srcDir(
+                getGeneratedSourceDir(project, sourceSet))
+        } else {
+            sourceSet.java.srcDir getGeneratedSourceDir(project, sourceSet)
+        }
         String compileJavaTaskName = sourceSet.getCompileTaskName("java");
         Task compileJavaTask = project.tasks.getByName(compileJavaTaskName);
         compileJavaTask.dependsOn(generateJavaTask)
