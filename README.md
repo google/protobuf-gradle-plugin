@@ -98,9 +98,7 @@ protobufCodeGenPlugins = ['foo:./protoc-gen-foo', 'bar:./protoc-gen-bar']
 //  '<plugin-groupId>:<plugin-artifactId>:<version>' is resolved and downloaded
 //  from the repositories. Then this entry is transformed into a
 //  'protobufCodeGenPlugins' entry '<name>:<path-to-downloaded-plugin>'.
-// NOTE: we are still in the process of deploying the GRPC Java codegen to
-// Maven Central. Currently there are no read-to-use codegen artifacts.
-protobufNativeCodeGenPluginDeps = ["grpc:io.grpc:protoc-gen-grpc-java:0.1.0-SNAPSHOT"]
+protobufNativeCodeGenPluginDeps = ["grpc:io.grpc:protoc-gen-grpc-java:0.7.0"]
 
 dependencies {
     // If you have your protos archived in a tar file, you can specify that as a dependency
