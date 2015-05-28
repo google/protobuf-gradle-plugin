@@ -26,7 +26,6 @@ sourceSets {
     nano {
       proto {
         builtins {
-          remove java
           javanano {
             option 'java_multiple_files=true'
           }
@@ -48,7 +47,6 @@ sourceSets {
     grpc_nano {
       proto {
         builtins {
-          remove java
           javanano {
             option 'ignore_services=true'
           }
@@ -61,6 +59,14 @@ sourceSets {
       }
       compileClasspath += configurations.grpcCompile
     }
+
+    // Configure multiple source sets at a time
+    [nano, grpc_nano]*.proto {
+      builtins {
+        remove java
+      }
+    }
+
     test {
       compileClasspath += nano.output
       compileClasspath += grpc.output
