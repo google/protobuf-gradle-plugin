@@ -17,6 +17,9 @@ public class ProtobufSourceSetConvention {
     proto = new ProtobufSourceDirectorySet(project, name, fileResolver)
     proto.srcDir("src/${name}/proto")
     proto.include("**/*.proto")
+    if (project.hasProperty('android')) {
+      project.android.sourceSets.maybeCreate(name).java.srcDir("build/generated-sources/${name}")
+    }
   }
 
   public ProtobufSourceDirectorySet getProto() {

@@ -80,9 +80,6 @@ class ProtobufPlugin implements Plugin<Project> {
         addProtoConfigurations(project)
         addProtoSourceSets(project)
 
-        if (project.hasProperty('android')) {
-            project.android.sourceSets.main.java.srcDir("build/generated-sources/main")
-        }
         project.afterEvaluate {
           addProtoTasks(project)
           resolveProtocDep(project)
