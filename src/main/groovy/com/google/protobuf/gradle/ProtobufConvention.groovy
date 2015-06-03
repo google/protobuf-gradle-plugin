@@ -33,11 +33,20 @@ package com.google.protobuf.gradle
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.Multimap
 import org.gradle.api.Project
+import org.gradle.api.internal.file.FileResolver
+import org.gradle.util.ConfigureUtil
 
 class ProtobufConvention {
-    def ProtobufConvention(Project project) {
+    def ProtobufConvention(Project project, FileResolver fileResolver) {
         extractedProtosDir = "${project.buildDir.path}/extracted-protos"
         generatedFileDir = "${project.buildDir}/generated-sources"
+        protobuf = new ProtobufConfigurator(project, fileResolver)
+    }
+
+    def final ProtobufConfigurator protobuf
+
+    def protobuf(Closure configureClosure) {
+        ConfigureUtil.configure(configureClosure, protobuf)
     }
 
     def String protocPath = "protoc"

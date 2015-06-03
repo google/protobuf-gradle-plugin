@@ -41,11 +41,9 @@ android {
     }
 }
 
-// TODO(zhangkun): This is the standard source sets, it should be moved to the
-// android {} block above.
-sourceSets {
-    main {
-        proto {
+protobuf {
+    sources {
+        main {
             // Configure built-in outputs. Default is 'java'. Here we only
             // build javanano.
             builtins {
@@ -53,7 +51,7 @@ sourceSets {
                 javanano {
                   // Options added to --javanano_out
                   option 'java_multiple_files=true'
-                    option 'ignore_services=true'
+                  option 'ignore_services=true'
                 }
             }
             // Apply the 'grpc' plugin
@@ -68,11 +66,6 @@ sourceSets {
 }
 
 protobufNativeCodeGenPluginDeps = ["grpc:io.grpc:protoc-gen-grpc-java:0.1.0-SNAPSHOT"]
-
-// TODO(zhangkun): This should have been added automatically by the protobuf plugin.
-project.afterEvaluate {
-    compileDebugJava.dependsOn generateProto
-}
 
 dependencies {
     compile 'com.android.support:appcompat-v7:21.0.3'

@@ -14,18 +14,16 @@ repositories {
     mavenCentral()
 }
 
-sourceSets {
-    main {
-        proto {
+protobuf {
+    sources {
+        main {
             // In addition to the default 'src/main/proto'
             srcDir 'src/main/protobuf'
             srcDir 'src/main/protocolbuffers'
             // In addition to '**/*.proto'
             include '**/*.protodevel'
         }
-    }
-    test {
-        proto {
+        test {
             // In addition to the default 'src/test/proto'
             srcDir 'src/test/protocolbuffers'
         }

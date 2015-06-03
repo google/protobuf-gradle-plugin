@@ -31,22 +31,24 @@
 package com.google.protobuf.gradle
 
 import org.gradle.api.Action
-import org.gradle.api.InvalidUserDataException
-import org.gradle.api.Plugin
-import org.gradle.api.Project
-import org.gradle.api.Task
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.Dependency
-import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.file.ConfigurableFileTree
-import org.gradle.api.internal.tasks.DefaultSourceSet
 import org.gradle.api.file.SourceDirectorySet
+import org.gradle.api.GradleException
 import org.gradle.api.internal.file.DefaultSourceDirectorySet
 import org.gradle.api.internal.file.FileResolver;
 import org.gradle.api.internal.plugins.DslObject
+import org.gradle.api.internal.tasks.DefaultSourceSet
+import org.gradle.api.InvalidUserDataException
 import org.gradle.api.logging.LogLevel
+import org.gradle.api.NamedDomainObjectContainer
+import org.gradle.api.Plugin
+import org.gradle.api.plugins.JavaPluginConvention
+import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.tasks.SourceSet
-import org.gradle.api.GradleException
+import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.tooling.UnsupportedVersionException
 import org.gradle.util.CollectionUtils
 
@@ -76,44 +78,13 @@ class ProtobufPlugin implements Plugin<Project> {
         // Provides the osdetector extension
         project.apply plugin: 'osdetector'
 
-        project.convention.plugins.protobuf = new ProtobufConvention(project);
-        addProtoConfigurations(project)
-        addProtoSourceSets(project)
+        project.convention.plugins.protobuf = new ProtobufConvention(project, fileResolver);
 
         project.afterEvaluate {
           addProtoTasks(project)
           resolveProtocDep(project)
           resolveNativeCodeGenPlugins(project)
         }
-    }
-
-    private addProtoConfigurations(Project project) {
-        project.sourceSets.all { SourceSet sourceSet ->
-          project.configurations.create(protobufConfigName(sourceSet)) {
-            visible = false
-            transitive = false
-            extendsFrom = []
-          }
-        }
-    }
-
-    private String protobufConfigName(SourceSet sourceSet) {
-        return sourceSet.getName().equals(SourceSet.MAIN_SOURCE_SET_NAME) ? "protobuf" : sourceSet.getName() + "Protobuf"
-    }
-
-    private addProtoSourceSets(Project project) {
-      project.getConvention().getPlugin(JavaPluginConvention.class).getSourceSets().all(new Action<SourceSet>() {
-        // The action applies to all source sets, typically 'main' and 'test'
-        public void execute(SourceSet sourceSet) {
-          final ProtobufSourceSetConvention protobufSourceSetConvention =
-              new ProtobufSourceSetConvention(project, ((DefaultSourceSet) sourceSet).getName(),
-                  fileResolver)
-          // Add all the properties of ProtobufSourceSet to the DefaultSourceSet that you get from
-          // sourceSets.main etc. In other words, adds sourceSets.main.proto etc.
-          new DslObject(sourceSet).getConvention().getPlugins().put(
-              "proto", protobufSourceSetConvention)
-        }
-      })
     }
 
     private resolveProtocDep(Project project) {
@@ -195,44 +166,41 @@ class ProtobufPlugin implements Plugin<Project> {
 
 
     private addProtoTasks(Project project) {
-        project.sourceSets.all { SourceSet sourceSet ->
-            addTasksToProjectForSourceSet(project, sourceSet)
+        project.protobuf.sources.all { ProtobufSourceDirectorySet sourceDirSet ->
+            addTasksToProjectForSourceDirSet(project, sourceDirSet)
         }
     }
 
-    private def addTasksToProjectForSourceSet(Project project, SourceSet sourceSet) {
-        def generateJavaTaskName = sourceSet.getTaskName('generate', 'proto')
+    private def addTasksToProjectForSourceDirSet(Project project, ProtobufSourceDirectorySet sourceDirSet) {
+        def generateJavaTaskName = 'generate' +
+            Utils.getSourceSetSubstringForTaskNames(sourceDirSet.name) + 'Proto'
         project.tasks.create(generateJavaTaskName, ProtobufCompile) {
-            description = "Compiles Proto source '${sourceSet.name}:proto'"
+            description = "Compiles Proto source '${sourceDirSet.name}:proto'"
             // Include extracted sources
             ConfigurableFileTree extractedProtoSources =
-                project.fileTree("${project.extractedProtosDir}/${sourceSet.name}") {
+                project.fileTree("${project.extractedProtosDir}/${sourceDirSet.name}") {
                   include "**/*.proto"
                 }
             inputs.source extractedProtoSources
             include extractedProtoSources.dir
-            // Include sourceSet dirs
-            SourceDirectorySet sourceDirSet = project.sourceSets.maybeCreate(sourceSet.name).proto
-            inputs.source sourceDirSet
-            sourceDirSet.srcDirs.each { srcDir ->
+            // Include sourceDirSet dirs
+            sourceDirectorySet = sourceDirSet
+            inputs.source sourceDirectorySet
+            sourceDirectorySet.srcDirs.each { srcDir ->
               include srcDir
             }
 
-            outputs.dir getGeneratedSourceDir(project, sourceSet)
-            //outputs.upToDateWhen {false}
-            sourceDirectorySet = sourceSet.proto
-            destinationDir = project.file(getGeneratedSourceDir(project, sourceSet))
+            outputs.dir getGeneratedSourceDir(project, sourceDirSet.name)
+            destinationDir = project.file(getGeneratedSourceDir(project, sourceDirSet.name))
         }
         def generateJavaTask = project.tasks.getByName(generateJavaTaskName)
 
-        def extractProtosTaskName = sourceSet.getTaskName('extract', 'proto')
+        def extractProtosTaskName = 'extract' +
+            Utils.getSourceSetSubstringForTaskNames(sourceDirSet.name) + 'Proto'
         project.tasks.create(extractProtosTaskName, ProtobufExtract) {
             description = "Extracts proto files/dependencies specified by 'protobuf' configuration"
-            //TODO: Figure out why the configuration can't be used as input.  That makes declaring output invalid
-            //inputs.files project.configurations[protobufConfigName].files
-            //outputs.dir "${project.extractedProtosDir}/${sourceSet.name}"
-            extractedProtosDir = project.file("${project.extractedProtosDir}/${sourceSet.name}")
-            configName = protobufConfigName(sourceSet)
+            extractedProtosDir = project.file("${project.extractedProtosDir}/${sourceDirSet.name}")
+            configName = Utils.getConfigName(sourceDirSet.name)
         }
         def extractProtosTask = project.tasks.getByName(extractProtosTaskName)
         generateJavaTask.dependsOn(extractProtosTask)
@@ -240,19 +208,28 @@ class ProtobufPlugin implements Plugin<Project> {
         // Add generated java sources to java source sets that will be compiled.
         if (project.hasProperty('android')) {
             // The android plugin uses its own SourceSetContainer for java source files.
-            project.android.sourceSets.maybeCreate(sourceSet.name).java.srcDir(
-                getGeneratedSourceDir(project, sourceSet))
+            def sourceSet = project.android.sourceSets.maybeCreate(sourceDirSet.name)
+            // TODO(zhangkun83): does Android plugin provide a helper to get the task names?
+            // TODO(zhangkun83): the test compilation tasks are like compileDebugUnitTestJava, need to figure
+            // out whether it's derived from source set name.
+            sourceSet.java.srcDir(getGeneratedSourceDir(project, sourceDirSet.name))
+            String compileDebugTaskName = 'compile' +
+                Utils.getSourceSetSubstringForTaskNames(sourceDirSet.name) + 'DebugJava'
+            String compileReleaseTaskName = 'compile' +
+                Utils.getSourceSetSubstringForTaskNames(sourceDirSet.name) + 'ReleaseJava'
+            project.tasks.getByName(compileDebugTaskName).dependsOn(generateJavaTask)
+            project.tasks.getByName(compileReleaseTaskName).dependsOn(generateJavaTask)
         } else {
-            sourceSet.java.srcDir getGeneratedSourceDir(project, sourceSet)
+            SourceSet sourceSet = project.sourceSets.maybeCreate(sourceDirSet.name)
+            sourceSet.java.srcDir(getGeneratedSourceDir(project, sourceDirSet.name))
+            String compileJavaTaskName = sourceSet.getCompileTaskName("java");
+            project.tasks.getByName(compileJavaTaskName).dependsOn(generateJavaTask)
         }
-        String compileJavaTaskName = sourceSet.getCompileTaskName("java");
-        Task compileJavaTask = project.tasks.getByName(compileJavaTaskName);
-        compileJavaTask.dependsOn(generateJavaTask)
     }
 
-    private getGeneratedSourceDir(Project project, SourceSet sourceSet) {
+    private getGeneratedSourceDir(Project project, String sourceSetName) {
         def generatedSourceDir = project.convention.plugins.protobuf.generatedFileDir
-        return "${generatedSourceDir}/${sourceSet.name}"
+        return "${generatedSourceDir}/${sourceSetName}"
     }
 
 }
