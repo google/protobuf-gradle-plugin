@@ -17,6 +17,8 @@ public class ProtobufSourceDirectorySet extends DefaultSourceDirectorySet {
     builtins = project.container(PluginOptions)
     builtins.create('java')
     plugins = project.container(PluginOptions)
+    srcDir("src/${name}/proto")
+    include("**/*.proto")
   }
 
   /**

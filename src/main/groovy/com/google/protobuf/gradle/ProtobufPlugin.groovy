@@ -69,10 +69,8 @@ class ProtobufPlugin implements Plugin<Project> {
             println("You are using Gradle ${project.gradle.gradleVersion}: This version of the protobuf plugin requires minimum Gradle version 2.2")
         }
 
-        if (!project.plugins.hasPlugin('java')
-            && !project.plugins.hasPlugin('com.android.application')) {
-            throw new GradleException(
-                'Please apply the \'java\' plugin or the \'com.android.application\' plugin first')
+        if (!project.plugins.hasPlugin('java') && !project.hasProperty('android')) {
+            throw new GradleException('Please apply the Java plugin or the Android plugin first')
         }
 
         // Provides the osdetector extension
@@ -184,9 +182,9 @@ class ProtobufPlugin implements Plugin<Project> {
             inputs.source extractedProtoSources
             include extractedProtoSources.dir
             // Include sourceDirSet dirs
+            inputs.source sourceDirSet
             sourceDirectorySet = sourceDirSet
-            inputs.source sourceDirectorySet
-            sourceDirectorySet.srcDirs.each { srcDir ->
+            sourceDirSet.srcDirs.each { srcDir ->
               include srcDir
             }
 
@@ -209,17 +207,17 @@ class ProtobufPlugin implements Plugin<Project> {
         if (project.hasProperty('android')) {
             // The android plugin uses its own SourceSetContainer for java source files.
             def sourceSet = project.android.sourceSets.maybeCreate(sourceDirSet.name)
-            // TODO(zhangkun83): does Android plugin provide a helper to get the task names?
-            // TODO(zhangkun83): the test compilation tasks are like compileDebugUnitTestJava, need to figure
-            // out whether it's derived from source set name.
-            sourceSet.java.srcDir(getGeneratedSourceDir(project, sourceDirSet.name))
-            String compileDebugTaskName = 'compile' +
-                Utils.getSourceSetSubstringForTaskNames(sourceDirSet.name) + 'DebugJava'
-            String compileReleaseTaskName = 'compile' +
-                Utils.getSourceSetSubstringForTaskNames(sourceDirSet.name) + 'ReleaseJava'
-            project.tasks.getByName(compileDebugTaskName).dependsOn(generateJavaTask)
-            project.tasks.getByName(compileReleaseTaskName).dependsOn(generateJavaTask)
+            // Each variant (e.g., release, debug) builds all source sets.
+            def variants = project.android.hasProperty('libraryVariants') ?
+                project.android.libraryVariants : project.android.applicationVariants
+            variants.each { variant ->
+                // This automatically adds the output of generateJavaTask to
+                // the compile*Java tasks for this variant.
+                variant.registerJavaGeneratingTask(generateJavaTask,
+                    getGeneratedSourceDir(project, sourceDirSet.name) as File)
+            }
         } else {
+            // For standard Java projects.
             SourceSet sourceSet = project.sourceSets.maybeCreate(sourceDirSet.name)
             sourceSet.java.srcDir(getGeneratedSourceDir(project, sourceDirSet.name))
             String compileJavaTaskName = sourceSet.getCompileTaskName("java");
