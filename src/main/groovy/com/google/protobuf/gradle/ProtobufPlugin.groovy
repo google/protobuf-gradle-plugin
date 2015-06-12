@@ -239,7 +239,7 @@ class ProtobufPlugin implements Plugin<Project> {
 
     private getGeneratedSourceDir(Project project, SourceSet sourceSet) {
         def generatedSourceDir = project.convention.plugins.protobuf.generatedFileDir
-        return "${generatedSourceDir}/${sourceSet.name}"
+        return "${generatedSourceDir}"
     }
 
 }
