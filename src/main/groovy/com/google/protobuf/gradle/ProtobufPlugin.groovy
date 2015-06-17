@@ -78,11 +78,36 @@ class ProtobufPlugin implements Plugin<Project> {
 
         project.convention.plugins.protobuf = new ProtobufConvention(project, fileResolver);
 
+        addSourceSetExtensions(project)
+        getSourceSets(project).all { sourceSet ->
+          createConfiguration(project, sourceSet.name)
+        }
         project.afterEvaluate {
           addProtoTasks(project)
           resolveProtocDep(project)
           resolveNativeCodeGenPlugins(project)
         }
+    }
+
+    /**
+     * Creates a configuration if necessary for each source set so that the
+     * build author can add dependencies to each source set.
+     */
+    private createConfiguration(Project project, String sourceSetName) {
+      String configName = Utils.getConfigName(sourceSetName)
+      if (project.configurations.findByName(configName) == null) {
+        project.configurations.create(configName) {
+          visible = false
+          transitive = false
+          extendsFrom = []
+        }
+      }
+    }
+
+    private addSourceSetExtensions(Project project) {
+      getSourceSets(project).all {  sourceSet ->
+        sourceSet.extensions.create('proto', ProtobufSourceDirectorySet, project, sourceSet.name, fileResolver)
+      }
     }
 
     private resolveProtocDep(Project project) {
@@ -162,11 +187,18 @@ class ProtobufPlugin implements Plugin<Project> {
         }
     }
 
+    private Object getSourceSets(Project project) {
+      if (project.hasProperty('android')) {
+        return project.android.sourceSets
+      } else {
+        return project.sourceSets
+      }
+    }
 
     private addProtoTasks(Project project) {
-        project.protobuf.sources.all { ProtobufSourceDirectorySet sourceDirSet ->
-            addTasksToProjectForSourceDirSet(project, sourceDirSet)
-        }
+      getSourceSets(project).all { sourceSet ->
+        addTasksToProjectForSourceDirSet(project, sourceSet.proto)
+      }
     }
 
     private def addTasksToProjectForSourceDirSet(Project project, ProtobufSourceDirectorySet sourceDirSet) {

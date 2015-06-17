@@ -45,26 +45,25 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-}
-
-protobuf {
-    sources {
+    sourceSets {
         main {
-            // Configure built-in outputs. Default is 'java'. Here we only
-            // build javanano.
-            builtins {
-                remove java
-                javanano {
-                  // Options added to --javanano_out
-                  option 'java_multiple_files=true'
-                  option 'ignore_services=true'
+            proto {
+                // Configure built-in outputs. Default is 'java'. Here we only
+                // build javanano.
+                builtins {
+                    remove java
+                    javanano {
+                      // Options added to --javanano_out
+                      option 'java_multiple_files=true'
+                      option 'ignore_services=true'
+                    }
                 }
-            }
-            // Apply the 'grpc' plugin
-            plugins {
-                grpc {
-                    // Options added to --grpc_out
-                    option 'nano=true'
+                // Apply the 'grpc' plugin
+                plugins {
+                    grpc {
+                        // Options added to --grpc_out
+                        option 'nano=true'
+                    }
                 }
             }
         }

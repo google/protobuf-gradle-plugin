@@ -22,58 +22,53 @@ configurations {
     grpcCompile
 }
 
-protobuf {
-    sources {
-        nano {
-            builtins {
-              remove java
-              javanano {
-                option 'java_multiple_files=true'
-              }
-            }
-        }
-        grpc {
-            plugins {
-              // No options. Note the braces cannot be omitted, otherwise the plugin
-              // will not be added. This is because of the implicit way
-              // NamedDomainObjectContainer binds the methods.
-              grpc { }
-            }
-        }
-        grpc_nano {
-            builtins {
-              remove java
-              javanano {
-                option 'ignore_services=true'
-              }
-            }
-            plugins {
-              grpc {
-                option 'nano=true'
-              }
-            }
-        }
-    }
-}
-
 sourceSets {
-    nano {
-      compileClasspath += configurations.nanoCompile
+  nano {
+    proto {
+      builtins {
+        remove java
+        javanano {
+          option 'java_multiple_files=true'
+        }
+      }
     }
-    grpc {
-      compileClasspath += configurations.grpcCompile
+    compileClasspath += configurations.nanoCompile
+  }
+  grpc {
+    proto {
+      plugins {
+        // No options. Note the braces cannot be omitted, otherwise the plugin
+        // will not be added. This is because of the implicit way
+        // NamedDomainObjectContainer binds the methods.
+        grpc { }
+      }
     }
-    grpc_nano {
-      compileClasspath += configurations.grpcCompile
+    compileClasspath += configurations.grpcCompile
+  }
+  grpc_nano {
+    proto {
+      builtins {
+        remove java
+          javanano {
+            option 'ignore_services=true'
+          }
+      }
+      plugins {
+        grpc {
+          option 'nano=true'
+        }
+      }
     }
-    test {
-      compileClasspath += nano.output
-      compileClasspath += grpc.output
-      compileClasspath += grpc_nano.output
-      runtimeClasspath += nano.output
-      runtimeClasspath += grpc.output
-      runtimeClasspath += grpc_nano.output
-    }
+    compileClasspath += configurations.grpcCompile
+  }
+  test {
+    compileClasspath += nano.output
+    compileClasspath += grpc.output
+    compileClasspath += grpc_nano.output
+    runtimeClasspath += nano.output
+    runtimeClasspath += grpc.output
+    runtimeClasspath += grpc_nano.output
+  }
 }
 
 def protobufDep = 'com.google.protobuf:protobuf-java:3.0.0-alpha-2'

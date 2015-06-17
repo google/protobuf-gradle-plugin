@@ -41,35 +41,7 @@ import org.gradle.util.ConfigureUtil
 public class ProtobufConfigurator {
   private final Project project
 
-  public final NamedDomainObjectContainer<ProtobufSourceDirectorySet> sources
-
-  /**
-   * Creates a configuration if necessary for each source set so that the build
-   * author can add dependencies to each source set.
-   */
-  private createConfiguration(String sourceSetName) {
-    String configName = Utils.getConfigName(sourceSetName)
-    if (project.configurations.findByName(configName) == null) {
-      project.configurations.create(configName) {
-        visible = false
-        transitive = false
-        extendsFrom = []
-      }
-    }
-  }
-
   public ProtobufConfigurator(Project project, FileResolver fileResolver) {
     this.project = project
-    sources = project.container(ProtobufSourceDirectorySet, { name ->
-      createConfiguration(name)
-      return new ProtobufSourceDirectorySet(project, name, fileResolver)
-    });
-    [SourceSet.MAIN_SOURCE_SET_NAME, SourceSet.TEST_SOURCE_SET_NAME].each {
-      sources.create(it)
-    }
-  }
-
-  public void sources(Closure configureClosure) {
-    ConfigureUtil.configure(configureClosure, sources)
   }
 }
