@@ -29,21 +29,56 @@
 
 package com.google.protobuf.gradle
 
-import org.apache.commons.lang.StringUtils
-import org.gradle.api.tasks.SourceSet
+import org.gradle.api.Named
 
-class Utils {
-  static String getConfigName(String sourceSetName) {
-    return sourceSetName == SourceSet.MAIN_SOURCE_SET_NAME ?
-        "protobuf" : (sourceSetName + "Protobuf")
+/**
+ * Locates an executable that can either be found locally or downloaded from
+ * repositories.  If configured multiple times, the last call wins.  If never
+ * configured, will run from system search path.
+ */
+public class ExecutableLocator implements Named {
+
+  private final String name
+
+  @Nullable
+  private String artifactSpec
+
+  @Nullable
+  private String path
+
+  public ExecutableLocator(String name) {
+    this.name = name
   }
 
-  static String getSourceSetSubstringForTaskNames(String sourceSetName) {
-    return sourceSetName == SourceSet.MAIN_SOURCE_SET_NAME ?
-        '' : StringUtils.capitalize(sourceSetName)
+  @Override
+  public String getName() {
+    return name
   }
 
-  static boolean isAndroidProject(Project project) {
-    return project.hasProperty('android')
+  /**
+   * Specifies an executable to be downloaded from repositories.
+   * spec format: '<groupId>:<artifactId>:<version>'
+   */
+  public artifact(String spec) {
+    this.artifactSpec = spec
+    this.path = null
+  }
+
+  /**
+   * Specifies a local executable.
+   */
+  public executable(String path) {
+    this.path = path
+    this.artifactSpec = null
+  }
+
+  @Nullable
+  public String getArtifactSpec() {
+    return artifactSpec
+  }
+
+  @Nullable
+  public String getExecutablePath() {
+    return path
   }
 }

@@ -70,6 +70,17 @@ android {
     }
 }
 
+protobuf {
+  generateProtoTasks {
+    all()*.plugins {
+      grpc {}
+    }
+    ofFlavor()*.plugins {
+      xrpc {}
+    }
+  }
+}
+
 protobufNativeCodeGenPluginDeps = ["grpc:io.grpc:protoc-gen-grpc-java:0.1.0-SNAPSHOT"]
 
 dependencies {

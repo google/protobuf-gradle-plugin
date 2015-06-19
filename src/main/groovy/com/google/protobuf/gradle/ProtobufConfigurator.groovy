@@ -40,8 +40,67 @@ import org.gradle.util.ConfigureUtil
  */
 public class ProtobufConfigurator {
   private final Project project
+  private final GenerateProtoTaskCollection tasks
+  private final ToolsLocator tools
 
   public ProtobufConfigurator(Project project, FileResolver fileResolver) {
     this.project = project
+    if (Utils.isAndroidProject(project)) {
+      tasks = new AndroidGenerateProtoTaskCollection()
+    } else {
+      tasks = new JavaGenerateProtoTaskCollection()
+    }
+    tools = new ToolsLocator(project)
+  }
+
+  //===========================================================================
+  //         Configuration methods
+  //===========================================================================
+
+  /**
+   * Locates the protoc executable. The closure will be manipulating an
+   * ExecutableLocator.
+   */
+  public void protoc(Closure configureClosure) {
+    ConfigureUtil.configure(configureClosure, tools.protoc)
+  }
+
+  /**
+   * Locate the codegen plugin executables. The closure will be manipulating a
+   * NamedDomainObjectContainer<ExecutableLocator>.
+   */
+  public void plugins(Closure configureClosure) {
+    ConfigureUtil.configure(configureClosure, tools.plugins)
+  }
+
+  /**
+   * Configures the generateProto tasks in the given closure.  The closure will
+   * be manipulating a JavaGenerateProtoTaskCollection or an
+   * AndroidGenerateProtoTaskCollection depending on whether the project is
+   * Java or Android.
+   */
+  public void generateProtoTasks(Closure configureClosure) {
+    // TODO(zhangkun83): run it after tasks are generated
+    ConfigureUtil.configure(configureClosure, tasks)
+  }
+
+  public static class GenerateProtoTaskCollection {
+    public Collection<GenerateProtoTask> all() {
+      return []
+    }
+  }
+
+  public static class AndroidGenerateProtoTaskCollection
+      extends GenerateProtoTaskCollection {
+    public Collection<GenerateProtoTask> ofFlavor(String flavor) {
+      return []
+    }
+  }
+
+  public static class JavaGenerateProtoTaskCollection
+      extends GenerateProtoTaskCollection {
+    public Collection<GenerateProtoTask> ofSourceSet(String sourceSet) {
+      return []
+    }
   }
 }

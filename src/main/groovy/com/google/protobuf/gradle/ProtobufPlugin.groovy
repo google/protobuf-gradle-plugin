@@ -69,7 +69,7 @@ class ProtobufPlugin implements Plugin<Project> {
             println("You are using Gradle ${project.gradle.gradleVersion}: This version of the protobuf plugin requires minimum Gradle version 2.2")
         }
 
-        if (!project.plugins.hasPlugin('java') && !project.hasProperty('android')) {
+        if (!project.plugins.hasPlugin('java') && !Utils.isAndroidProject(project)) {
             throw new GradleException('Please apply the Java plugin or the Android plugin first')
         }
 
@@ -84,14 +84,13 @@ class ProtobufPlugin implements Plugin<Project> {
         }
         project.afterEvaluate {
           addProtoTasks(project)
-          resolveProtocDep(project)
-          resolveNativeCodeGenPlugins(project)
+          project.protobuf.tools.resolve()
         }
     }
 
     /**
-     * Creates a configuration if necessary for each source set so that the
-     * build author can add dependencies to each source set.
+     * Creates a configuration if necessary for a source set so that the build
+     * author can configure dependencies for it.
      */
     private createConfiguration(Project project, String sourceSetName) {
       String configName = Utils.getConfigName(sourceSetName)
@@ -104,91 +103,17 @@ class ProtobufPlugin implements Plugin<Project> {
       }
     }
 
+    /**
+     * Adds the proto extension to all SourceSets.
+     */
     private addSourceSetExtensions(Project project) {
       getSourceSets(project).all {  sourceSet ->
         sourceSet.extensions.create('proto', ProtobufSourceDirectorySet, project, sourceSet.name, fileResolver)
       }
     }
 
-    private resolveProtocDep(Project project) {
-        String spec = project.convention.plugins.protobuf.protocDep;
-        if (spec == null) {
-          return;
-        }
-        Configuration config = project.configurations.create('protoc') {
-          visible = false
-          transitive = false
-          extendsFrom = []
-        }
-        def groupId, artifact, version
-        (groupId, artifact, version) = spec.split(":")
-        def notation = [group: groupId,
-                        name: artifact,
-                        version: version,
-                        classifier: project.osdetector.classifier,
-                        ext: 'exe']
-        project.logger.info('Adding protoc dependency: ' + notation)
-        Dependency dep = project.dependencies.add(config.name, notation)
-        Set<File> files = config.files(dep)
-        File protoc = null
-        for (f in files) {
-          if (f.getName().endsWith('.exe')) {
-            protoc = f
-            break
-          }
-        }
-        if (protoc == null) {
-          throw new GradleException('Cannot resolve ' + spec)
-        }
-        if (!protoc.canExecute() && !protoc.setExecutable(true)) {
-          throw new GradleException('Cannot make ' + protoc + ' executable')
-        }
-        project.logger.info('Resolved protoc: ' + protoc)
-        project.convention.plugins.protobuf.protocPath = protoc.getPath()
-    }
-
-    private resolveNativeCodeGenPlugins(Project project) {
-        Configuration config = project.configurations.create('protobufNativeCodeGenPlugins') {
-          visible = false
-          transitive = false
-          extendsFrom = []
-        }
-        def Map nameToDep = new HashMap()
-        for (key in project.convention.plugins.protobuf.protobufNativeCodeGenPluginDeps) {
-          def name, groupId, artifact, version
-            (name, groupId, artifact, version) = key.split(":")
-            def notation = [group: groupId,
-                            name: artifact,
-                            version: version,
-                            classifier: project.osdetector.classifier,
-                            ext: 'exe']
-            project.logger.info('Adding a native protobuf codegen plugin dependency: ' + notation)
-            Dependency dep = project.dependencies.add(config.name, notation)
-            nameToDep.put(name, dep);
-        }
-        for (e in nameToDep) {
-            Set<File> files = config.files(e.value);
-            File plugin = null
-            for (f in files) {
-                if (f.getName().endsWith('.exe')) {
-                    plugin = f
-                    break
-                }
-            }
-            if (plugin == null) {
-                throw new GradleException('Cannot resolve ' + e.value)
-            }
-            if (!plugin.canExecute() && !plugin.setExecutable(true)) {
-                throw new GradleException('Cannot make ' + plugin + ' executable')
-            }
-            project.logger.info('Resolved a native protobuf codegen plugin: ' + plugin)
-            project.convention.plugins.protobuf.protobufCodeGenPlugins.add(
-                e.key + ':' + plugin.getPath())
-        }
-    }
-
     private Object getSourceSets(Project project) {
-      if (project.hasProperty('android')) {
+      if (Utils.isAndroidProject(project)) {
         return project.android.sourceSets
       } else {
         return project.sourceSets
@@ -196,12 +121,20 @@ class ProtobufPlugin implements Plugin<Project> {
     }
 
     private addProtoTasks(Project project) {
-      getSourceSets(project).all { sourceSet ->
-        addTasksToProjectForSourceDirSet(project, sourceSet.proto)
+      if (Utils.isAndroidProject(project)) {
+        def variants = project.android.hasProperty('libraryVariants') ?
+            project.android.libraryVariants : project.android.applicationVariants
+        variants.each { variant ->
+          addTasksForVariant(project, variant)
+        }
+      } else {
+        getSourceSets(project).each { sourceSet ->
+          addTasksForSourceDirSet(project, sourceSet.proto)
+        }
       }
     }
 
-    private def addTasksToProjectForSourceDirSet(Project project, ProtobufSourceDirectorySet sourceDirSet) {
+    private def addTasksForSourceDirSet(Project project, ProtobufSourceDirectorySet sourceDirSet) {
         def generateJavaTaskName = 'generate' +
             Utils.getSourceSetSubstringForTaskNames(sourceDirSet.name) + 'Proto'
         project.tasks.create(generateJavaTaskName, ProtobufCompile) {
@@ -236,24 +169,23 @@ class ProtobufPlugin implements Plugin<Project> {
         generateJavaTask.dependsOn(extractProtosTask)
 
         // Add generated java sources to java source sets that will be compiled.
-        if (project.hasProperty('android')) {
-            // The android plugin uses its own SourceSetContainer for java source files.
-            def sourceSet = project.android.sourceSets.maybeCreate(sourceDirSet.name)
-            // Each variant (e.g., release, debug) builds all source sets.
-            def variants = project.android.hasProperty('libraryVariants') ?
-                project.android.libraryVariants : project.android.applicationVariants
-            variants.each { variant ->
-                // This automatically adds the output of generateJavaTask to
-                // the compile*Java tasks for this variant.
-                variant.registerJavaGeneratingTask(generateJavaTask,
-                    getGeneratedSourceDir(project, sourceDirSet.name) as File)
-            }
-        } else {
-            // For standard Java projects.
-            SourceSet sourceSet = project.sourceSets.maybeCreate(sourceDirSet.name)
-            sourceSet.java.srcDir(getGeneratedSourceDir(project, sourceDirSet.name))
-            String compileJavaTaskName = sourceSet.getCompileTaskName("java");
-            project.tasks.getByName(compileJavaTaskName).dependsOn(generateJavaTask)
+        SourceSet sourceSet = project.sourceSets.maybeCreate(sourceDirSet.name)
+        sourceSet.java.srcDir(getGeneratedSourceDir(project, sourceDirSet.name))
+        String compileJavaTaskName = sourceSet.getCompileTaskName("java");
+        project.tasks.getByName(compileJavaTaskName).dependsOn(generateJavaTask)
+    }
+
+    private def addTasksForVariant(Project project, Object variant) {
+      // The android plugin uses its own SourceSetContainer for java source files.
+      def sourceSet = project.android.sourceSets.maybeCreate(sourceDirSet.name)
+        // Each variant (e.g., release, debug) builds all source sets.
+        def variants = project.android.hasProperty('libraryVariants') ?
+        project.android.libraryVariants : project.android.applicationVariants
+        variants.each { variant ->
+          // This automatically adds the output of generateJavaTask to
+          // the compile*Java tasks for this variant.
+          variant.registerJavaGeneratingTask(generateJavaTask,
+              getGeneratedSourceDir(project, sourceDirSet.name) as File)
         }
     }
 
