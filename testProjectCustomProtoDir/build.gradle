@@ -37,7 +37,9 @@ dependencies {
     testCompile 'junit:junit:4.7'
 }
 
-protocDep = 'com.google.protobuf:protoc:2.6.1'
+protobuf.protoc {
+  artifact = 'com.google.protobuf:protoc:2.6.1'
+}
 
 task printDeps(dependsOn: build) << {
   configurations.each { println it }

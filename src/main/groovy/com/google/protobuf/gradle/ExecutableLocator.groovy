@@ -40,10 +40,8 @@ public class ExecutableLocator implements Named {
 
   private final String name
 
-  @Nullable
-  private String artifactSpec
+  private String artifact
 
-  @Nullable
   private String path
 
   public ExecutableLocator(String name) {
@@ -60,25 +58,23 @@ public class ExecutableLocator implements Named {
    * spec format: '<groupId>:<artifactId>:<version>'
    */
   public artifact(String spec) {
-    this.artifactSpec = spec
+    this.artifact = spec
     this.path = null
   }
 
   /**
    * Specifies a local executable.
    */
-  public executable(String path) {
+  public setPath(String path) {
     this.path = path
-    this.artifactSpec = null
+    this.artifact = null
   }
 
-  @Nullable
-  public String getArtifactSpec() {
-    return artifactSpec
+  public String getArtifact() {
+    return artifact
   }
 
-  @Nullable
-  public String getExecutablePath() {
+  public String getPath() {
     return path
   }
 }

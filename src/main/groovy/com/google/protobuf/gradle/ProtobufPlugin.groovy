@@ -30,9 +30,8 @@
 
 package com.google.protobuf.gradle
 
+import com.google.common.collect.ImmutableList
 import org.gradle.api.Action
-import org.gradle.api.artifacts.Configuration
-import org.gradle.api.artifacts.Dependency
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.GradleException
@@ -42,7 +41,6 @@ import org.gradle.api.internal.plugins.DslObject
 import org.gradle.api.internal.tasks.DefaultSourceSet
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.logging.LogLevel
-import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Plugin
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.Project
@@ -129,69 +127,100 @@ class ProtobufPlugin implements Plugin<Project> {
         }
       } else {
         getSourceSets(project).each { sourceSet ->
-          addTasksForSourceDirSet(project, sourceSet.proto)
+          addTasksForSourceSet(project, sourceSet)
         }
       }
     }
 
-    private def addTasksForSourceDirSet(Project project, ProtobufSourceDirectorySet sourceDirSet) {
-        def generateJavaTaskName = 'generate' +
-            Utils.getSourceSetSubstringForTaskNames(sourceDirSet.name) + 'Proto'
-        project.tasks.create(generateJavaTaskName, ProtobufCompile) {
-            description = "Compiles Proto source '${sourceDirSet.name}:proto'"
-            // Include extracted sources
-            ConfigurableFileTree extractedProtoSources =
-                project.fileTree("${project.extractedProtosDir}/${sourceDirSet.name}") {
-                  include "**/*.proto"
-                }
-            inputs.source extractedProtoSources
-            include extractedProtoSources.dir
-            // Include sourceDirSet dirs
-            inputs.source sourceDirSet
-            sourceDirectorySet = sourceDirSet
-            sourceDirSet.srcDirs.each { srcDir ->
-              include srcDir
+    private def addTasksForSourceSet(Project project, SourceSet sourceSet) {
+      def generateProtoTaskName = 'generate' +
+          Utils.getSourceSetSubstringForTaskNames(sourceSet.name) + 'Proto'
+      def generateProtoTask = project.tasks.create(generateProtoTaskName, GenerateProtoTask) {
+        description = "Compiles Proto source for sourceSet '${sourceSet.name}'"
+        outputBaseDir = "${project.buildDir}/generated/source/proto/${sourceSet.name}"
+        // Include extracted sources
+        ConfigurableFileTree extractedProtoSources =
+            project.fileTree("${project.extractedProtosDir}/${sourceSet.name}") {
+              include "**/*.proto"
             }
-
-            outputs.dir getGeneratedSourceDir(project, sourceDirSet.name)
-            destinationDir = project.file(getGeneratedSourceDir(project, sourceDirSet.name))
+        inputs.source extractedProtoSources
+        include extractedProtoSources.dir
+        inputs.source sourceSet.proto
+        ProtobufSourceDirectorySet protoSrcDirSet = sourceSet.proto
+        protoSrcDirSet.srcDirs.each { srcDir ->
+          include srcDir
         }
-        def generateJavaTask = project.tasks.getByName(generateJavaTaskName)
+      }
 
-        def extractProtosTaskName = 'extract' +
-            Utils.getSourceSetSubstringForTaskNames(sourceDirSet.name) + 'Proto'
-        project.tasks.create(extractProtosTaskName, ProtobufExtract) {
-            description = "Extracts proto files/dependencies specified by 'protobuf' configuration"
-            extractedProtosDir = project.file("${project.extractedProtosDir}/${sourceDirSet.name}")
-            configName = Utils.getConfigName(sourceDirSet.name)
-        }
-        def extractProtosTask = project.tasks.getByName(extractProtosTaskName)
-        generateJavaTask.dependsOn(extractProtosTask)
+      generateProtoTask.sourceSet = sourceSet
+      generateProtoTask.builtins {
+        java {}
+      }
 
-        // Add generated java sources to java source sets that will be compiled.
-        SourceSet sourceSet = project.sourceSets.maybeCreate(sourceDirSet.name)
-        sourceSet.java.srcDir(getGeneratedSourceDir(project, sourceDirSet.name))
-        String compileJavaTaskName = sourceSet.getCompileTaskName("java");
-        project.tasks.getByName(compileJavaTaskName).dependsOn(generateJavaTask)
+      def extractProtosTaskName = 'extract' +
+          Utils.getSourceSetSubstringForTaskNames(sourceSet.name) + 'Proto'
+      project.tasks.create(extractProtosTaskName, ProtobufExtract) {
+          description = "Extracts proto files/dependencies specified by 'protobuf' configuration"
+          extractedProtosDir = project.file("${project.extractedProtosDir}/${sourceSet.name}")
+          configName = Utils.getConfigName(sourceSet.name)
+      }
+      def extractProtosTask = project.tasks.getByName(extractProtosTaskName)
+      generateProtoTask.dependsOn(extractProtosTask)
+
+      String compileJavaTaskName = sourceSet.getCompileTaskName("java");
+      project.tasks.getByName(compileJavaTaskName).dependsOn(generateProtoTask)
     }
 
     private def addTasksForVariant(Project project, Object variant) {
-      // The android plugin uses its own SourceSetContainer for java source files.
-      def sourceSet = project.android.sourceSets.maybeCreate(sourceDirSet.name)
-        // Each variant (e.g., release, debug) builds all source sets.
-        def variants = project.android.hasProperty('libraryVariants') ?
-        project.android.libraryVariants : project.android.applicationVariants
-        variants.each { variant ->
-          // This automatically adds the output of generateJavaTask to
-          // the compile*Java tasks for this variant.
-          variant.registerJavaGeneratingTask(generateJavaTask,
-              getGeneratedSourceDir(project, sourceDirSet.name) as File)
+      // The collection of sourceSets that will be compiled for this variant
+      def sourceSetNames = new ArrayList()
+      def sourceSets = new ArrayList()
+      // TODO(zhangkun83): it seems all variants will compile the sources under
+      // main. Is it the case?
+      sourceSetNames.add 'main'
+      sourceSetNames.add variant.name
+      sourceSetNames.add variant.buildType.name
+      ImmutableList.Builder<String> flavors = ImmutableList.builder()
+      if (variant.hasProperty('productFlavors')) {
+        variant.productFlavors.each { flavor ->
+          sourceSetNames.add flavor.name
+          flavors.add flavor.name
         }
-    }
+      }
+      sourceSetNames.each { sourceSetName ->
+        def sourceSet = project.android.sourceSets.findByName(sourceSetName)
+        if (sourceSet != null) {
+          sourceSets.add sourceSet
+        }
+      }
 
-    private getGeneratedSourceDir(Project project, String sourceSetName) {
-        def generatedSourceDir = project.convention.plugins.protobuf.generatedFileDir
-        return "${generatedSourceDir}/${sourceSetName}"
-    }
+      def generateProtoTaskName = "generate${variant.name}Proto"
+      def generateProtoTask = project.tasks.create(generateProtoTaskName, GenerateProtoTask) {
+        description = "Compiles Proto source for variant '${variant.name}'"
+        outputBaseDir = "${project.buildDir}/generated/source/proto/${variant.name}"
+        // TODO(zhangkun83): include extracted protos?
+        sourceSets.each { sourceSet ->
+          ProtobufSourceDirectorySet protoSrcDirSet = sourceSet.proto
+          inputs.source protoSrcDirSet
+          protoSrcDirSet.srcDirs.each { srcDir ->
+            include srcDir
+          }
+        }
+      }
 
+      generateProtoTask.variant = variant
+      generateProtoTask.buildType = variant.buildType
+      generateProtoTask.flavors = flavors.build()
+      generateProtoTask.builtins {
+        javanano {}
+      }
+
+      // TODO(zhangkun83): create extraction tasks?
+
+      // TODO(zhangkun83): at this point we have not decided all the protoc
+      // outputs. We will call this again in GenerateProtoTask.compile() when
+      // all outputs are finalized. I am not sure the second call will work
+      // though.
+      variant.registerJavaGeneratingTask(generateProtoTask)
+    }
 }

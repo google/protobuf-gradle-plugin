@@ -43,6 +43,12 @@ public class ProtobufConfigurator {
   private final GenerateProtoTaskCollection tasks
   private final ToolsLocator tools
 
+  /**
+   * The base directory of generated files. The default is
+   * "${project.buildDir}/generated/source/proto".
+   */
+  public String generatedFilesBaseDir
+
   public ProtobufConfigurator(Project project, FileResolver fileResolver) {
     this.project = project
     if (Utils.isAndroidProject(project)) {
@@ -51,6 +57,7 @@ public class ProtobufConfigurator {
       tasks = new JavaGenerateProtoTaskCollection()
     }
     tools = new ToolsLocator(project)
+    generatedFilesBaseDir = "${project.buildDir}/generated/source/proto"
   }
 
   //===========================================================================
@@ -80,27 +87,33 @@ public class ProtobufConfigurator {
    * Java or Android.
    */
   public void generateProtoTasks(Closure configureClosure) {
-    // TODO(zhangkun83): run it after tasks are generated
-    ConfigureUtil.configure(configureClosure, tasks)
-  }
-
-  public static class GenerateProtoTaskCollection {
-    public Collection<GenerateProtoTask> all() {
-      return []
+    // TODO(zhangkun83): make sure to run it after tasks are generated
+    project.afterEvaluate {
+      ConfigureUtil.configure(configureClosure, tasks)
     }
   }
 
-  public static class AndroidGenerateProtoTaskCollection
+  public class GenerateProtoTaskCollection {
+    public Collection<GenerateProtoTask> all() {
+      return project.tasks.findAll { task ->
+        task instanceof GenerateProtoTask
+      }
+    }
+  }
+
+  public class AndroidGenerateProtoTaskCollection
       extends GenerateProtoTaskCollection {
     public Collection<GenerateProtoTask> ofFlavor(String flavor) {
       return []
     }
   }
 
-  public static class JavaGenerateProtoTaskCollection
+  public class JavaGenerateProtoTaskCollection
       extends GenerateProtoTaskCollection {
     public Collection<GenerateProtoTask> ofSourceSet(String sourceSet) {
-      return []
+      return all().findAll { task ->
+        task.sourceSet.name == sourceSet
+      }
     }
   }
 }

@@ -45,43 +45,35 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-    sourceSets {
-        main {
-            proto {
-                // Configure built-in outputs. Default is 'java'. Here we only
-                // build javanano.
-                builtins {
-                    remove java
-                    javanano {
-                      // Options added to --javanano_out
-                      option 'java_multiple_files=true'
-                      option 'ignore_services=true'
-                    }
-                }
-                // Apply the 'grpc' plugin
-                plugins {
-                    grpc {
-                        // Options added to --grpc_out
-                        option 'nano=true'
-                    }
-                }
-            }
-        }
-    }
 }
 
 protobuf {
-  generateProtoTasks {
-    all()*.plugins {
-      grpc {}
+  protoc {
+    artifact = 'com.google.protobuf:protoc:3.0.0-alpha-2'
+  }
+  plugins {
+    grpc {
+      artifact = 'io.grpc:protoc-gen-grpc-java:0.1.0-SNAPSHOT'
     }
-    ofFlavor()*.plugins {
-      xrpc {}
+  }
+  generateProtoTasks {
+    all().each { task ->
+      task.builtins {
+        javanano {
+          // Options added to --javanano_out
+          option 'java_multiple_files=true'
+          option 'ignore_services=true'
+        }
+      }
+      task.plugins {
+        grpc {
+          // Options added to --grpc_out
+          option 'nano=true'
+        }
+      }
     }
   }
 }
-
-protobufNativeCodeGenPluginDeps = ["grpc:io.grpc:protoc-gen-grpc-java:0.1.0-SNAPSHOT"]
 
 dependencies {
     compile 'com.android.support:appcompat-v7:21.0.3'

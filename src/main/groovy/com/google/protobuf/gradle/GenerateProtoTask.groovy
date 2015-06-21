@@ -29,8 +29,13 @@
  */
 package com.google.protobuf.gradle
 
+import com.google.common.collect.ImmutableList
+import org.gradle.api.tasks.SourceSet
+import org.gradle.api.logging.LogLevel
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.TaskAction
 import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
 import org.gradle.api.Named
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
@@ -39,20 +44,28 @@ import org.gradle.util.ConfigureUtil
 public class GenerateProtoTask extends DefaultTask {
 
   @Input
-  private final List includeDirs = new List()
+  private final List includeDirs = new ArrayList()
 
   private final ToolsLocator toolsLocator
 
   private final NamedDomainObjectContainer<PluginOptions> builtins
   private final NamedDomainObjectContainer<PluginOptions> plugins
 
-  public GenerateProtoTask(Project project, String sourceSet) {
-    final String outputBaseDir = "${project.buildDir}/generated/source/proto"
-    def pluginsFactory = { String name ->
-      return new PluginOptions(name, outputBaseDir, sourceSet)
-    }
-    builtins = project.container(PluginOptions, pluginsFactory)
-    plugins = project.container(PluginOptions, pluginsFactory)
+  private String outputBaseDir
+
+  SourceSet sourceSet
+  Object variant
+  Collection<String> flavors
+  String buildType
+
+  public GenerateProtoTask() {
+    builtins = project.container(PluginOptions)
+    plugins = project.container(PluginOptions)
+  }
+
+  public void setOutputBaseDir(String outputBaseDir) {
+    this.outputBaseDir = outputBaseDir
+    outputs.dir outputBaseDir
   }
 
   //===========================================================================
@@ -63,7 +76,7 @@ public class GenerateProtoTask extends DefaultTask {
    * Configures the protoc builtins in a closure, which will be maniuplating a
    * NamedDomainObjectContainer<PluginOptions>.
    */
-  public void plugins(Closure configureClosure) {
+  public void builtins(Closure configureClosure) {
     ConfigureUtil.configure(configureClosure, builtins)
   }
 
@@ -80,9 +93,9 @@ public class GenerateProtoTask extends DefaultTask {
    */
   public void include(Object dir) {
       if (dir instanceof File) {
-          includeDirs += dir
+          includeDirs.add(dir)
       } else {
-          includeDirs += project.file(dir)
+          includeDirs.add(project.file(dir))
       }
   }
 
@@ -93,14 +106,8 @@ public class GenerateProtoTask extends DefaultTask {
     private final ArrayList<String> options = new ArrayList<String>()
     private final String name
 
-    public final String sourceSet
-
-    private String outputDir
-
-    public PluginOptions(String name, String outputBaseDir, String sourceSet) {
+    public PluginOptions(String name) {
       this.name = name
-      this.sourceSet = sourceSet
-      this.outputDir = "${outputBaseDir}/${sourceSet}/${name}"
     }
 
     /**
@@ -121,23 +128,6 @@ public class GenerateProtoTask extends DefaultTask {
     @Override
     public String getName() {
       return name
-    }
-
-    /**
-     * Returns the name of the source set that this task is tied with.  In
-     * Android projects, it’s the variant name.  Useful when setting
-     * outputDir.
-     */
-    public String getSourceSet() {
-      return sourceSet
-    }
-
-    /**
-     *  Sets the output dir of this builtin or plugin.  By default it’s
-     *  '$buildDir/generated/source/proto/$sourceSet/$name'
-     */
-    public outputDir(String outputDir) {
-      this.outputDir = outputDir
     }
   }
 
@@ -164,53 +154,86 @@ public class GenerateProtoTask extends DefaultTask {
     return prefix.toString()
   }
 
+  String getOutputDir(PluginOptions plugin) {
+    return "${outputBaseDir}/${plugin.name}"
+  }
+
+  Collection<File> getAllOutputDirs() {
+    ImmutableList.Builder<File> dirs = ImmutableList.builder()
+    builtins.each { builtin ->
+      dirs.add(new File(getOutputDir(builtin)))
+    }
+    plugins.each { plugin ->
+      dirs.add(new File(getOutputDir(plugin)))
+    }
+    return dirs.build()
+  }
+
   @TaskAction
   def compile() {
+    // Only at this point all outputs are finalized, then we can register the
+    // generated source dirs to java compilation.
+
+    // TODO(zhangkun83): does this mean we can actually allow per-plugin output
+    // dir reconfiguraiton? Not actually -- the basedir of all outputs must be
+    // registered to task.outputs before Gradle starts to execute tasks, so
+    // that the task can be correctly skipped.  We may only allow plugins to
+    // output to a customized sub dir, but not to a random place, esp. out of
+    // the pre-designated basedir. I doubt the usefulness of this
+    // configurability given such restriction.
+    if (Utils.isAndroidProject(project)) {
+      variant.registerJavaGeneratingTask(this, getAllOutputDirs())
+    } else {
+      // Add generated java sources to java source sets that will be compiled.
+      getAllOutputDirs().each { dir ->
+        sourceSet.java.srcDir(dir)
+      }
+    }
+
     ToolsLocator tools = project.protobuf.tools
     Set<File> protoFiles = inputs.sourceFiles.files
 
     [builtins, plugins]*.each { plugin ->
-      File outputDir = new File(plugin.outputDir)
+      File outputDir = new File(getOutputDir(plugin))
       outputDir.mkdirs()
     }
 
     def dirs = includeDirs*.path.collect {"-I${it}"}
     logger.debug "ProtobufCompile using directories ${dirs}"
     logger.debug "ProtobufCompile using files ${protoFiles}"
-    def cmd = [ tools.protoc.executablePath ]
+    def cmd = [ tools.protoc.path ]
     cmd.addAll(dirs)
 
     // Handle code generation built-ins
     builtins.each { builtin ->
       String outPrefix = makeOptionsPrefix(builtin.options)
-      cmd += "--${builtin.name}_out=${outPrefix}${builtin.outputDir}"
+      cmd += "--${builtin.name}_out=${outPrefix}${getOutputDir(builtin)}"
     }
 
     // Handle code generation plugins
     plugins.each { plugin ->
       String name = plugin.name
-      ExecutableLocator locator = tools.plugins.get(name)
+      ExecutableLocator locator = tools.plugins.findByName(name)
       if (locator == null) {
         throw new GradleException("Codegen plugin ${name} not defined")
       }
-      String path = locator.executablePath
       String pluginOutPrefix = makeOptionsPrefix(plugin.options)
-      cmd += "--${name}_out=${pluginOutPrefix}${plugin.outputDir}"
-      cmd += "--plugin=protoc-gen-${name}=${path}"
+      cmd += "--${name}_out=${pluginOutPrefix}${getOutputDir(plugin)}"
+      cmd += "--plugin=protoc-gen-${name}=${locator.path}"
     }
 
-        cmd.addAll protoFiles
-        logger.log(LogLevel.INFO, cmd.toString())
-        def stdout = new StringBuffer()
-        def stderr = new StringBuffer()
-        Process result = cmd.execute()
-        result.waitForProcessOutput(stdout, stderr)
-        def output = "protoc: stdout: ${stdout}. stderr: ${stderr}"
-        if (result.exitValue() == 0) {
-            logger.log(LogLevel.INFO, output)
-        } else {
-            throw new InvalidUserDataException(output)
-        }
+    cmd.addAll protoFiles
+    logger.log(LogLevel.INFO, cmd.toString())
+    def stdout = new StringBuffer()
+    def stderr = new StringBuffer()
+    Process result = cmd.execute()
+    result.waitForProcessOutput(stdout, stderr)
+    def output = "protoc: stdout: ${stdout}. stderr: ${stderr}"
+    if (result.exitValue() == 0) {
+      logger.log(LogLevel.INFO, output)
+    } else {
+      throw new GradleException(output)
     }
+  }
 
 }

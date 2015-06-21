@@ -29,6 +29,12 @@
 
 package com.google.protobuf.gradle
 
+import org.gradle.api.GradleException
+import org.gradle.api.NamedDomainObjectContainer
+import org.gradle.api.Project
+import org.gradle.api.artifacts.Configuration
+import org.gradle.api.artifacts.Dependency
+
 /**
  * Holds locations of all external executables, i.e., protoc and plugins.
  */
@@ -48,28 +54,28 @@ class ToolsLocator {
    * For every ExecutableLocator that points to an artifact spec, resolves the
    * spec, downloads the artifact, and point to the local path.
    */
-  resolve() {
+  void resolve() {
     resolve(protoc)
-    if (protoc.executablePath == null) {
-      protoc.executable('protoc')
+    if (protoc.path == null) {
+      protoc.path = 'protoc'
     }
     plugins.each { plugin ->
       resolve(plugin)
-      if (plugin.executablePath == null) {
-        plugin.executable("protoc-gen-${plugin.name}")
+      if (plugin.path == null) {
+        plugin.path = "protoc-gen-${plugin.name}"
       }
     }
   }
 
-  static resolve(ExecutableLocator locator) {
-    if (locator.artifactSpec != null) {
+  void resolve(ExecutableLocator locator) {
+    if (locator.artifact != null) {
       Configuration config = project.configurations.create(locator.name) {
         visible = false
         transitive = false
         extendsFrom = []
       }
       def groupId, artifact, version
-      (groupId, artifact, version) = locator.artifactSpec.split(":")
+      (groupId, artifact, version) = locator.artifact.split(":")
       def notation = [group: groupId,
                       name: artifact,
                       version: version,
@@ -92,7 +98,7 @@ class ToolsLocator {
         throw new GradleException("Cannot set ${file} as executable")
       }
       project.logger.info("Resolved artifact: ${file}")
-      locator.executable(file.path)
+      locator.path = file.path
     }
   }
 }

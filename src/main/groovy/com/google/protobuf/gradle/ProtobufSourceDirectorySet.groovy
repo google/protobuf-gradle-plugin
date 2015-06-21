@@ -1,3 +1,32 @@
+/*
+ * Copyright (c) 2015, Google Inc. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ * list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of the copyright holder nor the names of its contributors
+ * may be used to endorse or promote products derived from this software without
+ * specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 package com.google.protobuf.gradle
 
 import org.gradle.api.Named
@@ -9,74 +38,10 @@ import org.gradle.internal.reflect.Instantiator
 import org.gradle.util.ConfigureUtil
 
 public class ProtobufSourceDirectorySet extends DefaultSourceDirectorySet {
-  private final NamedDomainObjectContainer<PluginOptions> builtins
-  private final NamedDomainObjectContainer<PluginOptions> plugins
 
   public ProtobufSourceDirectorySet(Project project, String name, FileResolver fileResolver) {
     super(name, String.format("%s Proto source", name), fileResolver)
-    builtins = project.container(PluginOptions)
-    builtins.create('java')
-    plugins = project.container(PluginOptions)
     srcDir("src/${name}/proto")
     include("**/*.proto")
-  }
-
-  /**
-   * Adds a built-in output and configure its options.
-   *
-   * <p>Each built-in will be transformed into {@ocde '--<name>_out=[<options>:]<generatedFileDir>'}
-   * in protoc command line.
-   */
-  public ProtobufSourceDirectorySet builtins(Closure configureClosure) {
-    ConfigureUtil.configure(configureClosure, builtins)
-    return this
-  }
-
-  /**
-   * Adds and configures protoc plugins.
-   *
-   * <p>Each plugin will be transformed into {@code '--plugin=protoc-gen-<name>=<path>'} and
-   * {@code '--<name>_out=[<options>:]<generatedFileDir>'} in protoc command line.
-   *
-   * <p>The locations of the plugins are defined in {@code protobufCodeGenPlugins} and
-   * {@code protobufNativeCodeGenPluginDeps}. If the location of the plugin as not been defined,
-   * <code>'${project.projectDir}/protoc-gen-${name}'</code> will be used.
-   */
-  public ProtobufSourceDirectorySet plugins(Closure configureClosure) {
-    ConfigureUtil.configure(configureClosure, plugins)
-    return this
-  }
-
-  public Set<PluginOptions> getPlugins() {
-    return plugins
-  }
-
-  public Set<PluginOptions> getBuiltins() {
-    return builtins
-  }
-
-  public static class PluginOptions implements Named {
-    private final ArrayList<String> options = new ArrayList<String>()
-    private final String name
-
-    public PluginOptions(String name) {
-      this.name = name
-    }
-
-    /**
-     * Adds a plugin option.
-     */
-    public PluginOptions option(String option) {
-      options.add(option)
-      return this
-    }
-
-    public List<String> getOptions() {
-      return options
-    }
-
-    public String getName() {
-      return name
-    }
   }
 }

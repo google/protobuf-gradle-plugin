@@ -24,41 +24,12 @@ configurations {
 
 sourceSets {
   nano {
-    proto {
-      builtins {
-        remove java
-        javanano {
-          option 'java_multiple_files=true'
-        }
-      }
-    }
     compileClasspath += configurations.nanoCompile
   }
   grpc {
-    proto {
-      plugins {
-        // No options. Note the braces cannot be omitted, otherwise the plugin
-        // will not be added. This is because of the implicit way
-        // NamedDomainObjectContainer binds the methods.
-        grpc { }
-      }
-    }
     compileClasspath += configurations.grpcCompile
   }
   grpc_nano {
-    proto {
-      builtins {
-        remove java
-          javanano {
-            option 'ignore_services=true'
-          }
-      }
-      plugins {
-        grpc {
-          option 'nano=true'
-        }
-      }
-    }
     compileClasspath += configurations.grpcCompile
   }
   test {
@@ -88,8 +59,43 @@ dependencies {
     grpcCompile protobufNanoDep, grpcDep
 }
 
-protocDep = 'com.google.protobuf:protoc:3.0.0-alpha-2'
-protobufNativeCodeGenPluginDeps = ['grpc:io.grpc:protoc-gen-grpc-java:0.1.0-SNAPSHOT']
+protobuf {
+  protoc {
+    artifact = 'com.google.protobuf:protoc:3.0.0-alpha-2'
+  }
+  plugins {
+    grpc {
+      artifact = 'io.grpc:protoc-gen-grpc-java:0.1.0-SNAPSHOT'
+    }
+  }
+  generateProtoTasks {
+    ofSourceSet('nano')*.builtins {
+      remove java
+      javanano {
+        option 'java_multiple_files=true'
+      }
+    }
+    ofSourceSet('grpc')*.plugins {
+      // No options. Note the braces cannot be omitted, otherwise the plugin
+      // will not be added. This is because of the implicit way
+      // NamedDomainObjectContainer binds the methods.
+      grpc { }
+    }
+    ofSourceSet('grpc_nano').each { task ->
+      task.builtins {
+        remove java
+        javanano {
+          option 'ignore_services=true'
+        }
+      }
+      task.plugins {
+        grpc {
+          option 'nano=true'
+        }
+      }
+    }
+  }
+}
 
 task printDeps(dependsOn: build) << {
   configurations.each { println it }
