@@ -36,9 +36,11 @@ import org.gradle.api.Project
 import org.gradle.api.internal.file.FileResolver
 import org.gradle.util.ConfigureUtil
 
+/**
+ * Adds the protobuf {} block as a property of the project.
+ */
 class ProtobufConvention {
     def ProtobufConvention(Project project, FileResolver fileResolver) {
-        extractedProtosDir = "${project.buildDir.path}/extracted-protos"
         protobuf = new ProtobufConfigurator(project, fileResolver)
     }
 
@@ -47,9 +49,4 @@ class ProtobufConvention {
     def protobuf(Closure configureClosure) {
         ConfigureUtil.configure(configureClosure, protobuf)
     }
-
-    /**
-     * Directory to extract proto files into
-     */
-    def String extractedProtosDir
 }

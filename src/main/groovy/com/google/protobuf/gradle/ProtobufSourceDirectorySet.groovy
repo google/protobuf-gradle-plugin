@@ -37,6 +37,9 @@ import org.gradle.api.internal.file.FileResolver
 import org.gradle.internal.reflect.Instantiator
 import org.gradle.util.ConfigureUtil
 
+/**
+ * The backing class of the proto extension added to sourceSets, e.g., sourceSets.main.proto
+ */
 public class ProtobufSourceDirectorySet extends DefaultSourceDirectorySet {
 
   public ProtobufSourceDirectorySet(Project project, String name, FileResolver fileResolver) {

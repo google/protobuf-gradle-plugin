@@ -104,7 +104,21 @@ public class ProtobufConfigurator {
   public class AndroidGenerateProtoTaskCollection
       extends GenerateProtoTaskCollection {
     public Collection<GenerateProtoTask> ofFlavor(String flavor) {
-      return []
+      return all().findAll { task ->
+        task.flavors.contains(flavor)
+      }
+    }
+
+    public Collection<GenerateProtoTask> ofBuildType(String buildType) {
+      return all().findAll { task ->
+        task.buildType == buildType
+      }
+    }
+
+    public Collection<GenerateProtoTask> ofVariant(String variant) {
+      return all().findAll { task ->
+        task.variant.name == variant
+      }
     }
   }
 

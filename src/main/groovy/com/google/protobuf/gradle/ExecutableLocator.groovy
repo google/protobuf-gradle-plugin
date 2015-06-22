@@ -34,14 +34,14 @@ import org.gradle.api.Named
 /**
  * Locates an executable that can either be found locally or downloaded from
  * repositories.  If configured multiple times, the last call wins.  If never
- * configured, will run from system search path.
+ * configured, the plugin should try to run the executable from system search
+ * path.
  */
 public class ExecutableLocator implements Named {
 
   private final String name
 
   private String artifact
-
   private String path
 
   public ExecutableLocator(String name) {
@@ -54,8 +54,8 @@ public class ExecutableLocator implements Named {
   }
 
   /**
-   * Specifies an executable to be downloaded from repositories.
-   * spec format: '<groupId>:<artifactId>:<version>'
+   * Specifies an artifact spec for downloading the executable from
+   * repositories. spec format: '<groupId>:<artifactId>:<version>'
    */
   public artifact(String spec) {
     this.artifact = spec
@@ -63,7 +63,7 @@ public class ExecutableLocator implements Named {
   }
 
   /**
-   * Specifies a local executable.
+   * Specifies a local path.
    */
   public setPath(String path) {
     this.path = path

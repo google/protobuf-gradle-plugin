@@ -29,10 +29,10 @@
  */
 package com.google.protobuf.gradle
 
+import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.logging.LogLevel
-import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
@@ -41,31 +41,101 @@ import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
 import org.gradle.util.ConfigureUtil
 
+/**
+ * The task that compiles proto files into Java files.
+ */
 public class GenerateProtoTask extends DefaultTask {
 
-  @Input
   private final List includeDirs = new ArrayList()
-
-  private final ToolsLocator toolsLocator
-
   private final NamedDomainObjectContainer<PluginOptions> builtins
   private final NamedDomainObjectContainer<PluginOptions> plugins
 
+  // These fields are set by the Protobuf plugin only when initializing the
+  // task.  Ideally they should be final fields, but Gradle task cannot have
+  // constructor arguments. We use the initializing flag to prevent users from
+  // accidentally modifying them.
   private String outputBaseDir
+  // Tags for selectors inside protobuf.generateProtoTasks
+  private SourceSet sourceSet
+  private Object variant
+  private ImmutableList<String> flavors
+  private String buildType
 
-  SourceSet sourceSet
-  Object variant
-  Collection<String> flavors
-  String buildType
+  private boolean initializing = true
+  private void checkInitializing() {
+    Preconditions.checkState(initializing, 'Should not be called after initilization has finished')
+  }
+
+  void setOutputBaseDir(String outputBaseDir) {
+    checkInitializing()
+    Preconditions.checkState(this.outputBaseDir == null, 'outputBaseDir is already set')
+    this.outputBaseDir = outputBaseDir
+    outputs.dir outputBaseDir
+  }
+
+  void setSourceSet(SourceSet sourceSet) {
+    checkInitializing()
+    Preconditions.checkState(!Utils.isAndroidProject(project),
+        'sourceSet should not be set in an Android project')
+    this.sourceSet = sourceSet
+  }
+
+  void setVariant(Object variant) {
+    checkInitializing()
+    Preconditions.checkState(Utils.isAndroidProject(project),
+        'variant should not be set in a Java project')
+    this.variant = variant
+  }
+
+  void setFlavors(ImmutableList<String> flavors) {
+    checkInitializing()
+    Preconditions.checkState(Utils.isAndroidProject(project),
+        'flavors should not be set in a Java project')
+    this.flavors = flavors
+  }
+
+  void setBuildType(String buildType) {
+    checkInitializing()
+    Preconditions.checkState(Utils.isAndroidProject(project),
+        'buildType should not be set in a Java project')
+    this.buildType = buildType
+  }
+
+  SourceSet getSourceSet() {
+    Preconditions.checkState(!Utils.isAndroidProject(project),
+        'sourceSet should not be used in an Android project')
+    Preconditions.checkNotNull(sourceSet, 'sourceSet is not set')
+    return sourceSet
+  }
+
+  Object getVariant() {
+    Preconditions.checkState(Utils.isAndroidProject(project),
+        'variant should not be used in a Java project')
+    Preconditions.checkNotNull(variant, 'variant is not set')
+    return variant
+  }
+
+  ImmutableList<String> getFlavors() {
+    Preconditions.checkState(Utils.isAndroidProject(project),
+        'flavors should not be used in a Java project')
+    Preconditions.checkNotNull(flavors, 'flavors is not set')
+    return flavors
+  }
+
+  String getBuildType() {
+    Preconditions.checkState(Utils.isAndroidProject(project),
+        'buildType should not be used in a Java project')
+    Preconditions.checkNotNull(buildType, 'buildType is not set')
+    return buildType
+  }
+
+  void doneInitializing() {
+    initializing = false
+  }
 
   public GenerateProtoTask() {
     builtins = project.container(PluginOptions)
     plugins = project.container(PluginOptions)
-  }
-
-  public void setOutputBaseDir(String outputBaseDir) {
-    this.outputBaseDir = outputBaseDir
-    outputs.dir outputBaseDir
   }
 
   //===========================================================================
@@ -171,10 +241,12 @@ public class GenerateProtoTask extends DefaultTask {
 
   @TaskAction
   def compile() {
+    Preconditions.checkState(!initializing, 'doneInitializing() has not been called')
+
     // Only at this point all outputs are finalized, then we can register the
     // generated source dirs to java compilation.
 
-    // TODO(zhangkun83): does this mean we can actually allow per-plugin output
+    // NOTE(zhangkun83): does this mean we can actually allow per-plugin output
     // dir reconfiguraiton? Not actually -- the basedir of all outputs must be
     // registered to task.outputs before Gradle starts to execute tasks, so
     // that the task can be correctly skipped.  We may only allow plugins to

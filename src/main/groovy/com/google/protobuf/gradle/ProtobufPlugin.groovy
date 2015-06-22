@@ -63,7 +63,6 @@ class ProtobufPlugin implements Plugin<Project> {
     void apply(final Project project) {
         def gv = project.gradle.gradleVersion =~ "(\\d*)\\.(\\d*).*"
         if (!gv || !gv.matches() || gv.group(1).toInteger() < 2 || gv.group(2).toInteger() < 2) {
-            //throw new UnsupportedVersionException
             println("You are using Gradle ${project.gradle.gradleVersion}: This version of the protobuf plugin requires minimum Gradle version 2.2")
         }
 
@@ -81,7 +80,10 @@ class ProtobufPlugin implements Plugin<Project> {
           createConfiguration(project, sourceSet.name)
         }
         project.afterEvaluate {
+          // The Android variants are only available at this point.
           addProtoTasks(project)
+          // protoc and codegen plugin configuration may change through the protobuf{}
+          // block. Only at this point the configuration has been finalized.
           project.protobuf.tools.resolve()
         }
     }
@@ -102,7 +104,8 @@ class ProtobufPlugin implements Plugin<Project> {
     }
 
     /**
-     * Adds the proto extension to all SourceSets.
+     * Adds the proto extension to all SourceSets, e.g., it creates
+     * sourceSets.main.proto and sourceSets.test.proto.
      */
     private addSourceSetExtensions(Project project) {
       getSourceSets(project).all {  sourceSet ->
@@ -110,6 +113,9 @@ class ProtobufPlugin implements Plugin<Project> {
       }
     }
 
+    /**
+     * Returns the sourceSets container of a Java or an Android project.
+     */
     private Object getSourceSets(Project project) {
       if (Utils.isAndroidProject(project)) {
         return project.android.sourceSets
@@ -118,6 +124,9 @@ class ProtobufPlugin implements Plugin<Project> {
       }
     }
 
+    /**
+     * Adds Protobuf-related tasks to the project.
+     */
     private addProtoTasks(Project project) {
       if (Utils.isAndroidProject(project)) {
         def variants = project.android.hasProperty('libraryVariants') ?
@@ -132,15 +141,19 @@ class ProtobufPlugin implements Plugin<Project> {
       }
     }
 
-    private def addTasksForSourceSet(Project project, SourceSet sourceSet) {
+    /**
+     * Creates Protobuf tasks for a sourceSet in a Java project.
+     */
+    private def addTasksForSourceSet(final Project project, final SourceSet sourceSet) {
       def generateProtoTaskName = 'generate' +
           Utils.getSourceSetSubstringForTaskNames(sourceSet.name) + 'Proto'
+      final String extractedProtosDir = "${project.buildDir}/extracted-protos/${sourceSet.name}"
       def generateProtoTask = project.tasks.create(generateProtoTaskName, GenerateProtoTask) {
         description = "Compiles Proto source for sourceSet '${sourceSet.name}'"
-        outputBaseDir = "${project.buildDir}/generated/source/proto/${sourceSet.name}"
+        outputBaseDir = "${project.protobuf.generatedFilesBaseDir}/${sourceSet.name}"
         // Include extracted sources
         ConfigurableFileTree extractedProtoSources =
-            project.fileTree("${project.extractedProtosDir}/${sourceSet.name}") {
+            project.fileTree(extractedProtosDir) {
               include "**/*.proto"
             }
         inputs.source extractedProtoSources
@@ -153,6 +166,7 @@ class ProtobufPlugin implements Plugin<Project> {
       }
 
       generateProtoTask.sourceSet = sourceSet
+      generateProtoTask.doneInitializing()
       generateProtoTask.builtins {
         java {}
       }
@@ -161,7 +175,7 @@ class ProtobufPlugin implements Plugin<Project> {
           Utils.getSourceSetSubstringForTaskNames(sourceSet.name) + 'Proto'
       project.tasks.create(extractProtosTaskName, ProtobufExtract) {
           description = "Extracts proto files/dependencies specified by 'protobuf' configuration"
-          extractedProtosDir = project.file("${project.extractedProtosDir}/${sourceSet.name}")
+          destDir = extractedProtosDir as File
           configName = Utils.getConfigName(sourceSet.name)
       }
       def extractProtosTask = project.tasks.getByName(extractProtosTaskName)
@@ -171,20 +185,23 @@ class ProtobufPlugin implements Plugin<Project> {
       project.tasks.getByName(compileJavaTaskName).dependsOn(generateProtoTask)
     }
 
-    private def addTasksForVariant(Project project, Object variant) {
+    /**
+     * Creates Protobuf tasks for a variant in an Android project.
+     */
+    private def addTasksForVariant(final Project project, final Object variant) {
       // The collection of sourceSets that will be compiled for this variant
       def sourceSetNames = new ArrayList()
       def sourceSets = new ArrayList()
-      // TODO(zhangkun83): it seems all variants will compile the sources under
+      // TODO(zhangkun83): it seems all variants will include the sources under
       // main. Is it the case?
       sourceSetNames.add 'main'
       sourceSetNames.add variant.name
       sourceSetNames.add variant.buildType.name
-      ImmutableList.Builder<String> flavors = ImmutableList.builder()
+      ImmutableList.Builder<String> flavorListBuilder = ImmutableList.builder()
       if (variant.hasProperty('productFlavors')) {
         variant.productFlavors.each { flavor ->
           sourceSetNames.add flavor.name
-          flavors.add flavor.name
+          flavorListBuilder.add flavor.name
         }
       }
       sourceSetNames.each { sourceSetName ->
@@ -197,7 +214,7 @@ class ProtobufPlugin implements Plugin<Project> {
       def generateProtoTaskName = "generate${variant.name}Proto"
       def generateProtoTask = project.tasks.create(generateProtoTaskName, GenerateProtoTask) {
         description = "Compiles Proto source for variant '${variant.name}'"
-        outputBaseDir = "${project.buildDir}/generated/source/proto/${variant.name}"
+        outputBaseDir = "${project.protobuf.generatedFilesBaseDir}/${variant.name}"
         // TODO(zhangkun83): include extracted protos?
         sourceSets.each { sourceSet ->
           ProtobufSourceDirectorySet protoSrcDirSet = sourceSet.proto
@@ -209,18 +226,20 @@ class ProtobufPlugin implements Plugin<Project> {
       }
 
       generateProtoTask.variant = variant
+      generateProtoTask.flavors = flavorListBuilder.build()
       generateProtoTask.buildType = variant.buildType
-      generateProtoTask.flavors = flavors.build()
+      generateProtoTask.doneInitializing()
       generateProtoTask.builtins {
         javanano {}
       }
 
       // TODO(zhangkun83): create extraction tasks?
 
-      // TODO(zhangkun83): at this point we have not decided all the protoc
-      // outputs. We will call this again in GenerateProtoTask.compile() when
-      // all outputs are finalized. I am not sure the second call will work
-      // though.
+      // At this point we have not decided all the protoc outputs, but we need
+      // to register the task to the variant so that the variant can make Java
+      // compilation tasks depend on the generateProto task. We will call this
+      // again in GenerateProtoTask.compile() with all output dirs when they
+      // are finalized.
       variant.registerJavaGeneratingTask(generateProtoTask)
     }
 }

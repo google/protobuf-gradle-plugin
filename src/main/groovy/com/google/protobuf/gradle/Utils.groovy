@@ -34,11 +34,18 @@ import org.gradle.api.Project
 import org.gradle.api.tasks.SourceSet
 
 class Utils {
+  /**
+   * Returns the conventional name of a configuration for a sourceSet
+   */
   static String getConfigName(String sourceSetName) {
     return sourceSetName == SourceSet.MAIN_SOURCE_SET_NAME ?
         "protobuf" : (sourceSetName + "Protobuf")
   }
 
+  /**
+   * Returns the conventional substring that represents the sourceSet in task names,
+   * e.g., "generate<sourceSetStubString>Proto"
+   */
   static String getSourceSetSubstringForTaskNames(String sourceSetName) {
     return sourceSetName == SourceSet.MAIN_SOURCE_SET_NAME ?
         '' : StringUtils.capitalize(sourceSetName)
