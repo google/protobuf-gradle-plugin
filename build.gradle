@@ -20,7 +20,7 @@ apply plugin: "com.gradle.plugin-publish"
 apply plugin: 'signing'
 
 group = 'com.google.protobuf'
-version = '0.4.2-SNAPSHOT'
+version = '0.5.0-SNAPSHOT'
 
 ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
 
