@@ -82,6 +82,7 @@ class ProtobufPlugin implements Plugin<Project> {
         project.afterEvaluate {
           // The Android variants are only available at this point.
           addProtoTasks(project)
+          project.protobuf.runTaskConfigClosures()
           // protoc and codegen plugin configuration may change through the protobuf{}
           // block. Only at this point the configuration has been finalized.
           project.protobuf.tools.resolve()

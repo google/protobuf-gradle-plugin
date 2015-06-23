@@ -42,6 +42,7 @@ public class ProtobufConfigurator {
   private final Project project
   private final GenerateProtoTaskCollection tasks
   private final ToolsLocator tools
+  private final ArrayList<Closure> taskConfigClosures
 
   /**
    * The base directory of generated files. The default is
@@ -57,7 +58,14 @@ public class ProtobufConfigurator {
       tasks = new JavaGenerateProtoTaskCollection()
     }
     tools = new ToolsLocator(project)
+    taskConfigClosures = new ArrayList()
     generatedFilesBaseDir = "${project.buildDir}/generated/source/proto"
+  }
+
+  void runTaskConfigClosures() {
+    taskConfigClosures.each { closure ->
+      ConfigureUtil.configure(closure, tasks)
+    }
   }
 
   //===========================================================================
@@ -87,10 +95,7 @@ public class ProtobufConfigurator {
    * Java or Android.
    */
   public void generateProtoTasks(Closure configureClosure) {
-    // TODO(zhangkun83): make sure to run it after tasks are generated
-    project.afterEvaluate {
-      ConfigureUtil.configure(configureClosure, tasks)
-    }
+    taskConfigClosures.add(configureClosure)
   }
 
   public class GenerateProtoTaskCollection {
