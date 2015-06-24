@@ -98,6 +98,35 @@ protobuf {
   }
 }
 
+def assertJavaCompileHasProtoGeneratedDir(
+    String sourceSet, Collection<String> codegenPlugins) {
+  def compileJavaTask = tasks.getByName(
+      sourceSets.getByName(sourceSet).getCompileTaskName("java"))
+  def baseDir = "$buildDir/generated/source/proto/$sourceSet" as File
+  // The expected direct subdirectories under baseDir
+  def expectedDirs = codegenPlugins.collect { codegenPlugin ->
+    "$buildDir/generated/source/proto/$sourceSet/$codegenPlugin" as File
+  } as Set
+
+  def actualDirs = new HashSet()
+  compileJavaTask.source.visit { fileVisitDetails ->
+    // If the visited file is or is under a direct subdirectory of baseDir, add
+    // that subdirectory to actualDirs.
+    def file = fileVisitDetails.file
+    while (true) {
+      if (file.parentFile == baseDir) {
+        println 'XXX ' + file
+        actualDirs.add file
+      }
+      if (file.parentFile == null) {
+        break
+      }
+      file = file.parentFile
+    }
+  }
+  org.junit.Assert.assertEquals(expectedDirs, actualDirs)
+}
+
 test.doLast {
   def tasks = protobuf.generateProtoTasks
   org.junit.Assert.assertEquals(
@@ -110,4 +139,9 @@ test.doLast {
   org.junit.Assert.assertEquals(
       ['generateNanoProto'] as Set,
        tasks.ofSourceSet('nano').collect({ it.name }) as Set)
+  assertJavaCompileHasProtoGeneratedDir('main', ['java'])
+  assertJavaCompileHasProtoGeneratedDir('test', ['java'])
+  assertJavaCompileHasProtoGeneratedDir('nano', ['javanano'])
+  assertJavaCompileHasProtoGeneratedDir('grpc', ['java', 'grpc'])
+  assertJavaCompileHasProtoGeneratedDir('grpc_nano', ['javanano', 'grpc'])
 }

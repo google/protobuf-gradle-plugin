@@ -127,9 +127,10 @@ lists pre-compiled ``protoc`` artifacts that can be used by this plugin.
 
 After you made any change to the plugin, be sure to run these tests.
 ```
-$ ./gradlew install && ./gradlew clean test
+$ ./gradlew install && ./gradlew clean test && ./gradlew test
 ```
 The tests use the plugin installed in Maven local repo, so you must install
 it before testing it. We cannot make the tests depend the plugin project
 directly, because the test projects apply the plugin at evaluation time. At
-evaluation time the plugin project has not been compiled yet.
+evaluation time the plugin project has not been compiled yet. The second test
+run is to make sure incremental build works.

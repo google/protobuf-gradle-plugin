@@ -44,6 +44,7 @@ import org.gradle.util.ConfigureUtil
 /**
  * The task that compiles proto files into Java files.
  */
+// TODO(zhangkun83): add per-plugin output dir reconfiguraiton.
 public class GenerateProtoTask extends DefaultTask {
 
   private final List includeDirs = new ArrayList()
@@ -242,25 +243,6 @@ public class GenerateProtoTask extends DefaultTask {
   @TaskAction
   def compile() {
     Preconditions.checkState(!initializing, 'doneInitializing() has not been called')
-
-    // Only at this point all outputs are finalized, then we can register the
-    // generated source dirs to java compilation.
-
-    // NOTE(zhangkun83): does this mean we can actually allow per-plugin output
-    // dir reconfiguraiton? Not actually -- the basedir of all outputs must be
-    // registered to task.outputs before Gradle starts to execute tasks, so
-    // that the task can be correctly skipped.  We may only allow plugins to
-    // output to a customized sub dir, but not to a random place, esp. out of
-    // the pre-designated basedir. I doubt the usefulness of this
-    // configurability given such restriction.
-    if (Utils.isAndroidProject(project)) {
-      variant.registerJavaGeneratingTask(this, getAllOutputDirs())
-    } else {
-      // Add generated java sources to java source sets that will be compiled.
-      getAllOutputDirs().each { dir ->
-        sourceSet.java.srcDir(dir)
-      }
-    }
 
     ToolsLocator tools = project.protobuf.tools
     Set<File> protoFiles = inputs.sourceFiles.files

@@ -48,6 +48,7 @@ import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
+import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.tooling.UnsupportedVersionException
 import org.gradle.util.CollectionUtils
 
@@ -186,8 +187,9 @@ class ProtobufPlugin implements Plugin<Project> {
       def extractProtosTask = project.tasks.getByName(extractProtosTaskName)
       generateProtoTask.dependsOn(extractProtosTask)
 
-      String compileJavaTaskName = sourceSet.getCompileTaskName("java");
-      project.tasks.getByName(compileJavaTaskName).dependsOn(generateProtoTask)
+      def compileJavaTask = project.tasks.getByName(sourceSet.getCompileTaskName("java"))
+      compileJavaTask.dependsOn(generateProtoTask)
+      addGeneratedOutputToJavaSource(project, generateProtoTask, compileJavaTask)
     }
 
     /**
@@ -245,9 +247,22 @@ class ProtobufPlugin implements Plugin<Project> {
 
       // At this point we have not decided all the protoc outputs, but we need
       // to register the task to the variant so that the variant can make Java
-      // compilation tasks depend on the generateProto task. We will call this
-      // again in GenerateProtoTask.compile() with all output dirs when they
-      // are finalized.
+      // compilation tasks depend on the generateProto task.
       variant.registerJavaGeneratingTask(generateProtoTask)
+      addGeneratedOutputToJavaSource(project, generateProtoTask, variant.javaCompile)
+    }
+
+    private def addGeneratedOutputToJavaSource(Project project,
+        GenerateProtoTask generateProtoTask, JavaCompile javaCompileTask) {
+      project.gradle.taskGraph.beforeTask { task ->
+        // Only at this point are all outputs finalized, then we can register
+        // the generated source dirs to java compilation.
+        if (task.is(javaCompileTask)) {
+          // Add generated java sources to java source sets that will be compiled.
+          generateProtoTask.getAllOutputDirs().each { dir ->
+            javaCompileTask.source project.fileTree(dir: dir)
+          }
+        }
+      }
     }
 }
