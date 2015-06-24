@@ -98,6 +98,14 @@ public class ProtobufConfigurator {
     taskConfigClosures.add(configureClosure)
   }
 
+  /**
+   * Returns the collection of generateProto tasks.
+   * Note the tasks are available only after project evaluation.
+   */
+  public GenerateProtoTaskCollection getGenerateProtoTasks() {
+    return tasks
+  }
+
   public class GenerateProtoTaskCollection {
     public Collection<GenerateProtoTask> all() {
       return project.tasks.findAll { task ->

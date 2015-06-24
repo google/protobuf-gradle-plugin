@@ -5,6 +5,7 @@ buildscript {
   }
   dependencies {
     classpath "com.google.protobuf:protobuf-gradle-plugin:${rootProject.version}"
+    classpath 'junit:junit:4.7'
   }
 }
 apply plugin: 'java'
@@ -44,7 +45,7 @@ sourceSets {
 
 def protobufDep = 'com.google.protobuf:protobuf-java:3.0.0-alpha-2'
 def protobufNanoDep = 'com.google.protobuf.nano:protobuf-javanano:3.0.0-alpha-2'
-def grpcDep = 'io.grpc:grpc-all:0.1.0-SNAPSHOT'
+def grpcDep = 'io.grpc:grpc-all:0.7.0'
 
 dependencies {
     compile protobufDep
@@ -65,7 +66,7 @@ protobuf {
   }
   plugins {
     grpc {
-      artifact = 'io.grpc:protoc-gen-grpc-java:0.1.0-SNAPSHOT'
+      artifact = 'io.grpc:protoc-gen-grpc-java:0.7.0'
     }
   }
   generateProtoTasks {
@@ -97,13 +98,16 @@ protobuf {
   }
 }
 
-task printDeps(dependsOn: build) << {
-  configurations.each { println it }
-  sourceSets.each { println it.getCompileTaskName("proto") }
-  sourceSets.each { println it.getCompileTaskName("java") }
-  sourceSets.each { println it }
-  println tasks['generateProto'].source
-  println tasks['compileJava'].source
-  println project.buildDir
-  println project.buildDir.path
+test.doLast {
+  def tasks = protobuf.generateProtoTasks
+  org.junit.Assert.assertEquals(
+      ['generateProto', 'generateNanoProto', 'generateGrpcProto',
+       'generateGrpc_nanoProto', 'generateTestProto'] as Set,
+       tasks.all().collect({ it.name }) as Set)
+  org.junit.Assert.assertEquals(
+      ['generateProto'] as Set,
+       tasks.ofSourceSet('main').collect({ it.name }) as Set)
+  org.junit.Assert.assertEquals(
+      ['generateNanoProto'] as Set,
+       tasks.ofSourceSet('nano').collect({ it.name }) as Set)
 }

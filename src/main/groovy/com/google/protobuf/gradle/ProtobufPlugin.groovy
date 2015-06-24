@@ -31,6 +31,7 @@
 package com.google.protobuf.gradle
 
 import com.google.common.collect.ImmutableList
+import org.apache.commons.lang.StringUtils
 import org.gradle.api.Action
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.SourceDirectorySet
@@ -133,7 +134,10 @@ class ProtobufPlugin implements Plugin<Project> {
         def variants = project.android.hasProperty('libraryVariants') ?
             project.android.libraryVariants : project.android.applicationVariants
         variants.each { variant ->
-          addTasksForVariant(project, variant)
+          addTasksForVariant(project, variant, false)
+        }
+        project.android.testVariants.each { testVariant ->
+          addTasksForVariant(project, testVariant, true)
         }
       } else {
         getSourceSets(project).each { sourceSet ->
@@ -189,13 +193,16 @@ class ProtobufPlugin implements Plugin<Project> {
     /**
      * Creates Protobuf tasks for a variant in an Android project.
      */
-    private def addTasksForVariant(final Project project, final Object variant) {
+    private def addTasksForVariant(final Project project, final Object variant,
+        final boolean isTestVariant) {
       // The collection of sourceSets that will be compiled for this variant
       def sourceSetNames = new ArrayList()
       def sourceSets = new ArrayList()
-      // TODO(zhangkun83): it seems all variants will include the sources under
-      // main. Is it the case?
-      sourceSetNames.add 'main'
+      if (!isTestVariant) {
+        // TODO(zhangkun83): it seems all non-test variants will include the
+        // main sourceSet. Is it the case?
+        sourceSetNames.add 'main'
+      }
       sourceSetNames.add variant.name
       sourceSetNames.add variant.buildType.name
       ImmutableList.Builder<String> flavorListBuilder = ImmutableList.builder()
@@ -212,7 +219,7 @@ class ProtobufPlugin implements Plugin<Project> {
         }
       }
 
-      def generateProtoTaskName = "generate${variant.name}Proto"
+      def generateProtoTaskName = 'generate' + StringUtils.capitalize(variant.name) + 'Proto'
       def generateProtoTask = project.tasks.create(generateProtoTaskName, GenerateProtoTask) {
         description = "Compiles Proto source for variant '${variant.name}'"
         outputBaseDir = "${project.protobuf.generatedFilesBaseDir}/${variant.name}"
@@ -228,7 +235,7 @@ class ProtobufPlugin implements Plugin<Project> {
 
       generateProtoTask.variant = variant
       generateProtoTask.flavors = flavorListBuilder.build()
-      generateProtoTask.buildType = variant.buildType
+      generateProtoTask.buildType = variant.buildType.name
       generateProtoTask.doneInitializing()
       generateProtoTask.builtins {
         javanano {}
