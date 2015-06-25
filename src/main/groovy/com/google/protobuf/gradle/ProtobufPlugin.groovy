@@ -85,6 +85,7 @@ class ProtobufPlugin implements Plugin<Project> {
           // The Android variants are only available at this point.
           addProtoTasks(project)
           project.protobuf.runTaskConfigClosures()
+          linkGenerateProtoTasksToJavaCompile(project)
           // protoc and codegen plugin configuration may change through the protobuf{}
           // block. Only at this point the configuration has been finalized.
           project.protobuf.tools.resolve()
@@ -127,14 +128,17 @@ class ProtobufPlugin implements Plugin<Project> {
       }
     }
 
+    private Object getNonTestVariants(Project project) {
+      return project.android.hasProperty('libraryVariants') ?
+          project.android.libraryVariants : project.android.applicationVariants
+    }
+
     /**
      * Adds Protobuf-related tasks to the project.
      */
     private addProtoTasks(Project project) {
       if (Utils.isAndroidProject(project)) {
-        def variants = project.android.hasProperty('libraryVariants') ?
-            project.android.libraryVariants : project.android.applicationVariants
-        variants.each { variant ->
+        getNonTestVariants(project).each { variant ->
           addTasksForVariant(project, variant, false)
         }
         project.android.testVariants.each { testVariant ->
@@ -186,10 +190,6 @@ class ProtobufPlugin implements Plugin<Project> {
       }
       def extractProtosTask = project.tasks.getByName(extractProtosTaskName)
       generateProtoTask.dependsOn(extractProtosTask)
-
-      def compileJavaTask = project.tasks.getByName(sourceSet.getCompileTaskName("java"))
-      compileJavaTask.dependsOn(generateProtoTask)
-      addGeneratedOutputToJavaSource(project, generateProtoTask, compileJavaTask)
     }
 
     /**
@@ -200,9 +200,11 @@ class ProtobufPlugin implements Plugin<Project> {
       // The collection of sourceSets that will be compiled for this variant
       def sourceSetNames = new ArrayList()
       def sourceSets = new ArrayList()
-      if (!isTestVariant) {
-        // TODO(zhangkun83): it seems all non-test variants will include the
-        // main sourceSet. Is it the case?
+      if (isTestVariant) {
+        // All test variants will include the androidTest sourceSet
+        sourceSetNames.add 'androidTest'
+      } else {
+        // All non-test variants will include the main sourceSet
         sourceSetNames.add 'main'
       }
       sourceSetNames.add variant.name
@@ -215,10 +217,7 @@ class ProtobufPlugin implements Plugin<Project> {
         }
       }
       sourceSetNames.each { sourceSetName ->
-        def sourceSet = project.android.sourceSets.findByName(sourceSetName)
-        if (sourceSet != null) {
-          sourceSets.add sourceSet
-        }
+        sourceSets.add project.android.sourceSets.maybeCreate(sourceSetName)
       }
 
       def generateProtoTaskName = 'generate' + StringUtils.capitalize(variant.name) + 'Proto'
@@ -235,7 +234,7 @@ class ProtobufPlugin implements Plugin<Project> {
         }
       }
 
-      generateProtoTask.variant = variant
+      generateProtoTask.setVariant(variant, isTestVariant)
       generateProtoTask.flavors = flavorListBuilder.build()
       generateProtoTask.buildType = variant.buildType.name
       generateProtoTask.doneInitializing()
@@ -244,23 +243,24 @@ class ProtobufPlugin implements Plugin<Project> {
       }
 
       // TODO(zhangkun83): create extraction tasks?
-
-      // At this point we have not decided all the protoc outputs, but we need
-      // to register the task to the variant so that the variant can make Java
-      // compilation tasks depend on the generateProto task.
-      variant.registerJavaGeneratingTask(generateProtoTask)
-      addGeneratedOutputToJavaSource(project, generateProtoTask, variant.javaCompile)
     }
 
-    private def addGeneratedOutputToJavaSource(Project project,
-        GenerateProtoTask generateProtoTask, JavaCompile javaCompileTask) {
-      project.gradle.taskGraph.beforeTask { task ->
-        // Only at this point are all outputs finalized, then we can register
-        // the generated source dirs to java compilation.
-        if (task.is(javaCompileTask)) {
-          // Add generated java sources to java source sets that will be compiled.
-          generateProtoTask.getAllOutputDirs().each { dir ->
-            javaCompileTask.source project.fileTree(dir: dir)
+    private def linkGenerateProtoTasksToJavaCompile(Project project) {
+      if (Utils.isAndroidProject(project)) {
+        (getNonTestVariants(project) + project.android.testVariants).each { variant ->
+          project.protobuf.generateProtoTasks.ofVariant(variant.name).each { generateProtoTask ->
+            // This cannot be called once task execution has started
+            variant.registerJavaGeneratingTask(generateProtoTask, generateProtoTask.getAllOutputDirs())
+          }
+        }
+      } else {
+        project.sourceSets.each { sourceSet ->
+          def javaCompileTask = project.tasks.getByName(sourceSet.getCompileTaskName("java"))
+          project.protobuf.generateProtoTasks.ofSourceSet(sourceSet.name).each { generateProtoTask ->
+            javaCompileTask.dependsOn(generateProtoTask)
+            generateProtoTask.getAllOutputDirs().each { dir ->
+              javaCompileTask.source project.fileTree(dir: dir)
+            }
           }
         }
       }

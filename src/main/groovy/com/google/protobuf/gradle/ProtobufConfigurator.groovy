@@ -133,6 +133,12 @@ public class ProtobufConfigurator {
         task.variant.name == variant
       }
     }
+    public Collection<GenerateProtoTask> ofNonTest() {
+      return all().findAll { task -> !task.isTestVariant }
+    }
+    public Collection<GenerateProtoTask> ofTest() {
+      return all().findAll { task -> task.isTestVariant }
+    }
   }
 
   public class JavaGenerateProtoTaskCollection

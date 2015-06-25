@@ -61,6 +61,7 @@ public class GenerateProtoTask extends DefaultTask {
   private Object variant
   private ImmutableList<String> flavors
   private String buildType
+  private boolean isTestVariant
 
   private boolean initializing = true
   private void checkInitializing() {
@@ -81,11 +82,12 @@ public class GenerateProtoTask extends DefaultTask {
     this.sourceSet = sourceSet
   }
 
-  void setVariant(Object variant) {
+  void setVariant(Object variant, boolean isTestVariant) {
     checkInitializing()
     Preconditions.checkState(Utils.isAndroidProject(project),
         'variant should not be set in a Java project')
     this.variant = variant
+    this.isTestVariant = isTestVariant
   }
 
   void setFlavors(ImmutableList<String> flavors) {
@@ -114,6 +116,13 @@ public class GenerateProtoTask extends DefaultTask {
         'variant should not be used in a Java project')
     Preconditions.checkNotNull(variant, 'variant is not set')
     return variant
+  }
+
+  boolean getIsTestVariant() {
+    Preconditions.checkState(Utils.isAndroidProject(project),
+        'isTestVariant should not be used in a Java project')
+    Preconditions.checkNotNull(variant, 'variant is not set')
+    return isTestVariant
   }
 
   ImmutableList<String> getFlavors() {
