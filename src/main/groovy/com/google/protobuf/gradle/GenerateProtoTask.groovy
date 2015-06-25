@@ -63,9 +63,19 @@ public class GenerateProtoTask extends DefaultTask {
   private String buildType
   private boolean isTestVariant
 
-  private boolean initializing = true
+  private static enum State {
+    INIT, CONFIG, FINALIZED
+  }
+
+  private State state = State.INIT
+
   private void checkInitializing() {
-    Preconditions.checkState(initializing, 'Should not be called after initilization has finished')
+    Preconditions.checkState(state == State.INIT, 'Should not be called after initilization has finished')
+  }
+
+  private void checkCanConfig() {
+    Preconditions.checkState(state == State.CONFIG || state == State.INIT,
+        'Should not be called after configuration has finished')
   }
 
   void setOutputBaseDir(String outputBaseDir) {
@@ -140,7 +150,13 @@ public class GenerateProtoTask extends DefaultTask {
   }
 
   void doneInitializing() {
-    initializing = false
+    Preconditions.checkState(state == State.INIT, "Invalid state: ${state}")
+    state = State.CONFIG
+  }
+
+  void doneConfig() {
+    Preconditions.checkState(state == State.CONFIG, "Invalid state: ${state}")
+    state = State.FINALIZED
   }
 
   public GenerateProtoTask() {
@@ -157,6 +173,7 @@ public class GenerateProtoTask extends DefaultTask {
    * NamedDomainObjectContainer<PluginOptions>.
    */
   public void builtins(Closure configureClosure) {
+    checkCanConfig()
     ConfigureUtil.configure(configureClosure, builtins)
   }
 
@@ -165,6 +182,7 @@ public class GenerateProtoTask extends DefaultTask {
    * NamedDomainObjectContainer<PluginOptions>.
    */
   public void plugins(Closure configureClosure) {
+    checkCanConfig()
     ConfigureUtil.configure(configureClosure, plugins)
   }
 
@@ -172,11 +190,12 @@ public class GenerateProtoTask extends DefaultTask {
    * Add a directory to protoc's include path.
    */
   public void include(Object dir) {
-      if (dir instanceof File) {
-          includeDirs.add(dir)
-      } else {
-          includeDirs.add(project.file(dir))
-      }
+    checkCanConfig()
+    if (dir instanceof File) {
+      includeDirs.add(dir)
+    } else {
+      includeDirs.add(project.file(dir))
+    }
   }
 
   /**
@@ -220,7 +239,7 @@ public class GenerateProtoTask extends DefaultTask {
   // - Without options: --java_out=/path/to/output
   // - With options: --java_out=option1,option2:/path/to/output
   // This method generates the prefix out of the given options.
-  def String makeOptionsPrefix(List<String> options) {
+  static String makeOptionsPrefix(List<String> options) {
     StringBuilder prefix = new StringBuilder()
     if (!options.isEmpty()) {
       options.each { option ->
@@ -251,7 +270,7 @@ public class GenerateProtoTask extends DefaultTask {
 
   @TaskAction
   def compile() {
-    Preconditions.checkState(!initializing, 'doneInitializing() has not been called')
+    Preconditions.checkState(state == State.FINALIZED, 'doneConfig() has not been called')
 
     ToolsLocator tools = project.protobuf.tools
     Set<File> protoFiles = inputs.sourceFiles.files

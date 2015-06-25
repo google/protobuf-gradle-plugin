@@ -85,6 +85,12 @@ class ProtobufPlugin implements Plugin<Project> {
           // The Android variants are only available at this point.
           addProtoTasks(project)
           project.protobuf.runTaskConfigClosures()
+          // Disallow user configuration outside the config closures, because
+          // next in linkGenerateProtoTasksToJavaCompile() we add generated,
+          // outputs to the inputs of javaCompile tasks, and any new codegen
+          // plugin output added after this point won't be added to javaCompile
+          // tasks.
+          project.protobuf.generateProtoTasks.all()*.doneConfig()
           linkGenerateProtoTasksToJavaCompile(project)
           // protoc and codegen plugin configuration may change through the protobuf{}
           // block. Only at this point the configuration has been finalized.

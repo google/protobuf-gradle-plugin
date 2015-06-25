@@ -89,18 +89,27 @@ public class ProtobufConfigurator {
   }
 
   /**
-   * Configures the generateProto tasks in the given closure.  The closure will
-   * be manipulating a JavaGenerateProtoTaskCollection or an
-   * AndroidGenerateProtoTaskCollection depending on whether the project is
+   * Configures the generateProto tasks in the given closure.
+   *
+   * <p>The closure will be manipulating a JavaGenerateProtoTaskCollection or
+   * an AndroidGenerateProtoTaskCollection depending on whether the project is
    * Java or Android.
+   *
+   * <p>You should only change the generateProto tasks in this closure. Do not
+   * change the task in your own afterEvaluate closure, as the change may not
+   * be picked up correctly by the wired javaCompile task.
    */
   public void generateProtoTasks(Closure configureClosure) {
     taskConfigClosures.add(configureClosure)
   }
 
   /**
-   * Returns the collection of generateProto tasks.
-   * Note the tasks are available only after project evaluation.
+   * Returns the collection of generateProto tasks. Note the tasks are
+   * available only after project evaluation.
+   *
+   * <p>Do not try to change the tasks other than in the closure provided
+   * to {@link #generateProtoTasks(Closure)}. The reason is explained
+   * in the comments for the linked method.
    */
   public GenerateProtoTaskCollection getGenerateProtoTasks() {
     return tasks
