@@ -44,7 +44,7 @@ class Utils {
 
   /**
    * Returns the conventional substring that represents the sourceSet in task names,
-   * e.g., "generate<sourceSetStubString>Proto"
+   * e.g., "generate<sourceSetSubstring>Proto"
    */
   static String getSourceSetSubstringForTaskNames(String sourceSetName) {
     return sourceSetName == SourceSet.MAIN_SOURCE_SET_NAME ?

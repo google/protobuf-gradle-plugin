@@ -68,37 +68,28 @@ class ToolsLocator {
   }
 
   void resolve(ExecutableLocator locator) {
-    if (locator.artifact != null) {
-      Configuration config = project.configurations.create(locator.name) {
-        visible = false
-        transitive = false
-        extendsFrom = []
-      }
-      def groupId, artifact, version
-      (groupId, artifact, version) = locator.artifact.split(":")
-      def notation = [group: groupId,
-                      name: artifact,
-                      version: version,
-                      classifier: project.osdetector.classifier,
-                      ext: 'exe']
-      project.logger.info("Resolving artifact: ${notation}")
-      Dependency dep = project.dependencies.add(config.name, notation)
-      Set<File> files = config.files(dep)
-      File file = null
-      for (f in files) {
-        if (f.getName().endsWith('.exe')) {
-          file = f
-          break
-        }
-      }
-      if (file == null) {
-        throw new GradleException("Cannot resolve: ${locator.artifactSpec}")
-      }
-      if (!file.canExecute() && !file.setExecutable(true)) {
-        throw new GradleException("Cannot set ${file} as executable")
-      }
-      project.logger.info("Resolved artifact: ${file}")
-      locator.path = file.path
+    if (locator.artifact == null) {
+      return
     }
+    Configuration config = project.configurations.create("protobufToolsLocator_${locator.name}") {
+      visible = false
+      transitive = false
+      extendsFrom = []
+    }
+    def groupId, artifact, version
+    (groupId, artifact, version) = locator.artifact.split(":")
+    def notation = [group: groupId,
+                    name: artifact,
+                    version: version,
+                    classifier: project.osdetector.classifier,
+                    ext: 'exe']
+    project.logger.info("Resolving artifact: ${notation}")
+    Dependency dep = project.dependencies.add(config.name, notation)
+    File file = config.fileCollection(dep).singleFile
+    if (!file.canExecute() && !file.setExecutable(true)) {
+      throw new GradleException("Cannot set ${file} as executable")
+    }
+    project.logger.info("Resolved artifact: ${file}")
+    locator.path = file.path
   }
 }
