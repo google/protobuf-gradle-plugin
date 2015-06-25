@@ -30,21 +30,51 @@
 package com.google.protobuf.gradle
 
 import org.gradle.api.Named
-import org.gradle.api.NamedDomainObjectContainer
-import org.gradle.api.Project
-import org.gradle.api.internal.file.DefaultSourceDirectorySet
-import org.gradle.api.internal.file.FileResolver
-import org.gradle.internal.reflect.Instantiator
-import org.gradle.util.ConfigureUtil
 
 /**
- * The backing class of the proto extension added to sourceSets, e.g., sourceSets.main.proto
+ * Locates an executable that can either be found locally or downloaded from
+ * repositories.  If configured multiple times, the last call wins.  If never
+ * configured, the plugin should try to run the executable from system search
+ * path.
  */
-public class ProtobufSourceDirectorySet extends DefaultSourceDirectorySet {
+public class ExecutableLocator implements Named {
 
-  public ProtobufSourceDirectorySet(Project project, String name, FileResolver fileResolver) {
-    super(name, String.format("%s Proto source", name), fileResolver)
-    srcDir("src/${name}/proto")
-    include("**/*.proto")
+  private final String name
+
+  private String artifact
+  private String path
+
+  public ExecutableLocator(String name) {
+    this.name = name
+  }
+
+  @Override
+  public String getName() {
+    return name
+  }
+
+  /**
+   * Specifies an artifact spec for downloading the executable from
+   * repositories. spec format: '<groupId>:<artifactId>:<version>'
+   */
+  public setArtifact(String spec) {
+    this.artifact = spec
+    this.path = null
+  }
+
+  /**
+   * Specifies a local path.
+   */
+  public setPath(String path) {
+    this.path = path
+    this.artifact = null
+  }
+
+  public String getArtifact() {
+    return artifact
+  }
+
+  public String getPath() {
+    return path
   }
 }

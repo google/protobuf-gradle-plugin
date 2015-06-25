@@ -12,6 +12,12 @@ com.google.protobuf:protobuf-gradle-plugin:0.4.1 - Available on Maven Central.
 To use the protobuf plugin, include in your build script:
 
 ```groovy
+
+// For Java project, you must apply the java plugin first.
+apply plugin: 'java'
+// Or, for Android project, apply the Android plugin first.
+// apply plugin: 'com.android.application'
+
 apply plugin: 'com.google.protobuf'
 
 buildscript {
@@ -121,9 +127,10 @@ lists pre-compiled ``protoc`` artifacts that can be used by this plugin.
 
 After you made any change to the plugin, be sure to run these tests.
 ```
-$ ./gradlew install && ./gradlew clean test
+$ ./gradlew install && ./gradlew clean test && ./gradlew test
 ```
 The tests use the plugin installed in Maven local repo, so you must install
 it before testing it. We cannot make the tests depend the plugin project
 directly, because the test projects apply the plugin at evaluation time. At
-evaluation time the plugin project has not been compiled yet.
+evaluation time the plugin project has not been compiled yet. The second test
+run is to make sure incremental build works.

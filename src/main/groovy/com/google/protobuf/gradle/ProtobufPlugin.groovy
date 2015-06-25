@@ -30,23 +30,25 @@
 
 package com.google.protobuf.gradle
 
+import com.google.common.collect.ImmutableList
+import org.apache.commons.lang.StringUtils
 import org.gradle.api.Action
-import org.gradle.api.InvalidUserDataException
-import org.gradle.api.Plugin
-import org.gradle.api.Project
-import org.gradle.api.Task
-import org.gradle.api.artifacts.Configuration
-import org.gradle.api.artifacts.Dependency
-import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.file.ConfigurableFileTree
-import org.gradle.api.internal.tasks.DefaultSourceSet
 import org.gradle.api.file.SourceDirectorySet
+import org.gradle.api.GradleException
 import org.gradle.api.internal.file.DefaultSourceDirectorySet
 import org.gradle.api.internal.file.FileResolver;
 import org.gradle.api.internal.plugins.DslObject
+import org.gradle.api.internal.tasks.DefaultSourceSet
+import org.gradle.api.InvalidUserDataException
 import org.gradle.api.logging.LogLevel
+import org.gradle.api.Plugin
+import org.gradle.api.plugins.JavaPluginConvention
+import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.tasks.SourceSet
-import org.gradle.api.GradleException
+import org.gradle.api.tasks.SourceSetContainer
+import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.tooling.UnsupportedVersionException
 import org.gradle.util.CollectionUtils
 
@@ -63,183 +65,210 @@ class ProtobufPlugin implements Plugin<Project> {
     void apply(final Project project) {
         def gv = project.gradle.gradleVersion =~ "(\\d*)\\.(\\d*).*"
         if (!gv || !gv.matches() || gv.group(1).toInteger() < 2 || gv.group(2).toInteger() < 2) {
-            //throw new UnsupportedVersionException
             println("You are using Gradle ${project.gradle.gradleVersion}: This version of the protobuf plugin requires minimum Gradle version 2.2")
         }
 
-        project.apply plugin: 'java'
+        if (!project.plugins.hasPlugin('java') && !Utils.isAndroidProject(project)) {
+            throw new GradleException('Please apply the Java plugin or the Android plugin first')
+        }
+
         // Provides the osdetector extension
         project.apply plugin: 'osdetector'
 
-        project.convention.plugins.protobuf = new ProtobufConvention(project);
-        addProtoConfigurations(project)
-        addProtoSourceSets(project)
+        project.convention.plugins.protobuf = new ProtobufConvention(project, fileResolver);
+
+        addSourceSetExtensions(project)
+        getSourceSets(project).all { sourceSet ->
+          createConfiguration(project, sourceSet.name)
+        }
         project.afterEvaluate {
+          // The Android variants are only available at this point.
           addProtoTasks(project)
-          resolveProtocDep(project)
-          resolveNativeCodeGenPlugins(project)
+          project.protobuf.runTaskConfigClosures()
+          // Disallow user configuration outside the config closures, because
+          // next in linkGenerateProtoTasksToJavaCompile() we add generated,
+          // outputs to the inputs of javaCompile tasks, and any new codegen
+          // plugin output added after this point won't be added to javaCompile
+          // tasks.
+          project.protobuf.generateProtoTasks.all()*.doneConfig()
+          linkGenerateProtoTasksToJavaCompile(project)
+          // protoc and codegen plugin configuration may change through the protobuf{}
+          // block. Only at this point the configuration has been finalized.
+          project.protobuf.tools.resolve()
         }
     }
 
-    private addProtoConfigurations(Project project) {
-        project.sourceSets.all { SourceSet sourceSet ->
-          project.configurations.create(protobufConfigName(sourceSet)) {
-            visible = false
-            transitive = false
-            extendsFrom = []
-          }
-        }
-    }
-
-    private String protobufConfigName(SourceSet sourceSet) {
-        return sourceSet.getName().equals(SourceSet.MAIN_SOURCE_SET_NAME) ? "protobuf" : sourceSet.getName() + "Protobuf"
-    }
-
-    private addProtoSourceSets(Project project) {
-      project.getConvention().getPlugin(JavaPluginConvention.class).getSourceSets().all(new Action<SourceSet>() {
-        // The action applies to all source sets, typically 'main' and 'test'
-        public void execute(SourceSet sourceSet) {
-          final ProtobufSourceSetConvention protobufSourceSetConvention =
-              new ProtobufSourceSetConvention(project, ((DefaultSourceSet) sourceSet).getName(),
-                  fileResolver)
-          // Add all the properties of ProtobufSourceSet to the DefaultSourceSet that you get from
-          // sourceSets.main etc. In other words, adds sourceSets.main.proto etc.
-          new DslObject(sourceSet).getConvention().getPlugins().put(
-              "proto", protobufSourceSetConvention)
-        }
-      })
-    }
-
-    private resolveProtocDep(Project project) {
-        String spec = project.convention.plugins.protobuf.protocDep;
-        if (spec == null) {
-          return;
-        }
-        Configuration config = project.configurations.create('protoc') {
+    /**
+     * Creates a configuration if necessary for a source set so that the build
+     * author can configure dependencies for it.
+     */
+    private createConfiguration(Project project, String sourceSetName) {
+      String configName = Utils.getConfigName(sourceSetName)
+      if (project.configurations.findByName(configName) == null) {
+        project.configurations.create(configName) {
           visible = false
           transitive = false
           extendsFrom = []
         }
-        def groupId, artifact, version
-        (groupId, artifact, version) = spec.split(":")
-        def notation = [group: groupId,
-                        name: artifact,
-                        version: version,
-                        classifier: project.osdetector.classifier,
-                        ext: 'exe']
-        project.logger.info('Adding protoc dependency: ' + notation)
-        Dependency dep = project.dependencies.add(config.name, notation)
-        Set<File> files = config.files(dep)
-        File protoc = null
-        for (f in files) {
-          if (f.getName().endsWith('.exe')) {
-            protoc = f
-            break
-          }
-        }
-        if (protoc == null) {
-          throw new GradleException('Cannot resolve ' + spec)
-        }
-        if (!protoc.canExecute() && !protoc.setExecutable(true)) {
-          throw new GradleException('Cannot make ' + protoc + ' executable')
-        }
-        project.logger.info('Resolved protoc: ' + protoc)
-        project.convention.plugins.protobuf.protocPath = protoc.getPath()
+      }
     }
 
-    private resolveNativeCodeGenPlugins(Project project) {
-        Configuration config = project.configurations.create('protobufNativeCodeGenPlugins') {
-          visible = false
-          transitive = false
-          extendsFrom = []
-        }
-        def Map nameToDep = new HashMap()
-        for (key in project.convention.plugins.protobuf.protobufNativeCodeGenPluginDeps) {
-          def name, groupId, artifact, version
-            (name, groupId, artifact, version) = key.split(":")
-            def notation = [group: groupId,
-                            name: artifact,
-                            version: version,
-                            classifier: project.osdetector.classifier,
-                            ext: 'exe']
-            project.logger.info('Adding a native protobuf codegen plugin dependency: ' + notation)
-            Dependency dep = project.dependencies.add(config.name, notation)
-            nameToDep.put(name, dep);
-        }
-        for (e in nameToDep) {
-            Set<File> files = config.files(e.value);
-            File plugin = null
-            for (f in files) {
-                if (f.getName().endsWith('.exe')) {
-                    plugin = f
-                    break
-                }
-            }
-            if (plugin == null) {
-                throw new GradleException('Cannot resolve ' + e.value)
-            }
-            if (!plugin.canExecute() && !plugin.setExecutable(true)) {
-                throw new GradleException('Cannot make ' + plugin + ' executable')
-            }
-            project.logger.info('Resolved a native protobuf codegen plugin: ' + plugin)
-            project.convention.plugins.protobuf.protobufCodeGenPlugins.add(
-                e.key + ':' + plugin.getPath())
-        }
+    /**
+     * Adds the proto extension to all SourceSets, e.g., it creates
+     * sourceSets.main.proto and sourceSets.test.proto.
+     */
+    private addSourceSetExtensions(Project project) {
+      getSourceSets(project).all {  sourceSet ->
+        sourceSet.extensions.create('proto', ProtobufSourceDirectorySet, project, sourceSet.name, fileResolver)
+      }
     }
 
+    /**
+     * Returns the sourceSets container of a Java or an Android project.
+     */
+    private Object getSourceSets(Project project) {
+      if (Utils.isAndroidProject(project)) {
+        return project.android.sourceSets
+      } else {
+        return project.sourceSets
+      }
+    }
 
+    private Object getNonTestVariants(Project project) {
+      return project.android.hasProperty('libraryVariants') ?
+          project.android.libraryVariants : project.android.applicationVariants
+    }
+
+    /**
+     * Adds Protobuf-related tasks to the project.
+     */
     private addProtoTasks(Project project) {
-        project.sourceSets.all { SourceSet sourceSet ->
-            addTasksToProjectForSourceSet(project, sourceSet)
+      if (Utils.isAndroidProject(project)) {
+        getNonTestVariants(project).each { variant ->
+          addTasksForVariant(project, variant, false)
         }
+        project.android.testVariants.each { testVariant ->
+          addTasksForVariant(project, testVariant, true)
+        }
+      } else {
+        getSourceSets(project).each { sourceSet ->
+          addTasksForSourceSet(project, sourceSet)
+        }
+      }
     }
 
-    private def addTasksToProjectForSourceSet(Project project, SourceSet sourceSet) {
-        def generateJavaTaskName = sourceSet.getTaskName('generate', 'proto')
-        project.tasks.create(generateJavaTaskName, ProtobufCompile) {
-            description = "Compiles Proto source '${sourceSet.name}:proto'"
-            // Include extracted sources
-            ConfigurableFileTree extractedProtoSources =
-                project.fileTree("${project.extractedProtosDir}/${sourceSet.name}") {
-                  include "**/*.proto"
-                }
-            inputs.source extractedProtoSources
-            include extractedProtoSources.dir
-            // Include sourceSet dirs
-            SourceDirectorySet sourceDirSet = project.sourceSets.maybeCreate(sourceSet.name).proto
-            inputs.source sourceDirSet
-            sourceDirSet.srcDirs.each { srcDir ->
-              include srcDir
+    /**
+     * Creates Protobuf tasks for a sourceSet in a Java project.
+     */
+    private def addTasksForSourceSet(final Project project, final SourceSet sourceSet) {
+      def generateProtoTaskName = 'generate' +
+          Utils.getSourceSetSubstringForTaskNames(sourceSet.name) + 'Proto'
+      final String extractedProtosDir = "${project.buildDir}/extracted-protos/${sourceSet.name}"
+      def generateProtoTask = project.tasks.create(generateProtoTaskName, GenerateProtoTask) {
+        description = "Compiles Proto source for sourceSet '${sourceSet.name}'"
+        outputBaseDir = "${project.protobuf.generatedFilesBaseDir}/${sourceSet.name}"
+        // Include extracted sources
+        ConfigurableFileTree extractedProtoSources =
+            project.fileTree(extractedProtosDir) {
+              include "**/*.proto"
             }
-
-            outputs.dir getGeneratedSourceDir(project, sourceSet)
-            //outputs.upToDateWhen {false}
-            sourceDirectorySet = sourceSet.proto
-            destinationDir = project.file(getGeneratedSourceDir(project, sourceSet))
+        inputs.source extractedProtoSources
+        include extractedProtoSources.dir
+        inputs.source sourceSet.proto
+        ProtobufSourceDirectorySet protoSrcDirSet = sourceSet.proto
+        protoSrcDirSet.srcDirs.each { srcDir ->
+          include srcDir
         }
-        def generateJavaTask = project.tasks.getByName(generateJavaTaskName)
+      }
 
-        def extractProtosTaskName = sourceSet.getTaskName('extract', 'proto')
-        project.tasks.create(extractProtosTaskName, ProtobufExtract) {
-            description = "Extracts proto files/dependencies specified by 'protobuf' configuration"
-            //TODO: Figure out why the configuration can't be used as input.  That makes declaring output invalid
-            //inputs.files project.configurations[protobufConfigName].files
-            //outputs.dir "${project.extractedProtosDir}/${sourceSet.name}"
-            extractedProtosDir = project.file("${project.extractedProtosDir}/${sourceSet.name}")
-            configName = protobufConfigName(sourceSet)
-        }
-        def extractProtosTask = project.tasks.getByName(extractProtosTaskName)
-        generateJavaTask.dependsOn(extractProtosTask)
+      generateProtoTask.sourceSet = sourceSet
+      generateProtoTask.doneInitializing()
+      generateProtoTask.builtins {
+        java {}
+      }
 
-        sourceSet.java.srcDir getGeneratedSourceDir(project, sourceSet)
-        String compileJavaTaskName = sourceSet.getCompileTaskName("java");
-        Task compileJavaTask = project.tasks.getByName(compileJavaTaskName);
-        compileJavaTask.dependsOn(generateJavaTask)
+      def extractProtosTaskName = 'extract' +
+          Utils.getSourceSetSubstringForTaskNames(sourceSet.name) + 'Proto'
+      project.tasks.create(extractProtosTaskName, ProtobufExtract) {
+          description = "Extracts proto files/dependencies specified by 'protobuf' configuration"
+          destDir = extractedProtosDir as File
+          configName = Utils.getConfigName(sourceSet.name)
+      }
+      def extractProtosTask = project.tasks.getByName(extractProtosTaskName)
+      generateProtoTask.dependsOn(extractProtosTask)
     }
 
-    private getGeneratedSourceDir(Project project, SourceSet sourceSet) {
-        def generatedSourceDir = project.convention.plugins.protobuf.generatedFileDir
-        return "${generatedSourceDir}/${sourceSet.name}"
+    /**
+     * Creates Protobuf tasks for a variant in an Android project.
+     */
+    private def addTasksForVariant(final Project project, final Object variant,
+        final boolean isTestVariant) {
+      // The collection of sourceSets that will be compiled for this variant
+      def sourceSetNames = new ArrayList()
+      def sourceSets = new ArrayList()
+      if (isTestVariant) {
+        // All test variants will include the androidTest sourceSet
+        sourceSetNames.add 'androidTest'
+      } else {
+        // All non-test variants will include the main sourceSet
+        sourceSetNames.add 'main'
+      }
+      sourceSetNames.add variant.name
+      sourceSetNames.add variant.buildType.name
+      ImmutableList.Builder<String> flavorListBuilder = ImmutableList.builder()
+      if (variant.hasProperty('productFlavors')) {
+        variant.productFlavors.each { flavor ->
+          sourceSetNames.add flavor.name
+          flavorListBuilder.add flavor.name
+        }
+      }
+      sourceSetNames.each { sourceSetName ->
+        sourceSets.add project.android.sourceSets.maybeCreate(sourceSetName)
+      }
+
+      def generateProtoTaskName = 'generate' + StringUtils.capitalize(variant.name) + 'Proto'
+      def generateProtoTask = project.tasks.create(generateProtoTaskName, GenerateProtoTask) {
+        description = "Compiles Proto source for variant '${variant.name}'"
+        outputBaseDir = "${project.protobuf.generatedFilesBaseDir}/${variant.name}"
+        // TODO(zhangkun83): include extracted protos?
+        sourceSets.each { sourceSet ->
+          ProtobufSourceDirectorySet protoSrcDirSet = sourceSet.proto
+          inputs.source protoSrcDirSet
+          protoSrcDirSet.srcDirs.each { srcDir ->
+            include srcDir
+          }
+        }
+      }
+
+      generateProtoTask.setVariant(variant, isTestVariant)
+      generateProtoTask.flavors = flavorListBuilder.build()
+      generateProtoTask.buildType = variant.buildType.name
+      generateProtoTask.doneInitializing()
+      generateProtoTask.builtins {
+        javanano {}
+      }
+
+      // TODO(zhangkun83): create extraction tasks?
     }
 
+    private def linkGenerateProtoTasksToJavaCompile(Project project) {
+      if (Utils.isAndroidProject(project)) {
+        (getNonTestVariants(project) + project.android.testVariants).each { variant ->
+          project.protobuf.generateProtoTasks.ofVariant(variant.name).each { generateProtoTask ->
+            // This cannot be called once task execution has started
+            variant.registerJavaGeneratingTask(generateProtoTask, generateProtoTask.getAllOutputDirs())
+          }
+        }
+      } else {
+        project.sourceSets.each { sourceSet ->
+          def javaCompileTask = project.tasks.getByName(sourceSet.getCompileTaskName("java"))
+          project.protobuf.generateProtoTasks.ofSourceSet(sourceSet.name).each { generateProtoTask ->
+            javaCompileTask.dependsOn(generateProtoTask)
+            generateProtoTask.getAllOutputDirs().each { dir ->
+              javaCompileTask.source project.fileTree(dir: dir)
+            }
+          }
+        }
+      }
+    }
 }

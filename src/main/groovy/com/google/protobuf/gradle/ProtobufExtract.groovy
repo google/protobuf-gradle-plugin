@@ -38,7 +38,7 @@ import org.gradle.api.tasks.TaskAction
  */
 class ProtobufExtract extends DefaultTask {
 
-    File extractedProtosDir
+    File destDir
 
     String configName
 
@@ -48,11 +48,11 @@ class ProtobufExtract extends DefaultTask {
             if (file.path.endsWith('.proto')) {
                 ant.copy(
                         file: file.path,
-                        toDir: extractedProtosDir
+                        toDir: destDir
                 )
                 //generateJavaTask.getSource().create(project.files(file))
             } else if (file.path.endsWith('.jar') || file.path.endsWith('.zip')) {
-                ant.unzip(src: file.path, dest: extractedProtosDir)
+                ant.unzip(src: file.path, dest: destDir)
             } else {
                 def compression
 
@@ -70,7 +70,7 @@ class ProtobufExtract extends DefaultTask {
 
                 ant.untar(
                         src: file.path,
-                        dest: extractedProtosDir,
+                        dest: destDir,
                         compression: compression)
             }
         }

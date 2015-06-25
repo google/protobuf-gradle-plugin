@@ -1,0 +1,179 @@
+apply plugin: 'com.android.application'
+apply plugin: 'com.google.protobuf'
+
+buildscript {
+    repositories {
+        jcenter()
+        mavenLocal()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:1.1.0'
+        classpath "com.google.protobuf:protobuf-gradle-plugin:${rootProject.version}"
+        classpath 'junit:junit:4.7'
+    }
+}
+
+repositories {
+  jcenter()
+  mavenLocal()
+  mavenCentral()
+  maven {
+    url 'https://oss.sonatype.org/content/repositories/snapshots/'
+  }
+}
+
+android {
+    compileSdkVersion 21
+    buildToolsVersion "21.1.2"
+
+    defaultConfig {
+        applicationId "io.grpc.helloworldexample"
+        minSdkVersion 7
+        targetSdkVersion 21
+        versionCode 1
+        versionName "1.0"
+    }
+    flavorDimensions 'abi', 'version'
+    productFlavors {
+        freeapp {
+          flavorDimension 'version'
+        }
+        retailapp {
+          flavorDimension 'version'
+        }
+        x86 {
+          flavorDimension 'abi'
+        }
+        arm {
+          flavorDimension 'abi'
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    sourceSets {
+        androidTest {}
+    }
+}
+
+protobuf {
+  protoc {
+    artifact = 'com.google.protobuf:protoc:3.0.0-alpha-2'
+  }
+  plugins {
+    grpc {
+      artifact = 'io.grpc:protoc-gen-grpc-java:0.7.0'
+    }
+  }
+  generateProtoTasks {
+    all()*.builtins {
+      javanano {
+        // Options added to --javanano_out
+        option 'java_multiple_files=true'
+        option 'ignore_services=true'
+      }
+    }
+    ofNonTest()*.plugins {
+      grpc {
+        // Options added to --grpc_out
+        option 'nano=true'
+      }
+    }
+  }
+}
+
+dependencies {
+    compile 'com.android.support:appcompat-v7:21.0.3'
+    compile 'com.google.code.findbugs:jsr305:3.0.0'
+    compile 'com.squareup.okhttp:okhttp:2.2.0'
+    compile 'com.google.guava:guava:18.0'
+    compile 'javax.annotation:javax.annotation-api:1.2'
+    compile 'io.grpc:grpc-all:0.7.0'
+}
+
+def assertJavaCompileHasProtoGeneratedDir(Object variant, Collection<String> codegenPlugins) {
+  assertJavaCompileHasProtoGeneratedDir(project, variant.name, variant.javaCompile, codegenPlugins)
+}
+
+afterEvaluate {
+  // 'gradle test' will run the unit tests, which is still experimental in
+  // Android plugin, and would do nothing with our setup. We make 'test' to
+  // trigger the "androidTest" Java compile tasks.
+  android.testVariants.each { testVariant ->
+    test.dependsOn testVariant.javaCompile
+  }
+
+  test.doLast {
+    org.junit.Assert.assertEquals(
+        ['generateArmFreeappDebugAndroidTestProto', 'generateArmFreeappDebugProto',
+         'generateArmFreeappReleaseProto', 'generateArmRetailappDebugAndroidTestProto',
+         'generateArmRetailappDebugProto', 'generateArmRetailappReleaseProto',
+         'generateX86FreeappDebugAndroidTestProto', 'generateX86FreeappDebugProto',
+         'generateX86FreeappReleaseProto', 'generateX86RetailappDebugAndroidTestProto',
+         'generateX86RetailappDebugProto', 'generateX86RetailappReleaseProto'] as Set,
+         protobuf.generateProtoTasks.all().collect({ it.name }) as Set)
+    org.junit.Assert.assertEquals(
+        ['generateArmFreeappDebugAndroidTestProto',
+         'generateArmRetailappDebugAndroidTestProto',
+         'generateX86FreeappDebugAndroidTestProto',
+         'generateX86RetailappDebugAndroidTestProto'] as Set,
+         protobuf.generateProtoTasks.ofTest().collect({ it.name }) as Set)
+    org.junit.Assert.assertEquals(
+        ['generateArmFreeappDebugProto', 'generateArmFreeappReleaseProto',
+         'generateArmRetailappDebugProto', 'generateArmRetailappReleaseProto',
+         'generateX86FreeappDebugProto', 'generateX86FreeappReleaseProto',
+         'generateX86RetailappDebugProto', 'generateX86RetailappReleaseProto'] as Set,
+         protobuf.generateProtoTasks.ofNonTest().collect({ it.name }) as Set)
+    org.junit.Assert.assertEquals(
+        ['generateArmFreeappDebugAndroidTestProto', 'generateArmFreeappDebugProto',
+         'generateArmFreeappReleaseProto',
+         'generateX86FreeappDebugAndroidTestProto', 'generateX86FreeappDebugProto',
+         'generateX86FreeappReleaseProto'] as Set,
+         protobuf.generateProtoTasks.ofFlavor('freeapp').collect({ it.name }) as Set)
+    org.junit.Assert.assertEquals(
+        ['generateArmRetailappDebugAndroidTestProto', 'generateArmRetailappDebugProto',
+         'generateArmRetailappReleaseProto',
+         'generateX86RetailappDebugAndroidTestProto', 'generateX86RetailappDebugProto',
+         'generateX86RetailappReleaseProto'] as Set,
+         protobuf.generateProtoTasks.ofFlavor('retailapp').collect({ it.name }) as Set)
+    org.junit.Assert.assertEquals(
+        ['generateX86FreeappDebugAndroidTestProto', 'generateX86FreeappDebugProto',
+         'generateX86FreeappReleaseProto', 'generateX86RetailappDebugAndroidTestProto',
+         'generateX86RetailappDebugProto', 'generateX86RetailappReleaseProto'] as Set,
+         protobuf.generateProtoTasks.ofFlavor('x86').collect({ it.name }) as Set)
+    org.junit.Assert.assertEquals(
+        ['generateArmFreeappDebugAndroidTestProto', 'generateArmFreeappDebugProto',
+         'generateArmFreeappReleaseProto', 'generateArmRetailappDebugAndroidTestProto',
+         'generateArmRetailappDebugProto', 'generateArmRetailappReleaseProto'] as Set,
+         protobuf.generateProtoTasks.ofFlavor('arm').collect({ it.name }) as Set)
+    org.junit.Assert.assertEquals(
+        ['generateArmFreeappDebugAndroidTestProto', 'generateArmFreeappDebugProto',
+         'generateArmRetailappDebugAndroidTestProto',
+         'generateArmRetailappDebugProto',
+         'generateX86FreeappDebugAndroidTestProto', 'generateX86FreeappDebugProto',
+         'generateX86RetailappDebugAndroidTestProto',
+         'generateX86RetailappDebugProto'] as Set,
+         protobuf.generateProtoTasks.ofBuildType('debug').collect({ it.name }) as Set)
+    org.junit.Assert.assertEquals(
+        ['generateArmFreeappReleaseProto', 'generateArmRetailappReleaseProto',
+         'generateX86FreeappReleaseProto', 'generateX86RetailappReleaseProto'] as Set,
+         protobuf.generateProtoTasks.ofBuildType('release').collect({ it.name }) as Set)
+    org.junit.Assert.assertEquals(
+        ['generateX86FreeappDebugAndroidTestProto'] as Set,
+         protobuf.generateProtoTasks.ofVariant('x86FreeappDebugAndroidTest').collect({ it.name }) as Set)
+    // "androidTest" sourceSet is not a flavor
+    org.junit.Assert.assertEquals(
+        [] as Set,
+         protobuf.generateProtoTasks.ofFlavor('androidTest').collect({ it.name }) as Set)
+    android.applicationVariants.each { variant ->
+      assertJavaCompileHasProtoGeneratedDir(variant, ['javanano', 'grpc'])
+    }
+    android.testVariants.each { variant ->
+      assertJavaCompileHasProtoGeneratedDir(variant, ['javanano'])
+    }
+  }
+}

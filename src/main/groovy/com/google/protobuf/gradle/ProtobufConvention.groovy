@@ -33,45 +33,20 @@ package com.google.protobuf.gradle
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.Multimap
 import org.gradle.api.Project
+import org.gradle.api.internal.file.FileResolver
+import org.gradle.util.ConfigureUtil
 
+/**
+ * Adds the protobuf {} block as a property of the project.
+ */
 class ProtobufConvention {
-    def ProtobufConvention(Project project) {
-        extractedProtosDir = "${project.buildDir.path}/extracted-protos"
-        generatedFileDir = "${project.buildDir}/generated-sources"
+    def ProtobufConvention(Project project, FileResolver fileResolver) {
+        protobuf = new ProtobufConfigurator(project, fileResolver)
     }
 
-    def String protocPath = "protoc"
+    def final ProtobufConfigurator protobuf
 
-    /**
-     * The spec of a pre-compiled protoc plugin that is fetched from repositories.
-     * It overrides 'protocPath'.
-     * Spec format: '<groupId>:<artifactId>:<version>', e.g.,
-     *     'com.google.protobuf:protoc:3.0.0-alpha2'
-     */
-    def String protocDep
-
-    /**
-     * Directory to extract proto files into
-     */
-    def String extractedProtosDir
-
-    /**
-     * Directory to save java files to
-     */
-    def String generatedFileDir
-
-    /**
-     *  List of code generation plugin names and paths. Plugins defined here
-     *  can be used in the proto block of the sourceSets.
-     *  -- Each item is a '<name>:<path>'
-     *  -- Names have to be unique
-     */
-    def Set protobufCodeGenPlugins = new HashSet()
-
-    /**
-     * List of native code generation plugins that is fetched from repositories.
-     * -- Each item is a '<name>:<plugin-groupId>:<plugin-artifactId>:<version>'
-     * It will be tranformed into a protobufCodeGenPlugins item once the plugin has been fetched.
-     */
-    def Set protobufNativeCodeGenPluginDeps = Collections.emptySet()
+    def protobuf(Closure configureClosure) {
+        ConfigureUtil.configure(configureClosure, protobuf)
+    }
 }

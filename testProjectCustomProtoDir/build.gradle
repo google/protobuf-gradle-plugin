@@ -7,7 +7,7 @@ buildscript {
     classpath "com.google.protobuf:protobuf-gradle-plugin:${rootProject.version}"
   }
 }
-
+apply plugin: 'java'
 apply plugin: 'com.google.protobuf'
 
 repositories {
@@ -15,21 +15,21 @@ repositories {
 }
 
 sourceSets {
-    main {
-        proto {
-            // In addition to the default 'src/main/proto'
-            srcDir 'src/main/protobuf'
-            srcDir 'src/main/protocolbuffers'
-            // In addition to '**/*.proto'
-            include '**/*.protodevel'
-        }
+  main {
+    proto {
+      // In addition to the default 'src/main/proto'
+      srcDir 'src/main/protobuf'
+      srcDir 'src/main/protocolbuffers'
+      // In addition to '**/*.proto'
+      include '**/*.protodevel'
     }
-    test {
-        proto {
-            // In addition to the default 'src/test/proto'
-            srcDir 'src/test/protocolbuffers'
-        }
+  }
+  test {
+    proto {
+      // In addition to the default 'src/test/proto'
+      srcDir 'src/test/protocolbuffers'
     }
+  }
 }
 
 dependencies {
@@ -37,7 +37,9 @@ dependencies {
     testCompile 'junit:junit:4.7'
 }
 
-protocDep = 'com.google.protobuf:protoc:2.6.1'
+protobuf.protoc {
+  artifact = 'com.google.protobuf:protoc:2.6.1'
+}
 
 task printDeps(dependsOn: build) << {
   configurations.each { println it }

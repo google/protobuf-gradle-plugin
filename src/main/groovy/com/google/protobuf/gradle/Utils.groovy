@@ -29,22 +29,29 @@
 
 package com.google.protobuf.gradle
 
-import org.gradle.api.Named
-import org.gradle.api.NamedDomainObjectContainer
+import org.apache.commons.lang.StringUtils
 import org.gradle.api.Project
-import org.gradle.api.internal.file.DefaultSourceDirectorySet
-import org.gradle.api.internal.file.FileResolver
-import org.gradle.internal.reflect.Instantiator
-import org.gradle.util.ConfigureUtil
+import org.gradle.api.tasks.SourceSet
 
-/**
- * The backing class of the proto extension added to sourceSets, e.g., sourceSets.main.proto
- */
-public class ProtobufSourceDirectorySet extends DefaultSourceDirectorySet {
+class Utils {
+  /**
+   * Returns the conventional name of a configuration for a sourceSet
+   */
+  static String getConfigName(String sourceSetName) {
+    return sourceSetName == SourceSet.MAIN_SOURCE_SET_NAME ?
+        "protobuf" : (sourceSetName + "Protobuf")
+  }
 
-  public ProtobufSourceDirectorySet(Project project, String name, FileResolver fileResolver) {
-    super(name, String.format("%s Proto source", name), fileResolver)
-    srcDir("src/${name}/proto")
-    include("**/*.proto")
+  /**
+   * Returns the conventional substring that represents the sourceSet in task names,
+   * e.g., "generate<sourceSetSubstring>Proto"
+   */
+  static String getSourceSetSubstringForTaskNames(String sourceSetName) {
+    return sourceSetName == SourceSet.MAIN_SOURCE_SET_NAME ?
+        '' : StringUtils.capitalize(sourceSetName)
+  }
+
+  static boolean isAndroidProject(Project project) {
+    return project.hasProperty('android')
   }
 }
