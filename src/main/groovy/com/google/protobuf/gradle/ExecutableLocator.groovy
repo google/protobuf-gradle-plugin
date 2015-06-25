@@ -57,7 +57,7 @@ public class ExecutableLocator implements Named {
    * Specifies an artifact spec for downloading the executable from
    * repositories. spec format: '<groupId>:<artifactId>:<version>'
    */
-  public artifact(String spec) {
+  public setArtifact(String spec) {
     this.artifact = spec
     this.path = null
   }
