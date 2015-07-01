@@ -90,6 +90,8 @@ signing {
      sign configurations.archives
 }
 
+targetCompatibility = 1.6
+
 uploadArchives {
   repositories {
     mavenDeployer {
