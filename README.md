@@ -6,10 +6,7 @@ For more information about the Protobuf Compiler, please refer to
 [Google Developers Site](https://developers.google.com/protocol-buffers/docs/reference/java-generated?csw=1).
 
 ## Latest Version
-``com.google.protobuf:protobuf-gradle-plugin:0.5.0-SNAPSHOT``
-
-It has not been released yet. You can build it and install locally by running
-``./gradlew install``.
+The latest version is ``0.5.0``. It has been pushed to Maven Central.
 
 ## Usage
 
@@ -20,10 +17,10 @@ Add dependency:
 ```gradle
 buildscript {
   repositories {
-    mavenLocal()
+    mavenCentral()
   }
   dependencies {
-    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.5.0-SNAPSHOT'
+    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.5.0'
   }
 }
 ```
