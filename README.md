@@ -12,22 +12,12 @@ It has not been released yet. You can build it and install locally by running
 ``./gradlew install``.
 
 ## Usage
-To use the protobuf plugin, include in your build script:
+
+### Adding the plugin to your project
+
+Add dependency:
 
 ```gradle
-
-// For Java project, you must apply the java plugin first.
-apply plugin: 'java'
-
-// For Android project, apply the Android plugin first.
-apply plugin: 'com.android.application'
-// Or:
-apply plugin: 'com.android.library'
-
-
-// Then apply the Protobuf plugin
-apply plugin: 'com.google.protobuf'
-
 buildscript {
   repositories {
     mavenLocal()
@@ -36,21 +26,50 @@ buildscript {
     classpath 'com.google.protobuf:protobuf-gradle-plugin:0.5.0-SNAPSHOT'
   }
 }
+```
 
-// Following are optional configurations.
+In Java projects, you must apply the java plugin before applying the Protobuf
+plugin:
 
-// For Java projects:
-// Optional - specify additional locations of .proto files.
-// The default is 'src/<sourceSetName>/proto' {include '**/*.proto'}, where
-// <sourceSetName> is typically 'main' and 'test' etc.
+```gradle
+apply plugin: 'java'
+apply plugin: 'com.google.protobuf'
+```
+
+In Android projects, you must apply the Android plugin first.
+
+```gradle
+apply plugin: 'com.android.application'  // or 'com.android.library'
+apply plugin: 'com.google.protobuf'
+```
+
+### Configuring Protobuf compilation
+The Protobuf plugin assumes Protobuf files (``*.proto``) are organized in the
+same way as Java source files, in _sourceSets_. The Protobuf files of a
+_sourceSet_ (or _variant_ in an Android project) are compiled in a single
+``protoc`` run, and the generated files are added to the input of the Java
+compilation run of that _sourceSet_ (or _variant_).
+
+#### Cutomizing source directories
+The plugin adds a new sources block named ``proto`` alongside ``java`` to every
+sourceSet. By default, it includes all ``*.proto`` files under
+``src/$sourceSetName/proto``. You can customize it in the same way as you would
+custmoize the ``java`` sources.
+
+For Java projects, use the top-level ``sourceSet``:
+
+```gradle
 sourceSets {
   main {
     proto {
       // In addition to the default 'src/main/proto'
       srcDir 'src/main/protobuf'
       srcDir 'src/main/protocolbuffers'
-      // In addition to '**/*.proto'
+      // In addition to the default '**/*.proto'
       include '**/*.protodevel'
+    }
+    java {
+      ...
     }
   }
   test {
@@ -60,28 +79,71 @@ sourceSets {
     }
   }
 }
+```
 
-// For Android projects, use android.sourceSets instead of the top-level
-// sourceSets.
+For Android projects, use ``android.sourceSets``:
+
+```gradle
 android {
   sourceSets {
     main {
       proto {
         ...
       }
+      java {
+        ...
+      }
     }
   }
 }
+```
 
-// The Protobuf configuration block.
+#### Customizing Protobuf compilation
+The plugin adds a ``protobuf`` block to the project. It provides all the
+configuration knobs.
+
+
+##### Locate external executables
+
+By default the plugin will search for the ``protoc`` executable in the system
+search path. We recommend you to take the advantage of pre-compiled ``protoc``
+that we have published on Maven Central:
+
+```gradle
 protobuf {
+  ...
   // Configure the protoc executable
   protoc {
     // Download from repositories
     artifact = 'com.google.protobuf:protoc:3.0.0-alpha-3'
-    // or specify a local path. The last one wins.
+  }
+  ...
+}
+```
+
+You may also specify a local path.
+```gradle
+protobuf {
+  ...
+  protoc {
     path = '/usr/local/bin/protoc'
   }
+  ...
+}
+```
+
+Mulitple assignments are allowed in the ``protoc`` block. The last one wins.
+
+You may also run ``protoc`` with codegen plugins. You need to define all the
+codegen plugins you will use in the ``plugins`` block, by specifying the
+downloadable artifact or a local path, in the same syntax as in the ``protoc``
+block above. This will __not__ apply the plugins. You need to configure the
+tasks in the ``generateProtoTasks`` block introduced below to apply the plugins
+defined here.
+
+```gradle
+protobuf {
+  ...
   // Configure the codegen plugins
   plugins {
     // Define a plugin with name 'grpc'
@@ -96,59 +158,39 @@ protobuf {
     // Any other plugins
     ...
   }
-  // Customize the location of generated files.
-  // Its default value is $buildDir/generated/source/proto
-  // Generated files are under $generatedFilesBaseDir/$sourceSet/$pluginName
-  generatedFilesBaseDir = "$projectDir/src/generated"
+  ...
+}
+```
 
-  // The Protobuf plugin creates a task per sourceSet in a Java project, or per
-  // variant in an Android project. A task runs protoc to compile the *.proto
-  // files of that sourceSet/variant, in the following closure you can customize
-  // the protoc invocations through these tasks.
-  // This closure is run after all tasks have been generated. Helper functions
-  // are provided to the closure to conveniently access tasks that are tied to a
-  // certain build element.
-  // DO NOT assume the names of the tasks, as they may change.
-  // DO NOT configure the tasks outside of this block, because there are subtle
-  // timing constraints on when the tasks should be configured.
+##### Customize code generation tasks
+
+The Protobuf plugin generates a task for each ``protoc`` run, which is for a
+sourceSet in a Java project, or a variant in an Android project. The task has
+configuration interfaces that allow you to control the type of outputs, the
+codegen plugins to use, and parameters.
+
+You must configure these tasks in the ``generateProtoTasks`` block, which
+provides you helper functions to conveniently access tasks that are tied to a
+certain build element, and also ensures you configuration will be picked up
+correctly by the plugin.
+
+DONOTs:
+ - DO NOT assume the names of the tasks, as they may change.
+ - DO NOT configure the tasks outside of the ``generateProtoTasks`` block,
+   because there are subtle timing constraints on when the tasks should be
+   configured.
+
+```gradle
+protobuf {
+  ...
   generateProtoTasks {
     // all() returns the collection of all protoc tasks
     all().each { task ->
-      // Configure built-in outputs. Each block generates a
-      // '--<name>_out' flag to the protoc command line.
-      task.builtins {
-        // In Java projects, the "java" output is added automatically.
-        // You only need it if you want it in an Android project or want to add
-        // options.
-        // DO NOT omit the braces if you want this builtin to be added.
-        java { }
-        // In Android projects, the "javanano" output is added automatically.
-        // You only need it if you want it in an Java project or want to add
-        // options.
-        javanano {
-          // Options added to --javanano_out
-          option 'java_multiple_files=true'
-          option 'ignore_services=true'
-        }
-        // Any other builtins
-        ...
-      }
-      // Configure codegen plugins. Each block generates two flags
-      // to the protoc command line:
-      //  - '--plugin=protoc-gen-<name>:<plugin-path>', and
-      //  - '--<name>_out=<output-dir>
-      // <name> must have been defined in the protobuf.plugins block
-      task.plugins {
-        // Use the "grpc" plugin in this task.
-        grpc {
-          // Options added to --grpc_out
-          option 'nano=true'
-        }
-        // Use the "xrpc" plugin, with no options (braces cannot be omitted)
-        xrpc { }
-        // Any other plugins
-      }
+      // Here you can configure the task
     }
+
+    // In addition to all(), you may get the task collection by various
+    // criteria:
 
     // (Java only) returns tasks for a sourceSet
     ofSourceSet('main')
@@ -164,17 +206,95 @@ protobuf {
     ofTest()
   }
 }
+```
 
+Here is how to control ``protoc`` built-in outputs in a closure passed to
+``builtins``, which configures a ``NamedDomainObjectContainer``.
+
+```gradle
+{ task ->
+  // Configure built-in outputs. Each block generates a
+  // '--<name>_out' flag to the protoc command line.
+  task.builtins {
+    // In Java projects, the "java" output is added automatically.
+    // You only need it if you want it in an Android project or want to add
+    // options.
+    // DO NOT omit the braces if you want this builtin to be added.
+    java { }
+    // In Android projects, the "javanano" output is added automatically.
+    // You only need it if you want it in an Java project or want to add
+    // options.
+    javanano {
+      // Options added to --javanano_out
+      option 'java_multiple_files=true'
+      option 'ignore_services=true'
+    }
+    // Any other builtins
+    ...
+  }
+}
+```
+
+If you want to remove the built-in output that is automatically added, use
+``remove`` method of ``NamedDomainObjectContainer``. For example, to generate
+``javanano`` instead of ``java`` in a Java project:
+```gradle
+{ task ->
+  task.builtins {
+    remove java
+    javanano { }
+  }
+}
+```
+
+Here is how you apply codegen plugins that have been defined in the
+``protobuf.plugins`` block introduced above.
+
+```gradle
+{ task ->
+  // Configure codegen plugins. Each block generates two flags
+  // to the protoc command line:
+  //  - '--plugin=protoc-gen-<name>:<plugin-path>', and
+  //  - '--<name>_out=<output-dir>
+  // <name> must have been defined in the protobuf.plugins block
+  task.plugins {
+    // Use the "grpc" plugin in this task.
+    grpc {
+      // Options added to --grpc_out
+      option 'nano=true'
+    }
+    // Use the "xrpc" plugin, with no options (braces cannot be omitted)
+    xrpc { }
+    // Any other plugins
+  }
+}
+```
+
+By default generated Java files are under
+``$generatedFilesBaseDir/$sourceSet/$builtinPluginName``, where
+``$generatedFilesBaseDir`` is ``$buildDir/generated/source/proto`` by default,
+and is configurable. E.g.,
+
+```gradle
+protobuf {
+  ...
+  generatedFilesBaseDir = "$projectDir/src/generated"
+}
+```
+
+##### Adding proto archives
+_Note this works only for Java projects at this moment_.
+
+If you have your protos archived in a tar file, you can
+specify that as a dependency per sourceSet. It supports ``jar``, ``tar``,
+``tar.gz``, ``tar.bz2``, ``zip``.
+```gradle
 dependencies {
-  // If you have your protos archived in a tar file, you can specify that as a dependency
-  //   ... alternative archive types supported are: jar, tar, tar.gz, tar.bz2, zip
   protobuf files("lib/protos.tar.gz")
   // Different configuration fileSets are supported
   testProtobuf files("lib/protos.tar")
 }
 ```
-
-More examples can be found in the test projects (``testProject*/``).
 
 ## Pre-compiled ``protoc`` artifacts
 This [Maven Central directory](https://repo1.maven.org/maven2/com/google/protobuf/protoc/)
