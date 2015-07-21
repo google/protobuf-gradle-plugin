@@ -40,9 +40,20 @@ buildscript {
     }
 }
 
-test {
-    //jvmArgs '-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005'
-    //debug true
+subprojects {
+  buildscript {
+    repositories {
+      jcenter()
+      mavenLocal()
+    }
+    dependencies {
+      classpath "com.google.protobuf:protobuf-gradle-plugin:${rootProject.version}"
+    }
+  }
+  repositories {
+    mavenCentral()
+    jcenter()
+  }
 }
 
 repositories {

@@ -1,18 +1,5 @@
-buildscript {
-  repositories {
-    mavenCentral()
-    mavenLocal()
-  }
-  dependencies {
-    classpath "com.google.protobuf:protobuf-gradle-plugin:${rootProject.version}"
-  }
-}
 apply plugin: 'java'
 apply plugin: 'com.google.protobuf'
-
-repositories {
-    mavenCentral()
-}
 
 sourceSets {
   main {

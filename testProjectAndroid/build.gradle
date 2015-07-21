@@ -2,25 +2,10 @@ apply plugin: 'com.android.application'
 apply plugin: 'com.google.protobuf'
 
 buildscript {
-    repositories {
-        jcenter()
-        mavenLocal()
-        mavenCentral()
-    }
     dependencies {
         classpath 'com.android.tools.build:gradle:1.1.0'
-        classpath "com.google.protobuf:protobuf-gradle-plugin:${rootProject.version}"
         classpath 'junit:junit:4.7'
     }
-}
-
-repositories {
-  jcenter()
-  mavenLocal()
-  mavenCentral()
-  maven {
-    url 'https://oss.sonatype.org/content/repositories/snapshots/'
-  }
 }
 
 android {
