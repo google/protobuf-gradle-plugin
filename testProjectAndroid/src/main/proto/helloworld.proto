@@ -29,6 +29,9 @@
 
 syntax = "proto3";
 
+// From testProject: src/nano/proto
+import "messages.proto";
+
 option java_package = "io.grpc.helloworldexample";
 
 package helloworld;
@@ -42,6 +45,8 @@ service Greeter {
 // The request message containing the user's name.
 message HelloRequest {
   string name = 1;
+  // Uses message type from messages.proto
+  grpc.testing.SimpleContext context = 2;
 }
 
 // The response message containing the greetings

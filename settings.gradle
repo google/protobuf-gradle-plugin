@@ -18,6 +18,8 @@ if ('install' in gradle.startParameter.taskNames) {
   project(':testProject').projectDir = "$rootDir/testProject" as File
   include ':testProjectCustomProtoDir'
   project(':testProjectCustomProtoDir').projectDir = "$rootDir/testProjectCustomProtoDir" as File
+  include ':testProjectDependent'
+  project(':testProjectDependent').projectDir = "$rootDir/testProjectDependent" as File
   include ':testProjectAndroid'
   project(':testProjectAndroid').projectDir = "$rootDir/testProjectAndroid" as File
 }

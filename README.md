@@ -67,7 +67,10 @@ sourceSets {
       // In addition to the default 'src/main/proto'
       srcDir 'src/main/protobuf'
       srcDir 'src/main/protocolbuffers'
-      // In addition to the default '**/*.proto'
+      // In addition to the default '**/*.proto' (use with caution).
+      // Using an extension other than 'proto' is NOT recommended,
+      // because when proto files are published along with class files, we can
+      // only tell the type of a file from its extension.
       include '**/*.protodevel'
     }
     java {

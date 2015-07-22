@@ -17,9 +17,9 @@ public class FooTest {
 
   @org.junit.Test
   public void testNanoMessages() {
-    // from src/nano/proto/message.proto with 'java_multiple_files=true'
+    // from src/nano/proto/message.proto with 'java_multiple_files=false'
     assertTrue(com.google.protobuf.nano.MessageNano.class.isAssignableFrom(
-        nano.SimpleRequest.class));
+        nano.Messages.SimpleRequest.class));
   }
 
   @org.junit.Test

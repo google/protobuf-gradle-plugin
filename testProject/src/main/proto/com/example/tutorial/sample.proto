@@ -6,10 +6,10 @@ option java_multiple_files = true;
 
 
 message Msg {
-    optional string foo = 1;
-    optional SecondMsg blah = 2;
+    string foo = 1;
+    SecondMsg blah = 2;
 }
 
 message SecondMsg {
-    optional int32 blah = 1;
+    int32 blah = 1;
 }

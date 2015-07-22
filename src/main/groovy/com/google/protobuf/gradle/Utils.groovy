@@ -37,9 +37,9 @@ class Utils {
   /**
    * Returns the conventional name of a configuration for a sourceSet
    */
-  static String getConfigName(String sourceSetName) {
+  static String getConfigName(String sourceSetName, String type) {
     return sourceSetName == SourceSet.MAIN_SOURCE_SET_NAME ?
-        "protobuf" : (sourceSetName + "Protobuf")
+        type : (sourceSetName + StringUtils.capitalize(type))
   }
 
   /**

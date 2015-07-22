@@ -7,6 +7,8 @@ public class TestLibrary {
   // From src/main/proto/helloworld.proto
   Helloworld.HelloRequest request;
 
+  // From testProject: src/nano/proto/messages.proto
+  nano.Messages.SimpleRequest simpleRequest;
   TestLibrary() {
   }
 }

@@ -1,3 +1,6 @@
+// A Java project that demonstrates most of the configuration features of this
+// plugin.
+
 apply plugin: 'java'
 apply plugin: 'com.google.protobuf'
 
@@ -26,9 +29,8 @@ sourceSets {
   }
 }
 
-def protobufDep = 'com.google.protobuf:protobuf-java:3.0.0-alpha-2'
-def protobufNanoDep = 'com.google.protobuf.nano:protobuf-javanano:3.0.0-alpha-2'
-def grpcDep = 'io.grpc:grpc-all:0.7.0'
+def protobufDep = 'com.google.protobuf:protobuf-java:3.0.0-alpha-3'
+def protobufNanoDep = 'com.google.protobuf.nano:protobuf-javanano:3.0.0-alpha-3'
 
 dependencies {
     compile protobufDep
@@ -40,12 +42,14 @@ dependencies {
     testProtobuf files("lib/protos-test.tar.gz")
     testCompile 'junit:junit:4.7', protobufNanoDep
     nanoCompile protobufNanoDep
-    grpcCompile protobufNanoDep, grpcDep
+    grpcCompile protobufDep, protobufNanoDep,
+        'io.grpc:grpc-stub:0.7.0', 'io.grpc:grpc-protobuf:0.7.0',
+        'io.grpc:grpc-protobuf-nano:0.7.0'
 }
 
 protobuf {
   protoc {
-    artifact = 'com.google.protobuf:protoc:3.0.0-alpha-2'
+    artifact = 'com.google.protobuf:protoc:3.0.0-alpha-3'
   }
   plugins {
     grpc {
@@ -56,7 +60,7 @@ protobuf {
     ofSourceSet('nano')*.builtins {
       remove java
       javanano {
-        option 'java_multiple_files=true'
+        option 'java_multiple_files=false'
       }
     }
     ofSourceSet('grpc')*.plugins {
@@ -78,6 +82,14 @@ protobuf {
         }
       }
     }
+  }
+}
+
+// To include all sourceSets in the project jar
+jar {
+  sourceSets.all { sourceSet ->
+    from sourceSet.output
+    dependsOn sourceSet.getCompileTaskName('java')
   }
 }
 

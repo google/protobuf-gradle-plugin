@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2015, Alex Antonov. All rights reserved.
+ * Original work copyright (c) 2015, Alex Antonov. All rights reserved.
+ * Modified work copyright (c) 2015, Google Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -34,45 +35,50 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 
 /**
- * Created by aantonov on 5/19/14.
+ * Extracts proto files from a dependency configuration.
  */
 class ProtobufExtract extends DefaultTask {
 
-    File destDir
+  /**
+   * The directory for the extracted files.
+   */
+  File destDir
 
-    String configName
+  /**
+   * The name of the configuration that contains proto files.
+   */
+  String configName
 
-    @TaskAction
-    def extract() {
-        project.configurations[configName].files.each { file ->
-            if (file.path.endsWith('.proto')) {
-                ant.copy(
-                        file: file.path,
-                        toDir: destDir
-                )
-                //generateJavaTask.getSource().create(project.files(file))
-            } else if (file.path.endsWith('.jar') || file.path.endsWith('.zip')) {
-                ant.unzip(src: file.path, dest: destDir)
-            } else {
-                def compression
-
-                if (file.path.endsWith('.tar')) {
-                    compression = 'none'
-                } else
-                if (file.path.endsWith('.tar.gz')) {
-                    compression = 'gzip'
-                } else if (file.path.endsWith('.tar.bz2')) {
-                    compression = 'bzip2'
-                } else {
-                    throw new GradleException(
-                            "Unsupported file type (${file.path}); handles only jar, tar, tar.gz & tar.bz2")
-                }
-
-                ant.untar(
-                        src: file.path,
-                        dest: destDir,
-                        compression: compression)
-            }
+  @TaskAction
+  def extract() {
+    logger.debug "Extracting protos from configuration ${configName} to ${destDir}"
+    project.configurations[configName].files.each { file ->
+      logger.debug "Extracting protos from ${file} to ${destDir}"
+      if (file.path.endsWith('.proto')) {
+        project.copy {
+          includeEmptyDirs(false)
+          from(file.path)
+          into(destDir)
         }
+      } else if (file.path.endsWith('.jar') || file.path.endsWith('.zip')) {
+        project.copy {
+          includeEmptyDirs(false)
+          from(project.zipTree(file.path)) {
+            include '**/*.proto'
+          }
+          into(destDir)
+        }
+      } else if (file.path.endsWith('.tar') || file.path.endsWith('.tar.gz') || file.path.endsWith('.tar.bz2')) {
+        project.copy {
+          includeEmptyDirs(false)
+          from(project.tarTree(file.path)) {
+            include '**/*.proto'
+          }
+          into(destDir)
+        }
+      } else {
+        logger.debug "Skipping unsupported file type (${file.path}); handles only jar, tar, tar.gz & tar.bz2"
+      }
     }
+  }
 }
