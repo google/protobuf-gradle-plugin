@@ -11,14 +11,8 @@ For more information about the Protobuf Compiler, please refer to
 [Google Developers Site](https://developers.google.com/protocol-buffers/docs/reference/java-generated?csw=1).
 
 ## Latest Version
-The latest version is ``0.5.0``. It has been pushed to Maven Central.
-
-## Usage
-
-### Adding the plugin to your project
-
-Add dependency:
-
+The latest version is ``0.5.0``. It is available on Maven Central. To add
+dependency to it:
 ```gradle
 buildscript {
   repositories {
@@ -29,6 +23,38 @@ buildscript {
   }
 }
 ```
+
+Latest changes are included in the SNAPSHOT artifact:
+```gradle
+buildscript {
+  repositories {
+    maven {
+       url 'https://oss.sonatype.org/content/repositories/snapshots/'
+    }
+  }
+  dependencies {
+    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.6.0-SNAPSHOT'
+  }
+}
+```
+
+However, the availability and freshness of the SNAPSHOT artifact are not
+guaranteed. You can instead download the source and build it with ``./gradlew
+install``, then:
+```gradle
+buildscript {
+  repositories {
+    mavenLocal()
+  }
+  dependencies {
+    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.6.0-SNAPSHOT'
+  }
+}
+```
+
+## Usage
+
+### Adding the plugin to your project
 
 In Java projects, you must apply the java plugin before applying the Protobuf
 plugin:
