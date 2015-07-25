@@ -81,6 +81,7 @@ protobuf {
           option 'nano=true'
         }
       }
+      task.generateDescriptorSet = true
     }
   }
 }
@@ -96,6 +97,14 @@ jar {
 def assertJavaCompileHasProtoGeneratedDir(String sourceSet, Collection<String> codegenPlugins) {
   def compileJavaTask = tasks.getByName(sourceSets.getByName(sourceSet).getCompileTaskName("java"))
   assertJavaCompileHasProtoGeneratedDir(project, sourceSet, compileJavaTask, codegenPlugins)
+}
+
+def assertFileExists(boolean exists, String path) {
+  if (exists) {
+    org.junit.Assert.assertTrue("\"${path}\" exists", (path as File).exists());
+  } else {
+    org.junit.Assert.assertFalse("\"${path}\" doesn't exist", (path as File).exists());
+  }
 }
 
 test.doLast {
@@ -114,4 +123,10 @@ test.doLast {
   assertJavaCompileHasProtoGeneratedDir('nano', ['javanano'])
   assertJavaCompileHasProtoGeneratedDir('grpc', ['java', 'grpc'])
   assertJavaCompileHasProtoGeneratedDir('grpc_nano', ['javanano', 'grpc'])
+
+  // Check generateDescriptorSet option has been honored
+  ['main', 'test', 'nano', 'grpc'].each { sourceSet ->
+    assertFileExists(false, "$buildDir/generated/source/proto/$sourceSet/descriptor_set.desc")
+  }
+  assertFileExists(true, "$buildDir/generated/source/proto/grpc_nano/descriptor_set.desc")
 }

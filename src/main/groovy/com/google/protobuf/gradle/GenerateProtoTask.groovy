@@ -63,6 +63,14 @@ public class GenerateProtoTask extends DefaultTask {
   private String buildType
   private boolean isTestVariant
 
+  /**
+   * If true, will set the protoc flag
+   * --descriptor_set_out="${outputBaseDir}/descriptor_set.desc"
+   *
+   * Default: false
+   */
+  public boolean generateDescriptorSet
+
   private static enum State {
     INIT, CONFIG, FINALIZED
   }
@@ -302,6 +310,10 @@ public class GenerateProtoTask extends DefaultTask {
       String pluginOutPrefix = makeOptionsPrefix(plugin.options)
       cmd += "--${name}_out=${pluginOutPrefix}${getOutputDir(plugin)}"
       cmd += "--plugin=protoc-gen-${name}=${locator.path}"
+    }
+
+    if (generateDescriptorSet) {
+      cmd += "--descriptor_set_out=${outputBaseDir}/descriptor_set.desc"
     }
 
     cmd.addAll protoFiles
