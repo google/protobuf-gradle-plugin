@@ -85,6 +85,7 @@ dependencies {
     compile 'io.grpc:grpc-stub:0.7.0'
     compile 'io.grpc:grpc-protobuf-nano:0.7.0'
     compile project(':testProject')
+    protobuf files('lib/protos.jar')
 }
 
 def assertJavaCompileHasProtoGeneratedDir(Object variant, Collection<String> codegenPlugins) {

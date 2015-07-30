@@ -170,16 +170,7 @@ class ProtobufPlugin implements Plugin<Project> {
         java {}
       }
 
-      // Task to extract protos from protobuf dependencies. They are treated as
-      // sources and will be compiled.
-      def extractProtosTaskName = 'extract' +
-          Utils.getSourceSetSubstringForTaskNames(sourceSet.name) + 'Proto'
-      project.tasks.create(extractProtosTaskName, ProtobufExtract) {
-          description = "Extracts proto files/dependencies specified by 'protobuf' configuration"
-          destDir = getExtractedProtosDir(sourceSet.name) as File
-          configName = Utils.getConfigName(sourceSet.name, 'protobuf')
-      }
-      def extractProtosTask = project.tasks.getByName(extractProtosTaskName)
+      def extractProtosTask = maybeAddExtractProtosTask(sourceSet.name)
       generateProtoTask.dependsOn(extractProtosTask)
 
       def extractIncludeProtosTask = maybeAddExtractIncludeProtosTask(sourceSet.name)
@@ -230,9 +221,10 @@ class ProtobufPlugin implements Plugin<Project> {
         javanano {}
       }
 
-      // TODO(zhangkun83): create extraction tasks for protobuf dependency configurations
-
       sourceSetNames.each { sourceSetName ->
+        def extractProtosTask = maybeAddExtractProtosTask(sourceSetName)
+        generateProtoTask.dependsOn(extractProtosTask)
+
         def extractIncludeProtosTask = maybeAddExtractIncludeProtosTask(sourceSetName)
         generateProtoTask.dependsOn(extractIncludeProtosTask)
       }
@@ -257,14 +249,6 @@ class ProtobufPlugin implements Plugin<Project> {
       return project.tasks.create(generateProtoTaskName, GenerateProtoTask) {
         description = "Compiles Proto source for '${sourceSetOrVariantName}'"
         outputBaseDir = "${project.protobuf.generatedFilesBaseDir}/${sourceSetOrVariantName}"
-        // Include extracted sources
-        ConfigurableFileTree extractedProtoSources =
-            project.fileTree(getExtractedProtosDir(sourceSetOrVariantName)) {
-              include "**/*.proto"
-            }
-        inputs.source extractedProtoSources
-        include extractedProtoSources.dir
-
         sourceSets.each { sourceSet ->
           // Include sources
           inputs.source sourceSet.proto
@@ -273,16 +257,47 @@ class ProtobufPlugin implements Plugin<Project> {
             include srcDir
           }
 
+          // Include extracted sources
+          ConfigurableFileTree extractedProtoSources =
+              project.fileTree(getExtractedProtosDir(sourceSet.name)) {
+                include "**/*.proto"
+              }
+          inputs.source extractedProtoSources
+          include extractedProtoSources.dir
+
+          // Register extracted include protos
           ConfigurableFileTree extractedIncludeProtoSources =
               project.fileTree(getExtractedIncludeProtosDir(sourceSet.name)) {
                 include "**/*.proto"
               }
-          // Register the extracted include protos as input, but not as "source".
+          // Register them as input, but not as "source".
           // Inputs are checked in incremental builds, but only "source" files are compiled.
           inputs.dir extractedIncludeProtoSources
           // Add the extracted include dir to the --proto_path include paths.
           include extractedIncludeProtoSources.dir
         }
+      }
+    }
+
+    /**
+     * Adds a task to extract protos from protobuf dependencies. They are
+     * treated as sources and will be compiled.
+     *
+     * <p>This task is per-sourceSet, for both Java and Android. In Android a
+     * variant may have multiple sourceSets, each of these sourceSets will have
+     * its own extraction task.
+     */
+    private Task maybeAddExtractProtosTask(String sourceSetName) {
+      def extractProtosTaskName = 'extract' +
+          Utils.getSourceSetSubstringForTaskNames(sourceSetName) + 'Proto'
+      Task existingTask = project.tasks.findByName(extractProtosTaskName)
+      if (existingTask != null) {
+        return existingTask
+      }
+      return project.tasks.create(extractProtosTaskName, ProtobufExtract) {
+        description = "Extracts proto files/dependencies specified by 'protobuf' configuration"
+        destDir = getExtractedProtosDir(sourceSetName) as File
+        configName = Utils.getConfigName(sourceSetName, 'protobuf')
       }
     }
 

@@ -9,6 +9,10 @@ public class TestLibrary {
 
   // From testProject: src/nano/proto/messages.proto
   nano.Messages.SimpleRequest simpleRequest;
+
+  // From lib/protos.jar
+  com.google.protobuf.gradle.test.External.BlobMessage blobMessage;
+
   TestLibrary() {
   }
 }
