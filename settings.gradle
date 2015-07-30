@@ -4,9 +4,9 @@ rootProject.name = 'protobuf-gradle-plugin'
 // We have to exclude them when we intend to build the plugin, because the test
 // projects apply the plugin at evaluation time. At evaluation time the plugin
 // has not been compiled yet.
-if ('install' in gradle.startParameter.taskNames) {
+if (gradle.startParameter.taskNames.intersect(['install', 'uploadArchives', 'publishPlugins'])) {
   if (gradle.startParameter.taskNames.size > 1) {
-    throw new GradleException("'install' can only be used alone")
+    throw new GradleException("'install', 'uploadArchives' or 'publishPlugins' can only be used alone")
   }
 } else {
   logger.warn('***************************************************************************')
