@@ -301,6 +301,16 @@ Here is how you apply codegen plugins that have been defined in the
 }
 ```
 
+The task also provides following options:
+```gradle
+{ task ->
+  // If true, will generate a descriptor_set.desc file under
+  // $generatedFilesBaseDir/$sourceSet. Default is false.
+  // See --descriptor_set_out in protoc documentation about what it is.
+  task.generateDescriptorSet = true
+}
+```
+
 By default generated Java files are under
 ``$generatedFilesBaseDir/$sourceSet/$builtinPluginName``, where
 ``$generatedFilesBaseDir`` is ``$buildDir/generated/source/proto`` by default,
