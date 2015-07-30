@@ -11,7 +11,7 @@ For more information about the Protobuf Compiler, please refer to
 [Google Developers Site](https://developers.google.com/protocol-buffers/docs/reference/java-generated?csw=1).
 
 ## Latest Version
-The latest version is ``0.5.0``. It is available on Maven Central. To add
+The latest version is ``0.6.0``. It is available on Maven Central. To add
 dependency to it:
 ```gradle
 buildscript {
@@ -19,7 +19,7 @@ buildscript {
     mavenCentral()
   }
   dependencies {
-    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.5.0'
+    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.6.0'
   }
 }
 ```
@@ -47,7 +47,7 @@ buildscript {
     mavenLocal()
   }
   dependencies {
-    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.6.0-SNAPSHOT'
+    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.6.1-SNAPSHOT'
   }
 }
 ```
@@ -313,17 +313,33 @@ protobuf {
 }
 ```
 
-##### Adding proto archives
-_Note this works only for Java projects at this moment_.
+### Protos in dependencies
 
-If you have your protos archived in a tar file, you can
-specify that as a dependency per sourceSet. It supports ``jar``, ``tar``,
-``tar.gz``, ``tar.bz2``, ``zip``.
+If a Java project contains proto files, they will be packaged in the jar files
+along with the compiled classes. If a ``compile`` configuration has a
+dependency on a project or library jar that contains proto files, they will be
+added to the ``--proto_path`` flag of the protoc command line, so that they can
+be imported in the proto files of the dependent project. The imported proto
+files will not be compiled since they have already been compiled in their own
+projects. Example:
+
 ```gradle
 dependencies {
-  protobuf files("lib/protos.tar.gz")
-  // Different configuration fileSets are supported
-  testProtobuf files("lib/protos.tar")
+  compile project(':someProjectWithProtos')
+  testCompile files("lib/some-testlib-with-protos.jar")
+}
+```
+
+
+If there is a project, package or published artifact that contains just protos
+files, whose compiled classes are absent, and you want to use these proto files
+in your project and compile them, you can add it to ``protobuf`` dependencies.
+Example:
+
+```gradle
+dependencies {
+  protobuf files('lib/protos.tar.gz')
+  testProtobuf 'com.example:published-protos:1.0.0'
 }
 ```
 
