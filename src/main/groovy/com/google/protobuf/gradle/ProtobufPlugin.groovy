@@ -298,6 +298,7 @@ class ProtobufPlugin implements Plugin<Project> {
         description = "Extracts proto files/dependencies specified by 'protobuf' configuration"
         destDir = getExtractedProtosDir(sourceSetName) as File
         configName = Utils.getConfigName(sourceSetName, 'protobuf')
+        dependsOn project.configurations.getByName(configName)
       }
     }
 
@@ -322,6 +323,7 @@ class ProtobufPlugin implements Plugin<Project> {
         description = "Extracts proto files from compile dependencies for includes"
         destDir = getExtractedIncludeProtosDir(sourceSetName) as File
         configName = Utils.getConfigName(sourceSetName, 'compile')
+        dependsOn project.configurations.getByName(configName)
       }
     }
 

@@ -11,7 +11,7 @@ For more information about the Protobuf Compiler, please refer to
 [Google Developers Site](https://developers.google.com/protocol-buffers/docs/reference/java-generated?csw=1).
 
 ## Latest Version
-The latest version is ``0.6.0``. It is available on Maven Central. To add
+The latest version is ``0.6.1``. It is available on Maven Central. To add
 dependency to it:
 ```gradle
 buildscript {
@@ -19,7 +19,7 @@ buildscript {
     mavenCentral()
   }
   dependencies {
-    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.6.0'
+    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.6.1'
   }
 }
 ```
@@ -33,7 +33,7 @@ buildscript {
     }
   }
   dependencies {
-    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.6.0-SNAPSHOT'
+    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.6.2-SNAPSHOT'
   }
 }
 ```
