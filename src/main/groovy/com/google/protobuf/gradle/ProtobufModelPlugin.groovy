@@ -61,7 +61,6 @@ class ProtobufModelPlugin implements Plugin<Project> {
         // Provides the osdetector extension
         project.pluginManager.apply('osdetector')
 
-        //project.convention.plugins.protobuf = new ProtobufConvention(project, fileResolver);
         project.extensions.create("protobuf", ProtobufConfigurator, project, fileResolver);
 
         project.pluginManager.apply(ComponentModelBasePlugin)
@@ -124,34 +123,12 @@ class ProtobufModelPlugin implements Plugin<Project> {
                                 include srcDir
                             }
 
-//                            // Include extracted sources
-//                            ConfigurableFileTree extractedProtoSources =
-//                                    project.fileTree(getExtractedProtosDir(sourceSet.name)) {
-//                                        include "**/*.proto"
-//                                    }
-//                            inputs.source extractedProtoSources
-//                            include extractedProtoSources.dir
-
-//                            // Register extracted include protos
-//                            ConfigurableFileTree extractedIncludeProtoSources =
-//                                    project.fileTree(getExtractedIncludeProtosDir(sourceSet.name)) {
-//                                        include "**/*.proto"
-//                                    }
-//                            // Register them as input, but not as "source".
-//                            // Inputs are checked in incremental builds, but only "source" files are compiled.
-//                            inputs.dir extractedIncludeProtoSources
-//                            // Add the extracted include dir to the --proto_path include paths.
-//                            include extractedIncludeProtoSources.dir
-
-                            //sourceSet = language.source
                             doneInitializing()
                             builtins {
                                 cpp {}
                             }
                         }
-                    //t.source language.source
-                    //t.sourceDir = new File("${buildDir}/src/${component.name}/cpp${language.name.capitalize()}")
-                        //t.includeDirs.addAll(language.source.srcDirs)
+
                         builtBy generateProtoTask
                         source {
                             srcDir new File("${outputDir.path}/cpp")

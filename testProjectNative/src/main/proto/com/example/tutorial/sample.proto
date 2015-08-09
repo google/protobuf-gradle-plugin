@@ -1,4 +1,4 @@
-//syntax = "proto3";
+syntax = "proto2";
 
 option java_package = "com.example.tutorial";
 option java_outer_classname = "OuterSample";
