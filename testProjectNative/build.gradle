@@ -1,0 +1,36 @@
+// A C++ project that demonstrates most of the configuration features of this
+// plugin.
+
+apply plugin: 'cpp'
+apply plugin: 'com.google.protobuf'
+
+model {
+    components {
+        main(NativeLibrarySpec)
+        test(NativeExecutableSpec) {
+            binaries.all {
+                lib library: 'main', linkage: 'static'
+            }
+        }
+    }
+
+    protobuf {
+        protoc {
+            artifact = 'com.google.protobuf:protoc:2.6.1'
+        }
+    }
+}
+
+if (!System.env.PROTOBUF_HOME) {
+    throw new StopExecutionException("Please specify the protobuf c++ built library through PROTOBUF_HOME")
+}
+
+binaries.all {
+    if (toolChain in Clang || toolChain in Gcc) {
+        cppCompiler.args "-std=c++11", "-I${System.env.PROTOBUF_HOME}/include"
+        linker.args "-L${System.env.PROTOBUF_HOME}/lib", "-lprotobuf"
+    } else {
+        cppCompiler.args "/I${System.env.PROTOBUF_HOME}/include"
+        linker.args "/LIBPATH:${System.env.PROTOBUF_HOME/lib}", "protobuf-lite.lib"
+    }
+}

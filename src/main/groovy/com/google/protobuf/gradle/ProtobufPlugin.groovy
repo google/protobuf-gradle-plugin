@@ -31,26 +31,13 @@
 package com.google.protobuf.gradle
 
 import com.google.common.collect.ImmutableList
-import org.apache.commons.lang.StringUtils
-import org.gradle.api.Action
-import org.gradle.api.file.ConfigurableFileTree
-import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.GradleException
-import org.gradle.api.internal.file.DefaultSourceDirectorySet
-import org.gradle.api.internal.file.FileResolver;
-import org.gradle.api.internal.plugins.DslObject
-import org.gradle.api.internal.tasks.DefaultSourceSet
-import org.gradle.api.InvalidUserDataException
-import org.gradle.api.logging.LogLevel
 import org.gradle.api.Plugin
-import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.file.ConfigurableFileTree
+import org.gradle.api.internal.file.FileResolver
 import org.gradle.api.tasks.SourceSet
-import org.gradle.api.tasks.SourceSetContainer
-import org.gradle.api.tasks.compile.JavaCompile
-import org.gradle.tooling.UnsupportedVersionException
-import org.gradle.util.CollectionUtils
 
 import javax.inject.Inject
 
@@ -70,33 +57,35 @@ class ProtobufPlugin implements Plugin<Project> {
             println("You are using Gradle ${project.gradle.gradleVersion}: This version of the protobuf plugin requires minimum Gradle version 2.2")
         }
 
-        if (!project.plugins.hasPlugin('java') && !Utils.isAndroidProject(project)) {
-            throw new GradleException('Please apply the Java plugin or the Android plugin first')
-        }
+        if (project.plugins.hasPlugin('java') || Utils.isAndroidProject(project)) {
+            // Provides the osdetector extension
+            project.apply plugin: 'osdetector'
 
-        // Provides the osdetector extension
-        project.apply plugin: 'osdetector'
+            project.convention.plugins.protobuf = new ProtobufConvention(project, fileResolver);
 
-        project.convention.plugins.protobuf = new ProtobufConvention(project, fileResolver);
-
-        addSourceSetExtensions()
-        getSourceSets().all { sourceSet ->
-          createConfiguration(sourceSet.name)
-        }
-        project.afterEvaluate {
-          // The Android variants are only available at this point.
-          addProtoTasks()
-          project.protobuf.runTaskConfigClosures()
-          // Disallow user configuration outside the config closures, because
-          // next in linkGenerateProtoTasksToJavaCompile() we add generated,
-          // outputs to the inputs of javaCompile tasks, and any new codegen
-          // plugin output added after this point won't be added to javaCompile
-          // tasks.
-          project.protobuf.generateProtoTasks.all()*.doneConfig()
-          linkGenerateProtoTasksToJavaCompile()
-          // protoc and codegen plugin configuration may change through the protobuf{}
-          // block. Only at this point the configuration has been finalized.
-          project.protobuf.tools.resolve()
+            addSourceSetExtensions()
+            getSourceSets().all { sourceSet ->
+                createConfiguration(sourceSet.name)
+            }
+            project.afterEvaluate {
+                // The Android variants are only available at this point.
+                addProtoTasks()
+                project.protobuf.runTaskConfigClosures()
+                // Disallow user configuration outside the config closures, because
+                // next in linkGenerateProtoTasksToJavaCompile() we add generated,
+                // outputs to the inputs of javaCompile tasks, and any new codegen
+                // plugin output added after this point won't be added to javaCompile
+                // tasks.
+                project.protobuf.generateProtoTasks.all()*.doneConfig()
+                linkGenerateProtoTasksToJavaCompile()
+                // protoc and codegen plugin configuration may change through the protobuf{}
+                // block. Only at this point the configuration has been finalized.
+                project.protobuf.tools.resolve()
+            }
+        } else if (project.plugins.hasPlugin("cpp")) {
+            project.plugins.apply(ProtobufModelPlugin)
+        } else {
+            throw new GradleException('Please apply the Java plugin, the Android plugin or the Cpp plugin first')
         }
     }
 
