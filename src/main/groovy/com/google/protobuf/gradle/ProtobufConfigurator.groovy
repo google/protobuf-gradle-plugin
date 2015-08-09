@@ -41,7 +41,7 @@ import org.gradle.util.ConfigureUtil
 public class ProtobufConfigurator {
   private final Project project
   private final GenerateProtoTaskCollection tasks
-  private final ToolsLocator tools
+  protected final ToolsLocator tools
   private final ArrayList<Closure> taskConfigClosures
 
   /**

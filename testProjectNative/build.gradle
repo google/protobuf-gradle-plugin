@@ -1,0 +1,55 @@
+import org.gradle.model.internal.core.ModelPath
+import org.gradle.model.internal.type.ModelType
+
+// A C++ project that demonstrates most of the configuration features of this
+// plugin.
+
+apply plugin: 'cpp'
+apply plugin: 'com.google.protobuf'
+
+model {
+    components {
+        main(NativeLibrarySpec) {
+            binaries.withType(StaticLibraryBinarySpec) {
+                lib project: ':vendor', library: 'protobuf', linkage: 'api'
+            }
+        }
+        test(NativeExecutableSpec) {
+            binaries.all {
+                lib library: 'main', linkage: 'static'
+                lib project: ':vendor', library: 'protobufLite', linkage: 'static'
+                lib project: ':vendor', library: 'protobuf', linkage: 'static'
+            }
+        }
+    }
+
+    protobuf {
+        protoc {
+            path = "$rootDir/vendor/build/binaries/protocExecutable/protoc"
+        }
+    }
+}
+
+tasks.withType(com.google.protobuf.gradle.GenerateProtoTask) {
+    def vendorModelRegistry = project.evaluationDependsOn(':vendor').getModelRegistry()
+
+    // We just want this path to be realize so we ignore the return type
+    vendorModelRegistry.realizeNode(ModelPath.path('components'))
+
+    // Depends on the protoc binary
+    dependsOn vendorModelRegistry.find(ModelPath.path('components.protoc.binaries.protocExecutable'), ModelType.of(NativeExecutableBinarySpec.class))
+}
+
+binaries.all {
+    if (toolChain in Clang || toolChain in Gcc) {
+        cppCompiler.args '-std=c++11'
+    }
+}
+
+task test(type: Exec) {
+    modelRegistry.realizeNode(ModelPath.path('components'))
+    def testBinary = modelRegistry.find(ModelPath.path('components.test.binaries.testExecutable'), ModelType.of(NativeExecutableBinarySpec))
+    dependsOn testBinary
+
+    commandLine testBinary.executableFile.path
+}

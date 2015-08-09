@@ -85,6 +85,10 @@ public class GenerateProtoTask extends DefaultTask {
         'Should not be called after configuration has finished')
   }
 
+  String getOutputBaseDir() {
+    return outputBaseDir
+  }
+
   void setOutputBaseDir(String outputBaseDir) {
     checkInitializing()
     Preconditions.checkState(this.outputBaseDir == null, 'outputBaseDir is already set')

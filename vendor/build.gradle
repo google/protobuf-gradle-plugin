@@ -1,0 +1,176 @@
+import org.gradle.nativeplatform.NativeExecutableSpec
+
+project(':vendor') {
+    apply plugin: 'cpp'
+    
+    model {
+        components {
+            // We are building protoc and protobuf from source for maximum compatibility
+            // across platform. Please note that we are using a very minimilistic
+            // port of the build to Gradle.
+            protocLib(NativeLibrarySpec) {
+                sources {
+                    cpp {
+                        source {
+                            srcDir "protobuf/src/google/protobuf/compiler"
+                            include "compiler/**/*.cc"
+                            include 'cpp/*.cc'
+                            include 'csharp/*.cc'
+                            include 'java/*.cc'
+                            include 'javanano/*.cc'
+                            include 'objectivec/*.cc'
+
+                            include 'code_generator.cc'
+                            include 'command_line_interface.cc'
+                            include 'plugin.cc'
+                            include 'plugin.pb.cc'
+                            include 'subprocess.cc'
+                            include 'zip_writer.cc'
+
+                            include 'python/python_generator.cc'
+                            include 'ruby/ruby_generator.cc'
+
+                            exclude '**/*_unittest.cc'
+                            exclude '**/*_test.cc'
+                        }
+                        exportedHeaders {
+                            srcDir "protobuf/src"
+                        }
+                    }
+                }
+                binaries.all {
+                    lib library: 'protobuf', linkage: 'api'
+                }
+            }
+
+            protoc(NativeExecutableSpec) {
+                sources.cpp {
+                    source {
+                        srcDir 'protobuf/src/google/protobuf/compiler'
+                        include 'main.cc'
+                    }
+                }
+
+                binaries.all {
+                    lib library: 'protobufLite', linkage: 'static'
+                    lib library: 'protocLib', linkage: 'static'
+                    lib library: 'protobuf', linkage: 'static'
+                }
+            }
+
+            protobufLite(NativeLibrarySpec) {
+                sources {
+                    cpp {
+                        source {
+                            srcDir 'protobuf/src/google/protobuf'
+                            include 'arena.cc'
+                            include 'arenastring.cc'
+                            include 'extension_set.cc'
+                            include 'generated_message_util.cc'
+                            include 'io/coded_stream.cc'
+                            include 'io/zero_copy_stream.cc'
+                            include 'io/zero_copy_stream_impl_lite.cc'
+                            include 'message_lite.cc'
+                            include 'repeated_field.cc'
+                            include 'stubs/atomicops_internals_x86_gcc.cc'
+                            include 'stubs/atomicops_internals_x86_msvc.cc'
+                            include 'stubs/bytestream.cc'
+                            include 'stubs/common.cc'
+                            include 'stubs/int128.cc'
+                            include 'stubs/once.cc'
+                            include 'stubs/status.cc'
+                            include 'stubs/statusor.cc'
+                            include 'stubs/stringpiece.cc'
+                            include 'stubs/stringprintf.cc'
+                            include 'stubs/structurally_valid.cc'
+                            include 'stubs/strutil.cc'
+                            include 'stubs/time.cc'
+                            include 'wire_format_lite.cc'
+                        }
+                        exportedHeaders {
+                            srcDir "protobuf/src"
+                        }
+                    }
+                }
+            }
+    
+            protobuf(NativeLibrarySpec) {
+                sources {
+                    cpp {
+                        source {
+                            srcDir "protobuf/src/google/protobuf"
+                            include 'any.cc'
+                            include 'any.pb.cc'
+                            include 'api.pb.cc'
+                            include 'compiler/importer.cc'
+                            include 'compiler/parser.cc'
+                            include 'descriptor.cc'
+                            include 'descriptor.pb.cc'
+                            include 'descriptor_database.cc'
+                            include 'duration.pb.cc'
+                            include 'dynamic_message.cc'
+                            include 'empty.pb.cc'
+                            include 'extension_set_heavy.cc'
+                            include 'field_mask.pb.cc'
+                            include 'generated_message_reflection.cc'
+                            include 'io/gzip_stream.cc'
+                            include 'io/printer.cc'
+                            include 'io/strtod.cc'
+                            include 'io/tokenizer.cc'
+                            include 'io/zero_copy_stream_impl.cc'
+                            include 'map_field.cc'
+                            include 'message.cc'
+                            include 'reflection_ops.cc'
+                            include 'service.cc'
+                            include 'source_context.pb.cc'
+                            include 'struct.pb.cc'
+                            include 'stubs/mathlimits.cc'
+                            include 'stubs/substitute.cc'
+                            include 'text_format.cc'
+                            include 'timestamp.pb.cc'
+                            include 'type.pb.cc'
+                            include 'unknown_field_set.cc'
+                            include 'util/field_comparator.cc'
+                            include 'util/field_mask_util.cc'
+                            include 'util/internal/datapiece.cc'
+                            include 'util/internal/default_value_objectwriter.cc'
+                            include 'util/internal/error_listener.cc'
+                            include 'util/internal/field_mask_utility.cc'
+                            include 'util/internal/json_escaping.cc'
+                            include 'util/internal/json_objectwriter.cc'
+                            include 'util/internal/json_stream_parser.cc'
+                            include 'util/internal/object_writer.cc'
+                            include 'util/internal/protostream_objectsource.cc'
+                            include 'util/internal/protostream_objectwriter.cc'
+                            include 'util/internal/type_info.cc'
+                            include 'util/internal/type_info_test_helper.cc'
+                            include 'util/internal/utility.cc'
+                            include 'util/json_util.cc'
+                            include 'util/message_differencer.cc'
+                            include 'util/time_util.cc'
+                            include 'util/type_resolver_util.cc'
+                            include 'wire_format.cc'
+                            include 'wrappers.pb.cc'
+                        }
+                        exportedHeaders {
+                            srcDir "protobuf/src"
+                        }
+                    }
+                }
+                binaries.all {
+                    lib library: 'protobufLite', linkage: 'api'
+                }
+            }
+        }
+    }
+    
+    binaries.all {
+        if (toolChain in Clang || toolChain in Gcc) {
+            cppCompiler.args "-DHAVE_PTHREAD", '-Wall', '-Wwrite-strings', '-Woverloaded-virtual',
+                    '-Wno-sign-compare',
+                    '-Wno-error=unused-function'
+            linker.args '-lpthread'
+        } else {
+        }
+    }
+}

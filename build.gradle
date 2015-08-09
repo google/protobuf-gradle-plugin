@@ -1,4 +1,7 @@
 import org.gradle.api.artifacts.maven.MavenDeployment
+import org.gradle.model.internal.core.ModelPath
+import org.gradle.model.internal.type.ModelType
+import org.gradle.platform.base.ComponentSpecContainer
 
 println """\
 Welcome to Gradle $gradle.gradleVersion - http://www.gradle.org
@@ -8,6 +11,11 @@ Gradle user directory is set to: $gradle.gradleUserHomeDir
 Base directory: $projectDir
 Running script ${relativePath(buildFile)}
 """
+
+if (file("vendor/protobuf").list().length == 0) {
+	throw new GradleException(
+		"You forgot to sync the submodule for protobuf. Please execute \"git submodule init && git submodule update\".")
+}
 
 apply plugin: 'idea'
 apply plugin: 'eclipse'
@@ -61,16 +69,40 @@ repositories {
     mavenCentral()
 }
 
+// Write the plugin's classpath to a file to share with the tests
+task createClasspathManifest {
+    def outputDir = file("$buildDir/$name")
+
+    inputs.files sourceSets.main.runtimeClasspath
+    outputs.dir outputDir
+
+    doLast {
+        outputDir.mkdirs()
+        file("$outputDir/plugin-classpath.txt").text = sourceSets.main.runtimeClasspath.join("\n")
+    }
+}
+
+tasks.test.dependsOn tasks.createClasspathManifest
+if (findProject(':vendor') != null) {
+	tasks.test.dependsOn
+		evaluationDependsOn(':vendor').binaries.matching {
+			it instanceof StaticLibraryBinarySpec || it instanceof NativeExecutableBinarySpec
+		}
+}
+
 dependencies {
     compile gradleApi()
     testCompile group: 'junit', name: 'junit', version: '4.8.1'
+    testCompile gradleTestKit()
+    testCompile 'org.spockframework:spock-core:1.0-groovy-2.3'
+    testRuntime files(createClasspathManifest)
     compile localGroovy()
     compile 'com.google.gradle:osdetector-gradle-plugin:1.2.1'
     compile 'commons-lang:commons-lang:2.6'
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '2.3'
+    gradleVersion = '2.7'
 }
 
 task sourcesJar(type: Jar, dependsOn:classes) {
