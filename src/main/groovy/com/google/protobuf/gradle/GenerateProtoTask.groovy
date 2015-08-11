@@ -38,7 +38,6 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.Named
 import org.gradle.api.NamedDomainObjectContainer
-import org.gradle.api.Project
 import org.gradle.util.ConfigureUtil
 
 /**
@@ -212,6 +211,7 @@ public class GenerateProtoTask extends DefaultTask {
   public static class PluginOptions implements Named {
     private final ArrayList<String> options = new ArrayList<String>()
     private final String name
+    private String outputSubDir
 
     public PluginOptions(String name) {
       this.name = name
@@ -235,6 +235,23 @@ public class GenerateProtoTask extends DefaultTask {
     @Override
     public String getName() {
       return name
+    }
+
+    /**
+     * Set the output directory for this plugin, relative to {@link GenerateProtoTask#outputBaseDir}.
+     */
+    public setOutputSubDir(String outputSubDir) {
+      this.outputSubDir = outputSubDir
+    }
+
+    /**
+     * Returns the relative outputDir for this plugin.  If outputDir is not specified, name is used.
+     */
+    public String getOutputSubDir() {
+      if (outputSubDir != null) {
+        return outputSubDir;
+      }
+      return name;
     }
   }
 
@@ -262,7 +279,7 @@ public class GenerateProtoTask extends DefaultTask {
   }
 
   String getOutputDir(PluginOptions plugin) {
-    return "${outputBaseDir}/${plugin.name}"
+    return "${outputBaseDir}/${plugin.outputSubDir}"
   }
 
   Collection<File> getAllOutputDirs() {
