@@ -158,6 +158,18 @@ pluginBundle {
   }
 }
 
+// Releases must be built on Java 1.7. Building on Java 1.8 will make the
+// plugin runnable only on Java 1.8.
+// See https://github.com/grpc/grpc-java/issues/805
+task checkJavaVersion << {
+  JavaVersion javaVersion = JavaVersion.current()
+  if (!javaVersion.isJava7()) {
+    throw new GradleException(
+        "The plugin must be published under Java 1.7 but ${javaVersion} is found")
+  }
+}
+[uploadArchives, publishPlugins]*.dependsOn checkJavaVersion
+
 ext {
   // Shared test utility. Checks a JavaCompile task for the given sourceSet
   // includes the generated source dirs for the given codegenPlugins, and does
