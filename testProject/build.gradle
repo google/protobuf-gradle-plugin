@@ -79,6 +79,7 @@ protobuf {
       task.plugins {
         grpc {
           option 'nano=true'
+          outputSubDir = 'grpcjavanano'
         }
       }
       task.generateDescriptorSet = true
@@ -122,7 +123,7 @@ test.doLast {
   assertJavaCompileHasProtoGeneratedDir('test', ['java'])
   assertJavaCompileHasProtoGeneratedDir('nano', ['javanano'])
   assertJavaCompileHasProtoGeneratedDir('grpc', ['java', 'grpc'])
-  assertJavaCompileHasProtoGeneratedDir('grpc_nano', ['javanano', 'grpc'])
+  assertJavaCompileHasProtoGeneratedDir('grpc_nano', ['javanano', 'grpcjavanano'])
 
   // Check generateDescriptorSet option has been honored
   ['main', 'test', 'nano', 'grpc'].each { sourceSet ->

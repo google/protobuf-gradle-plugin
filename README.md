@@ -11,7 +11,7 @@ For more information about the Protobuf Compiler, please refer to
 [Google Developers Site](https://developers.google.com/protocol-buffers/docs/reference/java-generated?csw=1).
 
 ## Latest Version
-The latest version is ``0.6.1``. It is available on Maven Central. To add
+The latest version is ``0.7.0``. It is available on Maven Central. To add
 dependency to it:
 ```gradle
 buildscript {
@@ -19,7 +19,7 @@ buildscript {
     mavenCentral()
   }
   dependencies {
-    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.6.1'
+    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.7.0'
   }
 }
 ```
@@ -33,7 +33,7 @@ buildscript {
     }
   }
   dependencies {
-    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.6.2-SNAPSHOT'
+    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.7.1-SNAPSHOT'
   }
 }
 ```
@@ -47,7 +47,7 @@ buildscript {
     mavenLocal()
   }
   dependencies {
-    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.6.1-SNAPSHOT'
+    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.7.1-SNAPSHOT'
   }
 }
 ```
@@ -311,6 +311,8 @@ The task also provides following options:
 }
 ```
 
+#### Change where the generated files are
+
 By default generated Java files are under
 ``$generatedFilesBaseDir/$sourceSet/$builtinPluginName``, where
 ``$generatedFilesBaseDir`` is ``$buildDir/generated/source/proto`` by default,
@@ -320,6 +322,23 @@ and is configurable. E.g.,
 protobuf {
   ...
   generatedFilesBaseDir = "$projectDir/src/generated"
+}
+```
+
+The subdirectory name, which is by default ``$builtinPluginName``, can also be
+changed by setting the ``outputSubDir`` property in the ``builtins`` or
+``plugins`` block of a task configuration within ``generateProtoTasks`` block
+(see previous section). E.g.,
+
+```gradle
+{ task ->
+  task.plugins {
+    grpc {
+      // Write the generated files under
+      // "$generatedFilesBaseDir/$sourceSet/grpcjava"
+      outputSubDir = 'grpcjava'
+    }
+  }
 }
 ```
 
