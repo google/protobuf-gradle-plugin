@@ -1,0 +1,29 @@
+syntax = "proto2";
+
+package ws.antonov.protobuf.test;
+
+import "com/example/tutorial/sample.proto";
+
+message TestMessage {
+  optional int32 id = 1;
+  optional string name = 2;
+}
+
+message AnotherMessage {
+  repeated string names = 1;
+  optional DataPayload data = 2;
+
+  message DataPayload {
+    optional string payload = 1;
+  }
+}
+
+message Item {
+  optional string name = 1;
+  optional string value = 2;
+  optional Msg msg = 3;
+  optional SecondMsg msg2 = 4;
+}
+message DataMap {
+  repeated Item data_items = 1;
+}
