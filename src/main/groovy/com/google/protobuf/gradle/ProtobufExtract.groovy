@@ -62,7 +62,9 @@ class ProtobufExtract extends DefaultTask {
   protected void setConfigName(String configName) {
     Preconditions.checkState(this.configName == null, 'configName already set')
     this.configName = configName
-    inputs.files project.configurations[configName]
+    def config = project.configurations[configName]
+    inputs.files config
+    dependsOn config
   }
 
   protected String getConfigName() {
