@@ -29,9 +29,9 @@
  */
 package com.google.protobuf.gradle
 
+import com.google.common.base.Preconditions
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
-import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 
 /**
@@ -42,17 +42,39 @@ class ProtobufExtract extends DefaultTask {
   /**
    * The directory for the extracted files.
    */
-  File destDir
+  private File destDir
 
   /**
    * The name of the configuration that contains proto files.
    */
-  String configName
+  private String configName
+
+  protected void setDestDir(File destDir) {
+    Preconditions.checkState(this.destDir == null, 'destDir already set')
+    this.destDir = destDir
+    outputs.dir destDir
+  }
+
+  protected File getDestDir() {
+    return destDir
+  }
+
+  protected void setConfigName(String configName) {
+    Preconditions.checkState(this.configName == null, 'configName already set')
+    this.configName = configName
+    def config = project.configurations[configName]
+    inputs.files config
+    dependsOn config
+  }
+
+  protected String getConfigName() {
+    return configName
+  }
 
   @TaskAction
   def extract() {
     logger.debug "Extracting protos from configuration ${configName} to ${destDir}"
-    project.configurations[configName].files.each { file ->
+    inputs.files.each { file ->
       logger.debug "Extracting protos from ${file} to ${destDir}"
       if (file.path.endsWith('.proto')) {
         project.copy {
