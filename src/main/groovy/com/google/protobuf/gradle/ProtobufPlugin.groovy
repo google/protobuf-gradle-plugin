@@ -31,26 +31,15 @@
 package com.google.protobuf.gradle
 
 import com.google.common.collect.ImmutableList
-import org.apache.commons.lang.StringUtils
-import org.gradle.api.Action
-import org.gradle.api.file.ConfigurableFileTree
-import org.gradle.api.file.SourceDirectorySet
+
 import org.gradle.api.GradleException
-import org.gradle.api.internal.file.DefaultSourceDirectorySet
-import org.gradle.api.internal.file.FileResolver;
-import org.gradle.api.internal.plugins.DslObject
-import org.gradle.api.internal.tasks.DefaultSourceSet
-import org.gradle.api.InvalidUserDataException
-import org.gradle.api.logging.LogLevel
 import org.gradle.api.Plugin
-import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.file.ConfigurableFileTree
+import org.gradle.api.file.SourceDirectorySet
+import org.gradle.api.internal.file.FileResolver
 import org.gradle.api.tasks.SourceSet
-import org.gradle.api.tasks.SourceSetContainer
-import org.gradle.api.tasks.compile.JavaCompile
-import org.gradle.tooling.UnsupportedVersionException
-import org.gradle.util.CollectionUtils
 
 import javax.inject.Inject
 

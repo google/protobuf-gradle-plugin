@@ -31,13 +31,14 @@ package com.google.protobuf.gradle
 
 import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
-import org.gradle.api.tasks.SourceSet
-import org.gradle.api.logging.LogLevel
-import org.gradle.api.tasks.TaskAction
+
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.Named
 import org.gradle.api.NamedDomainObjectContainer
+import org.gradle.api.logging.LogLevel
+import org.gradle.api.tasks.SourceSet
+import org.gradle.api.tasks.TaskAction
 import org.gradle.util.ConfigureUtil
 
 /**
@@ -69,6 +70,28 @@ public class GenerateProtoTask extends DefaultTask {
    * Default: false
    */
   public boolean generateDescriptorSet
+
+  /**
+   * If set, specifies an alternative location than the default for storing the descriptor
+   * set.
+   *
+   * Default: null
+   */
+  public GString descriptorSetPath
+
+  /**
+   * If true, source information (comments, locations) will be included in the descriptor set.
+   *
+   * Default: false
+   */
+  public boolean includeSourceInfoInDescriptorSet
+
+  /**
+   * If true, imports are included in the descriptor set, such that it is self-containing.
+   *
+   * Default: false
+   */
+  public boolean includeImportsInDescriptorSet
 
   private static enum State {
     INIT, CONFIG, FINALIZED
@@ -164,6 +187,14 @@ public class GenerateProtoTask extends DefaultTask {
   void doneConfig() {
     Preconditions.checkState(state == State.CONFIG, "Invalid state: ${state}")
     state = State.FINALIZED
+  }
+
+  String getDescriptorPath() {
+    if (!generateDescriptorSet) {
+      return null
+    }
+    return descriptorSetPath != null
+      ? descriptorSetPath : "${outputBaseDir}/descriptor_set.desc"
   }
 
   public GenerateProtoTask() {
@@ -330,7 +361,20 @@ public class GenerateProtoTask extends DefaultTask {
     }
 
     if (generateDescriptorSet) {
-      cmd += "--descriptor_set_out=${outputBaseDir}/descriptor_set.desc"
+      def path = getDescriptorPath()
+      // Ensure that the folder for the descriptor exists;
+      // the user may have set it to point outside an existing tree
+      def folder = new File(path).parentFile
+      if (!folder.exists()) {
+        folder.mkdirs()
+      }
+      cmd += "--descriptor_set_out=${path}"
+      if (includeImportsInDescriptorSet) {
+        cmd += "--include_imports"
+      }
+      if (includeSourceInfoInDescriptorSet) {
+        cmd += "--include_source_info"
+      }
     }
 
     cmd.addAll protoFiles
