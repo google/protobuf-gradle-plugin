@@ -310,16 +310,16 @@ The task also provides following options:
   task.generateDescriptorSet = true
 
   // Allows to override the default for the descriptor set location
-  task.descriptorSetPath = 
-    "${projectDir}/build/descriptors/{$task.sourceSet.name}.dsc
+  task.descriptorSetOptions.path = 
+    "${projectDir}/build/descriptors/{$task.sourceSet.name}.dsc"
 
   // If true, the descriptor set will contain line number information 
   // and comments. Default is false.
-  task.includeSourceInfoInDescriptorSet = true
+  task.descriptorSetOptions.includeSourceInfo = true
 
   // If true, the descriptor set will contain all transitive imports and 
   // is therefore self-contained. Default is false.
-  task.includeImportsInDescriptorSet = true
+  task.descriptorSetOption.includeImports = true
 }
 ```
 

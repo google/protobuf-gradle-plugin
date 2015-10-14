@@ -72,32 +72,40 @@ public class GenerateProtoTask extends DefaultTask {
   public boolean generateDescriptorSet
 
   /**
-   * If set, specifies an alternative location than the default for storing the descriptor
-   * set.
-   *
-   * Default: null
+   * Configuration object for descriptor generation details.
    */
-  public GString descriptorSetPath
+  public class DescriptorSetOptions {
+    /**
+     * If set, specifies an alternative location than the default for storing the descriptor
+     * set.
+     *
+     * Default: null
+     */
+    public GString path
 
-  /**
-   * If true, source information (comments, locations) will be included in the descriptor set.
-   *
-   * Default: false
-   */
-  public boolean includeSourceInfoInDescriptorSet
+    /**
+     * If true, source information (comments, locations) will be included in the descriptor set.
+     *
+     * Default: false
+     */
+    public boolean includeSourceInfo
 
-  /**
-   * If true, imports are included in the descriptor set, such that it is self-containing.
-   *
-   * Default: false
-   */
-  public boolean includeImportsInDescriptorSet
+    /**
+     * If true, imports are included in the descriptor set, such that it is self-containing.
+     *
+     * Default: false
+     */
+    public boolean includeImports
+  }
+
+  public final DescriptorSetOptions descriptorSetOptions = new DescriptorSetOptions();
 
   private static enum State {
     INIT, CONFIG, FINALIZED
   }
 
   private State state = State.INIT
+
 
   private void checkInitializing() {
     Preconditions.checkState(state == State.INIT, 'Should not be called after initilization has finished')
@@ -193,8 +201,8 @@ public class GenerateProtoTask extends DefaultTask {
     if (!generateDescriptorSet) {
       return null
     }
-    return descriptorSetPath != null
-      ? descriptorSetPath : "${outputBaseDir}/descriptor_set.desc"
+    return descriptorSetOptions.path != null
+      ? descriptorSetOptions.path : "${outputBaseDir}/descriptor_set.desc"
   }
 
   public GenerateProtoTask() {
@@ -369,10 +377,10 @@ public class GenerateProtoTask extends DefaultTask {
         folder.mkdirs()
       }
       cmd += "--descriptor_set_out=${path}"
-      if (includeImportsInDescriptorSet) {
+      if (descriptorSetOptions.includeImports) {
         cmd += "--include_imports"
       }
-      if (includeSourceInfoInDescriptorSet) {
+      if (descriptorSetOptions.includeSourceInfo) {
         cmd += "--include_source_info"
       }
     }
