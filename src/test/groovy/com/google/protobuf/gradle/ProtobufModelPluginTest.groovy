@@ -80,13 +80,7 @@ class ProtobufModelPluginTest extends Specification {
     buildFile << """
           model {
             components {
-              main(NativeExecutableSpec) {
-                sources {
-                  proto {
-                    source.include "*.proto"
-                  }
-                }
-              }
+              main(NativeExecutableSpec)
             }
           }
         """

@@ -13,8 +13,8 @@ Running script ${relativePath(buildFile)}
 """
 
 if (file("vendor/protobuf").list().length == 0) {
-	throw new GradleException(
-		"You forgot to sync the submodule for protobuf. Please execute \"git submodule init && git submodule update\".")
+  throw new GradleException(
+    "You forgot to sync the submodule for protobuf. Please execute \"git submodule init && git submodule update\".")
 }
 
 apply plugin: 'idea'
@@ -71,23 +71,29 @@ repositories {
 
 // Write the plugin's classpath to a file to share with the tests
 task createClasspathManifest {
-    def outputDir = file("$buildDir/$name")
+  def outputDir = file("$buildDir/$name")
 
-    inputs.files sourceSets.main.runtimeClasspath
-    outputs.dir outputDir
+  inputs.files sourceSets.main.runtimeClasspath
+  outputs.dir outputDir
 
-    doLast {
-        outputDir.mkdirs()
-        file("$outputDir/plugin-classpath.txt").text = sourceSets.main.runtimeClasspath.join("\n")
-    }
+  doLast {
+    outputDir.mkdirs()
+    file("$outputDir/plugin-classpath.txt").text = sourceSets.main.runtimeClasspath.join("\n")
+  }
 }
 
 tasks.test.dependsOn tasks.createClasspathManifest
 if (findProject(':vendor') != null) {
-	tasks.test.dependsOn
-		evaluationDependsOn(':vendor').binaries.matching {
-			it instanceof StaticLibraryBinarySpec || it instanceof NativeExecutableBinarySpec
-		}
+  def vendorModelRegistry = project.evaluationDependsOn(':vendor').getModelRegistry()
+
+  // We just want this path to be realize so we ignore the return type
+  vendorModelRegistry.realizeNode(ModelPath.path('components'))
+  def protoc = vendorModelRegistry.find(ModelPath.path('components.protoc.binaries.protocExecutable'), ModelType.of(NativeExecutableBinarySpec.class))
+  def protobuf = vendorModelRegistry.find(ModelPath.path('components.protobuf.binaries.protobufStaticLibrary'), ModelType.of(StaticLibraryBinarySpec.class))
+  def protobufLite = vendorModelRegistry.find(ModelPath.path('components.protobufLite.binaries.protobufLiteStaticLibrary'), ModelType.of(StaticLibraryBinarySpec.class))
+
+  // Depends on the protoc binary
+  tasks.test.dependsOn protoc, protobuf, protobufLite
 }
 
 dependencies {
