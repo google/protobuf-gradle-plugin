@@ -82,7 +82,7 @@ compilation run of that _sourceSet_ (or _variant_).
 The plugin adds a new sources block named ``proto`` alongside ``java`` to every
 sourceSet. By default, it includes all ``*.proto`` files under
 ``src/$sourceSetName/proto``. You can customize it in the same way as you would
-custmoize the ``java`` sources.
+customize the ``java`` sources.
 
 For Java projects, use the top-level ``sourceSet``:
 
