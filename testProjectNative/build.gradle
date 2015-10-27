@@ -17,8 +17,8 @@ model {
         test(NativeExecutableSpec) {
             binaries.all {
                 lib library: 'main', linkage: 'static'
-                lib project: ':vendor', library: 'protobufLite', linkage: 'static'
                 lib project: ':vendor', library: 'protobuf', linkage: 'static'
+				lib project: ':vendor', library: 'protobufLite', linkage: 'static'
             }
         }
     }
