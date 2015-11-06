@@ -185,12 +185,28 @@ public class GenerateProtoTask extends DefaultTask {
   }
 
   /**
+   * Returns the container of protoc builtins.
+   */
+  public NamedDomainObjectContainer<PluginOptions> getBuiltins() {
+    checkCanConfig()
+    return builtins
+  }
+
+  /**
    * Configures the protoc plugins in a closure, which will be maniuplating a
    * NamedDomainObjectContainer<PluginOptions>.
    */
   public void plugins(Closure configureClosure) {
     checkCanConfig()
     ConfigureUtil.configure(configureClosure, plugins)
+  }
+
+  /**
+   * Returns the container of protoc plugins.
+   */
+  public NamedDomainObjectContainer<PluginOptions> getPlugins() {
+    checkCanConfig()
+    return plugins
   }
 
   /**
