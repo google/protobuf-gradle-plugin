@@ -33,7 +33,7 @@ buildscript {
     }
   }
   dependencies {
-    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.7.1-SNAPSHOT'
+    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.7.2-SNAPSHOT'
   }
 }
 ```
@@ -47,7 +47,7 @@ buildscript {
     mavenLocal()
   }
   dependencies {
-    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.7.1-SNAPSHOT'
+    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.7.2-SNAPSHOT'
   }
 }
 ```
