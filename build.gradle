@@ -94,11 +94,12 @@ artifacts {
      archives javadocJar
 }
 
-signing {
-     required { isReleaseVersion &&
-                gradle.taskGraph.hasTask("uploadArchives") &&
-                !gradle.taskGraph.hasTask("publishPlugins")}
-     sign configurations.archives
+// The Gradle plugin portal doesn't allow signature files.
+if (!gradle.startParameter.taskNames.intersect(['publishPlugins'])) {
+  signing {
+       required { isReleaseVersion }
+       sign configurations.archives
+  }
 }
 
 targetCompatibility = 1.6
