@@ -308,6 +308,18 @@ The task also provides following options:
   // $generatedFilesBaseDir/$sourceSet. Default is false.
   // See --descriptor_set_out in protoc documentation about what it is.
   task.generateDescriptorSet = true
+
+  // Allows to override the default for the descriptor set location
+  task.descriptorSetOptions.path = 
+    "${projectDir}/build/descriptors/{$task.sourceSet.name}.dsc"
+
+  // If true, the descriptor set will contain line number information 
+  // and comments. Default is false.
+  task.descriptorSetOptions.includeSourceInfo = true
+
+  // If true, the descriptor set will contain all transitive imports and 
+  // is therefore self-contained. Default is false.
+  task.descriptorSetOption.includeImports = true
 }
 ```
 

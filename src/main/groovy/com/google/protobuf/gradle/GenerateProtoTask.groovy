@@ -31,13 +31,14 @@ package com.google.protobuf.gradle
 
 import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
-import org.gradle.api.tasks.SourceSet
-import org.gradle.api.logging.LogLevel
-import org.gradle.api.tasks.TaskAction
+
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.Named
 import org.gradle.api.NamedDomainObjectContainer
+import org.gradle.api.logging.LogLevel
+import org.gradle.api.tasks.SourceSet
+import org.gradle.api.tasks.TaskAction
 import org.gradle.util.ConfigureUtil
 
 /**
@@ -70,11 +71,41 @@ public class GenerateProtoTask extends DefaultTask {
    */
   public boolean generateDescriptorSet
 
+  /**
+   * Configuration object for descriptor generation details.
+   */
+  public class DescriptorSetOptions {
+    /**
+     * If set, specifies an alternative location than the default for storing the descriptor
+     * set.
+     *
+     * Default: null
+     */
+    public GString path
+
+    /**
+     * If true, source information (comments, locations) will be included in the descriptor set.
+     *
+     * Default: false
+     */
+    public boolean includeSourceInfo
+
+    /**
+     * If true, imports are included in the descriptor set, such that it is self-containing.
+     *
+     * Default: false
+     */
+    public boolean includeImports
+  }
+
+  public final DescriptorSetOptions descriptorSetOptions = new DescriptorSetOptions();
+
   private static enum State {
     INIT, CONFIG, FINALIZED
   }
 
   private State state = State.INIT
+
 
   private void checkInitializing() {
     Preconditions.checkState(state == State.INIT, 'Should not be called after initilization has finished')
@@ -164,6 +195,15 @@ public class GenerateProtoTask extends DefaultTask {
   void doneConfig() {
     Preconditions.checkState(state == State.CONFIG, "Invalid state: ${state}")
     state = State.FINALIZED
+  }
+
+  String getDescriptorPath() {
+    if (!generateDescriptorSet) {
+      throw new IllegalStateException(
+          "requested descriptor path but descriptor generation is off")
+    }
+    return descriptorSetOptions.path != null
+      ? descriptorSetOptions.path : "${outputBaseDir}/descriptor_set.desc"
   }
 
   public GenerateProtoTask() {
@@ -346,7 +386,20 @@ public class GenerateProtoTask extends DefaultTask {
     }
 
     if (generateDescriptorSet) {
-      cmd += "--descriptor_set_out=${outputBaseDir}/descriptor_set.desc"
+      def path = getDescriptorPath()
+      // Ensure that the folder for the descriptor exists;
+      // the user may have set it to point outside an existing tree
+      def folder = new File(path).parentFile
+      if (!folder.exists()) {
+        folder.mkdirs()
+      }
+      cmd += "--descriptor_set_out=${path}"
+      if (descriptorSetOptions.includeImports) {
+        cmd += "--include_imports"
+      }
+      if (descriptorSetOptions.includeSourceInfo) {
+        cmd += "--include_source_info"
+      }
     }
 
     cmd.addAll protoFiles
