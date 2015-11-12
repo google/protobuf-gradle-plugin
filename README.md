@@ -1,3 +1,9 @@
+:warning: If you just opened the Github hompage of this project, you are
+probably reading the documentation for the __HEAD revision__, which may not
+apply to the released version you are using. To read the documentation of a
+released version, you will need to switch to the corresponding release tag,
+e.g., [v0.7.1](https://github.com/google/protobuf-gradle-plugin/tree/v0.7.1).
+
 # Protobuf Plugin for Gradle
 The Gradle plugin that compiles Protocol Buffer (aka. Protobuf) definition
 files (``*.proto``) in your project. There are two pieces of its job:
@@ -310,14 +316,14 @@ The task also provides following options:
   task.generateDescriptorSet = true
 
   // Allows to override the default for the descriptor set location
-  task.descriptorSetOptions.path = 
+  task.descriptorSetOptions.path =
     "${projectDir}/build/descriptors/{$task.sourceSet.name}.dsc"
 
-  // If true, the descriptor set will contain line number information 
+  // If true, the descriptor set will contain line number information
   // and comments. Default is false.
   task.descriptorSetOptions.includeSourceInfo = true
 
-  // If true, the descriptor set will contain all transitive imports and 
+  // If true, the descriptor set will contain all transitive imports and
   // is therefore self-contained. Default is false.
   task.descriptorSetOption.includeImports = true
 }
