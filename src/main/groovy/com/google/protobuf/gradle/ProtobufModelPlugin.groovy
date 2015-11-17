@@ -81,6 +81,10 @@ class ProtobufModelPlugin implements Plugin<Project> {
     // Provides the osdetector extension
     project.pluginManager.apply('osdetector')
 
+    // TODO: The ProtobufConfigurator requires Project instance which can only be reference here.
+    // ProtobufConfigurator would need to be refactor in order to avoid creating it as an extension
+    // so we later reference it in the model. The end goal would be to create the ProtobufConfigurator
+    // instance directly in the @Model rule.
     project.extensions.create("protobuf", ProtobufConfigurator, project, fileResolver);
 
     project.pluginManager.apply(ComponentModelBasePlugin)
