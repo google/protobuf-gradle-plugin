@@ -297,7 +297,7 @@ class ProtobufModelPluginTest extends Specification {
           }
         """
 
-    and: "protobuf files across multiple source set that end up having the same include files"
+    and: "protobuf files across multiple source set that end up having the same include file names"
     testProjectDir.newFile("src/main/proto/Bar.proto").text = """
           package bar1;
           message BarMessage {

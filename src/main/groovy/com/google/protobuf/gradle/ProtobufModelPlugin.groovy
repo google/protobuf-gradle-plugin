@@ -216,17 +216,17 @@ class ProtobufModelPlugin implements Plugin<Project> {
         }
 
         @Override
-        void configureTask(Task task, BinarySpec binary, LanguageSourceSet language, ServiceRegistry serviceRegistry) {
+        void configureTask(Task task, BinarySpec binary, LanguageSourceSet sourceSet, ServiceRegistry serviceRegistry) {
           final FileResolver fileResolver = serviceRegistry.get(FileResolver.class)
           final Instantiator instantiator = serviceRegistry.get(Instantiator.class)
 
           GenerateProtoTask compile = (GenerateProtoTask) task;
-          compile.description = "Compiles Proto source for '${language.name}'"
-          compile.outputBaseDir = new File("${protobuf.generatedFilesBaseDir}/${binary.name}/${language.name}")
+          compile.description = "Compiles Proto source for '${sourceSet.name}'"
+          compile.outputBaseDir = new File("${protobuf.generatedFilesBaseDir}/${binary.name}/${sourceSet.name}")
 
           // Include sources
-          compile.inputs.source language.source
-          language.source.srcDirs.each { srcDir ->
+          compile.inputs.source sourceSet.source
+          sourceSet.source.srcDirs.each { srcDir ->
             compile.include srcDir
           }
 
@@ -235,10 +235,10 @@ class ProtobufModelPlugin implements Plugin<Project> {
             cpp {}
           }
 
-          def cppSourceSet = BaseLanguageSourceSet.create(DefaultCppSourceSet.class, "${language.name}Cpp", language.name, fileResolver, instantiator);
+          def cppSourceSet = BaseLanguageSourceSet.create(DefaultCppSourceSet.class, "${sourceSet.name}Cpp", sourceSet.name, fileResolver, instantiator);
           cppSourceSet.source.srcDir("${compile.outputBaseDir}/cpp")
           cppSourceSet.exportedHeaders.srcDir("${compile.outputBaseDir}/cpp")
-          language.generatedSourceSet.add(cppSourceSet)
+          sourceSet.generatedSourceSet.add(cppSourceSet)
         }
       }
     }

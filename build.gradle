@@ -88,9 +88,15 @@ if (findProject(':vendor') != null) {
 
   // We just want this path to be realize so we ignore the return type
   vendorModelRegistry.realizeNode(ModelPath.path('components'))
-  def protoc = vendorModelRegistry.find(ModelPath.path('components.protoc.binaries.protocExecutable'), ModelType.of(NativeExecutableBinarySpec.class))
-  def protobuf = vendorModelRegistry.find(ModelPath.path('components.protobuf.binaries.protobufStaticLibrary'), ModelType.of(StaticLibraryBinarySpec.class))
-  def protobufLite = vendorModelRegistry.find(ModelPath.path('components.protobufLite.binaries.protobufLiteStaticLibrary'), ModelType.of(StaticLibraryBinarySpec.class))
+  def protoc = vendorModelRegistry.find(
+          ModelPath.path('components.protoc.binaries.protocExecutable'),
+          ModelType.of(NativeExecutableBinarySpec.class))
+  def protobuf = vendorModelRegistry.find(
+          ModelPath.path('components.protobuf.binaries.protobufStaticLibrary'),
+          ModelType.of(StaticLibraryBinarySpec.class))
+  def protobufLite = vendorModelRegistry.find(
+          ModelPath.path('components.protobufLite.binaries.protobufLiteStaticLibrary'),
+          ModelType.of(StaticLibraryBinarySpec.class))
 
   // Depends on the protoc binary
   tasks.test.dependsOn protoc, protobuf, protobufLite
