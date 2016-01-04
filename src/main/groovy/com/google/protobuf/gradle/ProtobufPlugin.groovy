@@ -60,7 +60,9 @@ class ProtobufPlugin implements Plugin<Project> {
         }
 
         if (!project.plugins.hasPlugin('java') && !Utils.isAndroidProject(project)) {
-            throw new GradleException('Please apply the Java plugin or the Android plugin first')
+            throw new GradleException('Please apply the Java plugin or the Android plugin first.'
+                + ' This error may also be a result of using the new Gradle plugins DSL.'
+                + ' Please use the traditional "apply" function as described in README.md.')
         }
 
         // Provides the osdetector extension
