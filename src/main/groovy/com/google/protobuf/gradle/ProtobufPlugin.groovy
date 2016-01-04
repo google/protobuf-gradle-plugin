@@ -55,14 +55,11 @@ class ProtobufPlugin implements Plugin<Project> {
     void apply(final Project project) {
         this.project = project
         def gv = project.gradle.gradleVersion =~ "(\\d*)\\.(\\d*).*"
-        if (!gv || !gv.matches() || gv.group(1).toInteger() < 2 || gv.group(2).toInteger() < 3) {
-            println("You are using Gradle ${project.gradle.gradleVersion}: This version of the protobuf plugin requires minimum Gradle version 2.3")
+        if (!gv || !gv.matches() || gv.group(1).toInteger() < 2 || gv.group(2).toInteger() < 2) {
+            println("You are using Gradle ${project.gradle.gradleVersion}: This version of the protobuf plugin requires minimum Gradle version 2.2")
         }
 
-        // If the Java plugin was applied by "apply plugin:", it's added as "java".
-        // If it was applied by the "plugins {}" DSL, it's added as "org.gradle.java".
-        if (!project.plugins.hasPlugin('java') && !project.plugins.hasPlugin('org.gradle.java')
-            && !Utils.isAndroidProject(project)) {
+        if (!project.plugins.hasPlugin('java') && !Utils.isAndroidProject(project)) {
             throw new GradleException('Please apply the Java plugin or the Android plugin first')
         }
 
