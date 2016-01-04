@@ -62,8 +62,9 @@ buildscript {
 
 ### Adding the plugin to your project
 
-:warning: this plugin __does not__ work under the new plugins DSL of Gradle
-(#40). Use the traditional `apply` method instead.
+:warning: This plugin __does not__ work under the new plugins DSL of Gradle
+([issue #40](https://github.com/google/protobuf-gradle-plugin/issues/40)). Use
+the traditional `apply` method instead.
 
 In Java projects, you must apply the java plugin before applying the Protobuf
 plugin:
