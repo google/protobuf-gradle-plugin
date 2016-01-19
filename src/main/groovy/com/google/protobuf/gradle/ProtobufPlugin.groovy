@@ -32,20 +32,30 @@ package com.google.protobuf.gradle
 
 import com.google.common.collect.ImmutableList
 
+import org.gradle.api.Action
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.ConfigurableFileTree
-import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.internal.file.FileResolver
+import org.gradle.api.plugins.AppliedPlugin
 import org.gradle.api.tasks.SourceSet
 
 import javax.inject.Inject
 
 class ProtobufPlugin implements Plugin<Project> {
+    // any one of these plugins should be sufficient to proceed with applying this plugin
+    private static final List<String> prerequisitePluginOptions = [
+            'java',
+            'com.android.application',
+            'com.android.library',
+            'android',
+            'android-library']
+
     private final FileResolver fileResolver
     private Project project
+    private boolean wasApplied = false;
 
     @Inject
     public ProtobufPlugin(FileResolver fileResolver) {
@@ -55,16 +65,40 @@ class ProtobufPlugin implements Plugin<Project> {
     void apply(final Project project) {
         this.project = project
         def gv = project.gradle.gradleVersion =~ "(\\d*)\\.(\\d*).*"
-        if (!gv || !gv.matches() || gv.group(1).toInteger() < 2 || gv.group(2).toInteger() < 2) {
-            println("You are using Gradle ${project.gradle.gradleVersion}: This version of the protobuf plugin requires minimum Gradle version 2.2")
+        if (!gv || !gv.matches() || gv.group(1).toInteger() < 2 || gv.group(2).toInteger() < 4) {
+            println("You are using Gradle ${project.gradle.gradleVersion}: This version of the protobuf plugin requires minimum Gradle version 2.4")
         }
 
-        if (!project.plugins.hasPlugin('java') && !Utils.isAndroidProject(project)) {
-            throw new GradleException('Please apply the Java plugin or the Android plugin first.'
-                + ' This error may also be a result of using the new Gradle plugins DSL.'
-                + ' Please use the traditional "apply" function as described in README.md.')
+        // At least one of the prerequisite plugins must by applied before this plugin can be applied, so
+        // we will use the PluginManager.withPlugin() callback mechanism to delay applying this plugin until
+        // after that has been achieved. If project evaluation completes before one of the prerequisite plugins
+        // has been applied then we will assume that none of prerequisite plugins were specified and we will
+        // throw an Exception to alert the user of this configuration issue.
+        Action<? super AppliedPlugin> applyWithPrerequisitePlugin = { prerequisitePlugin ->
+          if (wasApplied) {
+            project.logger.warn('The com.google.protobuf plugin was already applied to the project: ' + project.path
+                + ' and will not be applied again after plugin: ' + prerequisitePlugin.id)
+
+          } else {
+            wasApplied = true
+
+            doApply()
+          }
         }
 
+        prerequisitePluginOptions.each { pluginName ->
+          project.pluginManager.withPlugin(pluginName, applyWithPrerequisitePlugin)
+        }
+
+        project.afterEvaluate {
+          if (!wasApplied) {
+            throw new GradleException('The com.google.protobuf plugin could not be applied during project evaluation.'
+                + ' The Java plugin or one of the Android plugins must be applied to the project first.')
+          }
+        }
+    }
+
+    private void doApply() {
         // Provides the osdetector extension
         project.apply plugin: 'osdetector'
 
