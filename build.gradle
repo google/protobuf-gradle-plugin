@@ -70,7 +70,7 @@ dependencies {
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '2.3'
+    gradleVersion = '2.4'
 }
 
 task sourcesJar(type: Jar, dependsOn:classes) {
@@ -103,6 +103,7 @@ if (!gradle.startParameter.taskNames.intersect(['publishPlugins'])) {
 }
 
 targetCompatibility = 1.6
+sourceCompatibility = 1.6
 
 uploadArchives {
   repositories {
