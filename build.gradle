@@ -20,7 +20,7 @@ apply plugin: "com.gradle.plugin-publish"
 apply plugin: 'signing'
 
 group = 'com.google.protobuf'
-version = '0.7.4-SNAPSHOT'
+version = '0.7.4'
 
 ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
 
@@ -102,8 +102,8 @@ if (!gradle.startParameter.taskNames.intersect(['publishPlugins'])) {
   }
 }
 
-targetCompatibility = 1.6
-sourceCompatibility = 1.6
+targetCompatibility = 1.7
+sourceCompatibility = 1.7
 
 uploadArchives {
   repositories {

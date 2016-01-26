@@ -2,7 +2,7 @@
 probably reading the documentation for the __HEAD revision__, which may not
 apply to the released version you are using. To read the documentation of a
 released version, you will need to switch to the corresponding release tag,
-e.g., [v0.7.3](https://github.com/google/protobuf-gradle-plugin/tree/v0.7.3).
+e.g., [v0.7.4](https://github.com/google/protobuf-gradle-plugin/tree/v0.7.4).
 
 # Protobuf Plugin for Gradle
 The Gradle plugin that compiles Protocol Buffer (aka. Protobuf) definition
@@ -17,15 +17,15 @@ For more information about the Protobuf Compiler, please refer to
 [Google Developers Site](https://developers.google.com/protocol-buffers/docs/reference/java-generated?csw=1).
 
 ## Latest Version
-The latest version is ``0.7.3``. It is available on Maven Central. To add
-dependency to it:
+The latest version is ``0.7.4``. It requires at least Gradle 2.4 and Java 7.
+It is available on Maven Central. To add dependency to it:
 ```gradle
 buildscript {
   repositories {
     mavenCentral()
   }
   dependencies {
-    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.7.3'
+    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.7.4'
   }
 }
 ```
@@ -39,7 +39,7 @@ buildscript {
     }
   }
   dependencies {
-    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.7.4-SNAPSHOT'
+    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.7.5-SNAPSHOT'
   }
 }
 ```
@@ -53,7 +53,7 @@ buildscript {
     mavenLocal()
   }
   dependencies {
-    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.7.4-SNAPSHOT'
+    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.7.5-SNAPSHOT'
   }
 }
 ```
