@@ -329,7 +329,7 @@ The task also provides following options:
 
   // If true, the descriptor set will contain all transitive imports and
   // is therefore self-contained. Default is false.
-  task.descriptorSetOption.includeImports = true
+  task.descriptorSetOptions.includeImports = true
 }
 ```
 
