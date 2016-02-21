@@ -44,11 +44,6 @@ class ProtobufExtract extends DefaultTask {
    */
   private File destDir
 
-  /**
-   * The name of the configuration that contains proto files.
-   */
-  private String configName
-
   protected void setDestDir(File destDir) {
     Preconditions.checkState(this.destDir == null, 'destDir already set')
     this.destDir = destDir
@@ -59,24 +54,19 @@ class ProtobufExtract extends DefaultTask {
     return destDir
   }
 
-  protected void setConfigName(String configName) {
-    Preconditions.checkState(this.configName == null, 'configName already set')
-    this.configName = configName
-    def config = project.configurations[configName]
-    inputs.files config
-    dependsOn config
-  }
-
-  protected String getConfigName() {
-    return configName
-  }
-
   @TaskAction
   def extract() {
-    logger.debug "Extracting protos from configuration ${configName} to ${destDir}"
     inputs.files.each { file ->
       logger.debug "Extracting protos from ${file} to ${destDir}"
-      if (file.path.endsWith('.proto')) {
+      if (file.isDirectory()) {
+        project.copy {
+          includeEmptyDirs(false)
+          from(file.path) {
+            include '**/*.proto'
+          }
+          into(destDir)
+        }
+      } else if (file.path.endsWith('.proto')) {
         project.copy {
           includeEmptyDirs(false)
           from(file.path)

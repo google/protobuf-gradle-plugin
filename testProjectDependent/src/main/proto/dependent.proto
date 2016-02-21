@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package dependent;
+
 // From testProject/src/main/proto
 import "ws/antonov/protobuf/test/test.proto";
 

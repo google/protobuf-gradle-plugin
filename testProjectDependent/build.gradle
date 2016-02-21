@@ -20,7 +20,7 @@ protobuf.protoc {
 test.doLast {
   // This project has compiled only one proto file, despite that it imports
   // other proto files from dependencies.
-  def generatedFiles = project.fileTree(protobuf.generatedFilesBaseDir)
+  def generatedFiles = project.fileTree(protobuf.generatedFilesBaseDir + "/main")
   File onlyGeneratedFile = generatedFiles.singleFile
   org.junit.Assert.assertEquals('Dependent.java', onlyGeneratedFile.name)
 }
