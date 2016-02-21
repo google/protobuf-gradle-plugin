@@ -61,25 +61,32 @@ buildscript {
 ## Usage
 
 ### Adding the plugin to your project
+This plugin must work with either the Java plugin or the Android plugin.
 
-:warning: This plugin __does not__ work under the new plugins DSL of Gradle
-([issue #40](https://github.com/google/protobuf-gradle-plugin/issues/40)). Use
-the traditional `apply` method instead.
 
-In Java projects, you must apply the java plugin before applying the Protobuf
-plugin:
+#### Using the `apply` method
+The Java plugin or the Android plugin must be applied before the Protobuf plugin:
 
 ```gradle
 apply plugin: 'java'
 apply plugin: 'com.google.protobuf'
 ```
 
-In Android projects, you must apply the Android plugin first.
-
 ```gradle
 apply plugin: 'com.android.application'  // or 'com.android.library'
 apply plugin: 'com.google.protobuf'
 ```
+
+#### Using the Gradle plugin DSL
+The order of the plugins doesn't matter:
+
+```gradle
+plugins {
+  id "com.google.protobuf" version "0.7.4"
+  id "java"
+}
+```
+
 
 ### Configuring Protobuf compilation
 The Protobuf plugin assumes Protobuf files (``*.proto``) are organized in the
