@@ -52,6 +52,6 @@ class Utils {
   }
 
   static boolean isAndroidProject(Project project) {
-    return project.hasProperty('android')
+    return project.hasProperty('android') && project.android.sourceSets
   }
 }
