@@ -37,6 +37,7 @@ buildscript {
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:0.5'
         classpath "com.gradle.publish:plugin-publish-plugin:0.9.0"
         classpath 'junit:junit:4.7'
+        classpath 'org.jacoco:org.jacoco.core:0.7.4.201502262128'
     }
 }
 
@@ -70,7 +71,7 @@ dependencies {
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '2.4'
+    gradleVersion = '2.12'
 }
 
 task sourcesJar(type: Jar, dependsOn:classes) {

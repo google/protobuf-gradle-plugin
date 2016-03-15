@@ -59,14 +59,15 @@ class ProtobufPlugin implements Plugin<Project> {
 
     @Inject
     public ProtobufPlugin(FileResolver fileResolver) {
-      this.fileResolver = fileResolver;
+      this.fileResolver = fileResolver
     }
 
     void apply(final Project project) {
         this.project = project
         def gv = project.gradle.gradleVersion =~ "(\\d*)\\.(\\d*).*"
-        if (!gv || !gv.matches() || gv.group(1).toInteger() < 2 || gv.group(2).toInteger() < 4) {
-            println("You are using Gradle ${project.gradle.gradleVersion}: This version of the protobuf plugin requires minimum Gradle version 2.4")
+        if (!gv || !gv.matches() || gv.group(1).toInteger() != 2 || gv.group(2).toInteger() < 12) {
+            println("You are using Gradle ${project.gradle.gradleVersion}: "
+                    + " This version of the protobuf plugin works with Gradle version 2.12+")
         }
 
         // At least one of the prerequisite plugins must by applied before this plugin can be applied, so
@@ -146,7 +147,7 @@ class ProtobufPlugin implements Plugin<Project> {
      */
     private addSourceSetExtensions() {
       getSourceSets().all {  sourceSet ->
-        sourceSet.extensions.create('proto', ProtobufSourceDirectorySet, project, sourceSet.name, fileResolver)
+        sourceSet.extensions.create('proto', ProtobufSourceDirectorySet, sourceSet.name, fileResolver)
       }
     }
 

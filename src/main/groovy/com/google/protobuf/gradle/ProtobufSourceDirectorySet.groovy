@@ -34,6 +34,7 @@ import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
 import org.gradle.api.internal.file.DefaultSourceDirectorySet
 import org.gradle.api.internal.file.FileResolver
+import org.gradle.api.internal.file.collections.DefaultDirectoryFileTreeFactory
 import org.gradle.internal.reflect.Instantiator
 import org.gradle.util.ConfigureUtil
 
@@ -42,8 +43,8 @@ import org.gradle.util.ConfigureUtil
  */
 public class ProtobufSourceDirectorySet extends DefaultSourceDirectorySet {
 
-  public ProtobufSourceDirectorySet(Project project, String name, FileResolver fileResolver) {
-    super(name, String.format("%s Proto source", name), fileResolver)
+  public ProtobufSourceDirectorySet(String name, FileResolver fileResolver) {
+    super(name, String.format("%s Proto source", name), fileResolver, new DefaultDirectoryFileTreeFactory())
     srcDir("src/${name}/proto")
     include("**/*.proto")
   }
