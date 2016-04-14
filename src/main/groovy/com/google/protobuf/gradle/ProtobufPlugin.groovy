@@ -385,7 +385,7 @@ class ProtobufPlugin implements Plugin<Project> {
           project.protobuf.generateProtoTasks.ofSourceSet(sourceSet.name).each { generateProtoTask ->
             javaCompileTask.dependsOn(generateProtoTask)
             generateProtoTask.getAllOutputDirs().each { dir ->
-              javaCompileTask.source project.fileTree(dir: dir)
+              sourceSet.java.srcDir dir
             }
           }
         }
