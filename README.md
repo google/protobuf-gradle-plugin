@@ -405,6 +405,25 @@ dependencies {
 This [Maven Central directory](https://repo1.maven.org/maven2/com/google/protobuf/protoc/)
 lists pre-compiled ``protoc`` artifacts that can be used by this plugin.
 
+## Tips for IDEs
+
+### IntelliJ IDEA
+
+If IntelliJ complains that the generated classes are not found, you
+can include the following block in you `build.gradle` to ask IntelliJ
+to include the generated Java directories as source folders.
+
+```gradle
+idea {
+    module {
+        sourceDirs += file("${protobuf.generatedFilesBaseDir}/main/java");
+        // If you have additional sourceSets and/or codegen plugins, add all of them
+        sourceDirs += file("${protobuf.generatedFilesBaseDir}/main/grpc");
+    }
+}
+```
+
+
 ## Testing the plugin
 ``testProject*`` are testing projects that uses this plugin to compile
 ``.proto`` files. They also serve as usage examples. Because the tests include
