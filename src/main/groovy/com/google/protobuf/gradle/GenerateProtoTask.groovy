@@ -250,6 +250,13 @@ public class GenerateProtoTask extends DefaultTask {
   }
 
   /**
+   * Returns true if the task has a plugin with the given name, false otherwise.
+   */
+  public boolean hasPlugin(String name) {
+    return plugins.findByName(name) != null
+  }
+
+  /**
    * Add a directory to protoc's include path.
    */
   public void include(Object dir) {

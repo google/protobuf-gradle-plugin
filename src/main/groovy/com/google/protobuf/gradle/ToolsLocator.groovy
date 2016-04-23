@@ -51,26 +51,29 @@ class ToolsLocator {
   }
 
   /**
-   * For every ExecutableLocator that points to an artifact spec, resolves the
+   * For every ExecutableLocator that points to an artifact spec: creates a
+   * project configuration dependency for that artifact, registers the
+   * configuration dependency as an input dependency with the specified tasks,
+   * and adds a doFirst {} block to the specified tasks which resolves the
    * spec, downloads the artifact, and point to the local path.
    */
-  void resolve() {
-    resolve(protoc)
-    if (protoc.path == null) {
+  void registerTaskDependencies(Collection<GenerateProtoTask> protoTasks) {
+    if (protoc.artifact != null) {
+      registerDependencyWithTasks(protoc, protoTasks)
+    } else if (protoc.path == null) {
       protoc.path = 'protoc'
     }
-    plugins.each { plugin ->
-      resolve(plugin)
-      if (plugin.path == null) {
-        plugin.path = "protoc-gen-${plugin.name}"
+    for (ExecutableLocator pluginLocator in plugins) {
+      if (pluginLocator.artifact != null) {
+        registerDependencyWithTasks(pluginLocator, protoTasks)
+      } else if (pluginLocator.path == null) {
+        pluginLocator.path = "protoc-gen-${pluginLocator.name}"
       }
     }
   }
 
-  void resolve(ExecutableLocator locator) {
-    if (locator.artifact == null) {
-      return
-    }
+  void registerDependencyWithTasks(ExecutableLocator locator, Collection<GenerateProtoTask> protoTasks) {
+    // create a project configuration dependency for the artifact
     Configuration config = project.configurations.create("protobufToolsLocator_${locator.name}") {
       visible = false
       transitive = false
@@ -83,13 +86,25 @@ class ToolsLocator {
                     version: version,
                     classifier: project.osdetector.classifier,
                     ext: 'exe']
-    project.logger.info("Resolving artifact: ${notation}")
     Dependency dep = project.dependencies.add(config.name, notation)
-    File file = config.fileCollection(dep).singleFile
-    if (!file.canExecute() && !file.setExecutable(true)) {
-      throw new GradleException("Cannot set ${file} as executable")
+
+    for (GenerateProtoTask protoTask in protoTasks) {
+      if (protoc.is(locator) || protoTask.hasPlugin(locator.name)) {
+        // register the configuration dependency as a task input
+        protoTask.inputs.files(config)
+
+        protoTask.doFirst {
+          if (locator.path == null) {
+            project.logger.info("Resolving artifact: ${notation}")
+            File file = config.fileCollection(dep).singleFile
+            if (!file.canExecute() && !file.setExecutable(true)) {
+              throw new GradleException("Cannot set ${file} as executable")
+            }
+            project.logger.info("Resolved artifact: ${file}")
+            locator.path = file.path
+          }
+        }
+      }
     }
-    project.logger.info("Resolved artifact: ${file}")
-    locator.path = file.path
   }
 }

@@ -122,7 +122,7 @@ class ProtobufPlugin implements Plugin<Project> {
           linkGenerateProtoTasksToJavaCompile()
           // protoc and codegen plugin configuration may change through the protobuf{}
           // block. Only at this point the configuration has been finalized.
-          project.protobuf.tools.resolve()
+          project.protobuf.tools.registerTaskDependencies(project.protobuf.getGenerateProtoTasks().all())
         }
     }
 
