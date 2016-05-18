@@ -1,8 +1,9 @@
-:warning: If you just opened the Github hompage of this project, you are
-probably reading the documentation for the __HEAD revision__, which may not
-apply to the released version you are using. To read the documentation of a
-released version, you will need to switch to the corresponding release tag,
-e.g., [v0.7.7](https://github.com/google/protobuf-gradle-plugin/tree/v0.7.7).
+:exclamation: Starting from version __0.7.6__, the plugin requires Gradle __2.12__ and later.
+Please check your Gradle version if you see the following error:
+```
+Error:Unable to load class 'org.gradle.api.internal.file.collections.DefaultDirectoryFileTreeFactory'.
+```
+
 
 # Protobuf Plugin for Gradle
 The Gradle plugin that compiles Protocol Buffer (aka. Protobuf) definition
