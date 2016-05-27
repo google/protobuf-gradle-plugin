@@ -32,6 +32,7 @@ package com.google.protobuf.gradle
 import org.apache.commons.lang.StringUtils
 import org.gradle.api.Project
 import org.gradle.api.tasks.SourceSet
+import org.gradle.api.tasks.SourceSetContainer
 
 class Utils {
   /**
@@ -53,5 +54,37 @@ class Utils {
 
   static boolean isAndroidProject(Project project) {
     return project.hasProperty('android') && project.android.sourceSets
+  }
+
+  /**
+   * Creates a configuration if necessary for a source set so that the build
+   * author can configure dependencies for it.
+   */
+  private static void createConfiguration(Project project, String sourceSetName) {
+    String configName = getConfigName(sourceSetName, 'protobuf')
+    if (project.configurations.findByName(configName) == null) {
+      project.configurations.create(configName) {
+        visible = false
+        transitive = false
+        extendsFrom = []
+      }
+    }
+  }
+
+  /**
+   * Adds the proto extension to all SourceSets, e.g., it creates
+   * sourceSets.main.proto and sourceSets.test.proto.
+   */
+  static void addSourceSetExtensions(SourceSetContainer sourceSets, fileResolver) {
+    sourceSets.each { sourceSet ->
+      sourceSet.extensions.create('proto', ProtobufSourceDirectorySet, sourceSet.name, fileResolver)
+    }
+  }
+
+  static void setupSourceSets(Project project, SourceSetContainer sourceSets, fileResolver) {
+      addSourceSetExtensions(sourceSets, fileResolver)
+      sourceSets.all { sourceSet ->
+        createConfiguration(project, sourceSet.name)
+      }
   }
 }
