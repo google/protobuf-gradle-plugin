@@ -33,6 +33,7 @@ import org.apache.commons.lang.StringUtils
 import org.gradle.api.Project
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
+import org.gradle.api.internal.file.FileResolver
 
 class Utils {
   /**
@@ -75,13 +76,13 @@ class Utils {
    * Adds the proto extension to all SourceSets, e.g., it creates
    * sourceSets.main.proto and sourceSets.test.proto.
    */
-  static void addSourceSetExtensions(SourceSetContainer sourceSets, fileResolver) {
+  static void addSourceSetExtensions(Object sourceSets, FileResolver fileResolver) {
     sourceSets.each { sourceSet ->
       sourceSet.extensions.create('proto', ProtobufSourceDirectorySet, sourceSet.name, fileResolver)
     }
   }
 
-  static void setupSourceSets(Project project, SourceSetContainer sourceSets, fileResolver) {
+  static void setupSourceSets(Project project, Object sourceSets, FileResolver fileResolver) {
       addSourceSetExtensions(sourceSets, fileResolver)
       sourceSets.all { sourceSet ->
         createConfiguration(project, sourceSet.name)

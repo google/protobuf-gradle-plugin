@@ -53,6 +53,7 @@ class ProtobufPlugin implements Plugin<Project> {
         // has been applied then we will assume that none of prerequisite plugins were specified and we will
         // throw an Exception to alert the user of this configuration issue.
         Action<? super AppliedPlugin> applyWithPrerequisitePlugin = { prerequisitePlugin ->
+            println(prerequisitePlugin.id)
             if (wasApplied) {
                 project.logger.warn('The com.google.protobuf plugin was already applied to the project: ' + project.path
                         + ' and will not be applied again after plugin: ' + prerequisitePlugin.id)

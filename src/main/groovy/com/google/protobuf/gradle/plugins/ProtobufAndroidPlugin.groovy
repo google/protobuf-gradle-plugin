@@ -5,7 +5,6 @@ import com.google.protobuf.gradle.TaskGenerator
 import com.google.protobuf.gradle.Utils
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.internal.file.FileResolver
 import org.gradle.api.tasks.SourceSet
 
 import javax.inject.Inject
@@ -13,19 +12,13 @@ import javax.inject.Inject
 class ProtobufAndroidPlugin implements Plugin<Project> {
 
     private Project project
-    private final FileResolver fileResolver
-
-    @Inject
-    public ProtobufAndroidPlugin(FileResolver fileResolver) {
-        this.fileResolver = fileResolver
-    }
 
     void apply(final Project project) {
         this.project = project
 
         project.apply plugin: 'com.google.protobuf.base'
 
-        Utils.setupSourceSets(project, project.android.sourceSets, fileResolver)
+        Utils.setupSourceSets(project, project.android.sourceSets, project.plugins['com.google.protobuf.base'].fileResolver)
 
         project.afterEvaluate {
             // The Android variants are only available at this point.

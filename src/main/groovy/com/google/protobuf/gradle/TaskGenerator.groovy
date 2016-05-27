@@ -8,7 +8,6 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.ConfigurableFileTree
-import org.gradle.api.internal.file.FileResolver
 import org.gradle.api.plugins.AppliedPlugin
 import org.gradle.api.tasks.SourceSet
 
@@ -40,7 +39,7 @@ class TaskGenerator {
 
                 // Include extracted sources
                 ConfigurableFileTree extractedProtoSources =
-                        project.fileTree(getExtractedProtosDir(sourceSet.name)) {
+                        project.fileTree(getExtractedProtosDir(project, sourceSet.name)) {
                             include "**/*.proto"
                         }
                 inputs.source extractedProtoSources
@@ -48,7 +47,7 @@ class TaskGenerator {
 
                 // Register extracted include protos
                 ConfigurableFileTree extractedIncludeProtoSources =
-                        project.fileTree(getExtractedIncludeProtosDir(sourceSet.name)) {
+                        project.fileTree(getExtractedIncludeProtosDir(project, sourceSet.name)) {
                             include "**/*.proto"
                         }
                 // Register them as input, but not as "source".
@@ -77,7 +76,7 @@ class TaskGenerator {
         }
         return project.tasks.create(extractProtosTaskName, ProtobufExtract) {
             description = "Extracts proto files/dependencies specified by 'protobuf' configuration"
-            destDir = getExtractedProtosDir(sourceSetName) as File
+            destDir = getExtractedProtosDir(project, sourceSetName) as File
             inputs.files project.configurations[Utils.getConfigName(sourceSetName, 'protobuf')]
         }
     }
@@ -92,7 +91,7 @@ class TaskGenerator {
      * variant may have multiple sourceSets, each of these sourceSets will have
      * its own extraction task.
      */
-    static Task maybeAddExtractIncludeProtosTask(Project project, String sourceSetName, def... inputFilesList) {
+    static Task maybeAddExtractIncludeProtosTask(Project project, String sourceSetName, Object... inputFilesList) {
         def extractIncludeProtosTaskName = 'extractInclude' +
                 Utils.getSourceSetSubstringForTaskNames(sourceSetName) + 'Proto'
         Task existingTask = project.tasks.findByName(extractIncludeProtosTaskName)
@@ -101,7 +100,7 @@ class TaskGenerator {
         }
         return project.tasks.create(extractIncludeProtosTaskName, ProtobufExtract) {
             description = "Extracts proto files from compile dependencies for includes"
-            destDir = getExtractedIncludeProtosDir(sourceSetName) as File
+            destDir = getExtractedIncludeProtosDir(project, sourceSetName) as File
             inputs.files project.configurations[Utils.getConfigName(sourceSetName, 'compile')]
 
             // TL; DR: Make protos in 'test' sourceSet able to import protos from the 'main' sourceSet.
@@ -112,11 +111,11 @@ class TaskGenerator {
         }
     }
 
-    private String getExtractedIncludeProtosDir(Project project, String sourceSetName) {
+    private static String getExtractedIncludeProtosDir(Project project, String sourceSetName) {
         return "${project.buildDir}/extracted-include-protos/${sourceSetName}"
     }
 
-    private String getExtractedProtosDir(Project project, String sourceSetName) {
+    private static String getExtractedProtosDir(Project project, String sourceSetName) {
         return "${project.buildDir}/extracted-protos/${sourceSetName}"
     }
 }

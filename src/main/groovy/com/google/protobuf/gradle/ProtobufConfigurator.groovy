@@ -31,7 +31,6 @@ package com.google.protobuf.gradle
 
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
-import org.gradle.api.internal.file.FileResolver
 import org.gradle.api.tasks.SourceSet
 import org.gradle.util.ConfigureUtil
 
@@ -50,7 +49,7 @@ public class ProtobufConfigurator {
    */
   public String generatedFilesBaseDir
 
-  public ProtobufConfigurator(Project project, FileResolver fileResolver) {
+  public ProtobufConfigurator(Project project) {
     this.project = project
     if (Utils.isAndroidProject(project)) {
       tasks = new AndroidGenerateProtoTaskCollection()
