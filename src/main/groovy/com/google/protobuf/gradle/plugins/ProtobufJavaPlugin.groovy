@@ -18,26 +18,22 @@ class ProtobufJavaPlugin implements Plugin<Project> {
         project.apply plugin: 'com.google.protobuf.base'
 
         Utils.setupSourceSets(project, project.sourceSets, project.plugins['com.google.protobuf.base'].fileResolver)
-        project.afterEvaluate {
-            addProtoTasks(project.sourceSets)
-            project.protobuf.runTaskConfigClosures()
-            // Disallow user configuration outside the config closures, because
-            // next in linkGenerateProtoTasksToJavaCompile() we add generated,
-            // outputs to the inputs of javaCompile tasks, and any new codegen
-            // plugin output added after this point won't be added to javaCompile
-            // tasks.
-            project.protobuf.generateProtoTasks.all()*.doneConfig()
-            linkGenerateProtoTasksToJavaCompile()
-        }
     }
 
     /**
      * Adds Protobuf-related tasks to the project.
      */
-    private addProtoTasks(SourceSetContainer sourceSets) {
-        sourceSets.each { sourceSet ->
+    void addProtoTasks() {
+        project.sourceSets.each { sourceSet ->
             addTasksForSourceSet(sourceSet)
         }
+    }
+
+    /**
+     * Performs after task are added and configured
+     */
+    void afterTaskAdded() {
+        linkGenerateProtoTasksToJavaCompile()
     }
 
     /**
