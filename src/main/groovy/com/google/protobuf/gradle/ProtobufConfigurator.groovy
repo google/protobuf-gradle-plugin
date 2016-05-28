@@ -32,6 +32,7 @@ package com.google.protobuf.gradle
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
 import org.gradle.api.tasks.SourceSet
+import org.gradle.api.internal.file.FileResolver
 import org.gradle.util.ConfigureUtil
 
 /**
@@ -43,14 +44,17 @@ public class ProtobufConfigurator {
   private final ToolsLocator tools
   private final ArrayList<Closure> taskConfigClosures
 
+  final FileResolver fileResolver
+
   /**
    * The base directory of generated files. The default is
    * "${project.buildDir}/generated/source/proto".
    */
   public String generatedFilesBaseDir
 
-  public ProtobufConfigurator(Project project) {
+  public ProtobufConfigurator(Project project, FileResolver fileResolver) {
     this.project = project
+    this.fileResolver = fileResolver
     if (Utils.isAndroidProject(project)) {
       tasks = new AndroidGenerateProtoTaskCollection()
     } else {

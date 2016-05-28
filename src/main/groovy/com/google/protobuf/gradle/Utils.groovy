@@ -77,15 +77,15 @@ class Utils {
    * sourceSets.main.proto and sourceSets.test.proto.
    */
   static void addSourceSetExtensions(Object sourceSets, FileResolver fileResolver) {
-    sourceSets.each { sourceSet ->
+    sourceSets.all { sourceSet ->
       sourceSet.extensions.create('proto', ProtobufSourceDirectorySet, sourceSet.name, fileResolver)
     }
   }
 
   static void setupSourceSets(Project project, Object sourceSets, FileResolver fileResolver) {
-      addSourceSetExtensions(sourceSets, fileResolver)
-      sourceSets.all { sourceSet ->
-        createConfiguration(project, sourceSet.name)
-      }
+    addSourceSetExtensions(sourceSets, fileResolver)
+    sourceSets.all { sourceSet ->
+      createConfiguration(project, sourceSet.name)
+    }
   }
 }

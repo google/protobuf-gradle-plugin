@@ -33,14 +33,15 @@ package com.google.protobuf.gradle
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.Multimap
 import org.gradle.api.Project
+import org.gradle.api.internal.file.FileResolver
 import org.gradle.util.ConfigureUtil
 
 /**
  * Adds the protobuf {} block as a property of the project.
  */
 class ProtobufConvention {
-    def ProtobufConvention(Project project) {
-        protobuf = new ProtobufConfigurator(project)
+    def ProtobufConvention(Project project, FileResolver fileResolver) {
+        protobuf = new ProtobufConfigurator(project, fileResolver)
     }
 
     def final ProtobufConfigurator protobuf

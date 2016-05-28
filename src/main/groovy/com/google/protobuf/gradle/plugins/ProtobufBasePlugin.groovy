@@ -30,11 +30,11 @@ class ProtobufBasePlugin implements Plugin<Project> {
         // Provides the osdetector extension
         project.apply plugin: 'osdetector'
 
-        project.convention.plugins.protobuf = new ProtobufConvention(project);
+        project.convention.plugins.protobuf = new ProtobufConvention(project, fileResolver);
 
-        project.afterEvaluate {
-            protobufPlugins.each { pluginName ->
-                project.pluginManager.withPlugin(pluginName, { plugin ->
+        protobufPlugins.each { pluginName ->
+            project.pluginManager.withPlugin(pluginName, { plugin ->
+                project.afterEvaluate {
                     def appliedPlugin = project.plugins[plugin.id]
 
                     // The Android variants are only available at this point.
@@ -53,8 +53,8 @@ class ProtobufBasePlugin implements Plugin<Project> {
                     // protoc and codegen plugin configuration may change through the protobuf{}
                     // block. Only at this point the configuration has been finalized.
                     project.protobuf.tools.registerTaskDependencies(project.protobuf.generateProtoTasks.all())
-                })
-            }
+                }
+            })
         }
     }
 }

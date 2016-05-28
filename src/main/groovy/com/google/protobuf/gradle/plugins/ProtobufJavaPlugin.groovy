@@ -1,5 +1,6 @@
 package com.google.protobuf.gradle.plugins
 
+import com.google.protobuf.gradle.ProtobufConvention
 import com.google.protobuf.gradle.TaskGenerator
 import com.google.protobuf.gradle.Utils
 import javafx.concurrent.Task
@@ -17,7 +18,7 @@ class ProtobufJavaPlugin implements Plugin<Project> {
 
         project.apply plugin: 'com.google.protobuf.base'
 
-        Utils.setupSourceSets(project, project.sourceSets, project.plugins['com.google.protobuf.base'].fileResolver)
+        Utils.setupSourceSets(project, project.sourceSets, project.protobuf.fileResolver)
     }
 
     /**

@@ -18,7 +18,7 @@ class ProtobufAndroidPlugin implements Plugin<Project> {
 
         project.apply plugin: 'com.google.protobuf.base'
 
-        Utils.setupSourceSets(project, project.android.sourceSets, project.plugins['com.google.protobuf.base'].fileResolver)
+        Utils.setupSourceSets(project, project.android.sourceSets, project.protobuf.fileResolver)
     }
 
     /**
