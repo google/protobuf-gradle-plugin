@@ -44,39 +44,43 @@ class ProtobufPlugin implements Plugin<Project> {
                                                               'android',
                                                               'android-library']
 
-    private boolean wasApplied = false;
+    private List<String> pluginsApplied = [];
+    private Project project;
 
     void apply(final Project project) {
+        this.project = project
+
         // At least one of the prerequisite plugins must by applied before this plugin can be applied, so
         // we will use the PluginManager.withPlugin() callback mechanism to delay applying this plugin until
         // after that has been achieved. If project evaluation completes before one of the prerequisite plugins
         // has been applied then we will assume that none of prerequisite plugins were specified and we will
         // throw an Exception to alert the user of this configuration issue.
-        Action<? super AppliedPlugin> applyWithPrerequisitePlugin = { prerequisitePlugin ->
-            if (wasApplied) {
-                project.logger.warn('The com.google.protobuf plugin was already applied to the project: ' + project.path
-                        + ' and will not be applied again after plugin: ' + prerequisitePlugin.id)
-
-            } else {
-                wasApplied = true
-
-                if (prerequisitePlugin.id in javaPluginOptions) {
-                    project.apply plugin: 'com.google.protobuf.java'
-                } else {
-                    project.apply plugin: 'com.google.protobuf.android'
-                }
-            }
-        }
-
-        (javaPluginOptions + androidPluginOptions).each { pluginName ->
-            project.pluginManager.withPlugin(pluginName, applyWithPrerequisitePlugin)
-        }
+        applyWithPrerequisitePlugin(javaPluginOptions, 'com.google.protobuf.java')
+        applyWithPrerequisitePlugin(androidPluginOptions, 'com.google.protobuf.android')
 
         project.afterEvaluate {
-            if (!wasApplied) {
+            if (pluginsApplied.empty) {
                 throw new GradleException('The com.google.protobuf plugin could not be applied during project evaluation.'
                         + ' The Java plugin or one of the Android plugins must be applied to the project first.')
             }
+        }
+    }
+
+    void applyWithPrerequisitePlugin(List<String> possiblePluginNames, String pluginToBeApplied) {
+        possiblePluginNames.each { pluginName ->
+            project.pluginManager.withPlugin(pluginName, { prerequisitePlugin ->
+                applyWithPrerequisitePlugin (prerequisitePlugin, pluginToBeApplied)
+            })
+        }
+    }
+
+    void applyWithPrerequisitePlugin(AppliedPlugin prerequisitePlugin, String pluginToBeApplied) {
+        if (pluginToBeApplied in pluginsApplied) {
+            project.logger.warn('The com.google.protobuf plugin was already applied to the project: ' + project.path
+                    + ' and will not be applied again after plugin: ' + prerequisitePlugin.id)
+        } else {
+            pluginsApplied.add pluginToBeApplied
+            project.apply plugin: pluginToBeApplied
         }
     }
 }
