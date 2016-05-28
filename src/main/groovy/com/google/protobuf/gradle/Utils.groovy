@@ -32,7 +32,6 @@ package com.google.protobuf.gradle
 import org.apache.commons.lang.StringUtils
 import org.gradle.api.Project
 import org.gradle.api.tasks.SourceSet
-import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.internal.file.FileResolver
 
 class Utils {
