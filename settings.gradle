@@ -14,12 +14,6 @@ if (gradle.startParameter.taskNames.intersect(['install', 'uploadArchives', 'pub
   logger.warn('To test the current code, make sure you have run "./gradlew install" first.')
   logger.warn('***************************************************************************')
 
-  include ':testProject'
-  project(':testProject').projectDir = "$rootDir/testProject" as File
-  include ':testProjectCustomProtoDir'
-  project(':testProjectCustomProtoDir').projectDir = "$rootDir/testProjectCustomProtoDir" as File
-  include ':testProjectDependent'
-  project(':testProjectDependent').projectDir = "$rootDir/testProjectDependent" as File
   include ':testProjectAndroid'
   project(':testProjectAndroid').projectDir = "$rootDir/testProjectAndroid" as File
 }

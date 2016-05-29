@@ -62,12 +62,30 @@ repositories {
     mavenCentral()
 }
 
+// Write the plugin's classpath to a file to share with the tests
+task createClasspathManifest {
+    def outputDir = file("$buildDir/$name")
+
+    inputs.files sourceSets.main.runtimeClasspath
+    outputs.dir outputDir
+
+    doLast {
+        outputDir.mkdirs()
+        file("$outputDir/plugin-classpath.txt").text = sourceSets.main.runtimeClasspath.join("\n")
+    }
+}
+
 dependencies {
     compile gradleApi()
-    testCompile group: 'junit', name: 'junit', version: '4.8.1'
-    compile localGroovy()
+    compile 'org.codehaus.groovy:groovy-all:2.4.4'
     compile 'com.google.gradle:osdetector-gradle-plugin:1.2.1'
     compile 'commons-lang:commons-lang:2.6'
+    testCompile gradleTestKit()
+    testCompile 'org.spockframework:spock-core:1.0-groovy-2.4'
+    testCompile 'commons-io:commons-io:2.5'
+
+    // Add the classpath file to the test runtime classpath
+    testRuntime files(createClasspathManifest)
 }
 
 task wrapper(type: Wrapper) {
