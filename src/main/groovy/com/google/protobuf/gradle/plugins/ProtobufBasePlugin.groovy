@@ -13,8 +13,7 @@ class ProtobufBasePlugin implements Plugin<Project> {
 
     private static final List<String> protobufPlugins = [
         'com.google.protobuf.java',
-        'com.google.protobuf.android',
-        'com.google.protobuf.csharp']
+        'com.google.protobuf.android']
 
     @Inject
     public ProtobufBasePlugin(FileResolver fileResolver) {
