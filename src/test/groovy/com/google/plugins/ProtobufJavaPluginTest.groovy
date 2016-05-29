@@ -17,8 +17,6 @@ class ProtobufJavaPluginTest extends Specification {
     @Rule
     final TemporaryFolder tempDir = new TemporaryFolder()
 
-    final ProtobufPluginTestHelper helper = new ProtobufPluginTestHelper()
-
     private Project setupBasicProject() {
         Project project = ProjectBuilder.builder().build()
         project.apply plugin: 'java'
@@ -63,7 +61,7 @@ class ProtobufJavaPluginTest extends Specification {
     def "testProject should be successfully executed"() {
         given: "project from testProject"
         def projectDir = tempDir.newFolder()
-        helper.copyTestProject('testProject', projectDir)
+        ProtobufPluginTestHelper.copyTestProject('testProject', projectDir)
 
         when: "build is invoked"
         def result = GradleRunner.create()
@@ -92,7 +90,7 @@ class ProtobufJavaPluginTest extends Specification {
         settingsFile.createNewFile()
 
         ['testProject', 'testProjectDependent'].each {
-            helper.copyTestProject(it, new File(mainProjectDir.path, it))
+            ProtobufPluginTestHelper.copyTestProject(it, new File(mainProjectDir.path, it))
             settingsFile << """
                 include ':$it'
                 project(':$it').projectDir = "\$rootDir/testProject" as File
@@ -115,7 +113,7 @@ class ProtobufJavaPluginTest extends Specification {
     def "testProjectCustomProtoDir should be successfully executed"() {
         given: "project from testProjectCustomProtoDir"
         def projectDir = tempDir.newFolder()
-        helper.copyTestProject('testProjectCustomProtoDir', projectDir)
+        ProtobufPluginTestHelper.copyTestProject('testProjectCustomProtoDir', projectDir)
 
         when: "build is invoked"
         def result = GradleRunner.create()

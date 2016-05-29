@@ -2,8 +2,8 @@ import org.apache.commons.io.FileUtils
 
 class ProtobufPluginTestHelper {
 
-    void appendPluginClasspath(File buildFile) {
-        def pluginClasspathResource = getClass().classLoader.findResource("plugin-classpath.txt")
+    static void appendPluginClasspath(File buildFile) {
+        def pluginClasspathResource = ProtobufPluginTestHelper.class.classLoader.findResource("plugin-classpath.txt")
         if (pluginClasspathResource == null) {
             throw new IllegalStateException("Did not find plugin classpath resource, run `testClasses` build task.")
         }
@@ -28,7 +28,7 @@ class ProtobufPluginTestHelper {
         """
     }
 
-    void copyTestProject(String testProjectName, File projectDir) {
+    static void copyTestProject(String testProjectName, File projectDir) {
         def baseDir = new File(System.getProperty("user.dir"), "testProject")
 
         FileUtils.copyDirectory(baseDir, projectDir)
