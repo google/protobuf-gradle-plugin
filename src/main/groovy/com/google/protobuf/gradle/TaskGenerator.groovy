@@ -23,9 +23,9 @@ class TaskGenerator {
      * compiled. For Java it's the sourceSet that sourceSetOrVariantName stands
      * for; for Android it's the collection of sourceSets that the variant includes.
      */
-    static Task addGenerateProtoTask(Project project, String sourceSetOrVariantName, Collection<Object> sourceSets) {
+    static Task addGenerateProtoTask(Project project, String sourceSetOrVariantName, Collection<Object> sourceSets, String suffix = "") {
         def generateProtoTaskName = 'generate' +
-                Utils.getSourceSetSubstringForTaskNames(sourceSetOrVariantName) + 'Proto'
+                Utils.getSourceSetSubstringForTaskNames(sourceSetOrVariantName) + 'Proto' + suffix
         return project.tasks.create(generateProtoTaskName, GenerateProtoTask) {
             description = "Compiles Proto source for '${sourceSetOrVariantName}'"
             outputBaseDir = "${project.protobuf.generatedFilesBaseDir}/${sourceSetOrVariantName}"
@@ -67,17 +67,13 @@ class TaskGenerator {
      * variant may have multiple sourceSets, each of these sourceSets will have
      * its own extraction task.
      */
-    static Task maybeAddExtractProtosTask(Project project, String sourceSetName) {
+    static Task maybeAddExtractProtosTask(Project project, String sourceSetName, String suffix = "") {
         def extractProtosTaskName = 'extract' +
-                Utils.getSourceSetSubstringForTaskNames(sourceSetName) + 'Proto'
-        Task existingTask = project.tasks.findByName(extractProtosTaskName)
-        if (existingTask != null) {
-            return existingTask
-        }
+                Utils.getSourceSetSubstringForTaskNames(sourceSetName) + 'Proto' + suffix
         return project.tasks.create(extractProtosTaskName, ProtobufExtract) {
             description = "Extracts proto files/dependencies specified by 'protobuf' configuration"
             destDir = getExtractedProtosDir(project, sourceSetName) as File
-            inputs.files project.configurations[Utils.getConfigName(sourceSetName, 'protobuf')]
+            inputs.files project.configurations[Utils.getConfigName(sourceSetName, 'protobuf', suffix)]
         }
     }
 
@@ -94,10 +90,6 @@ class TaskGenerator {
     static Task maybeAddExtractIncludeProtosTask(Project project, String sourceSetName, Object... inputFilesList) {
         def extractIncludeProtosTaskName = 'extractInclude' +
                 Utils.getSourceSetSubstringForTaskNames(sourceSetName) + 'Proto'
-        Task existingTask = project.tasks.findByName(extractIncludeProtosTaskName)
-        if (existingTask != null) {
-            return existingTask
-        }
         return project.tasks.create(extractIncludeProtosTaskName, ProtobufExtract) {
             description = "Extracts proto files from compile dependencies for includes"
             destDir = getExtractedIncludeProtosDir(project, sourceSetName) as File

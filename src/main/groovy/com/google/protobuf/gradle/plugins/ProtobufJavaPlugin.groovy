@@ -18,7 +18,7 @@ class ProtobufJavaPlugin implements Plugin<Project> {
 
         project.apply plugin: 'com.google.protobuf.base'
 
-        Utils.setupSourceSets(project, project.sourceSets, project.protobuf.fileResolver)
+        Utils.setupSourceSets(project, project.sourceSets)
     }
 
     /**

@@ -3,22 +3,13 @@ package com.google.protobuf.gradle.plugins
 import com.google.protobuf.gradle.ProtobufConvention
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.internal.file.FileResolver
-
-import javax.inject.Inject
 
 class ProtobufBasePlugin implements Plugin<Project> {
 
-    final FileResolver fileResolver
-
     private static final List<String> protobufPlugins = [
         'com.google.protobuf.java',
-        'com.google.protobuf.android']
-
-    @Inject
-    public ProtobufBasePlugin(FileResolver fileResolver) {
-        this.fileResolver = fileResolver
-    }
+        'com.google.protobuf.android',
+        'com.google.protobuf.csharp']
 
     void apply(final Project project) {
         def gv = project.gradle.gradleVersion =~ "(\\d*)\\.(\\d*).*"
@@ -30,7 +21,7 @@ class ProtobufBasePlugin implements Plugin<Project> {
         // Provides the osdetector extension
         project.apply plugin: 'osdetector'
 
-        project.convention.plugins.protobuf = new ProtobufConvention(project, fileResolver);
+        project.convention.plugins.protobuf = new ProtobufConvention(project)
 
         project.afterEvaluate {
             def appliedPlugins = protobufPlugins

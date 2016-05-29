@@ -8,8 +8,6 @@ import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Rule
 import org.junit.rules.TemporaryFolder
-import org.apache.commons.io.FileUtils
-
 import spock.lang.Specification
 
 class ProtobufJavaPluginTest extends Specification {

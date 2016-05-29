@@ -29,7 +29,7 @@ class ProtobufPluginTestHelper {
     }
 
     static void copyTestProject(String testProjectName, File projectDir) {
-        def baseDir = new File(System.getProperty("user.dir"), "testProject")
+        def baseDir = new File(System.getProperty("user.dir"), testProjectName)
 
         FileUtils.copyDirectory(baseDir, projectDir)
 

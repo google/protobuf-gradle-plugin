@@ -38,9 +38,9 @@ class Utils {
   /**
    * Returns the conventional name of a configuration for a sourceSet
    */
-  static String getConfigName(String sourceSetName, String type) {
-    return sourceSetName == SourceSet.MAIN_SOURCE_SET_NAME ?
-        type : (sourceSetName + StringUtils.capitalize(type))
+  static String getConfigName(String sourceSetName, String type, String suffix = "") {
+    return (sourceSetName == SourceSet.MAIN_SOURCE_SET_NAME ?
+        type : (sourceSetName + StringUtils.capitalize(type))) + suffix
   }
 
   /**
@@ -60,14 +60,12 @@ class Utils {
    * Creates a configuration if necessary for a source set so that the build
    * author can configure dependencies for it.
    */
-  private static void createConfiguration(Project project, String sourceSetName) {
-    String configName = getConfigName(sourceSetName, 'protobuf')
-    if (project.configurations.findByName(configName) == null) {
-      project.configurations.create(configName) {
-        visible = false
-        transitive = false
-        extendsFrom = []
-      }
+  private static void createConfiguration(Project project, String sourceSetName, String suffix) {
+    String configName = getConfigName(sourceSetName, 'protobuf', suffix)
+    project.configurations.create(configName) {
+      visible = false
+      transitive = false
+      extendsFrom = []
     }
   }
 
@@ -81,10 +79,10 @@ class Utils {
     }
   }
 
-  static void setupSourceSets(Project project, Object sourceSets, FileResolver fileResolver) {
-    addSourceSetExtensions(sourceSets, fileResolver)
+  static void setupSourceSets(Project project, Object sourceSets, String suffix = "") {
+    addSourceSetExtensions(sourceSets, project.fileResolver)
     sourceSets.all { sourceSet ->
-      createConfiguration(project, sourceSet.name)
+      createConfiguration(project, sourceSet.name, suffix)
     }
   }
 }
