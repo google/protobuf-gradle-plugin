@@ -1,13 +1,10 @@
 package com.google.protobuf.gradle.plugins
 
-import com.google.protobuf.gradle.ProtobufConvention
 import com.google.protobuf.gradle.TaskGenerator
 import com.google.protobuf.gradle.Utils
-import javafx.concurrent.Task
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.SourceSet
-import org.gradle.api.tasks.SourceSetContainer
 
 class ProtobufJavaPlugin implements Plugin<Project> {
 
