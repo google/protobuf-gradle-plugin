@@ -1,19 +1,7 @@
 rootProject.name = 'protobuf-gradle-plugin'
 
-// Include test projects only when we intend to run the tests.
-// We have to exclude them when we intend to build the plugin, because the test
-// projects apply the plugin at evaluation time. At evaluation time the plugin
-// has not been compiled yet.
 if (gradle.startParameter.taskNames.intersect(['install', 'uploadArchives', 'publishPlugins'])) {
   if (gradle.startParameter.taskNames.size > 1) {
     throw new GradleException("'install', 'uploadArchives' or 'publishPlugins' can only be used alone")
   }
-} else {
-  logger.warn('***************************************************************************')
-  logger.warn('The tests will be run against the plugin that is installed locally.')
-  logger.warn('To test the current code, make sure you have run "./gradlew install" first.')
-  logger.warn('***************************************************************************')
-
-  include ':testProjectAndroid'
-  project(':testProjectAndroid').projectDir = "$rootDir/testProjectAndroid" as File
 }
