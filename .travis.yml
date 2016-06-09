@@ -1,0 +1,35 @@
+language: android
+
+jdk:
+ - oraclejdk8
+
+android:
+  components:
+    - platform-tools
+    - tools
+    - build-tools-23.0.3
+    - android-23
+    - extra-android-support
+    - extra-android-m2repository
+  licenses:
+    - '.+'
+
+install:
+  - ./gradlew install
+
+script:
+  - ./gradlew clean assemble test --stacktrace
+
+notifications:
+  email: false
+
+sudo: false
+
+before_cache:
+  - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
+
+cache:
+  directories:
+    - $HOME/.gradle
+    - $HOME/.gradle/caches/
+    - $HOME/.gradle/wrapper/

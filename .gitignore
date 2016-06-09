@@ -3,3 +3,5 @@
 protobuf-gradle-plugin.i*
 gradle.properties
 /.idea
+local.properties
+
