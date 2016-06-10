@@ -61,6 +61,11 @@ android {
         exclude 'io/grpc/testing/integration/messages.proto'
         exclude 'tmp/stuff.proto'
     }
+
+    // https://github.com/square/okio/issues/58
+    lintOptions {
+        warning 'InvalidPackage'
+    }
 }
 
 protobuf {
