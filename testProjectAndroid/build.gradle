@@ -108,7 +108,7 @@ dependencies {
 }
 
 def assertJavaCompileHasProtoGeneratedDir(Object variant, Collection<String> codegenPlugins) {
-//  assertJavaCompileHasProtoGeneratedDir(project, variant.name, variant.javaCompile, codegenPlugins)
+  rootProject.assertJavaCompileHasProtoGeneratedDir(project, variant.name, variant.javaCompile, codegenPlugins)
 }
 
 afterEvaluate {

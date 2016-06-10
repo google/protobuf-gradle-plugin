@@ -142,7 +142,7 @@ test.doLast {
   assertFileExists(true, "$buildDir/generated/source/proto/grpc_nano/descriptor_set.desc")
 }
 
-ext {
+rootProject.ext {
   // Shared test utility. Checks a JavaCompile task for the given sourceSet
   // includes the generated source dirs for the given codegenPlugins, and does
   // not include any other dirs under the generated code base dir.

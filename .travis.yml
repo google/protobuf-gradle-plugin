@@ -14,9 +14,6 @@ android:
   licenses:
     - '.+'
 
-install:
-  - ./gradlew install
-
 script:
   - ./gradlew clean assemble test --stacktrace
 
