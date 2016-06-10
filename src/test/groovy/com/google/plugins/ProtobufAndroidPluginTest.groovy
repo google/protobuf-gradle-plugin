@@ -25,7 +25,7 @@ class ProtobufAndroidPluginTest extends Specification {
             ProtobufPluginTestHelper.copyTestProject(it, new File(mainProjectDir.path, it))
             settingsFile << """
                 include ':$it'
-                project(':$it').projectDir = "\$rootDir/testProject" as File
+                project(':$it').projectDir = "\$rootDir/$it" as File
             """
         }
 

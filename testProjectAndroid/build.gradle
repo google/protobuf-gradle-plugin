@@ -9,6 +9,13 @@ buildscript {
         classpath 'junit:junit:4.7'
         classpath 'org.jacoco:org.jacoco.core:0.7.4.201502262128'
     }
+    repositories {
+        mavenCentral()
+        jcenter()
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
 }
 
 android {
@@ -90,7 +97,7 @@ dependencies {
 }
 
 def assertJavaCompileHasProtoGeneratedDir(Object variant, Collection<String> codegenPlugins) {
-  assertJavaCompileHasProtoGeneratedDir(project, variant.name, variant.javaCompile, codegenPlugins)
+//  assertJavaCompileHasProtoGeneratedDir(project, variant.name, variant.javaCompile, codegenPlugins)
 }
 
 afterEvaluate {

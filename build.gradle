@@ -174,34 +174,3 @@ task checkJavaVersion << {
   }
 }
 [uploadArchives, publishPlugins]*.dependsOn checkJavaVersion
-
-ext {
-  // Shared test utility. Checks a JavaCompile task for the given sourceSet
-  // includes the generated source dirs for the given codegenPlugins, and does
-  // not include any other dirs under the generated code base dir.
-  assertJavaCompileHasProtoGeneratedDir = {
-      Project project, String sourceSet, JavaCompile compileJavaTask, Collection<String> codegenPlugins ->
-    def baseDir = "${project.buildDir}/generated/source/proto/$sourceSet" as File
-    // The expected direct subdirectories under baseDir
-    def expectedDirs = codegenPlugins.collect { codegenPlugin ->
-      "${project.buildDir}/generated/source/proto/$sourceSet/$codegenPlugin" as File
-    } as Set
-
-    def actualDirs = new HashSet()
-    compileJavaTask.source.visit { fileVisitDetails ->
-      // If the visited file is or is under a direct subdirectory of baseDir, add
-      // that subdirectory to actualDirs.
-      def file = fileVisitDetails.file
-      while (true) {
-        if (file.parentFile == baseDir) {
-          actualDirs.add file
-        }
-        if (file.parentFile == null) {
-          break
-        }
-        file = file.parentFile
-      }
-    }
-    org.junit.Assert.assertEquals("sourceSet=${sourceSet}", expectedDirs, actualDirs)
-  }
-}

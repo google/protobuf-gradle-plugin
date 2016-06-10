@@ -70,6 +70,10 @@ class TaskGenerator {
     static Task maybeAddExtractProtosTask(Project project, String sourceSetName, String suffix = "") {
         def extractProtosTaskName = 'extract' +
                 Utils.getSourceSetSubstringForTaskNames(sourceSetName) + 'Proto' + suffix
+        Task existingTask = project.tasks.findByName(extractProtosTaskName)
+        if (existingTask != null) {
+            return existingTask
+        }
         return project.tasks.create(extractProtosTaskName, ProtobufExtract) {
             description = "Extracts proto files/dependencies specified by 'protobuf' configuration"
             destDir = getExtractedProtosDir(project, sourceSetName) as File
@@ -90,6 +94,10 @@ class TaskGenerator {
     static Task maybeAddExtractIncludeProtosTask(Project project, String sourceSetName, Object... inputFilesList) {
         def extractIncludeProtosTaskName = 'extractInclude' +
                 Utils.getSourceSetSubstringForTaskNames(sourceSetName) + 'Proto'
+        Task existingTask = project.tasks.findByName(extractIncludeProtosTaskName)
+        if (existingTask != null) {
+            return existingTask
+        }
         return project.tasks.create(extractIncludeProtosTaskName, ProtobufExtract) {
             description = "Extracts proto files from compile dependencies for includes"
             destDir = getExtractedIncludeProtosDir(project, sourceSetName) as File
