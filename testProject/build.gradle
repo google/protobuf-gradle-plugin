@@ -4,6 +4,9 @@
 apply plugin: 'java'
 apply plugin: 'com.google.protobuf'
 
+sourceCompatibility = JavaVersion.VERSION_1_7
+targetCompatibility = JavaVersion.VERSION_1_7
+
 configurations {
     nanoCompile
     grpcCompile
@@ -33,18 +36,25 @@ def protobufDep = 'com.google.protobuf:protobuf-java:3.0.0-alpha-3'
 def protobufNanoDep = 'com.google.protobuf.nano:protobuf-javanano:3.0.0-alpha-3'
 
 dependencies {
-    compile protobufDep
-    protobuf files("lib/protos.tar.gz")
-    //protobuf files("ext/test1.proto", "ext/test2.proto")
-    protobuf fileTree("ext/") {
-        //exclude 'more.proto'
-    }
-    testProtobuf files("lib/protos-test.tar.gz")
-    testCompile 'junit:junit:4.7', protobufNanoDep
-    nanoCompile protobufNanoDep
-    grpcCompile protobufDep, protobufNanoDep,
-        'io.grpc:grpc-stub:0.7.0', 'io.grpc:grpc-protobuf:0.7.0',
-        'io.grpc:grpc-protobuf-nano:0.7.0'
+  compile protobufDep
+
+  protobuf files("lib/protos.tar.gz")
+  protobuf fileTree("ext/") {
+//    exclude 'more.proto'
+  }
+
+  testProtobuf files("lib/protos-test.tar.gz")
+
+  testCompile 'junit:junit:4.12'
+  testCompile protobufNanoDep
+
+  nanoCompile protobufNanoDep
+
+  grpcCompile protobufDep
+  grpcCompile protobufNanoDep
+  grpcCompile 'io.grpc:grpc-stub:0.7.0'
+  grpcCompile 'io.grpc:grpc-protobuf:0.7.0'
+  grpcCompile 'io.grpc:grpc-protobuf-nano:0.7.0'
 }
 
 protobuf {

@@ -5,24 +5,25 @@ apply plugin: 'com.google.protobuf'
 
 buildscript {
     dependencies {
-        classpath 'com.android.tools.build:gradle:1.5.0'
-        classpath 'junit:junit:4.7'
+        classpath 'com.android.tools.build:gradle:2.1.0'
         classpath 'org.jacoco:org.jacoco.core:0.7.4.201502262128'
     }
 }
 
 android {
-    compileSdkVersion 21
-    buildToolsVersion "21.1.2"
+    compileSdkVersion 23
+    buildToolsVersion "23.0.3"
 
     defaultConfig {
         applicationId "io.grpc.helloworldexample"
         minSdkVersion 7
-        targetSdkVersion 21
+        targetSdkVersion 23
         versionCode 1
         versionName "1.0"
     }
+
     flavorDimensions 'abi', 'version'
+
     productFlavors {
         freeapp {
           dimension 'version'
@@ -37,14 +38,24 @@ android {
           dimension 'abi'
         }
     }
+
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-    sourceSets {
-        androidTest {}
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_7
+        targetCompatibility = JavaVersion.VERSION_1_7
+    }
+
+    packagingOptions {
+        exclude 'io/grpc/testing/integration/empty.proto'
+        exclude 'io/grpc/testing/integration/test.proto'
+        exclude 'io/grpc/testing/integration/messages.proto'
+        exclude 'tmp/stuff.proto'
     }
 }
 
@@ -75,7 +86,7 @@ protobuf {
 }
 
 dependencies {
-    compile 'com.android.support:appcompat-v7:21.0.3'
+    compile 'com.android.support:appcompat-v7:23.4.0'
     compile 'com.google.code.findbugs:jsr305:3.0.0'
     compile 'com.squareup.okhttp:okhttp:2.2.0'
     compile 'com.google.guava:guava:18.0'
