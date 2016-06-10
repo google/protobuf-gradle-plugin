@@ -39,9 +39,7 @@ dependencies {
   compile protobufDep
 
   protobuf files("lib/protos.tar.gz")
-  protobuf fileTree("ext/") {
-//    exclude 'more.proto'
-  }
+  protobuf fileTree("ext/")
 
   testProtobuf files("lib/protos-test.tar.gz")
 

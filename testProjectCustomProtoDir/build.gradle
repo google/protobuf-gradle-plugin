@@ -26,12 +26,13 @@ sourceSets {
 }
 
 dependencies {
-    compile 'com.google.protobuf:protobuf-java:2.6.1'
-    testCompile 'junit:junit:4.7'
+    compile 'com.google.protobuf:protobuf-java:3.0.0-beta-3'
+
+    testCompile 'junit:junit:4.12'
 }
 
 protobuf.protoc {
-  artifact = 'com.google.protobuf:protoc:2.6.1'
+  artifact = 'com.google.protobuf:protoc:3.0.0-beta-3'
 }
 
 task printDeps(dependsOn: build) << {

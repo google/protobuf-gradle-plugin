@@ -1,23 +1,26 @@
+syntax = "proto3";
+
 package ws.antonov.protobuf.test;
 
 message TestMessage {
-  required int32 id = 1;
-  optional string name = 2;
+  int32 id = 1;
+  string name = 2;
 }
 
 message AnotherMessage {
   repeated string names = 1;
-  optional DataPayload data = 2;
+  DataPayload data = 2;
 
   message DataPayload {
-    optional string payload = 1;
+    string payload = 1;
   }
 }
 
 message Item {
-  required string name = 1;
-  optional string value = 2;
+  string name = 1;
+  string value = 2;
 }
+
 message DataMap {
-  repeated Item data_items = 1 [experimental_map_key="name"];
+  repeated Item data_items = 1;
 }
