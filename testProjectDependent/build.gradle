@@ -10,7 +10,7 @@ apply plugin: 'com.google.protobuf'
 dependencies {
     compile 'com.google.protobuf:protobuf-java:3.0.0-alpha-3'
     compile project(':testProject')
-    testCompile 'junit:junit:4.7'
+    testCompile 'junit:junit:4.12'
 }
 
 protobuf.protoc {
@@ -22,5 +22,5 @@ test.doLast {
   // other proto files from dependencies.
   def generatedFiles = project.fileTree(protobuf.generatedFilesBaseDir + "/main")
   File onlyGeneratedFile = generatedFiles.singleFile
-  org.junit.Assert.assertEquals('Dependent.java', onlyGeneratedFile.name)
+  assert 'Dependent.java' == onlyGeneratedFile.name
 }

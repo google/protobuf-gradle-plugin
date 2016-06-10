@@ -112,23 +112,20 @@ def assertJavaCompileHasProtoGeneratedDir(String sourceSet, Collection<String> c
 
 def assertFileExists(boolean exists, String path) {
   if (exists) {
-    org.junit.Assert.assertTrue("\"${path}\" exists", (path as File).exists());
+    assert (path as File).exists()
   } else {
-    org.junit.Assert.assertFalse("\"${path}\" doesn't exist", (path as File).exists());
+    assert !(path as File).exists()
   }
 }
 
 test.doLast {
-  org.junit.Assert.assertEquals(
-      ['generateProto', 'generateNanoProto', 'generateGrpcProto',
-       'generateGrpc_nanoProto', 'generateTestProto'] as Set,
-       protobuf.generateProtoTasks.all().collect({ it.name }) as Set)
-  org.junit.Assert.assertEquals(
-      ['generateProto'] as Set,
-       protobuf.generateProtoTasks.ofSourceSet('main').collect({ it.name }) as Set)
-  org.junit.Assert.assertEquals(
-      ['generateNanoProto'] as Set,
-       protobuf.generateProtoTasks.ofSourceSet('nano').collect({ it.name }) as Set)
+  assert ['generateProto', 'generateNanoProto', 'generateGrpcProto', 'generateGrpc_nanoProto',
+          'generateTestProto'] as Set == protobuf.generateProtoTasks.all().collect({ it.name }) as Set
+
+  assert ['generateProto'] as Set == protobuf.generateProtoTasks.ofSourceSet('main').collect({ it.name }) as Set
+
+  assert ['generateNanoProto'] as Set == protobuf.generateProtoTasks.ofSourceSet('nano').collect({ it.name }) as Set
+
   assertJavaCompileHasProtoGeneratedDir('main', ['java'])
   assertJavaCompileHasProtoGeneratedDir('test', ['java'])
   assertJavaCompileHasProtoGeneratedDir('nano', ['javanano'])
@@ -169,6 +166,6 @@ rootProject.ext {
         file = file.parentFile
       }
     }
-    org.junit.Assert.assertEquals("sourceSet=${sourceSet}", expectedDirs, actualDirs)
+    assert expectedDirs == actualDirs
   }
 }
