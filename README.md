@@ -5,7 +5,7 @@ Error:Unable to load class 'org.gradle.api.internal.file.collections.DefaultDire
 ```
 
 
-# Protobuf Plugin for Gradle
+# Protobuf Plugin for Gradle [![Status](https://travis-ci.org/google/protobuf-gradle-plugin.svg?branch=master)](https://travis-ci.org/google/protobuf-gradle-plugin)
 The Gradle plugin that compiles Protocol Buffer (aka. Protobuf) definition
 files (``*.proto``) in your project. There are two pieces of its job:
  1. It assembles the Protobuf Compiler (``protoc``) command line and use it to
