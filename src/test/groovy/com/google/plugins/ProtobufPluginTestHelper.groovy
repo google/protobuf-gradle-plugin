@@ -28,12 +28,28 @@ class ProtobufPluginTestHelper {
         """
     }
 
-    static void copyTestProject(String testProjectName, File projectDir) {
+    static void copyTestProject(File projectDir, String testProjectName) {
         def baseDir = new File(System.getProperty("user.dir"), testProjectName)
 
         FileUtils.copyDirectory(baseDir, projectDir)
 
         def buildFile = new File(projectDir.path, "build.gradle")
         appendPluginClasspath(buildFile)
+    }
+
+    static void copyTestProjects(File projectDir, String... testProjectNames) {
+        def settingsFile = new File(projectDir, 'settings.gradle')
+        settingsFile.createNewFile()
+
+        testProjectNames.each {
+            copyTestProject(new File(projectDir.path, it), it)
+            settingsFile << """
+                include ':$it'
+                project(':$it').projectDir = "\$rootDir/$it" as File
+            """
+        }
+
+        def buildFile = new File(projectDir, 'build.gradle')
+        buildFile.createNewFile()
     }
 }

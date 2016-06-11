@@ -202,7 +202,8 @@ public class GenerateProtoTask extends DefaultTask {
       throw new IllegalStateException(
           "requested descriptor path but descriptor generation is off")
     }
-    return descriptorSetOptions.path != null ? descriptorSetOptions.path : "${outputBaseDir}/descriptor_set.desc"
+    return descriptorSetOptions.path != null
+      ? descriptorSetOptions.path : "${outputBaseDir}/descriptor_set.desc"
   }
 
   public GenerateProtoTask() {

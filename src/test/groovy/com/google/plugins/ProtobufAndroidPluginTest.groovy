@@ -17,20 +17,8 @@ class ProtobufAndroidPluginTest extends Specification {
 
     def "testProjectAndroid should be successfully executed"() {
         given: "project from testProject & testProjectAndroid"
-        def mainProjectDir = tempDir.newFolder()
-        def settingsFile = new File(mainProjectDir, 'settings.gradle')
-        settingsFile.createNewFile()
-
-        ['testProject', 'testProjectAndroid'].each {
-            ProtobufPluginTestHelper.copyTestProject(it, new File(mainProjectDir.path, it))
-            settingsFile << """
-                include ':$it'
-                project(':$it').projectDir = "\$rootDir/$it" as File
-            """
-        }
-
-        def buildFile = new File(mainProjectDir, 'build.gradle')
-        buildFile.createNewFile()
+        def mainProjectDir = tempDir.newFolder('test')
+        ProtobufPluginTestHelper.copyTestProjects(mainProjectDir, 'testProject', 'testProjectAndroid')
 
         when: "build is invoked"
         def result = GradleRunner.create()

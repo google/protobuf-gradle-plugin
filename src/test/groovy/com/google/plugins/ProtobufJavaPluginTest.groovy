@@ -59,7 +59,7 @@ class ProtobufJavaPluginTest extends Specification {
     def "testProject should be successfully executed"() {
         given: "project from testProject"
         def projectDir = tempDir.newFolder()
-        ProtobufPluginTestHelper.copyTestProject('testProject', projectDir)
+        ProtobufPluginTestHelper.copyTestProject(projectDir, 'testProject')
 
         when: "build is invoked"
         def result = GradleRunner.create()
@@ -84,19 +84,7 @@ class ProtobufJavaPluginTest extends Specification {
     def "testProjectDependent should be successfully executed"() {
         given: "project from testProject & testProjectDependent"
         def mainProjectDir = tempDir.newFolder()
-        def settingsFile = new File(mainProjectDir, 'settings.gradle')
-        settingsFile.createNewFile()
-
-        ['testProject', 'testProjectDependent'].each {
-            ProtobufPluginTestHelper.copyTestProject(it, new File(mainProjectDir.path, it))
-            settingsFile << """
-                include ':$it'
-                project(':$it').projectDir = "\$rootDir/$it" as File
-            """
-        }
-
-        def buildFile = new File(mainProjectDir, 'build.gradle')
-        buildFile.createNewFile()
+        ProtobufPluginTestHelper.copyTestProjects(mainProjectDir, 'testProject', 'testProjectDependent')
 
         when: "build is invoked"
         def result = GradleRunner.create()
@@ -111,7 +99,7 @@ class ProtobufJavaPluginTest extends Specification {
     def "testProjectCustomProtoDir should be successfully executed"() {
         given: "project from testProjectCustomProtoDir"
         def projectDir = tempDir.newFolder()
-        ProtobufPluginTestHelper.copyTestProject('testProjectCustomProtoDir', projectDir)
+        ProtobufPluginTestHelper.copyTestProject(projectDir, 'testProjectCustomProtoDir', )
 
         when: "build is invoked"
         def result = GradleRunner.create()
