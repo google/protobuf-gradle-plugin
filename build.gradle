@@ -11,11 +11,9 @@ apply plugin: 'idea'
 apply plugin: 'eclipse'
 apply plugin: 'groovy'
 apply plugin: 'maven'
-apply plugin: 'git'
+apply plugin: 'signing'
 apply plugin: 'com.jfrog.bintray'
 apply plugin: "com.gradle.plugin-publish"
-
-apply plugin: 'signing'
 
 group = 'com.google.protobuf'
 version = '0.7.8-SNAPSHOT'
@@ -24,47 +22,45 @@ ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
 
 buildscript {
     repositories {
-        mavenCentral()
-        jcenter()
-        maven {
-            url "https://plugins.gradle.org/m2/"
-        }
+        maven { url "https://plugins.gradle.org/m2/" } // Mirrors jcenter() and mavenCentral()
     }
+
     dependencies {
-        classpath 'org.ajoberstar:gradle-git:0.1.0'
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:0.5'
+        classpath 'com.android.tools.build:gradle:2.1.0'
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.6'
         classpath "com.gradle.publish:plugin-publish-plugin:0.9.4"
-        classpath 'junit:junit:4.12'
-        classpath 'org.jacoco:org.jacoco.core:0.7.4.201502262128'
+        classpath "com.github.ben-manes:gradle-versions-plugin:0.12.0"
+        classpath "junit:junit:4.12"
+    }
+}
+
+allprojects {
+    apply plugin: "com.github.ben-manes.versions"
+
+    repositories {
+        maven { url "https://plugins.gradle.org/m2/" } // Mirrors jcenter() and mavenCentral()
     }
 }
 
 subprojects {
-  buildscript {
-    repositories {
-      jcenter()
-      mavenLocal()
-    }
-    dependencies {
-      classpath "com.google.protobuf:protobuf-gradle-plugin:${rootProject.version}"
-    }
-  }
-  repositories {
-    mavenCentral()
-    jcenter()
-  }
-}
+    buildscript {
+        repositories {
+            mavenLocal()
+            maven { url "https://plugins.gradle.org/m2/" } // Mirrors jcenter() and mavenCentral()
+        }
 
-repositories {
-    mavenLocal()
-    mavenCentral()
+        dependencies {
+            classpath "com.google.protobuf:protobuf-gradle-plugin:${rootProject.version}"
+        }
+    }
 }
 
 dependencies {
     compile gradleApi()
     compile localGroovy()
-    compile 'com.google.gradle:osdetector-gradle-plugin:1.2.1'
+    compile 'com.google.gradle:osdetector-gradle-plugin:1.4.0'
     compile 'commons-lang:commons-lang:2.6'
+
     testCompile 'junit:junit:4.12'
 }
 
