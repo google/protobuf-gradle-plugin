@@ -8,10 +8,12 @@ buildscript {
         classpath 'com.android.tools.build:gradle:2.1.0'
     }
     repositories {
-        maven {
-            url "https://plugins.gradle.org/m2/"
-        }
+        maven { url "https://plugins.gradle.org/m2/" }
     }
+}
+
+repositories {
+    maven { url "https://plugins.gradle.org/m2/" }
 }
 
 android {

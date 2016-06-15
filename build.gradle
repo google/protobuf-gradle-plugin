@@ -23,7 +23,6 @@ ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
 
 buildscript {
     repositories {
-        mavenCentral()
         maven { url "https://plugins.gradle.org/m2/" } // Mirrors jcenter() and mavenCentral()
     }
 
@@ -32,6 +31,10 @@ buildscript {
         classpath "com.gradle.publish:plugin-publish-plugin:0.9.4"
         classpath "com.github.ben-manes:gradle-versions-plugin:0.12.0"
     }
+}
+
+repositories {
+    maven { url "https://plugins.gradle.org/m2/" }
 }
 
 // Write the plugin's classpath to a file to share with the tests
@@ -66,6 +69,11 @@ dependencies {
     // Add the classpath file to the test runtime classpath
     testRuntime files(createClasspathManifest)
 }
+
+test.inputs.files fileTree("$projectDir/testProject")
+test.inputs.files fileTree("$projectDir/testProjectCustomProtoDir")
+test.inputs.files fileTree("$projectDir/testProjectDependent")
+test.inputs.files fileTree("$projectDir/testProjectAndroid")
 
 task sourcesJar(type: Jar, dependsOn:classes) {
      classifier = 'sources'

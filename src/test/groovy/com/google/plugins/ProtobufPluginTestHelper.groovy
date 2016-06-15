@@ -20,11 +20,6 @@ class ProtobufPluginTestHelper {
                     classpath files($pluginClasspath)
                 }
             }
-
-            repositories {
-                mavenCentral()
-                jcenter()
-            }
         """
     }
 

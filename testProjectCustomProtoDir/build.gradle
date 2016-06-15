@@ -4,6 +4,10 @@
 apply plugin: 'java'
 apply plugin: 'com.google.protobuf'
 
+repositories {
+    maven { url "https://plugins.gradle.org/m2/" }
+}
+
 sourceSets {
   main {
     proto {

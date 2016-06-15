@@ -1,7 +1,1 @@
 rootProject.name = 'protobuf-gradle-plugin'
-
-if (gradle.startParameter.taskNames.intersect(['install', 'uploadArchives', 'publishPlugins'])) {
-  if (gradle.startParameter.taskNames.size > 1) {
-    throw new GradleException("'install', 'uploadArchives' or 'publishPlugins' can only be used alone")
-  }
-}
