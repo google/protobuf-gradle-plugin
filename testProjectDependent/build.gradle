@@ -10,6 +10,7 @@ apply plugin: 'com.google.protobuf'
 dependencies {
     compile 'com.google.protobuf:protobuf-java:3.0.0-alpha-3'
     compile project(':testProject')
+
     testCompile 'junit:junit:4.12'
 }
 

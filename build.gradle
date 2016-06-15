@@ -11,11 +11,10 @@ apply plugin: 'idea'
 apply plugin: 'eclipse'
 apply plugin: 'groovy'
 apply plugin: 'maven'
-apply plugin: 'git'
-apply plugin: 'com.jfrog.bintray'
-apply plugin: "com.gradle.plugin-publish"
-
 apply plugin: 'signing'
+apply plugin: 'com.jfrog.bintray'
+apply plugin: 'com.gradle.plugin-publish'
+apply plugin: 'com.github.ben-manes.versions'
 
 group = 'com.google.protobuf'
 version = '0.7.8-SNAPSHOT'
@@ -25,22 +24,14 @@ ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
 buildscript {
     repositories {
         mavenCentral()
-        jcenter()
-        maven {
-            url "https://plugins.gradle.org/m2/"
-        }
+        maven { url "https://plugins.gradle.org/m2/" } // Mirrors jcenter() and mavenCentral()
     }
-    dependencies {
-        classpath 'org.ajoberstar:gradle-git:0.1.0'
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:0.5'
-        classpath "com.gradle.publish:plugin-publish-plugin:0.9.4"
-        classpath 'org.jacoco:org.jacoco.core:0.7.4.201502262128'
-    }
-}
 
-repositories {
-    mavenLocal()
-    mavenCentral()
+    dependencies {
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.6'
+        classpath "com.gradle.publish:plugin-publish-plugin:0.9.4"
+        classpath "com.github.ben-manes:gradle-versions-plugin:0.12.0"
+    }
 }
 
 // Write the plugin's classpath to a file to share with the tests
@@ -60,7 +51,7 @@ dependencies {
     compileOnly gradleApi()
     compileOnly localGroovy()
     compile 'com.google.guava:guava:18.0'
-    compile 'com.google.gradle:osdetector-gradle-plugin:1.2.1'
+    compile 'com.google.gradle:osdetector-gradle-plugin:1.4.0'
     compile 'commons-lang:commons-lang:2.6'
 
     testCompile gradleTestKit()
