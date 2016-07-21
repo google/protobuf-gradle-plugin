@@ -67,8 +67,8 @@ class ProtobufPlugin implements Plugin<Project> {
     }
   }
 
-  void applyWithPrerequisitePlugin(List<String> prerequisitePlugin, String pluginToBeApplied) {
-    prerequisitePlugin.each { pluginName ->
+  void applyWithPrerequisitePlugin(List<String> prerequisitePlugins, String pluginToBeApplied) {
+    prerequisitePlugins.each { pluginName ->
       project.pluginManager.withPlugin(pluginName, { prerequisitePlugin ->
         applyWithPrerequisitePlugin(prerequisitePlugin, pluginToBeApplied)
       })
