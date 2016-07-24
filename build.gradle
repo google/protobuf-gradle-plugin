@@ -13,7 +13,8 @@ apply plugin: 'groovy'
 apply plugin: 'maven'
 apply plugin: 'signing'
 apply plugin: 'com.jfrog.bintray'
-apply plugin: "com.gradle.plugin-publish"
+apply plugin: 'com.gradle.plugin-publish'
+apply plugin: 'com.github.ben-manes.versions'
 
 group = 'com.google.protobuf'
 version = '0.7.8-SNAPSHOT'
@@ -26,43 +27,53 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.1.0'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.6'
         classpath "com.gradle.publish:plugin-publish-plugin:0.9.4"
         classpath "com.github.ben-manes:gradle-versions-plugin:0.12.0"
-        classpath "junit:junit:4.12"
     }
 }
 
-allprojects {
-    apply plugin: "com.github.ben-manes.versions"
-
-    repositories {
-        maven { url "https://plugins.gradle.org/m2/" } // Mirrors jcenter() and mavenCentral()
-    }
+repositories {
+    maven { url "https://plugins.gradle.org/m2/" }
 }
 
-subprojects {
-    buildscript {
-        repositories {
-            mavenLocal()
-            maven { url "https://plugins.gradle.org/m2/" } // Mirrors jcenter() and mavenCentral()
-        }
+// Write the plugin's classpath to a file to share with the tests
+task createClasspathManifest {
+    def outputDir = file("$buildDir/$name")
 
-        dependencies {
-            classpath "com.google.protobuf:protobuf-gradle-plugin:${rootProject.version}"
-        }
+    inputs.files sourceSets.main.runtimeClasspath
+    outputs.dir outputDir
+
+    doLast {
+        outputDir.mkdirs()
+        file("$outputDir/plugin-classpath.txt").text = sourceSets.main.runtimeClasspath.join("\n")
     }
 }
 
 dependencies {
-    compile gradleApi()
-    compile localGroovy()
+    compileOnly gradleApi()
+    compileOnly localGroovy()
+    compile 'com.google.guava:guava:18.0'
     compile 'com.google.gradle:osdetector-gradle-plugin:1.4.0'
     compile 'commons-lang:commons-lang:2.6'
 
+    testCompile gradleTestKit()
+    testCompile gradleApi()
+    testCompile localGroovy()
     testCompile 'junit:junit:4.12'
+    testCompile ('org.spockframework:spock-core:1.0-groovy-2.4') {
+      exclude module : 'groovy-all'
+    }
+    testCompile 'commons-io:commons-io:2.5'
+
+    // Add the classpath file to the test runtime classpath
+    testRuntime files(createClasspathManifest)
 }
+
+test.inputs.files fileTree("$projectDir/testProject")
+test.inputs.files fileTree("$projectDir/testProjectCustomProtoDir")
+test.inputs.files fileTree("$projectDir/testProjectDependent")
+test.inputs.files fileTree("$projectDir/testProjectAndroid")
 
 task sourcesJar(type: Jar, dependsOn:classes) {
      classifier = 'sources'
@@ -162,34 +173,3 @@ task checkJavaVersion << {
   }
 }
 [uploadArchives, publishPlugins]*.dependsOn checkJavaVersion
-
-ext {
-  // Shared test utility. Checks a JavaCompile task for the given sourceSet
-  // includes the generated source dirs for the given codegenPlugins, and does
-  // not include any other dirs under the generated code base dir.
-  assertJavaCompileHasProtoGeneratedDir = {
-      Project project, String sourceSet, JavaCompile compileJavaTask, Collection<String> codegenPlugins ->
-    def baseDir = "${project.buildDir}/generated/source/proto/$sourceSet" as File
-    // The expected direct subdirectories under baseDir
-    def expectedDirs = codegenPlugins.collect { codegenPlugin ->
-      "${project.buildDir}/generated/source/proto/$sourceSet/$codegenPlugin" as File
-    } as Set
-
-    def actualDirs = new HashSet()
-    compileJavaTask.source.visit { fileVisitDetails ->
-      // If the visited file is or is under a direct subdirectory of baseDir, add
-      // that subdirectory to actualDirs.
-      def file = fileVisitDetails.file
-      while (true) {
-        if (file.parentFile == baseDir) {
-          actualDirs.add file
-        }
-        if (file.parentFile == null) {
-          break
-        }
-        file = file.parentFile
-      }
-    }
-    org.junit.Assert.assertEquals("sourceSet=${sourceSet}", expectedDirs, actualDirs)
-  }
-}

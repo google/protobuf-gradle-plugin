@@ -4,6 +4,10 @@
 apply plugin: 'java'
 apply plugin: 'com.google.protobuf'
 
+repositories {
+    maven { url "https://plugins.gradle.org/m2/" }
+}
+
 sourceSets {
   main {
     proto {
@@ -40,7 +44,6 @@ task printDeps(dependsOn: build) << {
   sourceSets.each { println it.getCompileTaskName("proto") }
   sourceSets.each { println it.getCompileTaskName("java") }
   sourceSets.each { println it }
-  println tasks['generateProto'].source
   println tasks['compileJava'].source
   println project.buildDir
   println project.buildDir.path

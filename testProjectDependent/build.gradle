@@ -7,6 +7,10 @@
 apply plugin: 'java'
 apply plugin: 'com.google.protobuf'
 
+repositories {
+    maven { url "https://plugins.gradle.org/m2/" }
+}
+
 dependencies {
     compile 'com.google.protobuf:protobuf-java:3.0.0-alpha-3'
     compile project(':testProject')
@@ -23,5 +27,5 @@ test.doLast {
   // other proto files from dependencies.
   def generatedFiles = project.fileTree(protobuf.generatedFilesBaseDir + "/main")
   File onlyGeneratedFile = generatedFiles.singleFile
-  org.junit.Assert.assertEquals('Dependent.java', onlyGeneratedFile.name)
+  assert 'Dependent.java' == onlyGeneratedFile.name
 }
