@@ -12,21 +12,21 @@ import spock.lang.Specification
 
 class ProtobufAndroidPluginTest extends Specification {
 
-    @Rule
-    final TemporaryFolder tempDir = new TemporaryFolder()
+  @Rule
+  final TemporaryFolder tempDir = new TemporaryFolder()
 
-    def "testProjectAndroid should be successfully executed"() {
-        given: "project from testProject & testProjectAndroid"
-        def mainProjectDir = tempDir.newFolder('test')
-        ProtobufPluginTestHelper.copyTestProjects(mainProjectDir, 'testProject', 'testProjectAndroid')
+  def "testProjectAndroid should be successfully executed"() {
+    given: "project from testProject & testProjectAndroid"
+    def mainProjectDir = tempDir.newFolder('test')
+    ProtobufPluginTestHelper.copyTestProjects(mainProjectDir, 'testProject', 'testProjectAndroid')
 
-        when: "build is invoked"
-        def result = GradleRunner.create()
-            .withProjectDir(mainProjectDir)
-            .withArguments('testProjectAndroid:build')
-            .build()
+    when: "build is invoked"
+    def result = GradleRunner.create()
+      .withProjectDir(mainProjectDir)
+      .withArguments('testProjectAndroid:build')
+      .build()
 
-        then: "it succeed"
-        result.task(":testProjectAndroid:build").outcome == TaskOutcome.SUCCESS
-    }
+    then: "it succeed"
+    result.task(":testProjectAndroid:build").outcome == TaskOutcome.SUCCESS
+  }
 }
