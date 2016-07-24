@@ -4,6 +4,10 @@
 apply plugin: 'java'
 apply plugin: 'com.google.protobuf'
 
+repositories {
+    maven { url "https://plugins.gradle.org/m2/" }
+}
+
 sourceCompatibility = JavaVersion.VERSION_1_7
 targetCompatibility = JavaVersion.VERSION_1_7
 
@@ -110,23 +114,20 @@ def assertJavaCompileHasProtoGeneratedDir(String sourceSet, Collection<String> c
 
 def assertFileExists(boolean exists, String path) {
   if (exists) {
-    org.junit.Assert.assertTrue("\"${path}\" exists", (path as File).exists());
+    assert (path as File).exists()
   } else {
-    org.junit.Assert.assertFalse("\"${path}\" doesn't exist", (path as File).exists());
+    assert !(path as File).exists()
   }
 }
 
 test.doLast {
-  org.junit.Assert.assertEquals(
-      ['generateProto', 'generateNanoProto', 'generateGrpcProto',
-       'generateGrpc_nanoProto', 'generateTestProto'] as Set,
-       protobuf.generateProtoTasks.all().collect({ it.name }) as Set)
-  org.junit.Assert.assertEquals(
-      ['generateProto'] as Set,
-       protobuf.generateProtoTasks.ofSourceSet('main').collect({ it.name }) as Set)
-  org.junit.Assert.assertEquals(
-      ['generateNanoProto'] as Set,
-       protobuf.generateProtoTasks.ofSourceSet('nano').collect({ it.name }) as Set)
+  assert ['generateProto', 'generateNanoProto', 'generateGrpcProto', 'generateGrpc_nanoProto',
+          'generateTestProto'] as Set == protobuf.generateProtoTasks.all().collect({ it.name }) as Set
+
+  assert ['generateProto'] as Set == protobuf.generateProtoTasks.ofSourceSet('main').collect({ it.name }) as Set
+
+  assert ['generateNanoProto'] as Set == protobuf.generateProtoTasks.ofSourceSet('nano').collect({ it.name }) as Set
+
   assertJavaCompileHasProtoGeneratedDir('main', ['java'])
   assertJavaCompileHasProtoGeneratedDir('test', ['java'])
   assertJavaCompileHasProtoGeneratedDir('nano', ['javanano'])
@@ -138,4 +139,35 @@ test.doLast {
     assertFileExists(false, "$buildDir/generated/source/proto/$sourceSet/descriptor_set.desc")
   }
   assertFileExists(true, "$buildDir/generated/source/proto/grpc_nano/descriptor_set.desc")
+}
+
+rootProject.ext {
+  // Shared test utility. Checks a JavaCompile task for the given sourceSet
+  // includes the generated source dirs for the given codegenPlugins, and does
+  // not include any other dirs under the generated code base dir.
+  assertJavaCompileHasProtoGeneratedDir = {
+      Project project, String sourceSet, JavaCompile compileJavaTask, Collection<String> codegenPlugins ->
+    def baseDir = "${project.buildDir}/generated/source/proto/$sourceSet" as File
+    // The expected direct subdirectories under baseDir
+    def expectedDirs = codegenPlugins.collect { codegenPlugin ->
+      "${project.buildDir}/generated/source/proto/$sourceSet/$codegenPlugin" as File
+    } as Set
+
+    def actualDirs = new HashSet()
+    compileJavaTask.source.visit { fileVisitDetails ->
+      // If the visited file is or is under a direct subdirectory of baseDir, add
+      // that subdirectory to actualDirs.
+      def file = fileVisitDetails.file
+      while (true) {
+        if (file.parentFile == baseDir) {
+          actualDirs.add file
+        }
+        if (file.parentFile == null) {
+          break
+        }
+        file = file.parentFile
+      }
+    }
+    assert expectedDirs == actualDirs
+  }
 }
