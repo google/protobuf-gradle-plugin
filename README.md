@@ -61,6 +61,9 @@ buildscript {
 
 ## Usage
 
+A stand-alone example project is located under the `exampleProject`
+directory. Run `../gradlew build` under that directory to test it out.
+
 ### Adding the plugin to your project
 This plugin must work with either the Java plugin or the Android plugin.
 

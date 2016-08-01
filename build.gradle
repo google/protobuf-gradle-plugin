@@ -173,3 +173,18 @@ task checkJavaVersion << {
   }
 }
 [uploadArchives, publishPlugins]*.dependsOn checkJavaVersion
+
+// To limit the memory usage when running in Travis.
+// Travis tend to kill tasks that use too much memory.
+if (System.env.TRAVIS == 'true') {
+  allprojects {
+    tasks.withType(GroovyCompile) {
+      groovyOptions.fork = false
+    }
+    tasks.withType(Test) {
+      // containers (currently) have 2 dedicated cores and 4GB of memory
+      maxParallelForks = 2
+      minHeapSize = '128m'
+    }
+  }
+}

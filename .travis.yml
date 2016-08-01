@@ -14,6 +14,10 @@ android:
   licenses:
     - '.+'
 
+env:
+  global:
+    - GRADLE_OPTS="-Xmx128m"
+
 script:
   - ./gradlew clean assemble test --stacktrace
 
