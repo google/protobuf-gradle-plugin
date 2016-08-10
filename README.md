@@ -4,6 +4,8 @@ Please check your Gradle version if you see the following error:
 Error:Unable to load class 'org.gradle.api.internal.file.collections.DefaultDirectoryFileTreeFactory'.
 ```
 
+:exclamation: Please [read release notes](https://github.com/google/protobuf-gradle-plugin/releases)
+before upgrading the plugin.
 
 # Protobuf Plugin for Gradle [![Status](https://travis-ci.org/google/protobuf-gradle-plugin.svg?branch=master)](https://travis-ci.org/google/protobuf-gradle-plugin)
 The Gradle plugin that compiles Protocol Buffer (aka. Protobuf) definition
