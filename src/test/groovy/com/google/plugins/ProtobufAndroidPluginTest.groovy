@@ -6,19 +6,14 @@ import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
-import org.junit.Rule
-import org.junit.rules.TemporaryFolder
 import spock.lang.Specification
 
 class ProtobufAndroidPluginTest extends Specification {
 
-  @Rule
-  final TemporaryFolder tempDir = new TemporaryFolder()
-
   def "testProjectAndroid should be successfully executed"() {
-    given: "project from testProject & testProjectAndroid"
-    def mainProjectDir = tempDir.newFolder('test')
-    ProtobufPluginTestHelper.copyTestProjects(mainProjectDir, 'testProject', 'testProjectAndroid')
+    given: "project from testProject, testProjectLite & testProjectAndroid"
+    def mainProjectDir = ProtobufPluginTestHelper.prepareTestTempDir('testProjectAndroid')
+    ProtobufPluginTestHelper.copyTestProjects(mainProjectDir, 'testProject', 'testProjectLite', 'testProjectAndroid')
 
     when: "build is invoked"
     def result = GradleRunner.create()

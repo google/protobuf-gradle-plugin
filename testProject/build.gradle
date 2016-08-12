@@ -12,86 +12,47 @@ sourceCompatibility = JavaVersion.VERSION_1_7
 targetCompatibility = JavaVersion.VERSION_1_7
 
 configurations {
-    nanoCompile
     grpcCompile
 }
 
 sourceSets {
-  nano {
-    compileClasspath += configurations.nanoCompile
-  }
   grpc {
     compileClasspath += configurations.grpcCompile
   }
-  grpc_nano {
-    compileClasspath += configurations.grpcCompile
-  }
   test {
-    compileClasspath += nano.output
     compileClasspath += grpc.output
-    compileClasspath += grpc_nano.output
-    runtimeClasspath += nano.output
     runtimeClasspath += grpc.output
-    runtimeClasspath += grpc_nano.output
   }
 }
 
-def protobufDep = 'com.google.protobuf:protobuf-java:3.0.0-alpha-3'
-def protobufNanoDep = 'com.google.protobuf.nano:protobuf-javanano:3.0.0-alpha-3'
+def protobufDep = 'com.google.protobuf:protobuf-java:3.0.0'
 
 dependencies {
-  compile protobufDep
-
   protobuf files("lib/protos.tar.gz")
   protobuf fileTree("ext/")
-
   testProtobuf files("lib/protos-test.tar.gz")
 
+  compile protobufDep
   testCompile 'junit:junit:4.12'
-  testCompile protobufNanoDep
-
-  nanoCompile protobufNanoDep
-
   grpcCompile protobufDep
-  grpcCompile protobufNanoDep
-  grpcCompile 'io.grpc:grpc-stub:0.7.0'
-  grpcCompile 'io.grpc:grpc-protobuf:0.7.0'
-  grpcCompile 'io.grpc:grpc-protobuf-nano:0.7.0'
+  grpcCompile 'io.grpc:grpc-stub:1.0.0-pre2'
+  grpcCompile 'io.grpc:grpc-protobuf:1.0.0-pre2'
 }
 
 protobuf {
   protoc {
-    artifact = 'com.google.protobuf:protoc:3.0.0-alpha-3'
+    artifact = 'com.google.protobuf:protoc:3.0.0'
   }
   plugins {
     grpc {
-      artifact = 'io.grpc:protoc-gen-grpc-java:0.7.0'
+      artifact = 'io.grpc:protoc-gen-grpc-java:1.0.0-pre2'
     }
   }
   generateProtoTasks {
-    ofSourceSet('nano')*.builtins {
-      remove java
-      javanano {
-        option 'java_multiple_files=false'
-      }
-    }
-    ofSourceSet('grpc')*.plugins {
-      // No options. Note the braces cannot be omitted, otherwise the plugin
-      // will not be added. This is because of the implicit way
-      // NamedDomainObjectContainer binds the methods.
-      grpc { }
-    }
-    ofSourceSet('grpc_nano').each { task ->
-      task.builtins {
-        remove java
-        javanano {
-          option 'ignore_services=true'
-        }
-      }
+    ofSourceSet('grpc').each { task ->
       task.plugins {
         grpc {
-          option 'nano=true'
-          outputSubDir = 'grpcjavanano'
+          outputSubDir = 'grpc_output'
         }
       }
       task.generateDescriptorSet = true
@@ -121,24 +82,20 @@ def assertFileExists(boolean exists, String path) {
 }
 
 test.doLast {
-  assert ['generateProto', 'generateNanoProto', 'generateGrpcProto', 'generateGrpc_nanoProto',
-          'generateTestProto'] as Set == protobuf.generateProtoTasks.all().collect({ it.name }) as Set
+  assert ['generateProto', 'generateGrpcProto', 'generateTestProto'] as Set ==
+      protobuf.generateProtoTasks.all().collect({ it.name }) as Set
 
   assert ['generateProto'] as Set == protobuf.generateProtoTasks.ofSourceSet('main').collect({ it.name }) as Set
 
-  assert ['generateNanoProto'] as Set == protobuf.generateProtoTasks.ofSourceSet('nano').collect({ it.name }) as Set
-
   assertJavaCompileHasProtoGeneratedDir('main', ['java'])
   assertJavaCompileHasProtoGeneratedDir('test', ['java'])
-  assertJavaCompileHasProtoGeneratedDir('nano', ['javanano'])
-  assertJavaCompileHasProtoGeneratedDir('grpc', ['java', 'grpc'])
-  assertJavaCompileHasProtoGeneratedDir('grpc_nano', ['javanano', 'grpcjavanano'])
+  assertJavaCompileHasProtoGeneratedDir('grpc', ['java', 'grpc_output'])
 
   // Check generateDescriptorSet option has been honored
-  ['main', 'test', 'nano', 'grpc'].each { sourceSet ->
+  ['main', 'test'].each { sourceSet ->
     assertFileExists(false, "$buildDir/generated/source/proto/$sourceSet/descriptor_set.desc")
   }
-  assertFileExists(true, "$buildDir/generated/source/proto/grpc_nano/descriptor_set.desc")
+  assertFileExists(true, "$buildDir/generated/source/proto/grpc/descriptor_set.desc")
 }
 
 rootProject.ext {

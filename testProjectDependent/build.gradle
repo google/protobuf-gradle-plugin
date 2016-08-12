@@ -12,14 +12,14 @@ repositories {
 }
 
 dependencies {
-    compile 'com.google.protobuf:protobuf-java:3.0.0-alpha-3'
+    compile 'com.google.protobuf:protobuf-java:3.0.0'
     compile project(':testProject')
 
     testCompile 'junit:junit:4.12'
 }
 
 protobuf.protoc {
-  artifact = 'com.google.protobuf:protoc:3.0.0-alpha-3'
+  artifact = 'com.google.protobuf:protoc:3.0.0'
 }
 
 test.doLast {

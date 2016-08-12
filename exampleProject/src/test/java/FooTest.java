@@ -18,7 +18,7 @@ public class FooTest {
   @org.junit.Test
   public void testGrpc() {
     // from src/grpc/proto/
-    assertTrue(com.google.protobuf.GeneratedMessage.class.isAssignableFrom(
+    assertTrue(com.google.protobuf.GeneratedMessageV3.class.isAssignableFrom(
         io.grpc.testing.integration.Messages.SimpleRequest.class));
     assertTrue(Object.class.isAssignableFrom(io.grpc.testing.integration.TestServiceGrpc.class));
   }

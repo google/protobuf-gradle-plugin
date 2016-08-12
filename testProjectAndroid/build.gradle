@@ -5,7 +5,7 @@ apply plugin: 'com.google.protobuf'
 
 buildscript {
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.1.0'
+        classpath 'com.android.tools.build:gradle:2.2.0-beta1'
     }
     repositories {
         maven { url "https://plugins.gradle.org/m2/" }
@@ -67,30 +67,30 @@ android {
     // https://github.com/square/okio/issues/58
     lintOptions {
         warning 'InvalidPackage'
+        abortOnError false
     }
 }
 
 protobuf {
   protoc {
-    artifact = 'com.google.protobuf:protoc:3.0.0-alpha-3'
+    artifact = 'com.google.protobuf:protoc:3.0.0'
   }
   plugins {
     grpc {
-      artifact = 'io.grpc:protoc-gen-grpc-java:0.7.0'
+      artifact = 'io.grpc:protoc-gen-grpc-java:1.0.0-pre2'
+    }
+    javalite {
+      artifact = 'com.google.protobuf:protoc-gen-javalite:3.0.0'
     }
   }
   generateProtoTasks {
-    all()*.builtins {
-      javanano {
-        // Options added to --javanano_out
-        option 'java_multiple_files=false'
-        option 'ignore_services=true'
-      }
+    all()*.plugins {
+      javalite { }
     }
     ofNonTest()*.plugins {
       grpc {
         // Options added to --grpc_out
-        option 'nano=true'
+        option 'lite'
       }
     }
   }
@@ -100,13 +100,17 @@ dependencies {
     compile 'com.android.support:appcompat-v7:23.4.0'
     compile 'com.squareup.okhttp:okhttp:2.7.5'
     compile 'javax.annotation:javax.annotation-api:1.2'
-    compile 'com.google.protobuf.nano:protobuf-javanano:3.0.0-alpha-3'
-    compile 'io.grpc:grpc-core:0.7.0'
-    compile 'io.grpc:grpc-okhttp:0.7.0'
-    compile 'io.grpc:grpc-stub:0.7.0'
-    compile 'io.grpc:grpc-protobuf-nano:0.7.0'
-    compile project(':testProject')
-
+    compile 'com.google.protobuf:protobuf-lite:3.0.0'
+    compile 'io.grpc:grpc-core:1.0.0-pre2'
+    compile 'io.grpc:grpc-stub:1.0.0-pre2'
+    compile 'io.grpc:grpc-okhttp:1.0.0-pre2'
+    compile('io.grpc:grpc-protobuf-lite:1.0.0-pre2') {
+      // Otherwise Android compile will complain "Multiple dex files define ..."
+      exclude module: "protobuf-lite"
+    }
+    compile(project(':testProjectLite')) {
+      exclude module: "protobuf-lite"
+    }
     protobuf files('lib/protos.jar')
 }
 
@@ -184,11 +188,11 @@ afterEvaluate {
     assert [] as Set == protobuf.generateProtoTasks.ofFlavor('androidTest').collect({ it.name }) as Set
 
       android.applicationVariants.each { variant ->
-      assertJavaCompileHasProtoGeneratedDir(variant, ['javanano', 'grpc'])
+      assertJavaCompileHasProtoGeneratedDir(variant, ['javalite', 'grpc'])
     }
 
     android.testVariants.each { variant ->
-      assertJavaCompileHasProtoGeneratedDir(variant, ['javanano'])
+      assertJavaCompileHasProtoGeneratedDir(variant, ['javalite'])
     }
   }
 }

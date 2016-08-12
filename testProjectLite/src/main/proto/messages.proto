@@ -34,7 +34,7 @@ syntax = "proto3";
 
 package grpc.testing;
 
-option java_package = "nano";
+option java_package = "io.grpc.testing";
 
 // The type of payload that should be returned.
 enum PayloadType {

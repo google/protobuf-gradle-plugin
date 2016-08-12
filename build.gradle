@@ -17,7 +17,7 @@ apply plugin: 'com.gradle.plugin-publish'
 apply plugin: 'com.github.ben-manes.versions'
 
 group = 'com.google.protobuf'
-version = '0.7.8-SNAPSHOT'
+version = '0.8.0-SNAPSHOT'
 
 ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
 
@@ -71,6 +71,7 @@ dependencies {
 }
 
 test.inputs.files fileTree("$projectDir/testProject")
+test.inputs.files fileTree("$projectDir/testProjectLite")
 test.inputs.files fileTree("$projectDir/testProjectCustomProtoDir")
 test.inputs.files fileTree("$projectDir/testProjectDependent")
 test.inputs.files fileTree("$projectDir/testProjectAndroid")

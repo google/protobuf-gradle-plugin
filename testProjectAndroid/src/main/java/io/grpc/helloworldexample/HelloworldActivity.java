@@ -13,10 +13,10 @@ import android.widget.TextView;
 
 import java.util.concurrent.TimeUnit;
 
-import io.grpc.ChannelImpl;
+import io.grpc.ManagedChannel;
 import io.grpc.helloworldexample.Helloworld.HelloReply;
 import io.grpc.helloworldexample.Helloworld.HelloRequest;
-import io.grpc.transport.okhttp.OkHttpChannelBuilder;
+import io.grpc.okhttp.OkHttpChannelBuilder;
 
 public class HelloworldActivity extends ActionBarActivity {
     private Button mSendButton;
@@ -47,7 +47,7 @@ public class HelloworldActivity extends ActionBarActivity {
         private String mHost;
         private String mMessage;
         private int mPort;
-        private ChannelImpl mChannel;
+        private ManagedChannel mChannel;
 
         @Override
         protected void onPreExecute() {
@@ -58,12 +58,11 @@ public class HelloworldActivity extends ActionBarActivity {
             mResultText.setText("");
         }
 
-        private String sayHello(ChannelImpl channel) {
+        private String sayHello(ManagedChannel channel) {
             GreeterGrpc.GreeterBlockingStub stub = GreeterGrpc.newBlockingStub(channel);
-            HelloRequest message = new HelloRequest();
-            message.name = mMessage;
+            HelloRequest message = HelloRequest.newBuilder().setName(mMessage).build();
             HelloReply reply = stub.sayHello(message);
-            return reply.message;
+            return reply.getMessage();
         }
 
         @Override
@@ -80,7 +79,7 @@ public class HelloworldActivity extends ActionBarActivity {
         @Override
         protected void onPostExecute(String result) {
             try {
-                mChannel.shutdown().awaitTerminated(1, TimeUnit.SECONDS);
+                mChannel.shutdown().awaitTermination(1, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }

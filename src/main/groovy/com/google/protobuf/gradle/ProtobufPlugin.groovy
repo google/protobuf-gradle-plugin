@@ -243,9 +243,6 @@ class ProtobufPlugin implements Plugin<Project> {
       generateProtoTask.flavors = flavorListBuilder.build()
       generateProtoTask.buildType = variant.buildType.name
       generateProtoTask.doneInitializing()
-      generateProtoTask.builtins {
-        javanano {}
-      }
 
       sourceSetNames.each { sourceSetName ->
         def extractProtosTask = maybeAddExtractProtosTask(sourceSetName)

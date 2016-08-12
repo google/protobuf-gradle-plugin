@@ -6,15 +6,9 @@ import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
-import org.junit.Rule
-import org.junit.rules.TemporaryFolder
 import spock.lang.Specification
 
 class ProtobufJavaPluginTest extends Specification {
-
-  @Rule
-  final TemporaryFolder tempDir = new TemporaryFolder()
-
   private Project setupBasicProject() {
     Project project = ProjectBuilder.builder().build()
     project.apply plugin: 'java'
@@ -43,22 +37,22 @@ class ProtobufJavaPluginTest extends Specification {
     given: "a basic project with java and com.google.protobuf"
     def project = setupBasicProject()
 
-    when: "adding custom sourceSet nano"
-    project.sourceSets.create('nano')
+    when: "adding custom sourceSet main2"
+    project.sourceSets.create('main2')
 
     and: "project evaluated"
     project.evaluate()
 
-    then: "tasks for nano added"
-    assert project.tasks.generateNanoProto instanceof GenerateProtoTask
+    then: "tasks for main2 added"
+    assert project.tasks.generateMain2Proto instanceof GenerateProtoTask
 
-    assert project.tasks.extractIncludeNanoProto instanceof ProtobufExtract
-    assert project.tasks.extractNanoProto instanceof ProtobufExtract
+    assert project.tasks.extractIncludeMain2Proto instanceof ProtobufExtract
+    assert project.tasks.extractMain2Proto instanceof ProtobufExtract
   }
 
   def "testProject should be successfully executed"() {
     given: "project from testProject"
-    def projectDir = tempDir.newFolder()
+    def projectDir = ProtobufPluginTestHelper.prepareTestTempDir('testProject')
     ProtobufPluginTestHelper.copyTestProject(projectDir, 'testProject')
 
     when: "build is invoked"
@@ -69,7 +63,7 @@ class ProtobufJavaPluginTest extends Specification {
 
     then: "it succeed"
     result.task(":build").outcome == TaskOutcome.SUCCESS
-    ['grpc', 'grpc_nano', 'main', 'nano', 'test'].each {
+    ['grpc', 'main', 'test'].each {
       def generatedSrcDir = new File(projectDir.path, "build/generated/source/proto/$it")
       def fileList = []
       generatedSrcDir.eachFileRecurse { file ->
@@ -81,9 +75,24 @@ class ProtobufJavaPluginTest extends Specification {
     }
   }
 
+  def "testProjectLite should be successfully executed"() {
+    given: "project from testProjectLite"
+    def projectDir = ProtobufPluginTestHelper.prepareTestTempDir('testProjectLite')
+    ProtobufPluginTestHelper.copyTestProject(projectDir, 'testProjectLite')
+
+    when: "build is invoked"
+    def result = GradleRunner.create()
+      .withProjectDir(projectDir)
+      .withArguments('build')
+      .build()
+
+    then: "it succeed"
+    result.task(":build").outcome == TaskOutcome.SUCCESS
+  }
+
   def "testProjectDependent should be successfully executed"() {
     given: "project from testProject & testProjectDependent"
-    def mainProjectDir = tempDir.newFolder()
+    def mainProjectDir = ProtobufPluginTestHelper.prepareTestTempDir('testProjectDependent')
     ProtobufPluginTestHelper.copyTestProjects(mainProjectDir, 'testProject', 'testProjectDependent')
 
     when: "build is invoked"
@@ -98,7 +107,7 @@ class ProtobufJavaPluginTest extends Specification {
 
   def "testProjectCustomProtoDir should be successfully executed"() {
     given: "project from testProjectCustomProtoDir"
-    def projectDir = tempDir.newFolder()
+    def projectDir = ProtobufPluginTestHelper.prepareTestTempDir('testProjectCustomProtoDir')
     ProtobufPluginTestHelper.copyTestProject(projectDir, 'testProjectCustomProtoDir', )
 
     when: "build is invoked"

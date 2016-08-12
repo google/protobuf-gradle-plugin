@@ -19,9 +19,9 @@ buildscript {
 }
 
 dependencies {
-  compile 'com.google.protobuf:protobuf-java:3.0.0-alpha-3'
-  compile 'io.grpc:grpc-stub:0.7.0'
-  compile 'io.grpc:grpc-protobuf:0.7.0'
+  compile 'com.google.protobuf:protobuf-java:3.0.0'
+  compile 'io.grpc:grpc-stub:1.0.0-pre2'
+  compile 'io.grpc:grpc-protobuf:1.0.0-pre2'
   // Extra proto source files besides the ones residing under
   // "src/main".
   protobuf files("lib/protos.tar.gz")
@@ -36,14 +36,14 @@ dependencies {
 protobuf {
   protoc {
     // The artifact spec for the Protobuf Compiler
-    artifact = 'com.google.protobuf:protoc:3.0.0-alpha-3'
+    artifact = 'com.google.protobuf:protoc:3.0.0'
   }
   plugins {
     // Optional: an artifact spec for a protoc plugin, with "grpc" as
     // the identifier, which can be referred to in the "plugins"
     // container of the "generateProtoTasks" closure.
     grpc {
-      artifact = 'io.grpc:protoc-gen-grpc-java:0.7.0'
+      artifact = 'io.grpc:protoc-gen-grpc-java:1.0.0-pre2'
     }
   }
   generateProtoTasks {

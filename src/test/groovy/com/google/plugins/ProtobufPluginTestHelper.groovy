@@ -25,6 +25,13 @@ class ProtobufPluginTestHelper {
     """
   }
 
+  static File prepareTestTempDir(String testProjectName) {
+    File dir = new File(System.getProperty('user.dir'), 'build/tests/' + testProjectName)
+    FileUtils.deleteDirectory(dir)
+    FileUtils.forceMkdir(dir)
+    return dir
+  }
+
   static void copyTestProject(File projectDir, String testProjectName) {
     def baseDir = new File(System.getProperty("user.dir"), testProjectName)
 
