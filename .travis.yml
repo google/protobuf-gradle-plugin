@@ -16,10 +16,12 @@ android:
 
 env:
   global:
-    - GRADLE_OPTS="-Xmx128m"
+    - GRADLE_OPTS="-Xms128m"
 
 script:
-  - ./gradlew clean assemble test --stacktrace
+  - ./gradlew clean assemble test --tests com.google.protobuf.gradle.plugins.ProtobufJavaPluginTest --stacktrace
+  - ./gradlew test --tests com.google.protobuf.gradle.plugins.ProtobufAndroidPluginTest --stacktrace
+
 
 notifications:
   email: false

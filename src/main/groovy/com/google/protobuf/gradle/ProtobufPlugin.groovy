@@ -268,7 +268,7 @@ class ProtobufPlugin implements Plugin<Project> {
         outputBaseDir = "${project.protobuf.generatedFilesBaseDir}/${sourceSetOrVariantName}"
         sourceSets.each { sourceSet ->
           // Include sources
-          inputs.source sourceSet.proto
+          Utils.addFilesToTaskInputs(project, inputs, sourceSet.proto)
           ProtobufSourceDirectorySet protoSrcDirSet = sourceSet.proto
           protoSrcDirSet.srcDirs.each { srcDir ->
             include srcDir
@@ -279,7 +279,7 @@ class ProtobufPlugin implements Plugin<Project> {
               project.fileTree(getExtractedProtosDir(sourceSet.name)) {
                 include "**/*.proto"
               }
-          inputs.source extractedProtoSources
+          Utils.addFilesToTaskInputs(project, inputs, extractedProtoSources)
           include extractedProtoSources.dir
 
           // Register extracted include protos

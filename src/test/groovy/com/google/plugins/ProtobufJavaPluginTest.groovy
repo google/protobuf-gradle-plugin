@@ -9,6 +9,8 @@ import org.gradle.testkit.runner.TaskOutcome
 import spock.lang.Specification
 
 class ProtobufJavaPluginTest extends Specification {
+  private static final def gradleVersions = ["2.12", "3.0"]
+
   private Project setupBasicProject() {
     Project project = ProjectBuilder.builder().build()
     project.apply plugin: 'java'
@@ -59,6 +61,7 @@ class ProtobufJavaPluginTest extends Specification {
     def result = GradleRunner.create()
       .withProjectDir(projectDir)
       .withArguments('build')
+      .withGradleVersion(gradleVersion)
       .build()
 
     then: "it succeed"
@@ -73,6 +76,9 @@ class ProtobufJavaPluginTest extends Specification {
       }
       assert fileList.size > 0
     }
+
+    where:
+    gradleVersion << gradleVersions
   }
 
   def "testProjectLite should be successfully executed"() {
@@ -84,10 +90,14 @@ class ProtobufJavaPluginTest extends Specification {
     def result = GradleRunner.create()
       .withProjectDir(projectDir)
       .withArguments('build')
+      .withGradleVersion(gradleVersion)
       .build()
 
     then: "it succeed"
     result.task(":build").outcome == TaskOutcome.SUCCESS
+
+    where:
+    gradleVersion << gradleVersions
   }
 
   def "testProjectDependent should be successfully executed"() {
@@ -99,10 +109,14 @@ class ProtobufJavaPluginTest extends Specification {
     def result = GradleRunner.create()
       .withProjectDir(mainProjectDir)
       .withArguments('testProjectDependent:build')
+      .withGradleVersion(gradleVersion)
       .build()
 
     then: "it succeed"
     result.task(":testProjectDependent:build").outcome == TaskOutcome.SUCCESS
+
+    where:
+    gradleVersion << gradleVersions
   }
 
   def "testProjectCustomProtoDir should be successfully executed"() {
@@ -114,9 +128,13 @@ class ProtobufJavaPluginTest extends Specification {
     def result = GradleRunner.create()
       .withProjectDir(projectDir)
       .withArguments('build')
+      .withGradleVersion(gradleVersion)
       .build()
 
     then: "it succeed"
     result.task(":build").outcome == TaskOutcome.SUCCESS
+
+    where:
+    gradleVersion << gradleVersions
   }
 }

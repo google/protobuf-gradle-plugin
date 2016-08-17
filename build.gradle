@@ -175,9 +175,9 @@ task checkJavaVersion << {
 }
 [uploadArchives, publishPlugins]*.dependsOn checkJavaVersion
 
-// To limit the memory usage when running in Travis.
-// Travis tend to kill tasks that use too much memory.
 if (System.env.TRAVIS == 'true') {
+  // To limit the memory usage when running in Travis.
+  // Travis tend to kill tasks that use too much memory.
   allprojects {
     tasks.withType(GroovyCompile) {
       groovyOptions.fork = false
@@ -188,4 +188,12 @@ if (System.env.TRAVIS == 'true') {
       minHeapSize = '128m'
     }
   }
+  // The Android test takes longer than 10 minutes.  Travis kills the test if it has
+  // seen no output for 10 minutes, so we need to produced output.
+  test {
+    testLogging {
+      showStandardStreams = true
+    }
+  }
 }
+

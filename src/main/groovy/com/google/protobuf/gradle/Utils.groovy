@@ -30,8 +30,12 @@
 package com.google.protobuf.gradle
 
 import org.apache.commons.lang.StringUtils
+import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.tasks.SourceSet
+import org.gradle.api.tasks.TaskInputs
+
+import java.util.regex.Matcher
 
 class Utils {
   /**
@@ -53,5 +57,36 @@ class Utils {
 
   static boolean isAndroidProject(Project project) {
     return project.hasProperty('android') && project.android.sourceSets
+  }
+
+  static void addFilesToTaskInputs(Project project, TaskInputs inputs, Object files) {
+    if (compareGradleVersion(project, "3.0") >= 0) {
+      inputs.file(files).skipWhenEmpty()
+    } else {
+      // source() is deprecated since Gradle 3.0
+      inputs.source(files)
+    }
+  }
+
+  /**
+   * Returns positive/0/negative if current Gradle version is higher than/equal to/lower than the
+   * given target version.  Only major and minor versions are checked.  Patch version is ignored.
+   */
+  static int compareGradleVersion(Project project, String target) {
+    Matcher gv = parseVersionString(project.gradle.gradleVersion)
+    Matcher tv = parseVersionString(target)
+    int majorVersionDiff = gv.group(1).toInteger() - tv.group(1).toInteger()
+    if (majorVersionDiff != 0) {
+      return majorVersionDiff
+    }
+    return gv.group(2).toInteger() - tv.group(2).toInteger()
+  }
+
+  private static Matcher parseVersionString(String version) {
+    Matcher matcher = version =~ "(\\d*)\\.(\\d*).*"
+    if (!matcher || !matcher.matches()) {
+      throw new GradleException("Failed to parse version \"${version}\"")
+    }
+    return matcher
   }
 }
