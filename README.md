@@ -20,7 +20,7 @@ For more information about the Protobuf Compiler, please refer to
 [Google Developers Site](https://developers.google.com/protocol-buffers/docs/reference/java-generated?csw=1).
 
 ## Latest Version
-The latest version is ``0.7.7``. It requires at least __Gradle 2.12__ and __Java 7__.
+The latest version is ``0.8.0``. It requires at least __Gradle 2.12__ and __Java 7__.
 It is available on Maven Central. To add dependency to it:
 ```gradle
 buildscript {
@@ -28,7 +28,7 @@ buildscript {
     mavenCentral()
   }
   dependencies {
-    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.7.7'
+    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.0'
   }
 }
 ```
@@ -42,7 +42,7 @@ buildscript {
     }
   }
   dependencies {
-    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.7.8-SNAPSHOT'
+    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.1-SNAPSHOT'
   }
 }
 ```
@@ -56,21 +56,27 @@ buildscript {
     mavenLocal()
   }
   dependencies {
-    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.7.8-SNAPSHOT'
+    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.1-SNAPSHOT'
   }
 }
 ```
 
-## Usage
+## Examples
 
-A stand-alone example project is located under the `exampleProject`
-directory. Run `../gradlew build` under that directory to test it out.
+A stand-alone example project is located under [exampleProject]
+(https://github.com/google/protobuf-gradle-plugin/tree/master/exampleProject).
+Run `../gradlew build` under that directory to test it out.
 
-### Adding the plugin to your project
+Directories that start with `testProject` can also serve as usage
+examples for advanced options, although they cannot be compiled as
+individual projects.
+
+
+## Adding the plugin to your project
 This plugin must work with either the Java plugin or the Android plugin.
 
 
-#### Using the `apply` method
+### Using the `apply` method
 The Java plugin or the Android plugin must be applied before the Protobuf plugin:
 
 ```gradle
@@ -83,31 +89,34 @@ apply plugin: 'com.android.application'  // or 'com.android.library'
 apply plugin: 'com.google.protobuf'
 ```
 
-#### Using the Gradle plugin DSL
+The experimental Android plugin is not supported yet (#85).
+
+### Using the Gradle plugin DSL
 The order of the plugins doesn't matter:
 
 ```gradle
 plugins {
-  id "com.google.protobuf" version "0.7.7"
+  id "com.google.protobuf" version "0.8.0"
   id "java"
 }
 ```
 
 
-### Configuring Protobuf compilation
+## Configuring Protobuf compilation
+
 The Protobuf plugin assumes Protobuf files (``*.proto``) are organized in the
 same way as Java source files, in _sourceSets_. The Protobuf files of a
 _sourceSet_ (or _variant_ in an Android project) are compiled in a single
 ``protoc`` run, and the generated files are added to the input of the Java
 compilation run of that _sourceSet_ (or _variant_).
 
-#### Cutomizing source directories
+### Cutomizing source directories
 The plugin adds a new sources block named ``proto`` alongside ``java`` to every
 sourceSet. By default, it includes all ``*.proto`` files under
 ``src/$sourceSetName/proto``. You can customize it in the same way as you would
 customize the ``java`` sources.
 
-For Java projects, use the top-level ``sourceSet``:
+**Java** projects: use the top-level ``sourceSet``:
 
 ```gradle
 sourceSets {
@@ -135,7 +144,7 @@ sourceSets {
 }
 ```
 
-For Android projects, use ``android.sourceSets``:
+**Android** projects: use ``android.sourceSets``:
 
 ```gradle
 android {
@@ -152,12 +161,12 @@ android {
 }
 ```
 
-#### Customizing Protobuf compilation
+### Customizing Protobuf compilation
 The plugin adds a ``protobuf`` block to the project. It provides all the
 configuration knobs.
 
 
-##### Locate external executables
+#### Locate external executables
 
 By default the plugin will search for the ``protoc`` executable in the system
 search path. We recommend you to take the advantage of pre-compiled ``protoc``
@@ -169,7 +178,7 @@ protobuf {
   // Configure the protoc executable
   protoc {
     // Download from repositories
-    artifact = 'com.google.protobuf:protoc:3.0.0-alpha-3'
+    artifact = 'com.google.protobuf:protoc:3.0.0'
   }
   ...
 }
@@ -202,13 +211,10 @@ protobuf {
   plugins {
     // Define a plugin with name 'grpc'
     grpc {
-      artifact = 'io.grpc:protoc-gen-grpc-java:0.1.0-SNAPSHOT'
+      artifact = 'io.grpc:protoc-gen-grpc-java:1.0.0-pre2'
       // or
-      path = 'tools/protoc-gen-grpc-java'
+      // path = 'tools/protoc-gen-grpc-java'
     }
-    xrpc {
-      path = 'tools/protoc-gen-xrpc'
-    }
     // Any other plugins
     ...
   }
@@ -216,7 +222,7 @@ protobuf {
 }
 ```
 
-##### Customize code generation tasks
+#### Customize code generation tasks
 
 The Protobuf plugin generates a task for each ``protoc`` run, which is for a
 sourceSet in a Java project, or a variant in an Android project. The task has
@@ -228,7 +234,7 @@ provides you helper functions to conveniently access tasks that are tied to a
 certain build element, and also ensures you configuration will be picked up
 correctly by the plugin.
 
-DONOTs:
+**DONOTs**:
  - DO NOT assume the names of the tasks, as they may change.
  - DO NOT configure the tasks outside of the ``generateProtoTasks`` block,
    because there are subtle timing constraints on when the tasks should be
@@ -243,88 +249,108 @@ protobuf {
       // Here you can configure the task
     }
 
-    // In addition to all(), you may get the task collection by various
-    // criteria:
+    // In addition to all(), you may select tasks by various criteria:
 
-    // (Java only) returns tasks for a sourceSet
+    // (Java-only) returns tasks for a sourceSet
     ofSourceSet('main')
-    // (Android only) returns tasks for a flavor
+
+    // (Android-only selectors)
+    // Returns tasks for a flavor
     ofFlavor('demo')
-    // (Android only) returns tasks for a buildType
+    // Returns tasks for a buildType
     ofBuildType('release')
-    // (Android only) returns tasks for a variant
+    // Returns tasks for a variant
     ofVariant('demoRelease')
-    // (Android only) returns non-androidTest tasks
+    // Returns non-androidTest tasks
     ofNonTest()
-    // (Android only) return androidTest tasks
+    // Return androidTest tasks
     ofTest()
   }
 }
 ```
 
-Here is how to control ``protoc`` built-in outputs in a closure passed to
-``builtins``, which configures a ``NamedDomainObjectContainer``.
+
+Each code generation task has two collections:
+ - `builtins`: code generators built in `protoc`, e.g., `java`, `cpp`,
+   `python`.
+ - `plugins`: code generation plugins that work with `protoc`, e.g.,
+   `grpc`. They must be defined in the `protobuf.plugins` block in
+   order to be added to a task.
+
+
+#### Configure what to generate
+
+Code generation is done by protoc builtins and plugins.  Each
+builtin/plugin generate a certain type of code.  To add or configure a
+builtin/plugin on a task, list its name followed by a braces block.
+Put options in the braces if wanted.  For example:
 
 ```gradle
-{ task ->
-  // Configure built-in outputs. Each block generates a
-  // '--<name>_out' flag to the protoc command line.
-  task.builtins {
-    // In Java projects, the "java" output is added automatically.
-    // You only need it if you want it in an Android project or want to add
-    // options.
-    // DO NOT omit the braces if you want this builtin to be added.
-    java { }
-    // In Android projects, the "javanano" output is added automatically.
-    // You only need it if you want it in an Java project or want to add
-    // options.
-    javanano {
-      // Options added to --javanano_out
-      option 'java_multiple_files=true'
-      option 'ignore_services=true'
+task.builtins {
+  java {
+    option 'example_option1=true'
+    option 'example_option2'
+  }
+  // Add cpp output without any option.
+  // DO NOT omit the braces if you want this builtin to be added.
+  cpp { }
+}
+
+task.plugins {
+  // Add grpc output without any option.  grpc must have been defined in the
+  // protobuf.plugins block.
+  grpc { }
+}
+```
+
+#### Default outputs
+
+**Java** projects: the `java` builtin is added by default.  If you
+wish to remove this output, for example, to only generate for Python:
+
+```gradle
+protobuf {
+  generateProtoTasks {
+    all().each { task ->
+      task.builtins {
+        remove java
+        python { }
+      }
     }
-    // Any other builtins
-    ...
   }
 }
 ```
 
-If you want to remove the built-in output that is automatically added, use
-``remove`` method of ``NamedDomainObjectContainer``. For example, to generate
-``javanano`` instead of ``java`` in a Java project:
-```gradle
-{ task ->
-  task.builtins {
-    remove java
-    javanano { }
-  }
-}
-```
-
-Here is how you apply codegen plugins that have been defined in the
-``protobuf.plugins`` block introduced above.
+**Android** projects: no default output will be added.  Since Protobuf
+3.0.0, [protobuf-lite](http://search.maven.org/#search%7Cga%7C1%7Ca%3A%22protobuf-lite%22)
+is the recommended Protobuf library for Android, and you will need to
+add it as a codegen plugin.  For example:
 
 ```gradle
-{ task ->
-  // Configure codegen plugins. Each block generates two flags
-  // to the protoc command line:
-  //  - '--plugin=protoc-gen-<name>:<plugin-path>', and
-  //  - '--<name>_out=<output-dir>
-  // <name> must have been defined in the protobuf.plugins block
-  task.plugins {
-    // Use the "grpc" plugin in this task.
+protobuf {
+  plugins {
+    javalite {
+      artifact = 'com.google.protobuf:protobuf-lite:3.0.0'
+    }
     grpc {
-      // Options added to --grpc_out
-      option 'nano=true'
+      artifact = 'io.grpc:protoc-gen-grpc-java:1.0.0-pre2'
     }
-    // Use the "xrpc" plugin, with no options (braces cannot be omitted)
-    xrpc { }
-    // Any other plugins
+  }
+  generateProtoTasks {
+    all().each { task ->
+      task.plugins {
+        javalite { }
+        grpc {
+          option 'lite'
+        }
+      }
+    }
   }
 }
 ```
 
-The task also provides following options:
+#### Generate descriptor set files
+
 ```gradle
 { task ->
   // If true, will generate a descriptor_set.desc file under
@@ -431,10 +457,11 @@ idea {
 
 
 ## Testing the plugin
+
 ``testProject*`` are testing projects that uses this plugin to compile
-``.proto`` files. They also serve as usage examples. Because the tests include
-an Android project, you need to install [Android SDK
-Tools](https://developer.android.com/sdk/index.html#Other).
+``.proto`` files. Because the tests include an Android project, you
+need to install
+[Android SDK Tools](https://developer.android.com/sdk/index.html#Other).
 
 After you made any change to the plugin, be sure to run these tests.
 ```
