@@ -327,22 +327,23 @@ is the recommended Protobuf library for Android, and you will need to
 add it as a codegen plugin.  For example:
 
 ```gradle
+
+dependencies {
+  // You need to depend on the lite runtime library, not protobuf-java
+  compile 'com.google.protobuf:protobuf-lite:3.0.0'
+}
+
 protobuf {
   plugins {
     javalite {
-      artifact = 'com.google.protobuf:protobuf-lite:3.0.0'
-    }
-    grpc {
-      artifact = 'io.grpc:protoc-gen-grpc-java:1.0.0-pre2'
+      // The codegen for lite comes as a separate artifact
+      artifact = 'com.google.protobuf:protoc-gen-javalite:3.0.0'
     }
   }
   generateProtoTasks {
     all().each { task ->
       task.plugins {
         javalite { }
-        grpc {
-          option 'lite'
-        }
       }
     }
   }
