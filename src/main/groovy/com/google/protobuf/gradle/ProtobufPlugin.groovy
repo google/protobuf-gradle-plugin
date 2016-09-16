@@ -42,24 +42,41 @@ import org.gradle.api.internal.file.FileResolver
 import org.gradle.api.plugins.AppliedPlugin
 import org.gradle.api.tasks.SourceSet
 
+import org.gradle.api.internal.file.SourceDirectorySetFactory
+import org.gradle.api.internal.tasks.DefaultSourceSetContainer
+
+import org.gradle.internal.reflect.Instantiator
+
+
 import javax.inject.Inject
 
 class ProtobufPlugin implements Plugin<Project> {
+
     // any one of these plugins should be sufficient to proceed with applying this plugin
+    private static final String javaPlugin = 'java'
+    private static final String msbuildPlugin = 'com.ullink.msbuild'
     private static final List<String> prerequisitePluginOptions = [
-            'java',
-            'com.android.application',
-            'com.android.library',
-            'android',
-            'android-library']
+        javaPlugin,
+        msbuildPlugin,
+        'com.android.application',
+        'com.android.library',
+        'android',
+        'android-library'
+    ]
+
 
     private final FileResolver fileResolver
+    private final Instantiator instantiator
     private Project project
-    private boolean wasApplied = false;
+    private boolean wasApplied = false
+    private def defaultBuiltins = []
+    private boolean wasJavaApplied = false
+    private boolean wasCSharpApplied = false
 
     @Inject
-    public ProtobufPlugin(FileResolver fileResolver) {
+    public ProtobufPlugin(FileResolver fileResolver, Instantiator instantiator) {
       this.fileResolver = fileResolver
+      this.instantiator = instantiator
     }
 
     void apply(final Project project) {
@@ -70,13 +87,8 @@ class ProtobufPlugin implements Plugin<Project> {
         // has been applied then we will assume that none of prerequisite plugins were specified and we will
         // throw an Exception to alert the user of this configuration issue.
         Action<? super AppliedPlugin> applyWithPrerequisitePlugin = { prerequisitePlugin ->
-          if (wasApplied) {
-            project.logger.warn('The com.google.protobuf plugin was already applied to the project: ' + project.path
-                + ' and will not be applied again after plugin: ' + prerequisitePlugin.id)
-
-          } else {
+          if (!wasApplied) {
             wasApplied = true
-
             doApply()
           }
         }
@@ -84,6 +96,13 @@ class ProtobufPlugin implements Plugin<Project> {
         prerequisitePluginOptions.each { pluginName ->
           project.pluginManager.withPlugin(pluginName, applyWithPrerequisitePlugin)
         }
+
+        project.pluginManager.withPlugin(javaPlugin, {
+          defaultBuiltins << 'java'
+        })
+        project.pluginManager.withPlugin(msbuildPlugin, {
+          defaultBuiltins << 'csharp'
+        })
 
         project.afterEvaluate {
           if (!wasApplied) {
@@ -108,12 +127,12 @@ class ProtobufPlugin implements Plugin<Project> {
           addProtoTasks()
           project.protobuf.runTaskConfigClosures()
           // Disallow user configuration outside the config closures, because
-          // next in linkGenerateProtoTasksToJavaCompile() we add generated,
+          // next in linkGenerateProtoTasksToCompile() we add generated,
           // outputs to the inputs of javaCompile tasks, and any new codegen
           // plugin output added after this point won't be added to javaCompile
           // tasks.
           project.protobuf.generateProtoTasks.all()*.doneConfig()
-          linkGenerateProtoTasksToJavaCompile()
+          linkGenerateProtoTasksToCompile()
           // protoc and codegen plugin configuration may change through the protobuf{}
           // block. Only at this point the configuration has been finalized.
           project.protobuf.tools.registerTaskDependencies(project.protobuf.getGenerateProtoTasks().all())
@@ -152,6 +171,14 @@ class ProtobufPlugin implements Plugin<Project> {
       if (Utils.isAndroidProject(project)) {
         return project.android.sourceSets
       } else {
+        // Add sourceSet when not defined
+        if (!project.hasProperty('sourceSets')) {
+          def sourceSets = instantiator.newInstance(DefaultSourceSetContainer.class, project.fileResolver, project.tasks, instantiator,
+            project.services.get(SourceDirectorySetFactory.class));
+          sourceSets.create('main')
+          project.extensions.sourceSets = sourceSets
+        }
+
         return project.sourceSets
       }
     }
@@ -180,14 +207,16 @@ class ProtobufPlugin implements Plugin<Project> {
     }
 
     /**
-     * Creates Protobuf tasks for a sourceSet in a Java project.
+     * Creates Protobuf tasks for a sourceSet in a projects other than Android
      */
     private addTasksForSourceSet(final SourceSet sourceSet) {
       def generateProtoTask = addGenerateProtoTask(sourceSet.name, [sourceSet])
       generateProtoTask.sourceSet = sourceSet
       generateProtoTask.doneInitializing()
       generateProtoTask.builtins {
-        java {}
+        defaultBuiltins.each {
+          "$it" {}
+        }
       }
 
       def extractProtosTask = maybeAddExtractProtosTask(sourceSet.name)
@@ -198,10 +227,13 @@ class ProtobufPlugin implements Plugin<Project> {
 
       // Include source proto files in the compiled archive, so that proto files from
       // dependent projects can import them.
-      def processResourcesTask =
-          project.tasks.getByName(sourceSet.getTaskName('process', 'resources'))
-      processResourcesTask.from(generateProtoTask.inputs.sourceFiles) {
-        include '**/*.proto'
+
+      def taskName = sourceSet.getTaskName('process', 'resources')
+      if (project.tasks.names.contains(taskName)) {
+        def processResourcesTask = project.tasks.getByName(taskName)
+        processResourcesTask.from(generateProtoTask.inputs.sourceFiles) {
+          include '**/*.proto'
+        }
       }
     }
 
@@ -338,13 +370,16 @@ class ProtobufPlugin implements Plugin<Project> {
       return project.tasks.create(extractIncludeProtosTaskName, ProtobufExtract) {
         description = "Extracts proto files from compile dependencies for includes"
         destDir = getExtractedIncludeProtosDir(sourceSetName) as File
-        inputs.files project.configurations[Utils.getConfigName(sourceSetName, 'compile')]
+        def configName = Utils.getConfigName(sourceSetName, 'compile')
+        if (project.configurations.names.contains(configName)) {
+          inputs.files project.configurations[configName]
+        }
 
         // TL; DR: Make protos in 'test' sourceSet able to import protos from the 'main' sourceSet.
         // Sub-configurations, e.g., 'testCompile' that extends 'compile', don't depend on the
         // their super configurations. As a result, 'testCompile' doesn't depend on 'compile' and
         // it cannot get the proto files from 'main' sourceSet through the configuration. However,
-	if (Utils.isAndroidProject(project)) {
+        if (Utils.isAndroidProject(project)) {
           // TODO(zhangkun83): Android sourceSet doesn't have compileClasspath. If it did, we
           // haven't figured out a way to put source protos in 'resources'. For now we use an ad-hoc
           // solution that manually includes the source protos of 'main' and its dependencies.
@@ -357,12 +392,13 @@ class ProtobufPlugin implements Plugin<Project> {
           // 'resources' of the output of 'main', in which the source protos are placed.
           // This is nicer than the ad-hoc solution that Android has, because it works for any
           // extended configuration, not just 'testCompile'.
-          inputs.files getSourceSets()[sourceSetName].compileClasspath
-	}
+          if (getSourceSets()[sourceSetName].compileClasspath) {
+            inputs.files getSourceSets()[sourceSetName].compileClasspath
+          }
+        }
       }
     }
-
-    private linkGenerateProtoTasksToJavaCompile() {
+    private linkGenerateProtoTasksToCompile() {
       if (Utils.isAndroidProject(project)) {
         (getNonTestVariants() + project.android.testVariants).each { variant ->
           project.protobuf.generateProtoTasks.ofVariant(variant.name).each { generateProtoTask ->
@@ -372,11 +408,17 @@ class ProtobufPlugin implements Plugin<Project> {
         }
       } else {
         project.sourceSets.each { sourceSet ->
-          def javaCompileTask = project.tasks.getByName(sourceSet.getCompileTaskName("java"))
+          def javaCompileTaskName = sourceSet.getCompileTaskName("java")
+          def compileTasks = project.tasks.findAll { it.class.name.startsWith ('com.ullink.Msbuild') || it.name == javaCompileTaskName }
+
           project.protobuf.generateProtoTasks.ofSourceSet(sourceSet.name).each { generateProtoTask ->
-            javaCompileTask.dependsOn(generateProtoTask)
-            generateProtoTask.getAllOutputDirs().each { dir ->
-              javaCompileTask.source project.fileTree(dir: dir)
+            compileTasks.each { compileTask ->
+              compileTask.dependsOn(generateProtoTask)
+              if (compileTask.hasProperty('source')) {
+                generateProtoTask.getAllOutputDirs().each { dir ->
+                  compileTask.source project.fileTree(dir: dir)
+                }
+              }
             }
           }
         }
@@ -390,5 +432,4 @@ class ProtobufPlugin implements Plugin<Project> {
     private String getExtractedProtosDir(String sourceSetName) {
       return "${project.buildDir}/extracted-protos/${sourceSetName}"
     }
-
 }

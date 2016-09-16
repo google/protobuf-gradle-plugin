@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+option csharp_namespace = "Google.Protobuf.Msg";
+
+message Msg {
+    string foo = 1;
+    SecondMsg blah = 2;
+}
+
+message SecondMsg {
+    int32 blah = 1;
+}
