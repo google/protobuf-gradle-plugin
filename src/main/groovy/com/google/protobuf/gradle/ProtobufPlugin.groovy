@@ -70,8 +70,6 @@ class ProtobufPlugin implements Plugin<Project> {
     private Project project
     private boolean wasApplied = false
     private def defaultBuiltins = []
-    private boolean wasJavaApplied = false
-    private boolean wasCSharpApplied = false
 
     @Inject
     public ProtobufPlugin(FileResolver fileResolver, Instantiator instantiator) {
