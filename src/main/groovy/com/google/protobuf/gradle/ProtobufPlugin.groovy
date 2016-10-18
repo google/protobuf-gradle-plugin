@@ -41,6 +41,7 @@ import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.internal.file.FileResolver
 import org.gradle.api.plugins.AppliedPlugin
 import org.gradle.api.tasks.SourceSet
+import org.gradle.plugins.ide.idea.IdeaPlugin
 
 import javax.inject.Inject
 
@@ -117,6 +118,11 @@ class ProtobufPlugin implements Plugin<Project> {
           // protoc and codegen plugin configuration may change through the protobuf{}
           // block. Only at this point the configuration has been finalized.
           project.protobuf.tools.registerTaskDependencies(project.protobuf.getGenerateProtoTasks().all())
+        }
+
+        project.plugins.withType(IdeaPlugin) { IdeaPlugin ip ->
+            ip.model.module.sourceDirs += project.file("${project.protobuf.generatedFilesBaseDir}/main/java");
+            ip.model.module.generatedSourceDirs += project.file("${project.protobuf.generatedFilesBaseDir}/main/java");
         }
     }
 
