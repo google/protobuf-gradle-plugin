@@ -452,10 +452,13 @@ apply plugin: 'idea'
 
 If you have additional sourceSets and/or codegen plugins, add all of them
 ```gradle
-idea {
-    module {
-        sourceDirs += file("${protobuf.generatedFilesBaseDir}/main/grpc");
-    }
+protobuf {
+    ...
+    generatedFilesBaseDir = "$projectDir/gen"
+}
+
+clean {
+    delete protobuf.generatedFilesBaseDir
 }
 ```
 
