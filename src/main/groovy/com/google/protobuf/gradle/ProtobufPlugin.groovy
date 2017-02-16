@@ -129,7 +129,7 @@ class ProtobufPlugin implements Plugin<Project> {
       if (project.configurations.findByName(configName) == null) {
         project.configurations.create(configName) {
           visible = false
-          transitive = false
+          transitive = true
           extendsFrom = []
         }
       }
