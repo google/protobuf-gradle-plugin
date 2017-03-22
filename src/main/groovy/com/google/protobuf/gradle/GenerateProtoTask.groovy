@@ -361,7 +361,8 @@ public class GenerateProtoTask extends DefaultTask {
     Preconditions.checkState(state == State.FINALIZED, 'doneConfig() has not been called')
 
     ToolsLocator tools = project.protobuf.tools
-    // Sort to make sure files are in a consistent order
+    // Sort to ensure generated descriptors have a canonical representation
+    // to avoid triggering unnecessary rebuilds downstream
     List<File> protoFiles = inputs.sourceFiles.files.sort()
 
     [builtins, plugins]*.each { plugin ->
