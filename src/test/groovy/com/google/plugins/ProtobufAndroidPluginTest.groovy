@@ -18,7 +18,9 @@ class ProtobufAndroidPluginTest extends Specification {
     when: "build is invoked"
     def result = GradleRunner.create()
       .withProjectDir(mainProjectDir)
-      .withArguments('testProjectAndroid:build')
+      .withArguments(
+              "-DANDROID_PLUGIN_VERSION=${androidPluginVersion}", 
+              'testProjectAndroid:build')
       .withGradleVersion(gradleVersion)
       .forwardStdOutput(new OutputStreamWriter(System.out))
       .forwardStdError(new OutputStreamWriter(System.err))
@@ -28,6 +30,7 @@ class ProtobufAndroidPluginTest extends Specification {
     result.task(":testProjectAndroid:build").outcome == TaskOutcome.SUCCESS
 
     where:
-    gradleVersion << ["2.14.1", "3.0"]
+    androidPluginVersion << ["2.2.0-beta1", "2.2.0-beta1", "3.0.0-alpha4"]
+    gradleVersion << ["2.14.1", "3.0", "4.0"]
   }
 }

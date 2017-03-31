@@ -1,24 +1,28 @@
 // An Android application project.
 
-apply plugin: 'com.android.application'
-apply plugin: 'com.google.protobuf'
-
 buildscript {
-    dependencies {
-        classpath 'com.android.tools.build:gradle:2.2.0-beta1'
-    }
+    def androidPluginVersion = System.properties.get("ANDROID_PLUGIN_VERSION") ?: "2.2.0-beta1"
     repositories {
         maven { url "https://plugins.gradle.org/m2/" }
+        if (androidPluginVersion.startsWith("3.")) {
+            google()
+        }
+    }
+    dependencies {
+        classpath "com.android.tools.build:gradle:$androidPluginVersion"
     }
 }
+
+apply plugin: 'com.android.application'
+apply plugin: 'com.google.protobuf'
 
 repositories {
     maven { url "https://plugins.gradle.org/m2/" }
 }
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion "23.0.3"
+    compileSdkVersion 25
+    buildToolsVersion "25.0.2"
 
     defaultConfig {
         applicationId "io.grpc.helloworldexample"
