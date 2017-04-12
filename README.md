@@ -447,6 +447,11 @@ can include the following block in you `build.gradle` to ask IntelliJ
 to include the generated Java directories as source folders.
 
 ```gradle
+apply plugin: 'idea'
+```
+
+If you have additional sourceSets and/or codegen plugins, add all of them
+```gradle
 protobuf {
     ...
     generatedFilesBaseDir = "$projectDir/gen"
@@ -454,14 +459,6 @@ protobuf {
 
 clean {
     delete protobuf.generatedFilesBaseDir
-}
-
-idea {
-    module {
-        sourceDirs += file("${protobuf.generatedFilesBaseDir}/main/java");
-        // If you have additional sourceSets and/or codegen plugins, add all of them
-        sourceDirs += file("${protobuf.generatedFilesBaseDir}/main/grpc");
-    }
 }
 ```
 

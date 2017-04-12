@@ -31,16 +31,12 @@
 package com.google.protobuf.gradle
 
 import com.google.common.collect.ImmutableList
-
-import org.gradle.api.Action
-import org.gradle.api.GradleException
-import org.gradle.api.Plugin
-import org.gradle.api.Project
-import org.gradle.api.Task
+import org.gradle.api.*
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.internal.file.FileResolver
 import org.gradle.api.plugins.AppliedPlugin
 import org.gradle.api.tasks.SourceSet
+import org.gradle.plugins.ide.idea.IdeaPlugin
 
 import javax.inject.Inject
 
@@ -117,7 +113,19 @@ class ProtobufPlugin implements Plugin<Project> {
           // protoc and codegen plugin configuration may change through the protobuf{}
           // block. Only at this point the configuration has been finalized.
           project.protobuf.tools.registerTaskDependencies(project.protobuf.getGenerateProtoTasks().all())
+
+          project.plugins.withType(IdeaPlugin) { IdeaPlugin ip ->
+
+            project.protobuf.generateProtoTasks.all().each { GenerateProtoTask generateProtoTask ->
+              generateProtoTask.allOutputDirs.each { File outputDir ->
+                ip.model.module.sourceDirs += outputDir
+                ip.model.module.generatedSourceDirs += outputDir
+              }
+            }
+
+          }
         }
+
     }
 
     /**
