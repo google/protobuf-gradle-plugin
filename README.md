@@ -444,9 +444,11 @@ lists pre-compiled ``protoc`` artifacts that can be used by this plugin.
 
 If IntelliJ complains that the generated classes are not found, you
 can include the following block in you `build.gradle` to ask IntelliJ
-to include the generated Java directories as source folders.
+to include the generated Java directories as source folders using the IDEA plugin.
 
 ```gradle
+apply plugin: 'idea'
+
 protobuf {
     ...
     generatedFilesBaseDir = "$projectDir/gen"
