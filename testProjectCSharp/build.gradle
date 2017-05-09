@@ -1,0 +1,35 @@
+// A sample CSharp project
+
+buildscript {
+  dependencies {
+    classpath 'com.ullink.gradle:gradle-msbuild-plugin:2.14'
+    classpath 'com.ullink.gradle:gradle-nuget-plugin:2.14'
+  }
+  repositories {
+    mavenCentral()
+    jcenter()
+  }
+}
+
+apply plugin: 'com.ullink.msbuild'
+apply plugin: 'com.ullink.nuget'
+apply plugin: 'com.google.protobuf'
+
+dependencies {
+  protobuf files("lib/protos.tar.gz")
+}
+
+repositories {
+  mavenCentral()
+  jcenter()
+}
+
+protobuf {
+  protoc {
+    artifact = 'com.google.protobuf:protoc:3.0.0'
+  }
+}
+
+msbuild {
+  solutionFile = 'Sample.sln'
+}

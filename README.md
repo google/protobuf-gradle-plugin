@@ -73,11 +73,10 @@ individual projects.
 
 
 ## Adding the plugin to your project
-This plugin must work with either the Java plugin or the Android plugin.
-
+This plugin must work with either the Java plugin, com.ullink.msbuild plugin, or the Android plugin.
 
 ### Using the `apply` method
-The Java plugin or the Android plugin must be applied before the Protobuf plugin:
+The Java plugin, msbuild plugin or the Android plugin must be applied before the Protobuf plugin:
 
 ```gradle
 apply plugin: 'java'
@@ -89,9 +88,21 @@ apply plugin: 'com.android.application'  // or 'com.android.library'
 apply plugin: 'com.google.protobuf'
 ```
 
+```gradle
+apply plugin: 'com.ullink.msbuild'
+apply plugin: 'com.google.protobuf'
+```
+
+```gradle
+// Java and msbuild plugin can be applied together
+apply plugin: 'java'
+apply plugin: 'com.ullink.msbuild'
+apply plugin: 'com.google.protobuf'
+```
+
 The experimental Android plugin is not supported yet (#85).
 
-### Using the Gradle plugin DSL
+#### Using the Gradle plugin DSL
 The order of the plugins doesn't matter:
 
 ```gradle
@@ -100,7 +111,6 @@ plugins {
   id "java"
 }
 ```
-
 
 ## Configuring Protobuf compilation
 
@@ -116,7 +126,7 @@ sourceSet. By default, it includes all ``*.proto`` files under
 ``src/$sourceSetName/proto``. You can customize it in the same way as you would
 customize the ``java`` sources.
 
-**Java** projects: use the top-level ``sourceSet``:
+**Java** or **Msbuild** projects, use the top-level ``sourceSet``:
 
 ```gradle
 sourceSets {
@@ -132,6 +142,9 @@ sourceSets {
       include '**/*.protodevel'
     }
     java {
+      ...
+    }
+    csharp {
       ...
     }
   }
