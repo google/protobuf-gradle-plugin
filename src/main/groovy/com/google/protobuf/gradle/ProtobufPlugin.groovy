@@ -246,9 +246,8 @@ class ProtobufPlugin implements Plugin<Project> {
         generateProtoTask.dependsOn(extractProtosTask)
       }
 
-      // Extract proto file from the compile classpath configuration exposed in Android Gradle plugin 2.5.  Revert to
-      // original behavior if the configuration is not found.
       if (variant.hasProperty("compileConfiguration")) {
+        // For Android Gradle plugin >= 2.5
         def artifactType = Attribute.of("artifactType", String)
         def extractIncludeProtosTask =
             maybeAddExtractIncludeProtosTask(
@@ -259,6 +258,7 @@ class ProtobufPlugin implements Plugin<Project> {
                             null)
         generateProtoTask.dependsOn(extractIncludeProtosTask)
       } else {
+        // For Android Gradle plugin < 2.5
         sourceSetNames.each { sourceSetName ->
           def extractIncludeProtosTask =
               maybeAddExtractIncludeProtosTask(sourceSetName)
