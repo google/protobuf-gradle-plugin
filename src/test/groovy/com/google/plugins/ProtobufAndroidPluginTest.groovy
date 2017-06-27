@@ -20,6 +20,7 @@ class ProtobufAndroidPluginTest extends Specification {
       .withProjectDir(mainProjectDir)
       .withArguments(
               "-DANDROID_PLUGIN_VERSION=${androidPluginVersion}", 
+              "-Pandroid.buildCacheDir=" + new File(mainProjectDir, ".buildCache"), // set android build cache to avoid using home directory on travis CI.
               'testProjectAndroid:build')
       .withGradleVersion(gradleVersion)
       .forwardStdOutput(new OutputStreamWriter(System.out))
