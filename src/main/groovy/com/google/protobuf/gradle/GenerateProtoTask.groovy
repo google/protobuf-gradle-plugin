@@ -72,6 +72,14 @@ public class GenerateProtoTask extends DefaultTask {
   public boolean generateDescriptorSet
 
   /**
+   * If true, will skip all non-descriptor related options
+   *
+   * Default: false
+   */
+  public boolean generateDescriptorSetOnly
+
+
+  /**
    * Configuration object for descriptor generation details.
    */
   public class DescriptorSetOptions {
@@ -202,8 +210,7 @@ public class GenerateProtoTask extends DefaultTask {
       throw new IllegalStateException(
           "requested descriptor path but descriptor generation is off")
     }
-    return descriptorSetOptions.path != null
-      ? descriptorSetOptions.path : "${outputBaseDir}/descriptor_set.desc"
+    return descriptorSetOptions.path != null ? descriptorSetOptions.path : "${outputBaseDir}/descriptor_set.desc"
   }
 
   public GenerateProtoTask() {
@@ -376,22 +383,24 @@ public class GenerateProtoTask extends DefaultTask {
     def cmd = [ tools.protoc.path ]
     cmd.addAll(dirs)
 
-    // Handle code generation built-ins
-    builtins.each { builtin ->
-      String outPrefix = makeOptionsPrefix(builtin.options)
-      cmd += "--${builtin.name}_out=${outPrefix}${getOutputDir(builtin)}"
-    }
-
-    // Handle code generation plugins
-    plugins.each { plugin ->
-      String name = plugin.name
-      ExecutableLocator locator = tools.plugins.findByName(name)
-      if (locator == null) {
-        throw new GradleException("Codegen plugin ${name} not defined")
+    if (!generateDescriptorSetOnly) {
+      // Handle code generation built-ins
+      builtins.each { builtin ->
+        String outPrefix = makeOptionsPrefix(builtin.options)
+        cmd += "--${builtin.name}_out=${outPrefix}${getOutputDir(builtin)}"
       }
-      String pluginOutPrefix = makeOptionsPrefix(plugin.options)
-      cmd += "--${name}_out=${pluginOutPrefix}${getOutputDir(plugin)}"
-      cmd += "--plugin=protoc-gen-${name}=${locator.path}"
+
+      // Handle code generation plugins
+      plugins.each { plugin ->
+        String name = plugin.name
+        ExecutableLocator locator = tools.plugins.findByName(name)
+        if (locator == null) {
+          throw new GradleException("Codegen plugin ${name} not defined")
+        }
+        String pluginOutPrefix = makeOptionsPrefix(plugin.options)
+        cmd += "--${name}_out=${pluginOutPrefix}${getOutputDir(plugin)}"
+        cmd += "--plugin=protoc-gen-${name}=${locator.path}"
+      }
     }
 
     if (generateDescriptorSet) {
