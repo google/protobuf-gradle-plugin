@@ -137,4 +137,33 @@ class ProtobufJavaPluginTest extends Specification {
     where:
     gradleVersion << gradleVersions
   }
+
+  def "testProjectFileDescriptorOnly should be successfully executed"() {
+    given: "project from testProjectFileDescriptorOnly"
+    def projectDir = ProtobufPluginTestHelper.prepareTestTempDir('testProjectFileDescriptorOnly')
+    ProtobufPluginTestHelper.copyTestProject(projectDir, 'testProjectFileDescriptorOnly')
+
+    when: "build is invoked"
+    def result = GradleRunner.create()
+            .withProjectDir(projectDir)
+            .withArguments('build')
+            .withGradleVersion(gradleVersion)
+            .build()
+
+    then: "it succeed"
+    result.task(":build").outcome == TaskOutcome.SUCCESS
+    ['main'].each {
+      def generatedSrcDir = new File(projectDir.path, "build/generated/source/proto/$it")
+      def fileList = []
+      generatedSrcDir.eachFileRecurse { file ->
+        if (file.path.endsWith('.java')) {
+          fileList.add (file)
+        }
+      }
+      assert fileList.size == 0 : "there should be no *.java files in source/proto/$it"
+    }
+
+    where:
+    gradleVersion << gradleVersions
+  }
 }
