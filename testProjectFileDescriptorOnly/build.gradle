@@ -1,0 +1,33 @@
+// A Java project that demonstrates the generation of the DescriptorSet without sources
+
+apply plugin: 'java'
+apply plugin: 'com.google.protobuf'
+
+repositories {
+    maven { url "https://plugins.gradle.org/m2/" }
+}
+
+sourceCompatibility = JavaVersion.VERSION_1_7
+targetCompatibility = JavaVersion.VERSION_1_7
+
+def protocVersion = '3.0.0'
+def protobufDep = "com.google.protobuf:protobuf-java:$protocVersion"
+
+dependencies {
+    compile protobufDep
+    testCompile 'junit:junit:4.12'
+}
+
+protobuf {
+    protoc {
+        artifact = 'com.google.protobuf:protoc:3.0.0'
+    }
+    generateProtoTasks {
+        ofSourceSet('main').each { task ->
+            task.builtins {
+                remove java
+            }
+            task.generateDescriptorSet = true
+        }
+    }
+}
