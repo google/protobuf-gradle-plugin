@@ -15,6 +15,23 @@ class ProtobufAndroidPluginTest extends Specification {
     def mainProjectDir = ProtobufPluginTestHelper.prepareTestTempDir('testProjectAndroid')
     ProtobufPluginTestHelper.copyTestProjects(mainProjectDir, 'testProject', 'testProjectLite', 'testProjectAndroid')
 
+    // Add android plugin to the test root project so that Gradle an resolve
+    // classpath correctly.
+    new File(mainProjectDir, "build.gradle") << """
+buildscript {
+    def androidPluginVersion = System.properties.get("ANDROID_PLUGIN_VERSION") ?: "2.2.0"
+    repositories {
+        maven { url "https://plugins.gradle.org/m2/" }
+        if (androidPluginVersion.startsWith("3.")) {
+            google()
+        }
+    }
+    dependencies {
+        classpath "com.android.tools.build:gradle:$androidPluginVersion"
+    }
+}
+"""
+
     when: "build is invoked"
     def result = GradleRunner.create()
       .withProjectDir(mainProjectDir)
@@ -31,7 +48,7 @@ class ProtobufAndroidPluginTest extends Specification {
     result.task(":testProjectAndroid:build").outcome == TaskOutcome.SUCCESS
 
     where:
-    androidPluginVersion << ["2.2.0-beta1", "2.2.0-beta1", "3.0.0-alpha4"]
-    gradleVersion << ["2.14.1", "3.0", "4.0"]
+    androidPluginVersion << ["2.2.0", "2.2.0", "3.0.0-alpha6"]
+    gradleVersion << ["2.14.1", "3.0", "4.1-milestone-1"]
   }
 }
