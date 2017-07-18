@@ -79,13 +79,13 @@ class ToolsLocator {
       transitive = false
       extendsFrom = []
     }
-    def groupId, artifact, version
-    (groupId, artifact, version) = locator.artifact.split(":")
+    def groupId, artifact, version, classifier, extension
+    (groupId, artifact, version, classifier, extension) = artifactParts(locator.artifact)
     def notation = [group: groupId,
                     name: artifact,
                     version: version,
-                    classifier: project.osdetector.classifier,
-                    ext: 'exe']
+                    classifier: classifier ?: project.osdetector.classifier,
+                    ext: extension ?: 'exe']
     Dependency dep = project.dependencies.add(config.name, notation)
 
     for (GenerateProtoTask protoTask in protoTasks) {
@@ -106,5 +106,12 @@ class ToolsLocator {
         }
       }
     }
+  }
+
+  static List<String> artifactParts(String artifact) {
+    ((artifact =~ /([+-0-9A-Z_a-z]+):([+-0-9A-Z_a-z]+):([+-0-9A-Z_a-z]+)(:[+-0-9A-Z_a-z]+)?(@[+-0-9A-Z_a-z]+)?/)[0]
+        .tail().collect {
+          it?.replaceFirst(/^[:@]/, '')
+        })
   }
 }
