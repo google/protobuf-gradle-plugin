@@ -223,8 +223,8 @@ protobuf {
 ```
 
 The syntax for `artifact` follows [Artifact Classifiers](https://docs.gradle.org/3.3/userguide/dependency_management.html#sub:classifiers)
-where the default classifier is `os.detector.classifier` (ie 
-`"${os.detector.os}-${os.detector.arch}"`) and the default extension is `"exe"`.
+where the default classifier is `project.osdetector.classifier` (ie 
+`"${project.osdetector.os}-${project.osdetector.arch}"`) and the default extension is `"exe"`.
 Non-C++ implementations of codegen plugins can be used if a constant 
 `classifier` is specified (eg `"com.example:example-generator:1.0.0:-jvm8_32"`). 
 
