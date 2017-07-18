@@ -34,33 +34,33 @@ import spock.lang.Specification
 class ToolsLocatorSpec extends Specification {
   def '`classifier` and `extension` should both be `null`'() {
     given:
-    final input = 'group:name:version'
+    final input = 'com.example:example-plugin:0.0.0-rc0+experimental'
 
     expect:
-    ['group', 'name', 'version', null, null] == ToolsLocator.artifactParts(input)
+    ['com.example', 'example-plugin', '0.0.0-rc0+experimental', null, null] == ToolsLocator.artifactParts(input)
   }
 
   def '`classifier` should be parsed and `extension` should be null'() {
     given:
-    final input = 'group:name:version:classifier'
+    final input = 'com.example:example-plugin:0.0.0-rc0+experimental:classifier'
 
     expect:
-    ['group', 'name', 'version', 'classifier', null] == ToolsLocator.artifactParts(input)
+    ['com.example', 'example-plugin', '0.0.0-rc0+experimental', 'classifier', null] == ToolsLocator.artifactParts(input)
   }
 
   def '`classifier` should be `null` and `extension` should be parsed'() {
     given:
-    final input = 'group:name:version@extension'
+    final input = 'com.example:example-plugin:0.0.0-rc0+experimental@extension'
 
     expect:
-    ['group', 'name', 'version', null, 'extension'] == ToolsLocator.artifactParts(input)
+    ['com.example', 'example-plugin', '0.0.0-rc0+experimental', null, 'extension'] == ToolsLocator.artifactParts(input)
   }
 
   def '`classifier` and `extension` should both be parsed'() {
     given:
-    final input = 'group:name:version:classifier@extension'
+    final input = 'com.example:example-plugin:0.0.0-rc0+experimental:classifier@extension'
 
     expect:
-    ['group', 'name', 'version', 'classifier', 'extension'] == ToolsLocator.artifactParts(input)
+    ['com.example', 'example-plugin', '0.0.0-rc0+experimental', 'classifier', 'extension'] == ToolsLocator.artifactParts(input)
   }
 }

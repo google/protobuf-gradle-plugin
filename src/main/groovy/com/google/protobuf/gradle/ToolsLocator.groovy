@@ -108,10 +108,12 @@ class ToolsLocator {
     }
   }
 
-  static List<String> artifactParts(String artifact) {
-    ((artifact =~ /([+-0-9A-Z_a-z]+):([+-0-9A-Z_a-z]+):([+-0-9A-Z_a-z]+)(:[+-0-9A-Z_a-z]+)?(@[+-0-9A-Z_a-z]+)?/)[0]
+  static List<String> artifactParts(String artifactCoordinate) {
+    final validName = '[+-.0-9A-Z_a-z]+'
+
+    ((artifactCoordinate =~ /(${validName}):(${validName}):(${validName})(:${validName})?(@${validName})?/)[0]
         .tail().collect {
-          it?.replaceFirst(/^[:@]/, '')
+          it?.replaceFirst(/^[:@]/, '') // remove the leading character from the classifier and extension parts
         })
   }
 }
