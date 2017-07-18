@@ -27,7 +27,7 @@ buildscript {
         }
     }
     dependencies {
-        classpath "com.android.tools.build:gradle:$androidPluginVersion"
+        classpath "com.android.tools.build:gradle:\$androidPluginVersion"
     }
 }
 """
