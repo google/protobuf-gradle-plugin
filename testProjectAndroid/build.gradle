@@ -1,18 +1,5 @@
 // An Android application project.
 
-buildscript {
-    def androidPluginVersion = System.properties.get("ANDROID_PLUGIN_VERSION") ?: "2.2.0-beta1"
-    repositories {
-        maven { url "https://plugins.gradle.org/m2/" }
-        if (androidPluginVersion.startsWith("3.")) {
-            google()
-        }
-    }
-    dependencies {
-        classpath "com.android.tools.build:gradle:$androidPluginVersion"
-    }
-}
-
 apply plugin: 'com.android.application'
 apply plugin: 'com.google.protobuf'
 
