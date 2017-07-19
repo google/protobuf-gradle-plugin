@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <ruleset-ref path='rulesets/basic.xml'/>
   <ruleset-ref path='rulesets/braces.xml'/>
   <ruleset-ref path='rulesets/concurrency.xml'/>
+  <ruleset-ref path='rulesets/convention.xml'/>
   <ruleset-ref path='rulesets/exceptions.xml'/>
   <ruleset-ref path='rulesets/generic.xml'/>
   <ruleset-ref path='rulesets/grails.xml'/>
@@ -45,7 +46,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <exclude name="CyclomaticComplexity"/>	
   </ruleset-ref>
 <!-- The following rules do not pass yet
-  <ruleset-ref path='rulesets/convention.xml'/>
   <ruleset-ref path='rulesets/design.xml'/>
   <ruleset-ref path='rulesets/dry.xml'/>
   <ruleset-ref path='rulesets/groovyism.xml'/>

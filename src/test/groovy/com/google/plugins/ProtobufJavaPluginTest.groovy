@@ -4,12 +4,13 @@ import com.google.protobuf.gradle.GenerateProtoTask
 import com.google.protobuf.gradle.ProtobufExtract
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
+import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import spock.lang.Specification
 
 class ProtobufJavaPluginTest extends Specification {
-  private static final def gradleVersions = ["2.12", "3.0"]
+  private static final List<String> gradleVersions = ["2.12", "3.0"]
 
   private Project setupBasicProject() {
     Project project = ProjectBuilder.builder().build()
@@ -18,9 +19,9 @@ class ProtobufJavaPluginTest extends Specification {
     return project
   }
 
-  def "Applying java and com.google.protobuf adds corresponding task to project"() {
+  void "Applying java and com.google.protobuf adds corresponding task to project"() {
     given: "a basic project with java and com.google.protobuf"
-    def project = setupBasicProject()
+    Project project = setupBasicProject()
 
     when: "project evaluated"
     project.evaluate()
@@ -35,9 +36,9 @@ class ProtobufJavaPluginTest extends Specification {
     assert project.tasks.extractTestProto instanceof ProtobufExtract
   }
 
-  def "Custom sourceSet should get its own GenerateProtoTask"() {
+  void "Custom sourceSet should get its own GenerateProtoTask"() {
     given: "a basic project with java and com.google.protobuf"
-    def project = setupBasicProject()
+    Project project = setupBasicProject()
 
     when: "adding custom sourceSet main2"
     project.sourceSets.create('main2')
@@ -52,13 +53,13 @@ class ProtobufJavaPluginTest extends Specification {
     assert project.tasks.extractMain2Proto instanceof ProtobufExtract
   }
 
-  def "testProject should be successfully executed"() {
+  void "testProject should be successfully executed"() {
     given: "project from testProject"
-    def projectDir = ProtobufPluginTestHelper.prepareTestTempDir('testProject')
+    File projectDir = ProtobufPluginTestHelper.prepareTestTempDir('testProject')
     ProtobufPluginTestHelper.copyTestProject(projectDir, 'testProject')
 
     when: "build is invoked"
-    def result = GradleRunner.create()
+    BuildResult result = GradleRunner.create()
       .withProjectDir(projectDir)
       .withArguments('build')
       .withGradleVersion(gradleVersion)
@@ -67,8 +68,8 @@ class ProtobufJavaPluginTest extends Specification {
     then: "it succeed"
     result.task(":build").outcome == TaskOutcome.SUCCESS
     ['grpc', 'main', 'test'].each {
-      def generatedSrcDir = new File(projectDir.path, "build/generated/source/proto/$it")
-      def fileList = []
+      File generatedSrcDir = new File(projectDir.path, "build/generated/source/proto/$it")
+      List<File> fileList = []
       generatedSrcDir.eachFileRecurse { file ->
         if (file.path.endsWith('.java')) {
           fileList.add (file)
@@ -81,13 +82,13 @@ class ProtobufJavaPluginTest extends Specification {
     gradleVersion << gradleVersions
   }
 
-  def "testProjectLite should be successfully executed"() {
+  void "testProjectLite should be successfully executed"() {
     given: "project from testProjectLite"
-    def projectDir = ProtobufPluginTestHelper.prepareTestTempDir('testProjectLite')
+    File projectDir = ProtobufPluginTestHelper.prepareTestTempDir('testProjectLite')
     ProtobufPluginTestHelper.copyTestProject(projectDir, 'testProjectLite')
 
     when: "build is invoked"
-    def result = GradleRunner.create()
+    BuildResult result = GradleRunner.create()
       .withProjectDir(projectDir)
       .withArguments('build')
       .withGradleVersion(gradleVersion)
@@ -100,13 +101,13 @@ class ProtobufJavaPluginTest extends Specification {
     gradleVersion << gradleVersions
   }
 
-  def "testProjectDependent should be successfully executed"() {
+  void "testProjectDependent should be successfully executed"() {
     given: "project from testProject & testProjectDependent"
-    def mainProjectDir = ProtobufPluginTestHelper.prepareTestTempDir('testProjectDependent')
+    File mainProjectDir = ProtobufPluginTestHelper.prepareTestTempDir('testProjectDependent')
     ProtobufPluginTestHelper.copyTestProjects(mainProjectDir, 'testProject', 'testProjectDependent')
 
     when: "build is invoked"
-    def result = GradleRunner.create()
+    BuildResult result = GradleRunner.create()
       .withProjectDir(mainProjectDir)
       .withArguments('testProjectDependent:build')
       .withGradleVersion(gradleVersion)
@@ -119,13 +120,13 @@ class ProtobufJavaPluginTest extends Specification {
     gradleVersion << gradleVersions
   }
 
-  def "testProjectCustomProtoDir should be successfully executed"() {
+  void "testProjectCustomProtoDir should be successfully executed"() {
     given: "project from testProjectCustomProtoDir"
-    def projectDir = ProtobufPluginTestHelper.prepareTestTempDir('testProjectCustomProtoDir')
+    File projectDir = ProtobufPluginTestHelper.prepareTestTempDir('testProjectCustomProtoDir')
     ProtobufPluginTestHelper.copyTestProject(projectDir, 'testProjectCustomProtoDir', )
 
     when: "build is invoked"
-    def result = GradleRunner.create()
+    BuildResult result = GradleRunner.create()
       .withProjectDir(projectDir)
       .withArguments('build')
       .withGradleVersion(gradleVersion)

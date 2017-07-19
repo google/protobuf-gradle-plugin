@@ -40,13 +40,13 @@ import org.gradle.util.ConfigureUtil
  * Adds the protobuf {} block as a property of the project.
  */
 class ProtobufConvention {
-    def ProtobufConvention(Project project, FileResolver fileResolver) {
+    ProtobufConvention(Project project, FileResolver fileResolver) {
         protobuf = new ProtobufConfigurator(project, fileResolver)
     }
 
-    def final ProtobufConfigurator protobuf
+    final ProtobufConfigurator protobuf
 
-    def protobuf(Closure configureClosure) {
+    ProtobufConfigurator protobuf(Closure configureClosure) {
         ConfigureUtil.configure(configureClosure, protobuf)
     }
 }
