@@ -177,7 +177,8 @@ task checkJavaVersion << {
 [uploadArchives, publishPlugins]*.dependsOn checkJavaVersion
 
 if (System.env.TRAVIS == 'true') {
-  // Normally html output is more user friendly, we want a console printable file for Travis logs
+  // Normally html output is more user friendly,
+  // but we want a console printable file for Travis logs
   project.codenarc.reportFormat = 'text'
 
   // To limit the memory usage when running in Travis.
