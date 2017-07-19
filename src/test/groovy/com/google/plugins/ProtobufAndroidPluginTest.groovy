@@ -15,7 +15,7 @@ class ProtobufAndroidPluginTest extends Specification {
     def mainProjectDir = ProtobufPluginTestHelper.prepareTestTempDir('testProjectAndroid')
     ProtobufPluginTestHelper.copyTestProjects(mainProjectDir, 'testProject', 'testProjectLite', 'testProjectAndroid')
 
-    // Add android plugin to the test root project so that Gradle an resolve
+    // Add android plugin to the test root project so that Gradle can resolve
     // classpath correctly.
     new File(mainProjectDir, "build.gradle") << """
 buildscript {
