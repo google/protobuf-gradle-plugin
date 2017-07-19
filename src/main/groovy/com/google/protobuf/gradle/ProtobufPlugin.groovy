@@ -336,31 +336,31 @@ class ProtobufPlugin implements Plugin<Project> {
       if (existingTask != null) {
         return existingTask
       }
-        return project.tasks.create(extractIncludeProtosTaskName, ProtobufExtract) {
-            description = "Extracts proto files from compile dependencies for includes"
-            destDir = getExtractedIncludeProtosDir(sourceSetName) as File
-            inputs.files project.configurations[Utils.getConfigName(sourceSetName, 'compile')]
+      return project.tasks.create(extractIncludeProtosTaskName, ProtobufExtract) {
+        description = "Extracts proto files from compile dependencies for includes"
+        destDir = getExtractedIncludeProtosDir(sourceSetName) as File
+        inputs.files project.configurations[Utils.getConfigName(sourceSetName, 'compile')]
 
-            // TL; DR: Make protos in 'test' sourceSet able to import protos from the 'main' sourceSet.
-            // Sub-configurations, e.g., 'testCompile' that extends 'compile', don't depend on the
-            // their super configurations. As a result, 'testCompile' doesn't depend on 'compile' and
-            // it cannot get the proto files from 'main' sourceSet through the configuration. However,
-            if (Utils.isAndroidProject(project)) {
-                // TODO(zhangkun83): Android sourceSet doesn't have compileClasspath. If it did, we
-                // haven't figured out a way to put source protos in 'resources'. For now we use an ad-hoc
-                // solution that manually includes the source protos of 'main' and its dependencies.
-                if (sourceSetName == 'androidTest') {
-                    inputs.files getSourceSets()['main'].proto
-                    inputs.files project.configurations['compile']
-                }
-            } else {
-                // In Java projects, the compileClasspath of the 'test' sourceSet includes all the
-                // 'resources' of the output of 'main', in which the source protos are placed.
-                // This is nicer than the ad-hoc solution that Android has, because it works for any
-                // extended configuration, not just 'testCompile'.
-                inputs.files getSourceSets()[sourceSetName].compileClasspath
-            }
+        // TL; DR: Make protos in 'test' sourceSet able to import protos from the 'main' sourceSet.
+        // Sub-configurations, e.g., 'testCompile' that extends 'compile', don't depend on the
+        // their super configurations. As a result, 'testCompile' doesn't depend on 'compile' and
+        // it cannot get the proto files from 'main' sourceSet through the configuration. However,
+        if (Utils.isAndroidProject(project)) {
+          // TODO(zhangkun83): Android sourceSet doesn't have compileClasspath. If it did, we
+          // haven't figured out a way to put source protos in 'resources'. For now we use an ad-hoc
+          // solution that manually includes the source protos of 'main' and its dependencies.
+          if (sourceSetName == 'androidTest') {
+            inputs.files getSourceSets()['main'].proto
+            inputs.files project.configurations['compile']
+          }
+        } else {
+          // In Java projects, the compileClasspath of the 'test' sourceSet includes all the
+          // 'resources' of the output of 'main', in which the source protos are placed.
+          // This is nicer than the ad-hoc solution that Android has, because it works for any
+          // extended configuration, not just 'testCompile'.
+          inputs.files getSourceSets()[sourceSetName].compileClasspath
         }
+      }
     }
 
     private linkGenerateProtoTasksToJavaCompile() {
