@@ -32,6 +32,9 @@ buildscript {
 }
 """
 
+    new File(mainProjectDir, "gradle.properties") << """org.gradle.jvmargs=-Xmx1536m"""
+
+
     when: "build is invoked"
     def result = GradleRunner.create()
       .withProjectDir(mainProjectDir)
