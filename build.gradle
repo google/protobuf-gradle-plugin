@@ -177,6 +177,9 @@ task checkJavaVersion << {
 [uploadArchives, publishPlugins]*.dependsOn checkJavaVersion
 
 if (System.env.TRAVIS == 'true') {
+  // Use the text output so we can easily print the file to console
+  project.codenarc.reportFormat = 'text'
+
   // To limit the memory usage when running in Travis.
   // Travis tend to kill tasks that use too much memory.
   allprojects {
@@ -197,4 +200,3 @@ if (System.env.TRAVIS == 'true') {
     }
   }
 }
-

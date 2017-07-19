@@ -32,6 +32,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
          xsi:noNamespaceSchemaLocation="http://codenarc.org/ruleset-schema.xsd">
   <ruleset-ref path='rulesets/basic.xml'/>
   <ruleset-ref path='rulesets/braces.xml'/>
+
+  <!-- fail on purpose to test jenkins -->
+  <ruleset-ref path='rulesets/convention.xml'/>
+
   <ruleset-ref path='rulesets/concurrency.xml'/>
   <ruleset-ref path='rulesets/exceptions.xml'/>
   <ruleset-ref path='rulesets/generic.xml'/>
