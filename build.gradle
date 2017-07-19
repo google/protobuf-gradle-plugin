@@ -7,6 +7,7 @@ Base directory: $projectDir
 Running script ${relativePath(buildFile)}
 """
 
+apply plugin: 'codenarc'
 apply plugin: 'idea'
 apply plugin: 'eclipse'
 apply plugin: 'groovy'

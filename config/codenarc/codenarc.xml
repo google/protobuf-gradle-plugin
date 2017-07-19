@@ -1,0 +1,19 @@
+<ruleset xmlns="http://codenarc.org/ruleset/1.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://codenarc.org/ruleset/1.0 http://codenarc.org/ruleset-schema.xsd"
+         xsi:noNamespaceSchemaLocation="http://codenarc.org/ruleset-schema.xsd">
+  <ruleset-ref path='rulesets/basic.xml'/>
+  <ruleset-ref path='rulesets/braces.xml'/>
+  <ruleset-ref path='rulesets/concurrency.xml'/>
+  <ruleset-ref path='rulesets/exceptions.xml'/>
+  <ruleset-ref path='rulesets/generic.xml'/>
+  <ruleset-ref path='rulesets/grails.xml'/>
+  <ruleset-ref path='rulesets/jdbc.xml'/>
+  <ruleset-ref path='rulesets/logging.xml'/>
+  <ruleset-ref path='rulesets/size.xml'>
+    <!--AbcMetric, CrapMetric and CyclomaticComplexity require external libs -->
+    <exclude name="AbcMetric"/>
+    <exclude name="CrapMetric"/>
+    <exclude name="CyclomaticComplexity"/>	
+  </ruleset-ref>
+</ruleset>
