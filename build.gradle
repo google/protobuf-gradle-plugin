@@ -193,6 +193,10 @@ if (System.env.TRAVIS == 'true') {
   test {
     testLogging {
       showStandardStreams = true
+      exceptionFormat = 'full'
+      showExceptions true
+      showCauses true
+      showStackTraces true
     }
   }
 }
