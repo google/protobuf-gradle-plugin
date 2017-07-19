@@ -81,7 +81,7 @@ class ToolsLocator {
     }
     def groupId, artifact, version
     (groupId, artifact, version) = locator.artifact.split(":")
-    def notation = [group: groupId,
+    Map<String, String> notation = [group: groupId,
                     name: artifact,
                     version: version,
                     classifier: project.osdetector.classifier,
