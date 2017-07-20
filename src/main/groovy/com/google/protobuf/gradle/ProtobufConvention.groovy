@@ -30,8 +30,6 @@
 
 package com.google.protobuf.gradle
 
-import com.google.common.collect.ArrayListMultimap
-import com.google.common.collect.Multimap
 import org.gradle.api.Project
 import org.gradle.api.internal.file.FileResolver
 import org.gradle.util.ConfigureUtil

@@ -31,7 +31,6 @@ package com.google.protobuf.gradle
 
 import com.google.common.base.Preconditions
 import org.gradle.api.DefaultTask
-import org.gradle.api.GradleException
 import org.gradle.api.tasks.TaskAction
 
 /**
