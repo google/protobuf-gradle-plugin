@@ -44,6 +44,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <ruleset-ref path='rulesets/groovyism.xml'/>
   <ruleset-ref path='rulesets/imports.xml'/>
   <ruleset-ref path='rulesets/jdbc.xml'/>
+  <ruleset-ref path='rulesets/junit.xml'>
+    <exclude name="JUnitTestMethodWithoutAssert"/>
+  </ruleset-ref>
   <ruleset-ref path='rulesets/logging.xml'/>
   <ruleset-ref path='rulesets/size.xml'>
     <!-- AbcMetric, CrapMetric and CyclomaticComplexity require external libs -->
@@ -58,7 +61,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <property name='length' value='100'/>
     </rule-config>
   </ruleset-ref>
-  <ruleset-ref path='rulesets/junit.xml'/>
   <ruleset-ref path='rulesets/naming.xml'/>
   <ruleset-ref path='rulesets/security.xml'/>
   <ruleset-ref path='rulesets/serialization.xml'/>
