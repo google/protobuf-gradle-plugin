@@ -69,7 +69,7 @@ public class GenerateProtoTask extends DefaultTask {
    *
    * Default: false
    */
-  public boolean generateDescriptorSet
+  boolean generateDescriptorSet
 
   /**
    * Configuration object for descriptor generation details.
@@ -81,24 +81,24 @@ public class GenerateProtoTask extends DefaultTask {
      *
      * Default: null
      */
-    public GString path
+    GString path
 
     /**
      * If true, source information (comments, locations) will be included in the descriptor set.
      *
      * Default: false
      */
-    public boolean includeSourceInfo
+    boolean includeSourceInfo
 
     /**
      * If true, imports are included in the descriptor set, such that it is self-containing.
      *
      * Default: false
      */
-    public boolean includeImports
+    boolean includeImports
   }
 
-  public final DescriptorSetOptions descriptorSetOptions = new DescriptorSetOptions();
+  final DescriptorSetOptions descriptorSetOptions = new DescriptorSetOptions()
 
   private static enum State {
     INIT, CONFIG, FINALIZED
@@ -272,7 +272,7 @@ public class GenerateProtoTask extends DefaultTask {
    * The container of command-line options for a protoc plugin or a built-in output.
    */
   public static class PluginOptions implements Named {
-    private final ArrayList<String> options = new ArrayList<String>()
+    private final List<String> options = new ArrayList<String>()
     private final String name
     private String outputSubDir
 

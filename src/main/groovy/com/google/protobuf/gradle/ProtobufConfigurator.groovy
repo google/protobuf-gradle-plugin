@@ -48,7 +48,7 @@ public class ProtobufConfigurator {
    * The base directory of generated files. The default is
    * "${project.buildDir}/generated/source/proto".
    */
-  public String generatedFilesBaseDir
+  String generatedFilesBaseDir
 
   public ProtobufConfigurator(Project project, FileResolver fileResolver) {
     this.project = project
