@@ -19,7 +19,7 @@ class ProtobufJavaPluginTest extends Specification {
     return project
   }
 
-  void "test Applying java and com.google.protobuf adds corresponding task to project"() {
+  void "testApplying java and com.google.protobuf adds corresponding task to project"() {
     given: "a basic project with java and com.google.protobuf"
     Project project = setupBasicProject()
 
@@ -36,7 +36,7 @@ class ProtobufJavaPluginTest extends Specification {
     assert project.tasks.extractTestProto instanceof ProtobufExtract
   }
 
-  void "test Custom sourceSet should get its own GenerateProtoTask"() {
+  void "testCustom sourceSet should get its own GenerateProtoTask"() {
     given: "a basic project with java and com.google.protobuf"
     Project project = setupBasicProject()
 
