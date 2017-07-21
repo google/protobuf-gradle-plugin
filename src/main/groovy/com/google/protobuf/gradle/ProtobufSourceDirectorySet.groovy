@@ -29,14 +29,9 @@
 
 package com.google.protobuf.gradle
 
-import org.gradle.api.Named
-import org.gradle.api.NamedDomainObjectContainer
-import org.gradle.api.Project
 import org.gradle.api.internal.file.DefaultSourceDirectorySet
 import org.gradle.api.internal.file.FileResolver
 import org.gradle.api.internal.file.collections.DefaultDirectoryFileTreeFactory
-import org.gradle.internal.reflect.Instantiator
-import org.gradle.util.ConfigureUtil
 
 /**
  * The backing class of the proto extension added to sourceSets, e.g., sourceSets.main.proto

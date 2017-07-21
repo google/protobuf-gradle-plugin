@@ -1,9 +1,5 @@
 package com.google.protobuf.gradle.plugins
 
-import com.google.protobuf.gradle.GenerateProtoTask
-import com.google.protobuf.gradle.ProtobufExtract
-import org.gradle.api.Project
-import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
