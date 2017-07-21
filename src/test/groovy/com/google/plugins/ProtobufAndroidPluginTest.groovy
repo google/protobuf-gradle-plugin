@@ -34,11 +34,15 @@ buildscript {
 """
 
     when: "build is invoked"
+    File localBuildCache = new File(mainProjectDir, ".buildCache")
+    if (localBuildCache.exists()) {
+        localBuildCache.deleteDir()
+    }
     BuildResult result = GradleRunner.create()
       .withProjectDir(mainProjectDir)
       .withArguments(
               "-DANDROID_PLUGIN_VERSION=${androidPluginVersion}", 
-              "-Pandroid.buildCacheDir=" + new File(mainProjectDir, ".buildCache"), // set android build cache to avoid using home directory on travis CI.
+              "-Pandroid.buildCacheDir=" + localBuildCache, // set android build cache to avoid using home directory on travis CI.
               "testProjectAndroid:build",
               "--stacktrace")
       .withGradleVersion(gradleVersion)
