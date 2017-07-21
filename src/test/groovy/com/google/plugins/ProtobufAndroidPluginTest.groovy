@@ -4,15 +4,16 @@ import com.google.protobuf.gradle.GenerateProtoTask
 import com.google.protobuf.gradle.ProtobufExtract
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
+import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import spock.lang.Specification
 
 class ProtobufAndroidPluginTest extends Specification {
 
-  def "testProjectAndroid should be successfully executed"() {
+  void "testProjectAndroid should be successfully executed"() {
     given: "project from testProject, testProjectLite & testProjectAndroid"
-    def mainProjectDir = ProtobufPluginTestHelper.prepareTestTempDir('testProjectAndroid')
+    File mainProjectDir = ProtobufPluginTestHelper.prepareTestTempDir('testProjectAndroid')
     ProtobufPluginTestHelper.copyTestProjects(mainProjectDir, 'testProject', 'testProjectLite', 'testProjectAndroid')
 
     // Add android plugin to the test root project so that Gradle can resolve
@@ -36,7 +37,7 @@ buildscript {
 
 
     when: "build is invoked"
-    def result = GradleRunner.create()
+    BuildResult result = GradleRunner.create()
       .withProjectDir(mainProjectDir)
       .withArguments(
               "-DANDROID_PLUGIN_VERSION=${androidPluginVersion}", 
