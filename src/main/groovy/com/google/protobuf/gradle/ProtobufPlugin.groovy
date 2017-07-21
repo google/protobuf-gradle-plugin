@@ -211,8 +211,8 @@ class ProtobufPlugin implements Plugin<Project> {
      */
     private addTasksForVariant(final Object variant, final boolean isTestVariant) {
       // The collection of sourceSets that will be compiled for this variant
-      List sourceSetNames = new ArrayList()
-      List sourceSets = new ArrayList()
+      List sourceSetNames = []
+      List sourceSets = []
       if (isTestVariant) {
         // All test variants will include the androidTest sourceSet
         sourceSetNames.add 'androidTest'

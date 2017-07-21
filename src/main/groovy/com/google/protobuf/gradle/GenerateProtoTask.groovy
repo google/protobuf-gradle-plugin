@@ -47,7 +47,7 @@ import org.gradle.util.ConfigureUtil
 // TODO(zhangkun83): add per-plugin output dir reconfiguraiton.
 public class GenerateProtoTask extends DefaultTask {
 
-  private final List includeDirs = new ArrayList()
+  private final List includeDirs = []
   private final NamedDomainObjectContainer<PluginOptions> builtins
   private final NamedDomainObjectContainer<PluginOptions> plugins
 
@@ -272,7 +272,7 @@ public class GenerateProtoTask extends DefaultTask {
    * The container of command-line options for a protoc plugin or a built-in output.
    */
   public static class PluginOptions implements Named {
-    private final List<String> options = new ArrayList<String>()
+    private final List<String> options = []
     private final String name
     private String outputSubDir
 

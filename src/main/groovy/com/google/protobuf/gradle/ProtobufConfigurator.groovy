@@ -58,7 +58,7 @@ public class ProtobufConfigurator {
       tasks = new JavaGenerateProtoTaskCollection()
     }
     tools = new ToolsLocator(project)
-    taskConfigClosures = new ArrayList()
+    taskConfigClosures = []
     generatedFilesBaseDir = "${project.buildDir}/generated/source/proto"
   }
 

@@ -41,6 +41,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <ruleset-ref path='rulesets/exceptions.xml'/>
   <ruleset-ref path='rulesets/generic.xml'/>
   <ruleset-ref path='rulesets/grails.xml'/>
+  <ruleset-ref path='rulesets/groovyism.xml'/>
   <ruleset-ref path='rulesets/jdbc.xml'/>
   <ruleset-ref path='rulesets/logging.xml'/>
   <ruleset-ref path='rulesets/size.xml'>
@@ -51,7 +52,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   </ruleset-ref>
 <!-- The following rules do not pass yet
   <ruleset-ref path='rulesets/dry.xml'/>
-  <ruleset-ref path='rulesets/groovyism.xml'/>
   <ruleset-ref path='rulesets/formatting.xml'>
     <rule-config name="LineLength">
       <property name='length' value='100'/>
