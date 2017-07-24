@@ -60,6 +60,10 @@ android {
         warning 'InvalidPackage'
         abortOnError false
     }
+
+    dexOptions {
+        threadCount 1 // reduce predex thread count to limit memory usage
+    }
 }
 
 protobuf {
