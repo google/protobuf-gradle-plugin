@@ -62,6 +62,7 @@ android {
     }
 
     dexOptions {
+        javaMaxHeapSize "1g"
         threadCount 1 // reduce predex thread count to limit memory usage
     }
 }
