@@ -79,13 +79,15 @@ class ToolsLocator {
       transitive = false
       extendsFrom = []
     }
-    def groupId, artifact, version, classifier, extension
+    String groupId, artifact, version, classifier, extension
     (groupId, artifact, version, classifier, extension) = artifactParts(locator.artifact)
-    def notation = [group: groupId,
-                    name: artifact,
-                    version: version,
-                    classifier: classifier ?: project.osdetector.classifier,
-                    ext: extension ?: 'exe']
+    Map<String, String> notation = [
+            group: groupId,
+            name: artifact,
+            version: version,
+            classifier: classifier ?: project.osdetector.classifier,
+            ext: extension ?: 'exe',
+    ]
     Dependency dep = project.dependencies.add(config.name, notation)
 
     for (GenerateProtoTask protoTask in protoTasks) {

@@ -31,7 +31,6 @@ package com.google.protobuf.gradle
 
 import com.google.common.base.Preconditions
 import org.gradle.api.DefaultTask
-import org.gradle.api.GradleException
 import org.gradle.api.tasks.TaskAction
 
 /**
@@ -55,7 +54,7 @@ class ProtobufExtract extends DefaultTask {
   }
 
   @TaskAction
-  def extract() {
+  void extract() {
     inputs.files.each { file ->
       logger.debug "Extracting protos from ${file} to ${destDir}"
       if (file.isDirectory()) {

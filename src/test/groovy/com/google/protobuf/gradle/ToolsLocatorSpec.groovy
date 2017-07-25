@@ -32,7 +32,7 @@ package com.google.protobuf.gradle
 import spock.lang.Specification
 
 class ToolsLocatorSpec extends Specification {
-  def '`classifier` and `extension` should both be `null`'() {
+  void '`classifier` and `extension` should both be `null`'() {
     given:
     final input = 'com.example:example-plugin:0.0.0-rc0+experimental'
 
@@ -40,7 +40,7 @@ class ToolsLocatorSpec extends Specification {
     ['com.example', 'example-plugin', '0.0.0-rc0+experimental', null, null] == ToolsLocator.artifactParts(input)
   }
 
-  def '`classifier` should be parsed and `extension` should be null'() {
+  void '`classifier` should be parsed and `extension` should be null'() {
     given:
     final input = 'com.example:example-plugin:0.0.0-rc0+experimental:classifier'
 
@@ -48,7 +48,7 @@ class ToolsLocatorSpec extends Specification {
     ['com.example', 'example-plugin', '0.0.0-rc0+experimental', 'classifier', null] == ToolsLocator.artifactParts(input)
   }
 
-  def '`classifier` should be `null` and `extension` should be parsed'() {
+  void '`classifier` should be `null` and `extension` should be parsed'() {
     given:
     final input = 'com.example:example-plugin:0.0.0-rc0+experimental@extension'
 
@@ -56,7 +56,7 @@ class ToolsLocatorSpec extends Specification {
     ['com.example', 'example-plugin', '0.0.0-rc0+experimental', null, 'extension'] == ToolsLocator.artifactParts(input)
   }
 
-  def '`classifier` and `extension` should both be parsed'() {
+  void '`classifier` and `extension` should both be parsed'() {
     given:
     final input = 'com.example:example-plugin:0.0.0-rc0+experimental:classifier@extension'
 

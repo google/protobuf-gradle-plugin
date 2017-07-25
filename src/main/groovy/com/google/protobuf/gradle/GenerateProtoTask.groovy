@@ -47,7 +47,7 @@ import org.gradle.util.ConfigureUtil
 // TODO(zhangkun83): add per-plugin output dir reconfiguraiton.
 public class GenerateProtoTask extends DefaultTask {
 
-  private final List includeDirs = new ArrayList()
+  private final List includeDirs = []
   private final NamedDomainObjectContainer<PluginOptions> builtins
   private final NamedDomainObjectContainer<PluginOptions> plugins
 
@@ -69,7 +69,7 @@ public class GenerateProtoTask extends DefaultTask {
    *
    * Default: false
    */
-  public boolean generateDescriptorSet
+  boolean generateDescriptorSet
 
   /**
    * Configuration object for descriptor generation details.
@@ -81,24 +81,24 @@ public class GenerateProtoTask extends DefaultTask {
      *
      * Default: null
      */
-    public GString path
+    GString path
 
     /**
      * If true, source information (comments, locations) will be included in the descriptor set.
      *
      * Default: false
      */
-    public boolean includeSourceInfo
+    boolean includeSourceInfo
 
     /**
      * If true, imports are included in the descriptor set, such that it is self-containing.
      *
      * Default: false
      */
-    public boolean includeImports
+    boolean includeImports
   }
 
-  public final DescriptorSetOptions descriptorSetOptions = new DescriptorSetOptions();
+  final DescriptorSetOptions descriptorSetOptions = new DescriptorSetOptions()
 
   private static enum State {
     INIT, CONFIG, FINALIZED
@@ -272,7 +272,7 @@ public class GenerateProtoTask extends DefaultTask {
    * The container of command-line options for a protoc plugin or a built-in output.
    */
   public static class PluginOptions implements Named {
-    private final ArrayList<String> options = new ArrayList<String>()
+    private final List<String> options = []
     private final String name
     private String outputSubDir
 
@@ -357,7 +357,7 @@ public class GenerateProtoTask extends DefaultTask {
   }
 
   @TaskAction
-  def compile() {
+  void compile() {
     Preconditions.checkState(state == State.FINALIZED, 'doneConfig() has not been called')
 
     ToolsLocator tools = project.protobuf.tools
@@ -370,10 +370,10 @@ public class GenerateProtoTask extends DefaultTask {
       outputDir.mkdirs()
     }
 
-    def dirs = includeDirs*.path.collect {"-I${it}"}
+    List<String> dirs = includeDirs*.path.collect {"-I${it}"}
     logger.debug "ProtobufCompile using directories ${dirs}"
     logger.debug "ProtobufCompile using files ${protoFiles}"
-    def cmd = [ tools.protoc.path ]
+    List<String> cmd = [ tools.protoc.path ]
     cmd.addAll(dirs)
 
     // Handle code generation built-ins
@@ -395,10 +395,10 @@ public class GenerateProtoTask extends DefaultTask {
     }
 
     if (generateDescriptorSet) {
-      def path = getDescriptorPath()
+      String path = getDescriptorPath()
       // Ensure that the folder for the descriptor exists;
       // the user may have set it to point outside an existing tree
-      def folder = new File(path).parentFile
+      File folder = new File(path).parentFile
       if (!folder.exists()) {
         folder.mkdirs()
       }
@@ -413,11 +413,11 @@ public class GenerateProtoTask extends DefaultTask {
 
     cmd.addAll protoFiles
     logger.log(LogLevel.INFO, cmd.toString())
-    def stdout = new StringBuffer()
-    def stderr = new StringBuffer()
+    StringBuffer stdout = new StringBuffer()
+    StringBuffer stderr = new StringBuffer()
     Process result = cmd.execute()
     result.waitForProcessOutput(stdout, stderr)
-    def output = "protoc: stdout: ${stdout}. stderr: ${stderr}"
+    String output = "protoc: stdout: ${stdout}. stderr: ${stderr}"
     if (result.exitValue() == 0) {
       logger.log(LogLevel.INFO, output)
     } else {
