@@ -9,13 +9,16 @@ import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import spock.lang.Specification
 
+/**
+ * Unit tests for normal java functionality.
+ */
 class ProtobufJavaPluginTest extends Specification {
   private static final List<String> gradleVersions = ["2.12", "3.0"]
 
   private Project setupBasicProject() {
     Project project = ProjectBuilder.builder().build()
-    project.apply plugin: 'java'
-    project.apply plugin: 'com.google.protobuf'
+    project.apply plugin:'java'
+    project.apply plugin:'com.google.protobuf'
     return project
   }
 
