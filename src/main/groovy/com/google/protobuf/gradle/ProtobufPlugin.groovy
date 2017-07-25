@@ -37,7 +37,6 @@ import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
-import org.gradle.api.artifacts.Configuration
 import org.gradle.api.attributes.Attribute;
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.FileCollection
@@ -261,7 +260,7 @@ class ProtobufPlugin implements Plugin<Project> {
       } else {
         // For Android Gradle plugin < 2.5
         sourceSetNames.each { sourceSetName ->
-          def extractIncludeProtosTask =
+          Task extractIncludeProtosTask =
               maybeAddExtractIncludeProtosTask(sourceSetName)
           generateProtoTask.dependsOn(extractIncludeProtosTask)
         }
