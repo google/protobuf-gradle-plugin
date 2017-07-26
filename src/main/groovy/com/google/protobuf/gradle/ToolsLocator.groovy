@@ -26,7 +26,6 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 package com.google.protobuf.gradle
 
 import org.gradle.api.GradleException
@@ -82,11 +81,11 @@ class ToolsLocator {
     String groupId, artifact, version
     (groupId, artifact, version) = locator.artifact.split(":")
     Map<String, String> notation = [
-            group: groupId,
-            name: artifact,
-            version: version,
-            classifier: project.osdetector.classifier,
-            ext: 'exe',
+            group:groupId,
+            name:artifact,
+            version:version,
+            classifier:project.osdetector.classifier,
+            ext:'exe',
     ]
     Dependency dep = project.dependencies.add(config.name, notation)
 

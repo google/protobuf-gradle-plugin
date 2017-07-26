@@ -5,6 +5,9 @@ import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import spock.lang.Specification
 
+/**
+ * Unit tests for android related functionality.
+ */
 class ProtobufAndroidPluginTest extends Specification {
 
   void "testProjectAndroid should be successfully executed"() {

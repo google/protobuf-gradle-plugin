@@ -27,7 +27,6 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 package com.google.protobuf.gradle
 
 import com.google.common.collect.ImmutableList
@@ -46,6 +45,9 @@ import org.gradle.api.tasks.SourceSet
 
 import javax.inject.Inject
 
+/**
+ * The main class for the protobuf plugin.
+ */
 class ProtobufPlugin implements Plugin<Project> {
     // any one of these plugins should be sufficient to proceed with applying this plugin
     private static final List<String> prerequisitePluginOptions = [
@@ -98,7 +100,7 @@ class ProtobufPlugin implements Plugin<Project> {
 
     private void doApply() {
         // Provides the osdetector extension
-        project.apply plugin: 'com.google.osdetector'
+        project.apply([plugin:'com.google.osdetector'])
 
         project.convention.plugins.protobuf = new ProtobufConvention(project, fileResolver);
 
@@ -190,7 +192,7 @@ class ProtobufPlugin implements Plugin<Project> {
       generateProtoTask.sourceSet = sourceSet
       generateProtoTask.doneInitializing()
       generateProtoTask.builtins {
-        java {}
+        java { }
       }
 
       Task extractProtosTask = maybeAddExtractProtosTask(sourceSet.name)
@@ -398,7 +400,7 @@ class ProtobufPlugin implements Plugin<Project> {
           project.protobuf.generateProtoTasks.ofSourceSet(sourceSet.name).each { generateProtoTask ->
             javaCompileTask.dependsOn(generateProtoTask)
             generateProtoTask.getAllOutputDirs().each { dir ->
-              javaCompileTask.source project.fileTree(dir: dir)
+              javaCompileTask.source project.fileTree([dir:dir])
             }
           }
         }

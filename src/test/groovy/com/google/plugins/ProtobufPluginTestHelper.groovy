@@ -1,5 +1,8 @@
 import org.apache.commons.io.FileUtils
 
+/**
+ * Utility class.
+ */
 class ProtobufPluginTestHelper {
 
   static void appendPluginClasspath(File buildFile) {
