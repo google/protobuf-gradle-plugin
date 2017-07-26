@@ -167,7 +167,7 @@ pluginBundle {
 // Releases must be built on Java 1.7. Building on Java 1.8 will make the
 // plugin runnable only on Java 1.8.
 // See https://github.com/grpc/grpc-java/issues/805
-task checkJavaVersion << {
+tasks.create("checkJavaVersion").doLast {
   JavaVersion javaVersion = JavaVersion.current()
   if (!javaVersion.isJava7()) {
     throw new GradleException(
@@ -198,6 +198,10 @@ if (System.env.TRAVIS == 'true') {
   test {
     testLogging {
       showStandardStreams = true
+      exceptionFormat = 'full'
+      showExceptions true
+      showCauses true
+      showStackTraces true
     }
   }
 }

@@ -3,22 +3,13 @@
 apply plugin: 'com.android.application'
 apply plugin: 'com.google.protobuf'
 
-buildscript {
-    dependencies {
-        classpath 'com.android.tools.build:gradle:2.2.0-beta1'
-    }
-    repositories {
-        maven { url "https://plugins.gradle.org/m2/" }
-    }
-}
-
 repositories {
     maven { url "https://plugins.gradle.org/m2/" }
 }
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion "23.0.3"
+    compileSdkVersion 26
+    buildToolsVersion "26.0.1"
 
     defaultConfig {
         applicationId "io.grpc.helloworldexample"
@@ -68,6 +59,11 @@ android {
     lintOptions {
         warning 'InvalidPackage'
         abortOnError false
+    }
+
+    dexOptions {
+        javaMaxHeapSize "1g"
+        threadCount 1 // reduce predex thread count to limit memory usage
     }
 }
 

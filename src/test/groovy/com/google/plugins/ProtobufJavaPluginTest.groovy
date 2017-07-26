@@ -10,7 +10,7 @@ import org.gradle.testkit.runner.TaskOutcome
 import spock.lang.Specification
 
 class ProtobufJavaPluginTest extends Specification {
-  private static final List<String> gradleVersions = ["2.12", "3.0"]
+  private static final List<String> gradleVersions = ["2.12", "3.0", "4.0"]
 
   private Project setupBasicProject() {
     Project project = ProjectBuilder.builder().build()
