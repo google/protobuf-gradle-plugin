@@ -254,9 +254,13 @@ class ProtobufPlugin implements Plugin<Project> {
         Task extractIncludeProtosTask =
             maybeAddExtractIncludeProtosTask(
                     variant.name,
-                    variant.compileConfiguration.incoming.artifactView{ attributes{ it.attribute(artifactType, "jar") }}.files,
+                    variant.compileConfiguration.incoming.artifactView {
+                      attributes { it.attribute(artifactType, "jar") }
+                    }.files,
                     variant.hasProperty("testedVariant") ?
-                            variant.testedVariant.compileConfiguration.incoming.artifactView{ attributes{ it.attribute(artifactType, "jar") }}.files :
+                            variant.testedVariant.compileConfiguration.incoming.artifactView {
+                              attributes { it.attribute(artifactType, "jar") }
+                            }.files :
                             null)
         generateProtoTask.dependsOn(extractIncludeProtosTask)
       } else {
@@ -361,8 +365,8 @@ class ProtobufPlugin implements Plugin<Project> {
       return project.tasks.create(extractIncludeProtosTaskName, ProtobufExtract) {
         description = "Extracts proto files from compile dependencies for includes"
         destDir = getExtractedIncludeProtosDir(sourceSetOrVariantName) as File
-        inputs.files compileClasspathConfiguration ?:
-            project.configurations[Utils.getConfigName(sourceSetOrVariantName, 'compile')]
+        inputs.files (compileClasspathConfiguration
+                      ?: project.configurations[Utils.getConfigName(sourceSetOrVariantName, 'compile')])
 
         // TL; DR: Make protos in 'test' sourceSet able to import protos from the 'main' sourceSet.
         // Sub-configurations, e.g., 'testCompile' that extends 'compile', don't depend on the
