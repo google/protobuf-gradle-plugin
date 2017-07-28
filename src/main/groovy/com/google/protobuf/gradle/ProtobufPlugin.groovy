@@ -251,17 +251,21 @@ class ProtobufPlugin implements Plugin<Project> {
       if (variant.hasProperty("compileConfiguration")) {
         // For Android Gradle plugin >= 2.5
         Attribute artifactType = Attribute.of("artifactType", String)
-        Task extractIncludeProtosTask =
-            maybeAddExtractIncludeProtosTask(
-                    variant.name,
-                    variant.compileConfiguration.incoming.artifactView {
-                      attributes { it.attribute(artifactType, "jar") }
-                    }.files,
-                    variant.hasProperty("testedVariant") ?
-                            variant.testedVariant.compileConfiguration.incoming.artifactView {
-                              attributes { it.attribute(artifactType, "jar") }
-                            }.files :
-                            null)
+        String name = variant.name
+        FileCollection classPathConfig = variant.compileConfiguration.incoming.artifactView {
+          attributes {
+              it.attribute(artifactType, "jar")
+          }
+        }.files
+        FileCollection testClassPathConfig =
+            variant.hasProperty("testedVariant") ?
+              variant.testedVariant.compileConfiguration.incoming.artifactView {
+                attributes {
+                  it.attribute(artifactType, "jar")
+                }
+              }.files : null
+        Task extractIncludeProtosTask = maybeAddExtractIncludeProtosTask(
+            name, classPathConfig, testClassPathConfig)
         generateProtoTask.dependsOn(extractIncludeProtosTask)
       } else {
         // For Android Gradle plugin < 2.5
@@ -366,7 +370,7 @@ class ProtobufPlugin implements Plugin<Project> {
         description = "Extracts proto files from compile dependencies for includes"
         destDir = getExtractedIncludeProtosDir(sourceSetOrVariantName) as File
         inputs.files (compileClasspathConfiguration
-                      ?: project.configurations[Utils.getConfigName(sourceSetOrVariantName, 'compile')])
+          ?: project.configurations[Utils.getConfigName(sourceSetOrVariantName, 'compile')])
 
         // TL; DR: Make protos in 'test' sourceSet able to import protos from the 'main' sourceSet.
         // Sub-configurations, e.g., 'testCompile' that extends 'compile', don't depend on the
