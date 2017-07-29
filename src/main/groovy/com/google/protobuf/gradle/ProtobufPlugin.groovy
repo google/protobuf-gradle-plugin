@@ -50,7 +50,7 @@ import javax.inject.Inject
  */
 class ProtobufPlugin implements Plugin<Project> {
     // any one of these plugins should be sufficient to proceed with applying this plugin
-    private static final List<String> prerequisitePluginOptions = [
+    private static final List<String> PREREQ_PLUGIN_OPTIONS = [
             'java',
             'com.android.application',
             'com.android.library',
@@ -86,7 +86,7 @@ class ProtobufPlugin implements Plugin<Project> {
           }
         }
 
-        prerequisitePluginOptions.each { pluginName ->
+        PREREQ_PLUGIN_OPTIONS.each { pluginName ->
           project.pluginManager.withPlugin(pluginName, applyWithPrerequisitePlugin)
         }
 
