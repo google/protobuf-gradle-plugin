@@ -7,7 +7,7 @@ class ProtobufPluginTestHelper {
 
   static void appendPluginClasspath(File buildFile) {
     URL pluginClasspathResource =
-        ProtobufPluginTestHelper.class.classLoader.findResource("plugin-classpath.txt")
+        ProtobufPluginTestHelper.classLoader.findResource("plugin-classpath.txt")
     if (pluginClasspathResource == null) {
       throw new IllegalStateException('Did not find plugin classpath resource, ' +
           'run `testClasses` build task.')
