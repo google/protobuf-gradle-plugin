@@ -9,13 +9,16 @@ import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import spock.lang.Specification
 
+/**
+ * Unit tests for normal java functionality.
+ */
 class ProtobufJavaPluginTest extends Specification {
-  private static final List<String> gradleVersions = ["2.12", "3.0"]
+  private static final List<String> GRADLE_VERSIONS = ["2.12", "3.0", "4.0"]
 
   private Project setupBasicProject() {
     Project project = ProjectBuilder.builder().build()
-    project.apply plugin: 'java'
-    project.apply plugin: 'com.google.protobuf'
+    project.apply plugin:'java'
+    project.apply plugin:'com.google.protobuf'
     return project
   }
 
@@ -79,7 +82,7 @@ class ProtobufJavaPluginTest extends Specification {
     }
 
     where:
-    gradleVersion << gradleVersions
+    gradleVersion << GRADLE_VERSIONS
   }
 
   void "testProjectLite should be successfully executed"() {
@@ -98,7 +101,7 @@ class ProtobufJavaPluginTest extends Specification {
     result.task(":build").outcome == TaskOutcome.SUCCESS
 
     where:
-    gradleVersion << gradleVersions
+    gradleVersion << GRADLE_VERSIONS
   }
 
   void "testProjectDependent should be successfully executed"() {
@@ -117,7 +120,7 @@ class ProtobufJavaPluginTest extends Specification {
     result.task(":testProjectDependent:build").outcome == TaskOutcome.SUCCESS
 
     where:
-    gradleVersion << gradleVersions
+    gradleVersion << GRADLE_VERSIONS
   }
 
   void "testProjectCustomProtoDir should be successfully executed"() {
@@ -136,6 +139,6 @@ class ProtobufJavaPluginTest extends Specification {
     result.task(":build").outcome == TaskOutcome.SUCCESS
 
     where:
-    gradleVersion << gradleVersions
+    gradleVersion << GRADLE_VERSIONS
   }
 }

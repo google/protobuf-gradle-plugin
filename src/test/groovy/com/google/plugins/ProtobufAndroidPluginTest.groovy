@@ -5,6 +5,9 @@ import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import spock.lang.Specification
 
+/**
+ * Unit tests for android related functionality.
+ */
 class ProtobufAndroidPluginTest extends Specification {
 
   void "testProjectAndroid should be successfully executed"() {
@@ -12,10 +15,36 @@ class ProtobufAndroidPluginTest extends Specification {
     File mainProjectDir = ProtobufPluginTestHelper.prepareTestTempDir('testProjectAndroid')
     ProtobufPluginTestHelper.copyTestProjects(mainProjectDir, 'testProject', 'testProjectLite', 'testProjectAndroid')
 
+    // Add android plugin to the test root project so that Gradle can resolve
+    // classpath correctly.
+    new File(mainProjectDir, "build.gradle") << """
+buildscript {
+    String androidPluginVersion = System.properties.get("ANDROID_PLUGIN_VERSION") ?: "2.2.0"
+    repositories {
+        maven { url "https://plugins.gradle.org/m2/" }
+        if (androidPluginVersion.startsWith("3.")) {
+            google()
+        }
+    }
+    dependencies {
+        classpath "com.android.tools.build:gradle:\$androidPluginVersion"
+    }
+}
+"""
+
     when: "build is invoked"
+    File localBuildCache = new File(mainProjectDir, ".buildCache")
+    if (localBuildCache.exists()) {
+        localBuildCache.deleteDir()
+    }
     BuildResult result = GradleRunner.create()
       .withProjectDir(mainProjectDir)
-      .withArguments('testProjectAndroid:build')
+      .withArguments(
+              "-DANDROID_PLUGIN_VERSION=${androidPluginVersion}",
+              // set android build cache to avoid using home directory on travis CI.
+              "-Pandroid.buildCacheDir=" + localBuildCache,
+              "testProjectAndroid:build",
+              "--stacktrace")
       .withGradleVersion(gradleVersion)
       .forwardStdOutput(new OutputStreamWriter(System.out))
       .forwardStdError(new OutputStreamWriter(System.err))
@@ -25,6 +54,7 @@ class ProtobufAndroidPluginTest extends Specification {
     result.task(":testProjectAndroid:build").outcome == TaskOutcome.SUCCESS
 
     where:
-    gradleVersion << ["2.14.1", "3.0"]
+    androidPluginVersion << ["2.2.0", "2.2.0", "3.0.0-alpha7"]
+    gradleVersion << ["2.14.1", "3.0", "4.1-milestone-1"]
   }
 }

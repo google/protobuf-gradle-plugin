@@ -26,7 +26,6 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 package com.google.protobuf.gradle
 
 import org.apache.commons.lang.StringUtils
@@ -37,6 +36,9 @@ import org.gradle.api.tasks.TaskInputs
 
 import java.util.regex.Matcher
 
+/**
+ * Utility classes.
+ */
 class Utils {
   /**
    * Returns the conventional name of a configuration for a sourceSet
