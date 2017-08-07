@@ -39,6 +39,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <exclude name="ImplementationAsType"/>
   </ruleset-ref>
   <ruleset-ref path='rulesets/exceptions.xml'/>
+  <ruleset-ref path='rulesets/formatting.xml'/>
   <ruleset-ref path='rulesets/generic.xml'/>
   <ruleset-ref path='rulesets/grails.xml'/>
   <ruleset-ref path='rulesets/groovyism.xml'/>
@@ -48,6 +49,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <exclude name="JUnitTestMethodWithoutAssert"/>
   </ruleset-ref>
   <ruleset-ref path='rulesets/logging.xml'/>
+  <ruleset-ref path='rulesets/naming.xml'>
+    <exclude name="ConfusingMethodName"/>
+    <!-- unit tests have arbitrary names -->
+    <exclude name='MethodName'/>
+    <exclude name='FactoryMethodName'/>
+  </ruleset-ref>
   <ruleset-ref path='rulesets/security.xml'>
     <exclude name="JavaIoPackageAccess"/>
   </ruleset-ref>
@@ -61,12 +68,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <ruleset-ref path='rulesets/unused.xml'/>
 <!-- The following rules do not pass yet
   <ruleset-ref path='rulesets/dry.xml'/>
-  <ruleset-ref path='rulesets/formatting.xml'>
-    <rule-config name="LineLength">
-      <property name='length' value='100'/>
-    </rule-config>
-  </ruleset-ref>
-  <ruleset-ref path='rulesets/naming.xml'/>
   <ruleset-ref path='rulesets/unnecessary.xml'/>
 -->
 </ruleset>

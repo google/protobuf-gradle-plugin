@@ -106,7 +106,6 @@ public class GenerateProtoTask extends DefaultTask {
 
   private State state = State.INIT
 
-
   private void checkInitializing() {
     Preconditions.checkState(state == State.INIT, 'Should not be called after initilization has finished')
   }
@@ -370,7 +369,7 @@ public class GenerateProtoTask extends DefaultTask {
       outputDir.mkdirs()
     }
 
-    List<String> dirs = includeDirs*.path.collect {"-I${it}"}
+    List<String> dirs = includeDirs*.path.collect { "-I${it}" }
     logger.debug "ProtobufCompile using directories ${dirs}"
     logger.debug "ProtobufCompile using files ${protoFiles}"
     List<String> cmd = [ tools.protoc.path ]
