@@ -110,18 +110,16 @@ class ToolsLocator {
   }
 
   static List<String> artifactParts(String artifactCoordinate) {
-    String validNameRegex = '[+-.0-9A-Z_a-z]+'
-    String groupRegex = validNameRegex
-    String nameRegex = validNameRegex
-    String versionRegex = validNameRegex
-    String classifierRegex = validNameRegex
-    String extensionRegex = validNameRegex
-    String artifactCoordinateRegex =
-        /(${groupRegex}):(${nameRegex}):(${versionRegex})(:${classifierRegex})?(@${extensionRegex})?/
+    String artifact
+    String extension
+    String group
+    String name
+    String version
+    String classifier
 
-    ((artifactCoordinate =~ artifactCoordinateRegex)[0]
-        .tail().collect {
-          it?.replaceFirst(/^[:@]/, '') // remove the leading character from the classifier and extension parts
-        })
+    (artifact, extension) = artifactCoordinate.tokenize('@')
+    (group, name, version, classifier) = artifact.tokenize(':')
+
+    return [group, name, version, classifier, extension]
   }
 }
