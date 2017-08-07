@@ -26,15 +26,17 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 package com.google.protobuf.gradle
 
 import spock.lang.Specification
 
+/**
+ * Tests for ToolsLocator
+ */
 class ToolsLocatorSpec extends Specification {
   void '`classifier` and `extension` should both be `null`'() {
     given:
-    final input = 'com.example:example-plugin:0.0.0-rc0+experimental'
+    String input = 'com.example:example-plugin:0.0.0-rc0+experimental'
 
     expect:
     ['com.example', 'example-plugin', '0.0.0-rc0+experimental', null, null] == ToolsLocator.artifactParts(input)
@@ -42,7 +44,7 @@ class ToolsLocatorSpec extends Specification {
 
   void '`classifier` should be parsed and `extension` should be null'() {
     given:
-    final input = 'com.example:example-plugin:0.0.0-rc0+experimental:classifier'
+    String input = 'com.example:example-plugin:0.0.0-rc0+experimental:classifier'
 
     expect:
     ['com.example', 'example-plugin', '0.0.0-rc0+experimental', 'classifier', null] == ToolsLocator.artifactParts(input)
@@ -50,7 +52,7 @@ class ToolsLocatorSpec extends Specification {
 
   void '`classifier` should be `null` and `extension` should be parsed'() {
     given:
-    final input = 'com.example:example-plugin:0.0.0-rc0+experimental@extension'
+    String input = 'com.example:example-plugin:0.0.0-rc0+experimental@extension'
 
     expect:
     ['com.example', 'example-plugin', '0.0.0-rc0+experimental', null, 'extension'] == ToolsLocator.artifactParts(input)
@@ -58,9 +60,10 @@ class ToolsLocatorSpec extends Specification {
 
   void '`classifier` and `extension` should both be parsed'() {
     given:
-    final input = 'com.example:example-plugin:0.0.0-rc0+experimental:classifier@extension'
+    String input = 'com.example:example-plugin:0.0.0-rc0+experimental:classifier@extension'
+    List<String> expected = ['com.example', 'example-plugin', '0.0.0-rc0+experimental', 'classifier', 'extension']
 
     expect:
-    ['com.example', 'example-plugin', '0.0.0-rc0+experimental', 'classifier', 'extension'] == ToolsLocator.artifactParts(input)
+    expected == ToolsLocator.artifactParts(input)
   }
 }
