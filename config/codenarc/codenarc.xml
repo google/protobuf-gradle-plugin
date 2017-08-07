@@ -38,6 +38,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <exclude name="Instanceof"/>
     <exclude name="ImplementationAsType"/>
   </ruleset-ref>
+  <ruleset-ref path='rulesets/dry.xml'>
+    <exclude name="DuplicateStringLiteral"/>
+    <exclude name="DuplicateNumberLiteral"/>
+  </ruleset-ref>
   <ruleset-ref path='rulesets/exceptions.xml'/>
   <ruleset-ref path='rulesets/formatting.xml'/>
   <ruleset-ref path='rulesets/generic.xml'/>
@@ -66,8 +70,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <exclude name="CyclomaticComplexity"/>
   </ruleset-ref>
   <ruleset-ref path='rulesets/unused.xml'/>
-<!-- The following rules do not pass yet
-  <ruleset-ref path='rulesets/dry.xml'/>
-  <ruleset-ref path='rulesets/unnecessary.xml'/>
--->
+  <ruleset-ref path='rulesets/unnecessary.xml'>
+    <exclude name="UnnecessaryCollectCall"/>
+    <exclude name="UnnecessaryGetter"/>
+    <exclude name="UnnecessaryGString"/>
+    <exclude name="UnnecessaryPublicModifier"/>
+    <exclude name="UnnecessaryReturnKeyword"/>
+  </ruleset-ref>
 </ruleset>

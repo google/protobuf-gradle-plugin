@@ -36,7 +36,7 @@ import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
-import org.gradle.api.attributes.Attribute;
+import org.gradle.api.attributes.Attribute
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.FileCollection
 import org.gradle.api.internal.file.FileResolver
@@ -60,7 +60,7 @@ class ProtobufPlugin implements Plugin<Project> {
 
     private final FileResolver fileResolver
     private Project project
-    private boolean wasApplied = false;
+    private boolean wasApplied = false
 
     @Inject
     public ProtobufPlugin(FileResolver fileResolver) {
@@ -102,7 +102,7 @@ class ProtobufPlugin implements Plugin<Project> {
         // Provides the osdetector extension
         project.apply([plugin:'com.google.osdetector'])
 
-        project.convention.plugins.protobuf = new ProtobufConvention(project, fileResolver);
+        project.convention.plugins.protobuf = new ProtobufConvention(project, fileResolver)
 
         addSourceSetExtensions()
         getSourceSets().all { sourceSet ->
@@ -156,9 +156,8 @@ class ProtobufPlugin implements Plugin<Project> {
     private Object getSourceSets() {
       if (Utils.isAndroidProject(project)) {
         return project.android.sourceSets
-      } else {
-        return project.sourceSets
       }
+      return project.sourceSets
     }
 
     private Object getNonTestVariants() {

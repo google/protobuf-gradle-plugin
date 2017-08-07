@@ -311,9 +311,9 @@ public class GenerateProtoTask extends DefaultTask {
      */
     public String getOutputSubDir() {
       if (outputSubDir != null) {
-        return outputSubDir;
+        return outputSubDir
       }
-      return name;
+      return name
     }
   }
 
