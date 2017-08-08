@@ -78,14 +78,14 @@ class ToolsLocator {
       transitive = false
       extendsFrom = []
     }
-    String groupId, artifact, version
-    (groupId, artifact, version) = locator.artifact.split(":")
+    String groupId, artifact, version, classifier, extension
+    (groupId, artifact, version, classifier, extension) = artifactParts(locator.artifact)
     Map<String, String> notation = [
             group:groupId,
             name:artifact,
             version:version,
-            classifier:project.osdetector.classifier,
-            ext:'exe',
+            classifier:classifier ?: project.osdetector.classifier,
+            ext:extension ?: 'exe',
     ]
     Dependency dep = project.dependencies.add(config.name, notation)
 
@@ -107,5 +107,19 @@ class ToolsLocator {
         }
       }
     }
+  }
+
+  static List<String> artifactParts(String artifactCoordinate) {
+    String artifact
+    String extension
+    String group
+    String name
+    String version
+    String classifier
+
+    (artifact, extension) = artifactCoordinate.tokenize('@')
+    (group, name, version, classifier) = artifact.tokenize(':')
+
+    return [group, name, version, classifier, extension]
   }
 }
