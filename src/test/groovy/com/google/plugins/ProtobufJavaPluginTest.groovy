@@ -64,8 +64,11 @@ class ProtobufJavaPluginTest extends Specification {
     when: "build is invoked"
     BuildResult result = GradleRunner.create()
       .withProjectDir(projectDir)
-      .withArguments('build')
+      .withArguments('build', '--stacktrace')
       .withGradleVersion(gradleVersion)
+      .forwardStdOutput(new OutputStreamWriter(System.out))
+      .forwardStdError(new OutputStreamWriter(System.err))
+      .withDebug(true)
       .build()
 
     then: "it succeed"
@@ -93,8 +96,11 @@ class ProtobufJavaPluginTest extends Specification {
     when: "build is invoked"
     BuildResult result = GradleRunner.create()
       .withProjectDir(projectDir)
-      .withArguments('build')
+      .withArguments('build', '--stacktrace')
       .withGradleVersion(gradleVersion)
+      .forwardStdOutput(new OutputStreamWriter(System.out))
+      .forwardStdError(new OutputStreamWriter(System.err))
+      .withDebug(true)
       .build()
 
     then: "it succeed"
@@ -112,8 +118,11 @@ class ProtobufJavaPluginTest extends Specification {
     when: "build is invoked"
     BuildResult result = GradleRunner.create()
       .withProjectDir(mainProjectDir)
-      .withArguments('testProjectDependent:build')
+      .withArguments('testProjectDependent:build', '--stacktrace')
       .withGradleVersion(gradleVersion)
+      .withDebug(true)
+      .forwardStdOutput(new OutputStreamWriter(System.out))
+      .forwardStdError(new OutputStreamWriter(System.err))
       .build()
 
     then: "it succeed"
@@ -131,8 +140,11 @@ class ProtobufJavaPluginTest extends Specification {
     when: "build is invoked"
     BuildResult result = GradleRunner.create()
       .withProjectDir(projectDir)
-      .withArguments('build')
+      .withArguments('build', '--stacktrace')
       .withGradleVersion(gradleVersion)
+      .forwardStdOutput(new OutputStreamWriter(System.out))
+      .forwardStdError(new OutputStreamWriter(System.err))
+      .withDebug(true)
       .build()
 
     then: "it succeed"
