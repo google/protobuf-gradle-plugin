@@ -55,6 +55,6 @@ buildscript {
 
     where:
     androidPluginVersion << ["2.2.0", "2.2.0", "3.0.0-alpha7"]
-    gradleVersion << ["2.14.1", "3.0", "4.1-milestone-1"]
+    gradleVersion << ["2.14.1", "3.0", "4.1-milestone-1", "4.3-rc-2"]
   }
 }
