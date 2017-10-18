@@ -120,9 +120,9 @@ class ProtobufJavaPluginTest extends Specification {
       .withProjectDir(mainProjectDir)
       .withArguments('testProjectDependent:build', '--stacktrace')
       .withGradleVersion(gradleVersion)
-      .withDebug(true)
       .forwardStdOutput(new OutputStreamWriter(System.out))
       .forwardStdError(new OutputStreamWriter(System.err))
+      .withDebug(true)
       .build()
 
     then: "it succeed"
