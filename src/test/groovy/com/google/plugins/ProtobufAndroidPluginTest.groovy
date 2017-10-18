@@ -54,7 +54,13 @@ buildscript {
     result.task(":testProjectAndroid:build").outcome == TaskOutcome.SUCCESS
 
     where:
-    androidPluginVersion << ["2.2.0", "2.2.0", "3.0.0-beta7", "3.0.0-beta7"]
-    gradleVersion << ["2.14.1", "3.0", "4.1", "4.3-rc-2"]
+    // Always make sure we have a pairing that includes the latest stable releases, and optionally
+    // the latest release candidates of each.
+    // Latest stable releases of android plugin:
+    //   https://developer.android.com/studio/releases/gradle-plugin.html
+    // Latest preview releases of android plugin:
+    //   https://developer.android.com/studio/build/gradle-plugin-3-0-0-migration.html
+    androidPluginVersion << ["2.2.0", "2.2.0", "2.3.0", "3.0.0-beta7"]
+    gradleVersion << ["2.14.1", "3.0", "4.2", "4.3-rc-2"]
   }
 }
