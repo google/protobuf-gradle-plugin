@@ -72,6 +72,14 @@ public class GenerateProtoTask extends DefaultTask {
   boolean generateDescriptorSet
 
   /**
+   * If true, protoc will be called once for each proto file instead of once with all files
+   * This allows the command line argument length limit can be avoided when many proto files are being generated
+   *
+   * Default: false
+   */
+  boolean spreadProtoGeneration
+
+  /**
    * Configuration object for descriptor generation details.
    */
   public class DescriptorSetOptions {
@@ -410,7 +418,20 @@ public class GenerateProtoTask extends DefaultTask {
       }
     }
 
+    if (spreadProtoGeneration) {
+      // If spreadProtoGeneration is enabled, call protoc once for each file
+      for (File proto : protoFiles) {
+        compileFiles(cmd, [ proto ])
+      }
+    } else {
+      compileFiles(cmd, protoFiles)
+    }
+  }
+
+  private void compileFiles(List<String> baseCmd, List<File> protoFiles) {
+    List<String> cmd = baseCmd.collect()
     cmd.addAll protoFiles
+
     logger.log(LogLevel.INFO, cmd.toString())
     StringBuffer stdout = new StringBuffer()
     StringBuffer stderr = new StringBuffer()
