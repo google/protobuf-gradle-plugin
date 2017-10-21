@@ -462,7 +462,7 @@ public class GenerateProtoTask extends DefaultTask {
         if (idx > 0) {
           // If the major version is > 5, we are on Windows Vista or higher
           int majorVersion = Ints.tryParse(version[0..(idx - 1)]) ?: 0
-          if (majorVersion ?: 0 > 5) {
+          if (majorVersion > 5) {
             return VISTA_CMD_LENGTH_LIMIT
           }
         }
