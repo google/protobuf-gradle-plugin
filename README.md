@@ -340,6 +340,10 @@ dependencies {
 }
 
 protobuf {
+  protoc {
+    // You still need protoc like in the non-Android case
+    artifact = 'com.google.protobuf:protoc:3.0.0'
+  }
   plugins {
     javalite {
       // The codegen for lite comes as a separate artifact
@@ -348,6 +352,11 @@ protobuf {
   }
   generateProtoTasks {
     all().each { task ->
+      task.builtins {
+        // In most cases you don't need the full Java output
+        // if you use the lite output.
+        remove java
+      }
       task.plugins {
         javalite { }
       }
