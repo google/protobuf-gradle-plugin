@@ -46,6 +46,8 @@ import org.gradle.util.ConfigureUtil
  */
 // TODO(zhangkun83): add per-plugin output dir reconfiguraiton.
 public class GenerateProtoTask extends DefaultTask {
+  private static final int VISTA_CMD_LENGTH_LIMIT = 8191
+  private static final int XP_CMD_LENGTH_LIMIT = 2047
 
   private final List includeDirs = []
   private final NamedDomainObjectContainer<PluginOptions> builtins
@@ -70,14 +72,6 @@ public class GenerateProtoTask extends DefaultTask {
    * Default: false
    */
   boolean generateDescriptorSet
-
-  /**
-   * If true, protoc will be called once for each proto file instead of once with all files
-   * This allows the command line argument length limit can be avoided when many proto files are being generated
-   *
-   * Default: false
-   */
-  boolean spreadProtoGeneration
 
   /**
    * Configuration object for descriptor generation details.
@@ -380,7 +374,7 @@ public class GenerateProtoTask extends DefaultTask {
     List<String> dirs = includeDirs*.path.collect { "-I${it}" }
     logger.debug "ProtobufCompile using directories ${dirs}"
     logger.debug "ProtobufCompile using files ${protoFiles}"
-    List<String> cmd = [ tools.protoc.path ]
+    List cmd = [ tools.protoc.path ]
     cmd.addAll(dirs)
 
     // Handle code generation built-ins
@@ -418,21 +412,27 @@ public class GenerateProtoTask extends DefaultTask {
       }
     }
 
-    if (spreadProtoGeneration) {
-      // If spreadProtoGeneration is enabled, call protoc once for each file
-      for (File proto : protoFiles) {
-        compileFiles(cmd, [ proto ])
+    int lengthLimit = getCmdLengthLimit()
+
+    String baseCmd = cmd.join(" ") + " "
+
+    StringBuilder currentCmd = new StringBuilder(baseCmd)
+    for (File proto : protoFiles) {
+      currentCmd.append(proto.toString()).append(" ")
+      // Offset to account for trailing space
+      if (currentCmd.length() - 1 > lengthLimit) {
+        // If we've reached the length limit, execute the current command and reset the builder
+        compileFiles(currentCmd)
+        currentCmd = new StringBuilder(baseCmd)
       }
-    } else {
-      compileFiles(cmd, protoFiles)
     }
   }
 
-  private void compileFiles(List<String> baseCmd, List<File> protoFiles) {
-    List<String> cmd = baseCmd.collect()
-    cmd.addAll protoFiles
-
+  private void compileFiles(StringBuilder cmdBuilder) {
+    // Trim trailing space
+    String cmd = cmdBuilder.toString().trim()
     logger.log(LogLevel.INFO, cmd.toString())
+
     StringBuffer stdout = new StringBuffer()
     StringBuffer stderr = new StringBuffer()
     Process result = cmd.execute()
@@ -443,6 +443,28 @@ public class GenerateProtoTask extends DefaultTask {
     } else {
       throw new GradleException(output)
     }
+  }
+
+  private static int getCmdLengthLimit() {
+    String os = System.getProperty("os.name")?.toLowerCase(Locale.ROOT)
+    if (os?.contains("win")) {
+      String version = System.getProperty("os.version")
+      if (version?.contains(".")) {
+        String[] versionComponents = version.toLowerCase(Locale.ROOT).split("\\.")
+        try {
+          // If the first version component is > 5, we are on Windows Vista or higher
+          if (versionComponents[0].toInteger() > 5) {
+            return VISTA_CMD_LENGTH_LIMIT
+          }
+        } catch (NumberFormatException e) {
+          // Invalid version component, assume Windows XP or lower
+          return XP_CMD_LENGTH_LIMIT
+        }
+      }
+      // If version string not present, assume Windows XP or lower
+      return XP_CMD_LENGTH_LIMIT
+    }
+    return Integer.MAX_VALUE
   }
 
 }
