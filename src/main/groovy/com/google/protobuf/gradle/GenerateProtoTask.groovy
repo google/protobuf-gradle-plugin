@@ -31,6 +31,7 @@ package com.google.protobuf.gradle
 
 import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
+import com.google.common.primitives.Ints
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
@@ -417,21 +418,27 @@ public class GenerateProtoTask extends DefaultTask {
     String baseCmd = cmd.join(" ") + " "
 
     StringBuilder currentCmd = new StringBuilder(baseCmd)
+    int currentFileCount = 0
     for (File proto : protoFiles) {
       currentCmd.append(proto.toString()).append(" ")
+      currentFileCount++
       // Offset to account for trailing space
       if (currentCmd.length() - 1 > lengthLimit) {
         // If we've reached the length limit, execute the current command and reset the builder
         compileFiles(currentCmd)
-        currentCmd = new StringBuilder(baseCmd)
+        currentFileCount = 0
+        currentCmd.setLength(baseCmd.length())
       }
+    }
+    if (currentFileCount > 0) {
+      compileFiles(currentCmd)
     }
   }
 
   private void compileFiles(StringBuilder cmdBuilder) {
     // Trim trailing space
     String cmd = cmdBuilder.toString().trim()
-    logger.log(LogLevel.INFO, cmd.toString())
+    logger.log(LogLevel.INFO, cmd)
 
     StringBuffer stdout = new StringBuffer()
     StringBuffer stderr = new StringBuffer()
@@ -446,22 +453,21 @@ public class GenerateProtoTask extends DefaultTask {
   }
 
   private static int getCmdLengthLimit() {
-    String os = System.getProperty("os.name")?.toLowerCase(Locale.ROOT)
-    if (os?.contains("win")) {
+    // Check if operating system is Windows
+    String os = System.getProperty("os.name")
+    if (os != null && os.toLowerCase(Locale.ROOT).indexOf("win") > -1) {
       String version = System.getProperty("os.version")
-      if (version?.contains(".")) {
-        String[] versionComponents = version.toLowerCase(Locale.ROOT).split("\\.")
-        try {
-          // If the first version component is > 5, we are on Windows Vista or higher
-          if (versionComponents[0].toInteger() > 5) {
+      if (version != null) {
+        int idx = version.indexOf('.')
+        if (idx > 0) {
+          // If the major version is > 5, we are on Windows Vista or higher
+          int majorVersion = Ints.tryParse(version[0..(idx - 1)]) ?: 0
+          if (majorVersion ?: 0 > 5) {
             return VISTA_CMD_LENGTH_LIMIT
           }
-        } catch (NumberFormatException e) {
-          // Invalid version component, assume Windows XP or lower
-          return XP_CMD_LENGTH_LIMIT
         }
       }
-      // If version string not present, assume Windows XP or lower
+      // Failed to read version, assume Windows XP or lower
       return XP_CMD_LENGTH_LIMIT
     }
     return Integer.MAX_VALUE
