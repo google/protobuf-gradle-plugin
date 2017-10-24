@@ -375,13 +375,13 @@ public class GenerateProtoTask extends DefaultTask {
     List<String> dirs = includeDirs*.path.collect { "-I${it}" }
     logger.debug "ProtobufCompile using directories ${dirs}"
     logger.debug "ProtobufCompile using files ${protoFiles}"
-    List cmd = [ tools.protoc.path ]
-    cmd.addAll(dirs)
+    List<String> baseCmd = [ tools.protoc.path ]
+    baseCmd.addAll(dirs)
 
     // Handle code generation built-ins
     builtins.each { builtin ->
       String outPrefix = makeOptionsPrefix(builtin.options)
-      cmd += "--${builtin.name}_out=${outPrefix}${getOutputDir(builtin)}"
+      baseCmd += "--${builtin.name}_out=${outPrefix}${getOutputDir(builtin)}"
     }
 
     // Handle code generation plugins
@@ -392,8 +392,8 @@ public class GenerateProtoTask extends DefaultTask {
         throw new GradleException("Codegen plugin ${name} not defined")
       }
       String pluginOutPrefix = makeOptionsPrefix(plugin.options)
-      cmd += "--${name}_out=${pluginOutPrefix}${getOutputDir(plugin)}"
-      cmd += "--plugin=protoc-gen-${name}=${locator.path}"
+      baseCmd += "--${name}_out=${pluginOutPrefix}${getOutputDir(plugin)}"
+      baseCmd += "--plugin=protoc-gen-${name}=${locator.path}"
     }
 
     if (generateDescriptorSet) {
@@ -404,40 +404,22 @@ public class GenerateProtoTask extends DefaultTask {
       if (!folder.exists()) {
         folder.mkdirs()
       }
-      cmd += "--descriptor_set_out=${path}"
+      baseCmd += "--descriptor_set_out=${path}"
       if (descriptorSetOptions.includeImports) {
-        cmd += "--include_imports"
+        baseCmd += "--include_imports"
       }
       if (descriptorSetOptions.includeSourceInfo) {
-        cmd += "--include_source_info"
+        baseCmd += "--include_source_info"
       }
     }
 
-    int lengthLimit = getCmdLengthLimit()
-
-    String baseCmd = cmd.join(" ") + " "
-
-    StringBuilder currentCmd = new StringBuilder(baseCmd)
-    int currentFileCount = 0
-    for (File proto : protoFiles) {
-      currentCmd.append(proto.toString()).append(" ")
-      currentFileCount++
-      // Offset to account for trailing space
-      if (currentCmd.length() - 1 > lengthLimit) {
-        // If we've reached the length limit, execute the current command and reset the builder
-        compileFiles(currentCmd)
-        currentFileCount = 0
-        currentCmd.setLength(baseCmd.length())
-      }
-    }
-    if (currentFileCount > 0) {
-      compileFiles(currentCmd)
+    List<String> cmds = generateCmds(baseCmd.join(" "), protoFiles, getCmdLengthLimit())
+    for (String cmd : cmds) {
+      compileFiles(cmd)
     }
   }
 
-  private void compileFiles(StringBuilder cmdBuilder) {
-    // Trim trailing space
-    String cmd = cmdBuilder.toString().trim()
+  private void compileFiles(String cmd) {
     logger.log(LogLevel.INFO, cmd)
 
     StringBuffer stdout = new StringBuffer()
@@ -450,6 +432,25 @@ public class GenerateProtoTask extends DefaultTask {
     } else {
       throw new GradleException(output)
     }
+  }
+
+  static List<String> generateCmds(String baseCmd, List<File> protoFiles, int cmdLengthLimit) {
+    List<String> cmds = []
+    StringBuilder currentCmd = new StringBuilder(baseCmd)
+    for (File proto: protoFiles) {
+      String protoFileName = proto
+      // Check if appending the next proto string will overflow the cmd length limit
+      if (currentCmd.length() + protoFileName.length() + 1 > cmdLengthLimit) {
+        // Add the current cmd before overflow
+        cmds.add(currentCmd.toString())
+        currentCmd.setLength(baseCmd.length())
+      }
+      // Append the proto file to the command
+      currentCmd.append(" ").append(protoFileName)
+    }
+    // Add the last cmd for execution
+    cmds.add(currentCmd.toString())
+    return cmds
   }
 
   private static int getCmdLengthLimit() {

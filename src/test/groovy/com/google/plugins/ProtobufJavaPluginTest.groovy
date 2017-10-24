@@ -153,4 +153,19 @@ class ProtobufJavaPluginTest extends Specification {
     where:
     gradleVersion << GRADLE_VERSIONS
   }
+
+  void "test generateCmds should split commands appropriately"() {
+    given: "a cmd length limit and two proto files"
+
+    String baseCmd = "protoc"
+    List<File> protoFiles = [ new File("short.proto"), new File("long_proto_name.proto") ]
+    int cmdLengthLimit = 32
+
+    when: "the commands are split"
+
+    List<String> cmds = GenerateProtoTask.generateCmds(baseCmd, protoFiles, cmdLengthLimit)
+
+    then: "it splits appropriately"
+    cmds.size() == 2
+  }
 }
