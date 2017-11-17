@@ -293,18 +293,27 @@ Put options in the braces if wanted.  For example:
 
 ```gradle
 task.builtins {
+  // This yields
+  // "--java_out=example_option1=true,example_option2:/path/to/output"
+  // on the protoc commandline, which is equivalent to
+  // "--java_out=/path/to/output --java_opt=example_option1=true,example_option2"
+  // with the latest version of protoc.
   java {
     option 'example_option1=true'
     option 'example_option2'
   }
   // Add cpp output without any option.
   // DO NOT omit the braces if you want this builtin to be added.
+  // This yields
+  // "--cpp_out=/path/to/output" on the protoc commandline.
   cpp { }
 }
 
 task.plugins {
   // Add grpc output without any option.  grpc must have been defined in the
   // protobuf.plugins block.
+  // This yields
+  // "--grpc_out=/path/to/output" on the protoc commandline.
   grpc { }
 }
 ```
