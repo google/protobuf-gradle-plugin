@@ -13,7 +13,7 @@ import spock.lang.Specification
  * Unit tests for normal java functionality.
  */
 class ProtobufJavaPluginTest extends Specification {
-  private static final List<String> GRADLE_VERSIONS = ["2.12", "3.0", "4.0", "4.3-rc-2"]
+  private static final List<String> GRADLE_VERSIONS = ["2.12", "3.0", "4.0", "4.3"]
 
   private Project setupBasicProject() {
     Project project = ProjectBuilder.builder().build()
