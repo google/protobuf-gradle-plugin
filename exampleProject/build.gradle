@@ -14,14 +14,14 @@ buildscript {
     maven { url "https://plugins.gradle.org/m2/" }
   }
   dependencies {
-    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.1'
+    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.3'
   }
 }
 
 dependencies {
-  compile 'com.google.protobuf:protobuf-java:3.0.0'
-  compile 'io.grpc:grpc-stub:1.0.0-pre2'
-  compile 'io.grpc:grpc-protobuf:1.0.0-pre2'
+  compile 'com.google.protobuf:protobuf-java:3.4.0'
+  compile 'io.grpc:grpc-stub:1.5.0'
+  compile 'io.grpc:grpc-protobuf:1.5.0'
   // Extra proto source files besides the ones residing under
   // "src/main".
   protobuf files("lib/protos.tar.gz")
@@ -36,14 +36,14 @@ dependencies {
 protobuf {
   protoc {
     // The artifact spec for the Protobuf Compiler
-    artifact = 'com.google.protobuf:protoc:3.0.0'
+    artifact = 'com.google.protobuf:protoc:3.4.0'
   }
   plugins {
     // Optional: an artifact spec for a protoc plugin, with "grpc" as
     // the identifier, which can be referred to in the "plugins"
     // container of the "generateProtoTasks" closure.
     grpc {
-      artifact = 'io.grpc:protoc-gen-grpc-java:1.0.0-pre2'
+      artifact = 'io.grpc:protoc-gen-grpc-java:1.5.0'
     }
   }
   generateProtoTasks {
