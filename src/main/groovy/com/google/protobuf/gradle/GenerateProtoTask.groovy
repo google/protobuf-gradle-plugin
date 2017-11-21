@@ -47,8 +47,8 @@ import org.gradle.util.ConfigureUtil
  */
 // TODO(zhangkun83): add per-plugin output dir reconfiguraiton.
 public class GenerateProtoTask extends DefaultTask {
-  private static final int VISTA_CMD_LENGTH_LIMIT = 8191
-  private static final int XP_CMD_LENGTH_LIMIT = 2047
+  static final int VISTA_CMD_LENGTH_LIMIT = 8191
+  static final int XP_CMD_LENGTH_LIMIT = 2047
 
   private final List includeDirs = []
   private final NamedDomainObjectContainer<PluginOptions> builtins
@@ -436,28 +436,32 @@ public class GenerateProtoTask extends DefaultTask {
 
   static List<String> generateCmds(String baseCmd, List<File> protoFiles, int cmdLengthLimit) {
     List<String> cmds = []
-    StringBuilder currentCmd = new StringBuilder(baseCmd)
-    for (File proto: protoFiles) {
-      String protoFileName = proto
-      // Check if appending the next proto string will overflow the cmd length limit
-      if (currentCmd.length() + protoFileName.length() + 1 > cmdLengthLimit) {
-        // Add the current cmd before overflow
-        cmds.add(currentCmd.toString())
-        currentCmd.setLength(baseCmd.length())
+    if (!protoFiles.isEmpty()) {
+      StringBuilder currentCmd = new StringBuilder(baseCmd)
+      for (File proto: protoFiles) {
+        String protoFileName = proto
+        // Check if appending the next proto string will overflow the cmd length limit
+        if (currentCmd.length() + protoFileName.length() + 1 > cmdLengthLimit) {
+          // Add the current cmd before overflow
+          cmds.add(currentCmd.toString())
+          currentCmd.setLength(baseCmd.length())
+        }
+        // Append the proto file to the command
+        currentCmd.append(" ").append(protoFileName)
       }
-      // Append the proto file to the command
-      currentCmd.append(" ").append(protoFileName)
+      // Add the last cmd for execution
+      cmds.add(currentCmd.toString())
     }
-    // Add the last cmd for execution
-    cmds.add(currentCmd.toString())
     return cmds
   }
 
-  private static int getCmdLengthLimit() {
+  static int getCmdLengthLimit() {
+    return getCmdLengthLimit(System.getProperty("os.name"), System.getProperty("os.version"))
+  }
+
+  static int getCmdLengthLimit(String os, String version) {
     // Check if operating system is Windows
-    String os = System.getProperty("os.name")
     if (os != null && os.toLowerCase(Locale.ROOT).indexOf("win") > -1) {
-      String version = System.getProperty("os.version")
       if (version != null) {
         int idx = version.indexOf('.')
         if (idx > 0) {

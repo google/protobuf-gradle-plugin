@@ -154,18 +154,90 @@ class ProtobufJavaPluginTest extends Specification {
     gradleVersion << GRADLE_VERSIONS
   }
 
-  void "test generateCmds should split commands appropriately"() {
+  void "test generateCmds should split commands when limit exceeded"() {
     given: "a cmd length limit and two proto files"
 
     String baseCmd = "protoc"
     List<File> protoFiles = [ new File("short.proto"), new File("long_proto_name.proto") ]
     int cmdLengthLimit = 32
 
-    when: "the commands are split"
+    when: "the commands are generated"
 
     List<String> cmds = GenerateProtoTask.generateCmds(baseCmd, protoFiles, cmdLengthLimit)
 
     then: "it splits appropriately"
     cmds.size() == 2
+  }
+
+  void "test generateCmds should not split commands when under limit"() {
+    given: "a cmd length limit and two proto files"
+
+    String baseCmd = "protoc"
+    List<File> protoFiles = [ new File("short.proto"), new File("long_proto_name.proto") ]
+    int cmdLengthLimit = 64
+
+    when: "the commands are generated"
+
+    List<String> cmds = GenerateProtoTask.generateCmds(baseCmd, protoFiles, cmdLengthLimit)
+
+    then: "it splits appropriately"
+    cmds.size() == 1
+  }
+
+  void "test generateCmds should not return commands when no protos are given"() {
+    given: "a cmd length limit and no proto files"
+
+    String baseCmd = "protoc"
+    List<File> protoFiles = []
+    int cmdLengthLimit = 32
+
+    when: "the commands are generated"
+
+    List<String> cmds = GenerateProtoTask.generateCmds(baseCmd, protoFiles, cmdLengthLimit)
+
+    then: "it returns no commands"
+    cmds.size() == 0
+  }
+
+  void "test getCmdLengthLimit returns correct limit for Windows XP"() {
+    given: "Windows OS at major version 5"
+
+    String os = "windows"
+    String version = "5.0.0"
+
+    when: "the command length limit is queried"
+
+    int limit = GenerateProtoTask.getCmdLengthLimit(os, version)
+
+    then: "it returns the XP limit"
+    limit == GenerateProtoTask.XP_CMD_LENGTH_LIMIT
+  }
+
+  void "test getCmdLengthLimit returns correct limit for Windows Vista"() {
+    given: "Windows OS at major version 6"
+
+    String os = "Windows"
+    String version = "6.0.0"
+
+    when: "the command length limit is queried"
+
+    int limit = GenerateProtoTask.getCmdLengthLimit(os, version)
+
+    then: "it returns the Vista limit"
+    limit == GenerateProtoTask.VISTA_CMD_LENGTH_LIMIT
+  }
+
+  void "test getCmdLengthLimit returns correct limit for non-Windows OS"() {
+    given: "MacOS X at major version 10"
+
+    String os = "Mac OS X"
+    String version = "10.0.0"
+
+    when: "the command length limit is queried"
+
+    int limit = GenerateProtoTask.getCmdLengthLimit(os, version)
+
+    then: "it returns maximum integer value"
+    limit == Integer.MAX_VALUE
   }
 }
