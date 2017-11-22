@@ -31,6 +31,7 @@ package com.google.protobuf.gradle
 
 import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
+import com.google.common.primitives.Ints
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
@@ -46,6 +47,8 @@ import org.gradle.util.ConfigureUtil
  */
 // TODO(zhangkun83): add per-plugin output dir reconfiguraiton.
 public class GenerateProtoTask extends DefaultTask {
+  static final int VISTA_CMD_LENGTH_LIMIT = 8191
+  static final int XP_CMD_LENGTH_LIMIT = 2047
 
   private final List includeDirs = []
   private final NamedDomainObjectContainer<PluginOptions> builtins
@@ -372,13 +375,13 @@ public class GenerateProtoTask extends DefaultTask {
     List<String> dirs = includeDirs*.path.collect { "-I${it}" }
     logger.debug "ProtobufCompile using directories ${dirs}"
     logger.debug "ProtobufCompile using files ${protoFiles}"
-    List<String> cmd = [ tools.protoc.path ]
-    cmd.addAll(dirs)
+    List<String> baseCmd = [ tools.protoc.path ]
+    baseCmd.addAll(dirs)
 
     // Handle code generation built-ins
     builtins.each { builtin ->
       String outPrefix = makeOptionsPrefix(builtin.options)
-      cmd += "--${builtin.name}_out=${outPrefix}${getOutputDir(builtin)}"
+      baseCmd += "--${builtin.name}_out=${outPrefix}${getOutputDir(builtin)}"
     }
 
     // Handle code generation plugins
@@ -389,8 +392,8 @@ public class GenerateProtoTask extends DefaultTask {
         throw new GradleException("Codegen plugin ${name} not defined")
       }
       String pluginOutPrefix = makeOptionsPrefix(plugin.options)
-      cmd += "--${name}_out=${pluginOutPrefix}${getOutputDir(plugin)}"
-      cmd += "--plugin=protoc-gen-${name}=${locator.path}"
+      baseCmd += "--${name}_out=${pluginOutPrefix}${getOutputDir(plugin)}"
+      baseCmd += "--plugin=protoc-gen-${name}=${locator.path}"
     }
 
     if (generateDescriptorSet) {
@@ -401,17 +404,24 @@ public class GenerateProtoTask extends DefaultTask {
       if (!folder.exists()) {
         folder.mkdirs()
       }
-      cmd += "--descriptor_set_out=${path}"
+      baseCmd += "--descriptor_set_out=${path}"
       if (descriptorSetOptions.includeImports) {
-        cmd += "--include_imports"
+        baseCmd += "--include_imports"
       }
       if (descriptorSetOptions.includeSourceInfo) {
-        cmd += "--include_source_info"
+        baseCmd += "--include_source_info"
       }
     }
 
-    cmd.addAll protoFiles
-    logger.log(LogLevel.INFO, cmd.toString())
+    List<String> cmds = generateCmds(baseCmd.join(" "), protoFiles, getCmdLengthLimit())
+    for (String cmd : cmds) {
+      compileFiles(cmd)
+    }
+  }
+
+  private void compileFiles(String cmd) {
+    logger.log(LogLevel.INFO, cmd)
+
     StringBuffer stdout = new StringBuffer()
     StringBuffer stderr = new StringBuffer()
     Process result = cmd.execute()
@@ -422,6 +432,50 @@ public class GenerateProtoTask extends DefaultTask {
     } else {
       throw new GradleException(output)
     }
+  }
+
+  static List<String> generateCmds(String baseCmd, List<File> protoFiles, int cmdLengthLimit) {
+    List<String> cmds = []
+    if (!protoFiles.isEmpty()) {
+      StringBuilder currentCmd = new StringBuilder(baseCmd)
+      for (File proto: protoFiles) {
+        String protoFileName = proto
+        // Check if appending the next proto string will overflow the cmd length limit
+        if (currentCmd.length() + protoFileName.length() + 1 > cmdLengthLimit) {
+          // Add the current cmd before overflow
+          cmds.add(currentCmd.toString())
+          currentCmd.setLength(baseCmd.length())
+        }
+        // Append the proto file to the command
+        currentCmd.append(" ").append(protoFileName)
+      }
+      // Add the last cmd for execution
+      cmds.add(currentCmd.toString())
+    }
+    return cmds
+  }
+
+  static int getCmdLengthLimit() {
+    return getCmdLengthLimit(System.getProperty("os.name"), System.getProperty("os.version"))
+  }
+
+  static int getCmdLengthLimit(String os, String version) {
+    // Check if operating system is Windows
+    if (os != null && os.toLowerCase(Locale.ROOT).indexOf("win") > -1) {
+      if (version != null) {
+        int idx = version.indexOf('.')
+        if (idx > 0) {
+          // If the major version is > 5, we are on Windows Vista or higher
+          int majorVersion = Ints.tryParse(version[0..(idx - 1)]) ?: 0
+          if (majorVersion > 5) {
+            return VISTA_CMD_LENGTH_LIMIT
+          }
+        }
+      }
+      // Failed to read version, assume Windows XP or lower
+      return XP_CMD_LENGTH_LIMIT
+    }
+    return Integer.MAX_VALUE
   }
 
 }
