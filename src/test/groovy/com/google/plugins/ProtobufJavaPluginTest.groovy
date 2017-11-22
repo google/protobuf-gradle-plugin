@@ -166,7 +166,7 @@ class ProtobufJavaPluginTest extends Specification {
     List<String> cmds = GenerateProtoTask.generateCmds(baseCmd, protoFiles, cmdLengthLimit)
 
     then: "it splits appropriately"
-    cmds.size() == 2
+    cmds.size() == 2 && cmds[0] == "protoc short.proto" && cmds[1] == "protoc long_proto_name.proto"
   }
 
   void "test generateCmds should not split commands when under limit"() {
@@ -181,7 +181,7 @@ class ProtobufJavaPluginTest extends Specification {
     List<String> cmds = GenerateProtoTask.generateCmds(baseCmd, protoFiles, cmdLengthLimit)
 
     then: "it splits appropriately"
-    cmds.size() == 1
+    cmds.size() == 1 && cmds[0] == "protoc short.proto long_proto_name.proto"
   }
 
   void "test generateCmds should not return commands when no protos are given"() {
@@ -196,7 +196,7 @@ class ProtobufJavaPluginTest extends Specification {
     List<String> cmds = GenerateProtoTask.generateCmds(baseCmd, protoFiles, cmdLengthLimit)
 
     then: "it returns no commands"
-    cmds.size() == 0
+    cmds.isEmpty()
   }
 
   void "test getCmdLengthLimit returns correct limit for Windows XP"() {
