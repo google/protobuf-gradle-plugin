@@ -22,6 +22,11 @@ dependencies {
   compile 'com.google.protobuf:protobuf-java:3.0.0'
   compile 'io.grpc:grpc-stub:1.0.0-pre2'
   compile 'io.grpc:grpc-protobuf:1.0.0-pre2'
+  if (JavaVersion.current().isJava9Compatible()) {
+    // Workaround for @javax.annotation.Generated
+    // see: https://github.com/grpc/grpc-java/issues/3633
+    compile 'javax.annotation:javax.annotation-api:1.3.1'
+  }
   // Extra proto source files besides the ones residing under
   // "src/main".
   protobuf files("lib/protos.tar.gz")
