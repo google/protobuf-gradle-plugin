@@ -31,8 +31,11 @@ package com.google.protobuf.gradle
 import org.apache.commons.lang.StringUtils
 import org.gradle.api.GradleException
 import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskInputs
+import org.gradle.plugins.ide.idea.GenerateIdeaModule
+import org.gradle.plugins.ide.idea.IdeaPlugin
 
 import java.util.regex.Matcher
 
@@ -90,5 +93,36 @@ class Utils {
       throw new GradleException("Failed to parse version \"${version}\"")
     }
     return matcher
+  }
+
+  static boolean isTest(String sourceSetOrVariantName) {
+    return sourceSetOrVariantName.equals("test") ||
+      sourceSetOrVariantName.toLowerCase().contains('androidtest')
+  }
+
+  /**
+   * Adds the file to the IDE plugin's set of sources / resources.
+   */
+  static void addToIdeSources(Project project, String sourceSetName, File f) {
+    IdeaPlugin idea = (IdeaPlugin) project.getPlugins().findPlugin("idea")
+    if (idea == null) {
+      return
+    }
+
+    if (isTest(sourceSetName)) {
+      idea.model.module.testSourceDirs += f
+    } else {
+      idea.model.module.sourceDirs += f
+    }
+  }
+
+  /**
+   * Sets the {@code task} as a dependency before IDE gen tasks. This allows {@code task} to
+   * update the IDE plugin's configuration before the IDE config files are generated.
+   */
+  static void runBeforeIdeTasks(Project project, Task task) {
+    project.tasks.withType(GenerateIdeaModule) {
+      it -> it.dependsOn(task)
+    }
   }
 }
