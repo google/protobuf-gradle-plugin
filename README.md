@@ -474,7 +474,7 @@ idea {
 ```
 
 
-## Testing the plugin
+## Testing the plugin (for plugin developers)
 
 ``testProject*`` are testing projects that uses this plugin to compile
 ``.proto`` files. Because the tests include an Android project, you
@@ -485,3 +485,41 @@ After you made any change to the plugin, be sure to run these tests.
 ```
 $ ./gradlew test
 ```
+
+
+## Installing the plugin locally (for plugin developers)
+
+If you want to use a ``SNAPSHOT`` version of this plugin in another project,
+you can install this to a local directory and load it from the other project.
+
+In ``build.gradle``, modify the ``uploadArchives`` block to be:
+
+```
+uploadArchives {
+    repositories {
+        maven { url uri('/tmp/mavenrepo') }
+    }
+}
+```
+
+Run ``./gradlew uploadArchives`` to install the plugin to
+``/tmp/mavenrepo``.
+
+In your test project, modify the ``buildscript`` block to be:
+
+```
+buildscript {
+  repositories {
+    maven { url "https://plugins.gradle.org/m2/" }
+    maven { url uri('/tmp/mavenrepo') }
+  }
+  dependencies {
+    classpath 'commons-lang:commons-lang:2.6'
+    classpath 'com.google.gradle:osdetector-gradle-plugin:1.4.0'
+    classpath 'com.google.protobuf:protobuf-gradle-plugin:VER-SNAPSHOT'
+  }
+}
+```
+
+Be sure to update the versions of the classpath artifacts as
+needed.
