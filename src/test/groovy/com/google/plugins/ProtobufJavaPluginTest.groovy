@@ -1,5 +1,4 @@
-package com.google.protobuf.gradle.plugins
-
+import com.google.common.collect.ImmutableSet
 import com.google.protobuf.gradle.GenerateProtoTask
 import com.google.protobuf.gradle.ProtobufExtract
 import org.gradle.api.Project
@@ -137,6 +136,64 @@ class ProtobufJavaPluginTest extends Specification {
 
     then: "it succeed"
     result.task(":build").outcome == TaskOutcome.SUCCESS
+
+    where:
+    gradleVersion << GRADLE_VERSIONS
+  }
+
+  void "testProjectIdea should be successfully executed"() {
+    given: "project from testProjectCustomProtoDir"
+    File projectDir = ProtobufPluginTestHelper.prepareTestTempDir('testProject')
+    ProtobufPluginTestHelper.copyTestProject(projectDir, 'testProject', )
+
+    when: "idea is invoked"
+    // The idea plugin does not allow adding dirs that do not exist to sourceDir and testSourceDir.
+    // Some of the protobuf directories are only created when 'generateProto' is executed.
+    // Failure to run generateProto will result in some directories being silently ignored by
+    // the idea plugin.
+    GradleRunner.create()
+    BuildResult result = GradleRunner.create()
+      .withProjectDir(projectDir)
+      .withArguments('generateProto', 'idea')
+      .withGradleVersion(gradleVersion)
+      .build()
+
+    then: "it succeed"
+    result.task(":idea").outcome == TaskOutcome.SUCCESS
+    def imlRoot = new XmlParser().parse(projectDir.toPath().resolve("testProject.iml").toFile())
+    def rootMgr = imlRoot.component.findAll {it.'@name' == 'NewModuleRootManager'}
+    assert rootMgr.size() == 1
+    assert rootMgr.content.sourceFolder.size() == 1
+
+    Set<String> sourceDir = new HashSet<>()
+    Set<String> testSourceDir = new HashSet<>()
+    rootMgr.content.sourceFolder[0].each {
+      if (Boolean.parseBoolean(it.@isTestSource)) {
+        testSourceDir.add(it.@url)
+      } else {
+        sourceDir.add(it.@url)
+      }
+    }
+
+    assert Objects.equals(
+            sourceDir,
+            ImmutableSet.builder()
+                    .add('file://$MODULE_DIR$/src/main/java')
+                    .add('file://$MODULE_DIR$/src/grpc/proto')
+                    .add('file://$MODULE_DIR$/src/main/proto')
+                    .add('file://$MODULE_DIR$/build/extracted-include-protos/grpc')
+                    .add('file://$MODULE_DIR$/build/extracted-protos/main')
+                    .add('file://$MODULE_DIR$/build/extracted-include-protos/main')
+                    .add('file://$MODULE_DIR$/build/extracted-protos/grpc')
+                    .build())
+    assert Objects.equals(
+            testSourceDir,
+            ImmutableSet.builder()
+                    .add('file://$MODULE_DIR$/src/test/java')
+                    .add('file://$MODULE_DIR$/src/test/proto')
+                    .add('file://$MODULE_DIR$/build/extracted-protos/test')
+                    .add('file://$MODULE_DIR$/build/extracted-include-protos/test')
+            .build())
 
     where:
     gradleVersion << GRADLE_VERSIONS

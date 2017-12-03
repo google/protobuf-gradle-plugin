@@ -237,7 +237,6 @@ class ProtobufPlugin implements Plugin<Project> {
       }
 
       Task generateProtoTask = addGenerateProtoTask(variant.name, sourceSets)
-      Utils.runBeforeIdeTasks(project, generateProtoTask)
       generateProtoTask.setVariant(variant, isTestVariant)
       generateProtoTask.flavors = flavorListBuilder.build()
       generateProtoTask.buildType = variant.buildType.name

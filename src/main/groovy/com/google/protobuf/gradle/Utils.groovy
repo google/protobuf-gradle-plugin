@@ -31,10 +31,8 @@ package com.google.protobuf.gradle
 import org.apache.commons.lang.StringUtils
 import org.gradle.api.GradleException
 import org.gradle.api.Project
-import org.gradle.api.Task
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskInputs
-import org.gradle.plugins.ide.idea.GenerateIdeaModule
 import org.gradle.plugins.ide.idea.IdeaPlugin
 
 import java.util.regex.Matcher
@@ -101,28 +99,19 @@ class Utils {
   }
 
   /**
-   * Adds the file to the IDE plugin's set of sources / resources.
+   * Adds the file to the IDE plugin's set of sources / resources. Note: if the directory does
+   * not exist, idea plugin will silently ignore it rather than adding it to the generated project
+   * file.
    */
   static void addToIdeSources(Project project, String sourceSetName, File f) {
     IdeaPlugin idea = (IdeaPlugin) project.getPlugins().findPlugin("idea")
     if (idea == null) {
       return
     }
-
     if (isTest(sourceSetName)) {
       idea.model.module.testSourceDirs += f
     } else {
       idea.model.module.sourceDirs += f
-    }
-  }
-
-  /**
-   * Sets the {@code task} as a dependency before IDE gen tasks. This allows {@code task} to
-   * update the IDE plugin's configuration before the IDE config files are generated.
-   */
-  static void runBeforeIdeTasks(Project project, Task task) {
-    project.tasks.withType(GenerateIdeaModule) {
-      it -> it.dependsOn(task)
     }
   }
 }
