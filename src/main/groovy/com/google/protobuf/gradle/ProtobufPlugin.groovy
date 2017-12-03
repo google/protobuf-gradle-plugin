@@ -428,4 +428,5 @@ class ProtobufPlugin implements Plugin<Project> {
     private String getExtractedProtosDir(String sourceSetName) {
       return "${project.buildDir}/extracted-protos/${sourceSetName}"
     }
+
 }

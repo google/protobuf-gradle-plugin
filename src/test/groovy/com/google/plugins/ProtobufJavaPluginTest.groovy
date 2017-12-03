@@ -1,3 +1,5 @@
+package com.google.protobuf.gradle.plugins
+
 import com.google.common.collect.ImmutableSet
 import com.google.protobuf.gradle.GenerateProtoTask
 import com.google.protobuf.gradle.ProtobufExtract
@@ -153,32 +155,27 @@ class ProtobufJavaPluginTest extends Specification {
     gradleVersion << GRADLE_VERSIONS
   }
 
-  void "testProjectIdea should be successfully executed"() {
-    given: "project from testProjectCustomProtoDir"
+  void "testProject proto directories should be successfully added to intellij"() {
+    given: "project from testProject"
     File projectDir = ProtobufPluginTestHelper.prepareTestTempDir('testProject')
     ProtobufPluginTestHelper.copyTestProject(projectDir, 'testProject', )
 
     when: "idea is invoked"
-    // The idea plugin does not allow adding dirs that do not exist to sourceDir and testSourceDir.
-    // Some of the protobuf directories are only created when 'generateProto' is executed.
-    // Failure to run generateProto will result in some directories being silently ignored by
-    // the idea plugin.
-    GradleRunner.create()
     BuildResult result = GradleRunner.create()
       .withProjectDir(projectDir)
-      .withArguments('generateProto', 'idea')
+      .withArguments('idea')
       .withGradleVersion(gradleVersion)
       .build()
 
     then: "it succeed"
     result.task(":idea").outcome == TaskOutcome.SUCCESS
-    def imlRoot = new XmlParser().parse(projectDir.toPath().resolve("testProject.iml").toFile())
-    def rootMgr = imlRoot.component.findAll {it.'@name' == 'NewModuleRootManager'}
+    Node imlRoot = new XmlParser().parse(projectDir.toPath().resolve("testProject.iml").toFile())
+    Collection rootMgr = imlRoot.component.findAll { it.'@name' == 'NewModuleRootManager' }
     assert rootMgr.size() == 1
     assert rootMgr.content.sourceFolder.size() == 1
 
-    Set<String> sourceDir = new HashSet<>()
-    Set<String> testSourceDir = new HashSet<>()
+    Set<String> sourceDir = [] as Set
+    Set<String> testSourceDir = [] as Set
     rootMgr.content.sourceFolder[0].each {
       if (Boolean.parseBoolean(it.@isTestSource)) {
         testSourceDir.add(it.@url)

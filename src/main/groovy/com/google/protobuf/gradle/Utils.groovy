@@ -33,7 +33,8 @@ import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskInputs
-import org.gradle.plugins.ide.idea.IdeaPlugin
+import org.gradle.plugins.ide.idea.GenerateIdeaModule
+import org.gradle.plugins.ide.idea.model.IdeaModel
 
 import java.util.regex.Matcher
 
@@ -93,25 +94,33 @@ class Utils {
     return matcher
   }
 
+  /**
+   * Returns true if the source set is a test related source set.
+   */
   static boolean isTest(String sourceSetOrVariantName) {
-    return sourceSetOrVariantName.equals("test") ||
+    return sourceSetOrVariantName == "test" ||
       sourceSetOrVariantName.toLowerCase().contains('androidtest')
   }
 
   /**
-   * Adds the file to the IDE plugin's set of sources / resources. Note: if the directory does
-   * not exist, idea plugin will silently ignore it rather than adding it to the generated project
-   * file.
+   * Adds the file to the IDE plugin's set of sources / resources. If the directory does
+   * not exist, it will be created before the IDE task is run.
    */
   static void addToIdeSources(Project project, String sourceSetName, File f) {
-    IdeaPlugin idea = (IdeaPlugin) project.getPlugins().findPlugin("idea")
-    if (idea == null) {
-      return
-    }
-    if (isTest(sourceSetName)) {
-      idea.model.module.testSourceDirs += f
-    } else {
-      idea.model.module.sourceDirs += f
+    project.getExtensions().findByType(IdeaModel).each { IdeaModel model ->
+      if (isTest(sourceSetName)) {
+        model.module.testSourceDirs += f
+      } else {
+        model.module.sourceDirs += f
+      }
+      project.tasks.withType(GenerateIdeaModule).each {
+        it.doFirst {
+          // This is required because the intellij plugin does not allow adding source directories
+          // that do not exist. The intellij config files to be valid from the start even if a user
+          // runs './gradlew idea' before running './gradlew generateProto'.
+          f.mkdirs()
+        }
+      }
     }
   }
 }
