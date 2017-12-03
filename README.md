@@ -448,6 +448,11 @@ lists pre-compiled ``protoc`` artifacts that can be used by this plugin.
 
 ### IntelliJ IDEA
 
+Be sure to [delegate builds to Gradle](https://www.jetbrains.com/idea/whatsnew/#v2016-3-gradle)
+so that Intellij does not ues its internal build mechanism to compile source code. This plugin
+ensures that code generation happens before building sources. Without this setting, Intellij's
+own build system will fail to invoke this plugin.
+
 If IntelliJ complains that the generated classes are not found, you
 can include the following block in you `build.gradle` to ask IntelliJ
 to include the generated Java directories as source folders using the IDEA plugin.
