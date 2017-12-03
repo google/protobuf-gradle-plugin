@@ -33,30 +33,17 @@ buildscript {
 }
 ```
 
-Latest changes are included in the SNAPSHOT artifact:
-```gradle
-buildscript {
-  repositories {
-    maven {
-       url 'https://oss.sonatype.org/content/repositories/snapshots/'
-    }
-  }
-  dependencies {
-    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.3-SNAPSHOT'
-  }
-}
-```
+To try out the head version, you can download the source and build it
+with ``./gradlew install -x test`` (we skip tests here because they
+require Android SDK), then:
 
-However, the availability and freshness of the SNAPSHOT artifact are not
-guaranteed. You can instead download the source and build it with ``./gradlew
-install``, then:
 ```gradle
 buildscript {
   repositories {
     mavenLocal()
   }
   dependencies {
-    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.3-SNAPSHOT'
+    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.4-SNAPSHOT'
   }
 }
 ```
@@ -293,18 +280,27 @@ Put options in the braces if wanted.  For example:
 
 ```gradle
 task.builtins {
+  // This yields
+  // "--java_out=example_option1=true,example_option2:/path/to/output"
+  // on the protoc commandline, which is equivalent to
+  // "--java_out=/path/to/output --java_opt=example_option1=true,example_option2"
+  // with the latest version of protoc.
   java {
     option 'example_option1=true'
     option 'example_option2'
   }
   // Add cpp output without any option.
   // DO NOT omit the braces if you want this builtin to be added.
+  // This yields
+  // "--cpp_out=/path/to/output" on the protoc commandline.
   cpp { }
 }
 
 task.plugins {
   // Add grpc output without any option.  grpc must have been defined in the
   // protobuf.plugins block.
+  // This yields
+  // "--grpc_out=/path/to/output" on the protoc commandline.
   grpc { }
 }
 ```
@@ -340,6 +336,10 @@ dependencies {
 }
 
 protobuf {
+  protoc {
+    // You still need protoc like in the non-Android case
+    artifact = 'com.google.protobuf:protoc:3.0.0'
+  }
   plugins {
     javalite {
       // The codegen for lite comes as a separate artifact
@@ -348,6 +348,11 @@ protobuf {
   }
   generateProtoTasks {
     all().each { task ->
+      task.builtins {
+        // In most cases you don't need the full Java output
+        // if you use the lite output.
+        remove java
+      }
       task.plugins {
         javalite { }
       }

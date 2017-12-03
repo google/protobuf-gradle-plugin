@@ -12,7 +12,7 @@ import spock.lang.Specification
  * Unit tests for normal java functionality.
  */
 class ProtobufJavaPluginTest extends Specification {
-  private static final List<String> GRADLE_VERSIONS = ["2.12", "3.0", "4.0"]
+  private static final List<String> GRADLE_VERSIONS = ["2.12", "3.0", "4.0", "4.3"]
 
   private Project setupBasicProject() {
     Project project = ProjectBuilder.builder().build()
@@ -63,8 +63,11 @@ class ProtobufJavaPluginTest extends Specification {
     when: "build is invoked"
     BuildResult result = GradleRunner.create()
       .withProjectDir(projectDir)
-      .withArguments('build')
+      .withArguments('build', '--stacktrace')
       .withGradleVersion(gradleVersion)
+      .forwardStdOutput(new OutputStreamWriter(System.out))
+      .forwardStdError(new OutputStreamWriter(System.err))
+      .withDebug(true)
       .build()
 
     then: "it succeed"
@@ -92,8 +95,11 @@ class ProtobufJavaPluginTest extends Specification {
     when: "build is invoked"
     BuildResult result = GradleRunner.create()
       .withProjectDir(projectDir)
-      .withArguments('build')
+      .withArguments('build', '--stacktrace')
       .withGradleVersion(gradleVersion)
+      .forwardStdOutput(new OutputStreamWriter(System.out))
+      .forwardStdError(new OutputStreamWriter(System.err))
+      .withDebug(true)
       .build()
 
     then: "it succeed"
@@ -111,8 +117,11 @@ class ProtobufJavaPluginTest extends Specification {
     when: "build is invoked"
     BuildResult result = GradleRunner.create()
       .withProjectDir(mainProjectDir)
-      .withArguments('testProjectDependent:build')
+      .withArguments('testProjectDependent:build', '--stacktrace')
       .withGradleVersion(gradleVersion)
+      .forwardStdOutput(new OutputStreamWriter(System.out))
+      .forwardStdError(new OutputStreamWriter(System.err))
+      .withDebug(true)
       .build()
 
     then: "it succeed"
@@ -130,8 +139,11 @@ class ProtobufJavaPluginTest extends Specification {
     when: "build is invoked"
     BuildResult result = GradleRunner.create()
       .withProjectDir(projectDir)
-      .withArguments('build')
+      .withArguments('build', '--stacktrace')
       .withGradleVersion(gradleVersion)
+      .forwardStdOutput(new OutputStreamWriter(System.out))
+      .forwardStdError(new OutputStreamWriter(System.err))
+      .withDebug(true)
       .build()
 
     then: "it succeed"
@@ -197,5 +209,92 @@ class ProtobufJavaPluginTest extends Specification {
 
     where:
     gradleVersion << GRADLE_VERSIONS
+  }
+
+  void "test generateCmds should split commands when limit exceeded"() {
+    given: "a cmd length limit and two proto files"
+
+    String baseCmd = "protoc"
+    List<File> protoFiles = [ new File("short.proto"), new File("long_proto_name.proto") ]
+    int cmdLengthLimit = 32
+
+    when: "the commands are generated"
+
+    List<String> cmds = GenerateProtoTask.generateCmds(baseCmd, protoFiles, cmdLengthLimit)
+
+    then: "it splits appropriately"
+    cmds.size() == 2 && cmds[0] == "protoc short.proto" && cmds[1] == "protoc long_proto_name.proto"
+  }
+
+  void "test generateCmds should not split commands when under limit"() {
+    given: "a cmd length limit and two proto files"
+
+    String baseCmd = "protoc"
+    List<File> protoFiles = [ new File("short.proto"), new File("long_proto_name.proto") ]
+    int cmdLengthLimit = 64
+
+    when: "the commands are generated"
+
+    List<String> cmds = GenerateProtoTask.generateCmds(baseCmd, protoFiles, cmdLengthLimit)
+
+    then: "it splits appropriately"
+    cmds.size() == 1 && cmds[0] == "protoc short.proto long_proto_name.proto"
+  }
+
+  void "test generateCmds should not return commands when no protos are given"() {
+    given: "a cmd length limit and no proto files"
+
+    String baseCmd = "protoc"
+    List<File> protoFiles = []
+    int cmdLengthLimit = 32
+
+    when: "the commands are generated"
+
+    List<String> cmds = GenerateProtoTask.generateCmds(baseCmd, protoFiles, cmdLengthLimit)
+
+    then: "it returns no commands"
+    cmds.isEmpty()
+  }
+
+  void "test getCmdLengthLimit returns correct limit for Windows XP"() {
+    given: "Windows OS at major version 5"
+
+    String os = "windows"
+    String version = "5.0.0"
+
+    when: "the command length limit is queried"
+
+    int limit = GenerateProtoTask.getCmdLengthLimit(os, version)
+
+    then: "it returns the XP limit"
+    limit == GenerateProtoTask.XP_CMD_LENGTH_LIMIT
+  }
+
+  void "test getCmdLengthLimit returns correct limit for Windows Vista"() {
+    given: "Windows OS at major version 6"
+
+    String os = "Windows"
+    String version = "6.0.0"
+
+    when: "the command length limit is queried"
+
+    int limit = GenerateProtoTask.getCmdLengthLimit(os, version)
+
+    then: "it returns the Vista limit"
+    limit == GenerateProtoTask.VISTA_CMD_LENGTH_LIMIT
+  }
+
+  void "test getCmdLengthLimit returns correct limit for non-Windows OS"() {
+    given: "MacOS X at major version 10"
+
+    String os = "Mac OS X"
+    String version = "10.0.0"
+
+    when: "the command length limit is queried"
+
+    int limit = GenerateProtoTask.getCmdLengthLimit(os, version)
+
+    then: "it returns maximum integer value"
+    limit == Integer.MAX_VALUE
   }
 }

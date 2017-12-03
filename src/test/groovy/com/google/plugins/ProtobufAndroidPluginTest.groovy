@@ -54,7 +54,7 @@ buildscript {
     result.task(":testProjectAndroid:build").outcome == TaskOutcome.SUCCESS
 
     where:
-    androidPluginVersion << ["2.2.0", "2.2.0", "3.0.0-alpha7"]
-    gradleVersion << ["2.14.1", "3.0", "4.1-milestone-1"]
+    androidPluginVersion << ["2.2.0", "2.2.0", "2.3.0", "2.3.0"]
+    gradleVersion << ["2.14.1", "3.0", "4.2", "4.3"]
   }
 }
