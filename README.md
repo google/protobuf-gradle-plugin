@@ -448,7 +448,7 @@ lists pre-compiled ``protoc`` artifacts that can be used by this plugin.
 
 ### IntelliJ IDEA
 
-Be sure to [delegate builds to Gradle](https://www.jetbrains.com/idea/whatsnew/#v2016-3-gradle)
+Be sure to enable [Delegating IDE build/run actions to Gradle](https://blog.jetbrains.com/idea/2016/10/intellij-idea-2016-3-eap-refactorings-to-java-8-vcs-integration-and-gradle/)
 so that Intellij does not use its internal build mechanism to compile source code. This plugin
 ensures that code generation happens before Gradle's build step. Without this setting, Intellij's
 own build system will be used instead of Gradle.
