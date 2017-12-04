@@ -479,7 +479,7 @@ idea {
 ```
 
 
-## Testing the plugin
+## Testing the plugin (for plugin developers)
 
 ``testProject*`` are testing projects that uses this plugin to compile
 ``.proto`` files. Because the tests include an Android project, you
@@ -490,3 +490,29 @@ After you made any change to the plugin, be sure to run these tests.
 ```
 $ ./gradlew test
 ```
+
+
+## Installing the plugin locally (for plugin developers)
+
+If you want to use a ``SNAPSHOT`` version of this plugin in another project,
+you can install this locally and load it from the other project.
+
+
+Run ``./gradlew install`` to install the plugin locally.
+
+In your test project, modify the ``buildscript`` block to be:
+
+```
+buildscript {
+  repositories {
+    maven { url "https://plugins.gradle.org/m2/" }
+    mavenLocal()
+  }
+  dependencies {
+    classpath 'com.google.protobuf:protobuf-gradle-plugin:VER-SNAPSHOT'
+  }
+}
+```
+
+Be sure to update the versions of the classpath artifacts as
+needed.
