@@ -490,20 +490,10 @@ $ ./gradlew test
 ## Installing the plugin locally (for plugin developers)
 
 If you want to use a ``SNAPSHOT`` version of this plugin in another project,
-you can install this to a local directory and load it from the other project.
+you can install this locally and load it from the other project.
 
-In ``build.gradle``, modify the ``uploadArchives`` block to be:
 
-```
-uploadArchives {
-    repositories {
-        maven { url uri('/tmp/mavenrepo') }
-    }
-}
-```
-
-Run ``./gradlew uploadArchives`` to install the plugin to
-``/tmp/mavenrepo``.
+Run ``./gradlew install`` to install the plugin locally.
 
 In your test project, modify the ``buildscript`` block to be:
 
@@ -511,11 +501,9 @@ In your test project, modify the ``buildscript`` block to be:
 buildscript {
   repositories {
     maven { url "https://plugins.gradle.org/m2/" }
-    maven { url uri('/tmp/mavenrepo') }
+    mavenLocal()
   }
   dependencies {
-    classpath 'commons-lang:commons-lang:2.6'
-    classpath 'com.google.gradle:osdetector-gradle-plugin:1.4.0'
     classpath 'com.google.protobuf:protobuf-gradle-plugin:VER-SNAPSHOT'
   }
 }
