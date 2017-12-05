@@ -448,10 +448,18 @@ lists pre-compiled ``protoc`` artifacts that can be used by this plugin.
 
 ### IntelliJ IDEA
 
-Be sure to enable [Delegating IDE build/run actions to Gradle](https://blog.jetbrains.com/idea/2016/10/intellij-idea-2016-3-eap-refactorings-to-java-8-vcs-integration-and-gradle/)
-so that Intellij does not use its internal build mechanism to compile source code. This plugin
-ensures that code generation happens before Gradle's build step. Without this setting, Intellij's
-own build system will be used instead of Gradle.
+Be sure to enable delegate IDE build/run actions to Gradle so
+that Intellij does not use its internal build mechanism to
+compile source code. This plugin ensures that code generation
+happens before Gradle's build step. If the setting is off,
+Intellij's own build system will be used instead of Gradle.
+
+Enable the setting with:
+```
+Settings -> Build, Execution, Deployment
+  -> Build Tools -> Gradle -> Runner
+  -> Delegate IDE build/run actions to gradle.
+```
 
 If IntelliJ complains that the generated classes are not found, you
 can include the following block in you `build.gradle` to ask IntelliJ
