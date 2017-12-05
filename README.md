@@ -453,6 +453,19 @@ lists pre-compiled ``protoc`` artifacts that can be used by this plugin.
 
 ### IntelliJ IDEA
 
+Be sure to enable delegate IDE build/run actions to Gradle so
+that Intellij does not use its internal build mechanism to
+compile source code. This plugin ensures that code generation
+happens before Gradle's build step. If the setting is off,
+Intellij's own build system will be used instead of Gradle.
+
+Enable the setting with:
+```
+Settings -> Build, Execution, Deployment
+  -> Build Tools -> Gradle -> Runner
+  -> Delegate IDE build/run actions to gradle.
+```
+
 If IntelliJ complains that the generated classes are not found, you
 can include the following block in you `build.gradle` to ask IntelliJ
 to include the generated Java directories as source folders using the IDEA plugin.
