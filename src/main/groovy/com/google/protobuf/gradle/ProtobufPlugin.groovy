@@ -322,6 +322,12 @@ class ProtobufPlugin implements Plugin<Project> {
           inputs.dir extractedIncludeProtoSources
           // Add the extracted include dir to the --proto_path include paths.
           include extractedIncludeProtoSources.dir
+
+          protoSrcDirSet.srcDirs.each {
+            srcDir -> Utils.addToIdeSources(project, sourceSetOrVariantName, srcDir)
+          }
+          Utils.addToIdeSources(project, sourceSetOrVariantName, getExtractedProtosDir(sourceSet.name) as File)
+          Utils.addToIdeSources(project, sourceSetOrVariantName, getExtractedIncludeProtosDir(sourceSet.name) as File)
         }
       }
     }
@@ -380,7 +386,7 @@ class ProtobufPlugin implements Plugin<Project> {
           // TODO(zhangkun83): Android sourceSet doesn't have compileClasspath. If it did, we
           // haven't figured out a way to put source protos in 'resources'. For now we use an ad-hoc
           // solution that manually includes the source protos of 'main' and its dependencies.
-          if (sourceSetOrVariantName.toLowerCase().contains('androidtest')) {
+          if (Utils.isTest(sourceSetOrVariantName)) {
             inputs.files getSourceSets()['main'].proto
             inputs.files testedCompileClasspathConfiguration ?: project.configurations['compile']
           }

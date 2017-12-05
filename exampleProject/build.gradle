@@ -4,6 +4,7 @@
 
 apply plugin: 'java'
 apply plugin: 'com.google.protobuf'
+apply plugin: 'idea'
 
 repositories {
   maven { url "https://plugins.gradle.org/m2/" }
