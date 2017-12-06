@@ -38,16 +38,26 @@ repositories {
     maven { url "https://plugins.gradle.org/m2/" }
 }
 
-// Write the plugin's classpath to a file to share with the tests
+configurations {
+    // Test projects may have runtime dependencies such as the kotlin plugin
+    testProjectRuntime
+}
+
+/**
+ * Write file containing all the things that should be in the test projects' class path. This
+ * includes the current SNAPSHOT version of protobuf-gradle-plugin and whatever else may be
+ * needed by the test projects such as other plugins or libraries.
+ */
 task createClasspathManifest {
     def outputDir = file("$buildDir/$name")
 
     inputs.files sourceSets.main.runtimeClasspath
+    inputs.files configurations.testProjectRuntime
     outputs.dir outputDir
 
     doLast {
         outputDir.mkdirs()
-        file("$outputDir/plugin-classpath.txt").text = sourceSets.main.runtimeClasspath.join("\n")
+        file("$outputDir/plugin-classpath.txt").text = inputs.files.join("\n")
     }
 }
 
@@ -66,6 +76,8 @@ dependencies {
       exclude module : 'groovy-all'
     }
     testCompile 'commons-io:commons-io:2.5'
+
+    testProjectRuntime "org.jetbrains.kotlin:kotlin-gradle-plugin:1.2.0"
 
     // Add the classpath file to the test runtime classpath
     testRuntime files(createClasspathManifest)

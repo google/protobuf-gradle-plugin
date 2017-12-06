@@ -40,6 +40,7 @@ import org.gradle.api.attributes.Attribute
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.FileCollection
 import org.gradle.api.internal.file.FileResolver
+import org.gradle.api.logging.LogLevel
 import org.gradle.api.plugins.AppliedPlugin
 import org.gradle.api.tasks.SourceSet
 
@@ -58,6 +59,23 @@ class ProtobufPlugin implements Plugin<Project> {
             'android',
             'android-library',
     ]
+
+    private static final String USER_LANG_PROP = 'protobuf_gradle_plugin_additional_languages'
+    private static final List<String> SUPPORTED_LANGUAGES = [
+        'java',
+        'kotlin',
+    ]
+
+    private static List<String> getLanguages(Project project) {
+      List<String> additionalLanguages = []
+      if (project.hasProperty(USER_LANG_PROP)) {
+        additionalLanguages = (List<String>) project.property(USER_LANG_PROP)
+        project.logger.log(
+            LogLevel.WARN,
+            "protobuf plugin is now using additional unsupported languages: " + additionalLanguages)
+      }
+      return SUPPORTED_LANGUAGES + additionalLanguages
+    }
 
     private final FileResolver fileResolver
     private Project project
@@ -409,12 +427,22 @@ class ProtobufPlugin implements Plugin<Project> {
           }
         }
       } else {
-        project.sourceSets.each { sourceSet ->
-          Task javaCompileTask = project.tasks.getByName(sourceSet.getCompileTaskName("java"))
-          project.protobuf.generateProtoTasks.ofSourceSet(sourceSet.name).each { generateProtoTask ->
-            javaCompileTask.dependsOn(generateProtoTask)
-            generateProtoTask.getAllOutputDirs().each { dir ->
-              javaCompileTask.source project.fileTree([dir:dir])
+        project.sourceSets.each { SourceSet sourceSet ->
+          project.protobuf.generateProtoTasks.ofSourceSet(sourceSet.name).each { GenerateProtoTask genProto ->
+            getLanguages(project).each { String lang ->
+              Task compileTask = project.tasks.findByName(sourceSet.getCompileTaskName(lang))
+              if (compileTask != null) {
+                compileTask.dependsOn(genProto)
+                genProto.getAllOutputDirs().each { dir ->
+                  // The Java plugin requires the dir in FileTree form, but the Kotlin plugin requires
+                  // a File. It appears safe to generically supply both here. This
+                  // *may* also work for additional languages such as scala, but this theory
+                  // is untested. Set the project property read in getSupportedLanguages to
+                  // to add other languages to the whitelist.
+                  compileTask.source project.fileTree([dir:dir])
+                  compileTask.source dir
+                }
+              }
             }
           }
         }

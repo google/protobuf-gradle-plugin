@@ -68,6 +68,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <exclude name="AbcMetric"/>
     <exclude name="CrapMetric"/>
     <exclude name="CyclomaticComplexity"/>
+    <exclude name="NestedBlockDepth"/>
   </ruleset-ref>
   <ruleset-ref path='rulesets/unused.xml'/>
   <ruleset-ref path='rulesets/unnecessary.xml'>
