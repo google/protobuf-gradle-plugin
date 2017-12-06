@@ -197,10 +197,11 @@ public class GenerateProtoTask extends DefaultTask {
   void doneConfig() {
     Preconditions.checkState(state == State.CONFIG, "Invalid state: ${state}")
     state = State.FINALIZED
+    String sourceSetOrVariantName = Utils.isAndroidProject(project) ? variant.name : sourceSet.name
     // builtins and plugins can be repeatedly modified until doneConfig() is called.
     // Now that they are finalized, register the directories with intellij.
     [builtins, plugins]*.each {
-      Utils.addToIdeSources(project, sourceSet.name, new File(getOutputDir(it)))
+      Utils.addToIdeSources(project, sourceSetOrVariantName, new File(getOutputDir(it)))
     }
   }
 
