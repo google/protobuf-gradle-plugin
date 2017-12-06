@@ -187,21 +187,25 @@ class ProtobufJavaPluginTest extends Specification {
     assert Objects.equals(
             sourceDir,
             ImmutableSet.builder()
-                    .add('file://$MODULE_DIR$/src/main/java')
-                    .add('file://$MODULE_DIR$/src/grpc/proto')
-                    .add('file://$MODULE_DIR$/src/main/proto')
-                    .add('file://$MODULE_DIR$/build/extracted-include-protos/grpc')
-                    .add('file://$MODULE_DIR$/build/extracted-protos/main')
-                    .add('file://$MODULE_DIR$/build/extracted-include-protos/main')
-                    .add('file://$MODULE_DIR$/build/extracted-protos/grpc')
-                    .build())
+                .add('file://$MODULE_DIR$/src/main/java')
+                .add('file://$MODULE_DIR$/src/grpc/proto')
+                .add('file://$MODULE_DIR$/src/main/proto')
+                .add('file://$MODULE_DIR$/build/extracted-include-protos/grpc')
+                .add('file://$MODULE_DIR$/build/extracted-protos/main')
+                .add('file://$MODULE_DIR$/build/extracted-include-protos/main')
+                .add('file://$MODULE_DIR$/build/extracted-protos/grpc')
+                .add('file://$MODULE_DIR$/build/generated/source/proto/grpc/java')
+                .add('file://$MODULE_DIR$/build/generated/source/proto/grpc/grpc_output')
+                .add('file://$MODULE_DIR$/build/generated/source/proto/main/java')
+                .build())
     assert Objects.equals(
             testSourceDir,
             ImmutableSet.builder()
-                    .add('file://$MODULE_DIR$/src/test/java')
-                    .add('file://$MODULE_DIR$/src/test/proto')
-                    .add('file://$MODULE_DIR$/build/extracted-protos/test')
-                    .add('file://$MODULE_DIR$/build/extracted-include-protos/test')
+                .add('file://$MODULE_DIR$/src/test/java')
+                .add('file://$MODULE_DIR$/src/test/proto')
+                .add('file://$MODULE_DIR$/build/extracted-protos/test')
+                .add('file://$MODULE_DIR$/build/extracted-include-protos/test')
+                .add('file://$MODULE_DIR$/build/generated/source/proto/test/java')
             .build())
 
     where:
