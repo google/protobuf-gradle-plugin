@@ -109,6 +109,8 @@ class Utils {
   static void addToIdeSources(Project project, String sourceSetName, File f) {
     IdeaModel model = project.getExtensions().findByType(IdeaModel)
     if (model != null) {
+      // TODO(zpencer): switch to model.module.generatedSourceDirs when that API becomes stable
+      // For now, just hint to the IDE that it's a source dir or a test source dir.
       if (isTest(sourceSetName)) {
         model.module.testSourceDirs += f
       } else {

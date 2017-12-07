@@ -197,6 +197,12 @@ public class GenerateProtoTask extends DefaultTask {
   void doneConfig() {
     Preconditions.checkState(state == State.CONFIG, "Invalid state: ${state}")
     state = State.FINALIZED
+    String sourceSetOrVariantName = Utils.isAndroidProject(project) ? variant.name : sourceSet.name
+    // builtins and plugins can be repeatedly modified until doneConfig() is called.
+    // Now that they are finalized, register the directories with intellij.
+    [builtins, plugins]*.each {
+      Utils.addToIdeSources(project, sourceSetOrVariantName, new File(getOutputDir(it)))
+    }
   }
 
   String getDescriptorPath() {
@@ -218,7 +224,7 @@ public class GenerateProtoTask extends DefaultTask {
   //===========================================================================
 
   /**
-   * Configures the protoc builtins in a closure, which will be maniuplating a
+   * Configures the protoc builtins in a closure, which will be manipulating a
    * NamedDomainObjectContainer<PluginOptions>.
    */
   public void builtins(Closure configureClosure) {
