@@ -123,6 +123,9 @@ class ProtobufPlugin implements Plugin<Project> {
           // protoc and codegen plugin configuration may change through the protobuf{}
           // block. Only at this point the configuration has been finalized.
           project.protobuf.tools.registerTaskDependencies(project.protobuf.getGenerateProtoTasks().all())
+
+          // Register proto and generated sources with IDE
+          addSourcesToIde()
         }
     }
 
@@ -322,12 +325,6 @@ class ProtobufPlugin implements Plugin<Project> {
           inputs.dir extractedIncludeProtoSources
           // Add the extracted include dir to the --proto_path include paths.
           include extractedIncludeProtoSources.dir
-
-          protoSrcDirSet.srcDirs.each {
-            srcDir -> Utils.addToIdeSources(project, sourceSetOrVariantName, srcDir)
-          }
-          Utils.addToIdeSources(project, sourceSetOrVariantName, getExtractedProtosDir(sourceSet.name) as File)
-          Utils.addToIdeSources(project, sourceSetOrVariantName, getExtractedIncludeProtosDir(sourceSet.name) as File)
         }
       }
     }
@@ -351,6 +348,7 @@ class ProtobufPlugin implements Plugin<Project> {
         description = "Extracts proto files/dependencies specified by 'protobuf' configuration"
         destDir = getExtractedProtosDir(sourceSetName) as File
         inputs.files project.configurations[Utils.getConfigName(sourceSetName, 'protobuf')]
+        isTest = Utils.isTest(sourceSetName)
       }
     }
 
@@ -397,6 +395,7 @@ class ProtobufPlugin implements Plugin<Project> {
           // extended configuration, not just 'testCompile'.
           inputs.files getSourceSets()[sourceSetOrVariantName].compileClasspath
         }
+        isTest = Utils.isTest(sourceSetOrVariantName)
       }
     }
 
@@ -429,4 +428,26 @@ class ProtobufPlugin implements Plugin<Project> {
       return "${project.buildDir}/extracted-protos/${sourceSetName}"
     }
 
+    /**
+     * Adds proto sources and generated sources to supported IDE plugins.
+     */
+    private void addSourcesToIde() {
+      // Make the proto source dirs known to IDEs
+      getSourceSets().each { sourceSet ->
+        ProtobufSourceDirectorySet protoSrcDirSet = sourceSet.proto
+        protoSrcDirSet.srcDirs.each { File protoDir ->
+          Utils.addToIdeSources(project, Utils.isTest(sourceSet.name), protoDir)
+        }
+      }
+      // Make the extracted proto dirs known to IDEs
+      project.tasks.withType(ProtobufExtract).each { ProtobufExtract extractProtoTask ->
+        Utils.addToIdeSources(project, extractProtoTask.isTest, extractProtoTask.destDir)
+      }
+      // Make the generated code dirs known to IDEs
+      project.tasks.withType(GenerateProtoTask).each {  GenerateProtoTask generateProtoTask ->
+        generateProtoTask.allOutputDirs.each { File outputDir ->
+          Utils.addToIdeSources(project, generateProtoTask.isTest, outputDir)
+        }
+      }
+    }
 }

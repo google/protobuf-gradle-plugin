@@ -42,11 +42,21 @@ class ProtobufExtract extends DefaultTask {
    * The directory for the extracted files.
    */
   private File destDir
+  private Boolean isTest = null
 
   protected void setDestDir(File destDir) {
     Preconditions.checkState(this.destDir == null, 'destDir already set')
     this.destDir = destDir
     outputs.dir destDir
+  }
+
+  public void setIsTest(boolean isTest) {
+    this.isTest = isTest
+  }
+
+  public boolean getIsTest() {
+    Preconditions.checkNotNull(isTest)
+    return isTest
   }
 
   protected File getDestDir() {

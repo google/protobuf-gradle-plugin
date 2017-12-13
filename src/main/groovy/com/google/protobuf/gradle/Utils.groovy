@@ -106,12 +106,12 @@ class Utils {
    * Adds the file to the IDE plugin's set of sources / resources. If the directory does
    * not exist, it will be created before the IDE task is run.
    */
-  static void addToIdeSources(Project project, String sourceSetName, File f) {
+  static void addToIdeSources(Project project, boolean isTest, File f) {
     IdeaModel model = project.getExtensions().findByType(IdeaModel)
     if (model != null) {
       // TODO(zpencer): switch to model.module.generatedSourceDirs when that API becomes stable
       // For now, just hint to the IDE that it's a source dir or a test source dir.
-      if (isTest(sourceSetName)) {
+      if (isTest) {
         model.module.testSourceDirs += f
       } else {
         model.module.sourceDirs += f
@@ -119,8 +119,8 @@ class Utils {
       project.tasks.withType(GenerateIdeaModule).each {
         it.doFirst {
           // This is required because the intellij plugin does not allow adding source directories
-          // that do not exist. The intellij config files to be valid from the start even if a user
-          // runs './gradlew idea' before running './gradlew generateProto'.
+          // that do not exist. The intellij config files should be valid from the start even if a
+          // user runs './gradlew idea' before running './gradlew generateProto'.
           f.mkdirs()
         }
       }
