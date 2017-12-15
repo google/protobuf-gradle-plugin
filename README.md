@@ -466,9 +466,9 @@ Settings -> Build, Execution, Deployment
   -> Delegate IDE build/run actions to gradle.
 ```
 
-If IntelliJ complains that the generated classes are not found, you
-can include the following block in you `build.gradle` to ask IntelliJ
-to include the generated Java directories as source folders using the IDEA plugin.
+This plugin integrates with the ``idea`` plugin and automatically
+registers the proto files and generated Java code as sources.
+
 
 ```gradle
 apply plugin: 'idea'
@@ -484,9 +484,10 @@ clean {
 
 idea {
     module {
-        sourceDirs += file("${protobuf.generatedFilesBaseDir}/main/java");
-        // If you have additional sourceSets and/or codegen plugins, add all of them
-        sourceDirs += file("${protobuf.generatedFilesBaseDir}/main/grpc");
+        // proto files and generated Java files are automatically added as
+        // source dirs.
+        // If you have additional sources, add them here:
+        sourceDirs += file("/path/to/other/sources");
     }
 }
 ```
