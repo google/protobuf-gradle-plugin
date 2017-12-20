@@ -1,4 +1,4 @@
-package com.google.protobuf.gradle.plugins
+package com.google.protobuf.gradle
 
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
@@ -14,15 +14,18 @@ class ProtobufAndroidPluginTest extends Specification {
 
   void "testProjectAndroid should be successfully executed (java only)"() {
     given: "project from testProject, testProjectLite & testProjectAndroid"
-    File testProjectStaging = ProtobufPluginTestHelper.createTestProject(
-        'testProject', 'testProjectBase', 'testProject')
-    File testProjectAndroidStaging = ProtobufPluginTestHelper.createTestProject(
-        'testProjectAndroid', 'testProjectAndroidBase', 'testProjectAndroid')
-    File testProjectLiteStaging = ProtobufPluginTestHelper.createTestProject(
-        'testProjectLite', 'testProjectLite')
-    File mainProjectDir = ProtobufPluginTestHelper.createTestProject('testProjectAndroidMain')
-    ProtobufPluginTestHelper.initializeSubProjects(
-        mainProjectDir, testProjectStaging, testProjectLiteStaging, testProjectAndroidStaging)
+    File testProjectStaging = ProtobufPluginTestHelper.projectBuilder('testProject')
+        .copyDirs('testProjectBase', 'testProject')
+        .build()
+    File testProjectAndroidStaging = ProtobufPluginTestHelper.projectBuilder('testProjectAndroid')
+        .copyDirs('testProjectAndroidBase', 'testProjectAndroid')
+        .build()
+    File testProjectLiteStaging = ProtobufPluginTestHelper.projectBuilder('testProjectLite')
+        .copyDirs('testProjectLite')
+        .build()
+    File mainProjectDir = ProtobufPluginTestHelper.projectBuilder('testProjectAndroidMain')
+        .copySubProjects(testProjectStaging, testProjectLiteStaging, testProjectAndroidStaging)
+        .build()
     when: "build is invoked"
     BuildResult result = testHelper(mainProjectDir, androidPluginVersion, gradleVersion)
 
@@ -36,15 +39,18 @@ class ProtobufAndroidPluginTest extends Specification {
 
   void "testProjectAndroidKotlin should be successfully executed (kotlin only)"() {
     given: "project from testProject, testProjectLite & testProjectAndroid"
-    File testProjectStaging = ProtobufPluginTestHelper.createTestProject(
-        'testProject', 'testProjectBase', 'testProject')
-    File testProjectAndroidStaging = ProtobufPluginTestHelper.createTestProject(
-        'testProjectAndroid', 'testProjectAndroidBase', 'testProjectAndroidKotlin')
-    File testProjectLiteStaging = ProtobufPluginTestHelper.createTestProject(
-        'testProjectLite', 'testProjectLite')
-    File mainProjectDir = ProtobufPluginTestHelper.createTestProject('testProjectAndroidMain')
-    ProtobufPluginTestHelper.initializeSubProjects(
-        mainProjectDir, testProjectStaging, testProjectLiteStaging, testProjectAndroidStaging)
+    File testProjectStaging = ProtobufPluginTestHelper.projectBuilder('testProject')
+        .copyDirs('testProjectBase', 'testProject')
+        .build()
+    File testProjectAndroidStaging = ProtobufPluginTestHelper.projectBuilder('testProjectAndroid')
+        .copyDirs('testProjectAndroidBase', 'testProjectAndroidKotlin')
+        .build()
+    File testProjectLiteStaging = ProtobufPluginTestHelper.projectBuilder('testProjectLite')
+        .copyDirs('testProjectLite')
+        .build()
+    File mainProjectDir = ProtobufPluginTestHelper.projectBuilder('testProjectAndroidMain')
+        .copySubProjects(testProjectStaging, testProjectLiteStaging, testProjectAndroidStaging)
+        .build()
     when: "build is invoked"
     BuildResult result = testHelper(mainProjectDir, androidPluginVersion, gradleVersion)
 
