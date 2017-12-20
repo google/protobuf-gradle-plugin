@@ -60,7 +60,7 @@ class ProtobufPlugin implements Plugin<Project> {
             'android-library',
     ]
 
-    private static final String USER_LANG_PROP = 'protobuf_gradle_plugin_additional_languages'
+    private static final String USER_LANG_PROP = 'protobufGradlePluginAdditionalLanguages'
     private static final List<String> SUPPORTED_LANGUAGES = [
         'java',
         'kotlin',
