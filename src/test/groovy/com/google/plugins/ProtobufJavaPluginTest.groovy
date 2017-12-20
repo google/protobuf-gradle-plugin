@@ -11,7 +11,7 @@ import org.gradle.testkit.runner.TaskOutcome
 import spock.lang.Specification
 
 /**
- * Unit tests for normal java functionality.
+ * Unit tests for normal java and kotlin functionality.
  */
 class ProtobufJavaPluginTest extends Specification {
   private static final List<String> GRADLE_VERSIONS = ["2.12", "3.0", "4.0", "4.3"]
@@ -57,10 +57,10 @@ class ProtobufJavaPluginTest extends Specification {
     assert project.tasks.extractMain2Proto instanceof ProtobufExtract
   }
 
-  void "testProject should be successfully executed"() {
+  void "testProject should be successfully executed (java-only project)"() {
     given: "project from testProject"
-    File projectDir = ProtobufPluginTestHelper.prepareTestTempDir('testProject')
-    ProtobufPluginTestHelper.copyTestProject(projectDir, 'testProject')
+    File projectDir = ProtobufPluginTestHelper.createTestProject(
+        'testProject', 'testProjectBase', 'testProject')
 
     when: "build is invoked"
     BuildResult result = GradleRunner.create()
@@ -74,16 +74,51 @@ class ProtobufJavaPluginTest extends Specification {
 
     then: "it succeed"
     result.task(":build").outcome == TaskOutcome.SUCCESS
-    ['grpc', 'main', 'test'].each {
-      File generatedSrcDir = new File(projectDir.path, "build/generated/source/proto/$it")
-      List<File> fileList = []
-      generatedSrcDir.eachFileRecurse { file ->
-        if (file.path.endsWith('.java')) {
-          fileList.add (file)
-        }
-      }
-      assert fileList.size > 0
-    }
+    verifyProjectDirHelper(projectDir)
+
+    where:
+    gradleVersion << GRADLE_VERSIONS
+  }
+
+  void "testProjectKotlin should be successfully executed (kotlin-only project)"() {
+    given: "project from testProjectKotlin overlaid on testProject"
+    File projectDir = ProtobufPluginTestHelper.createTestProject(
+        'testProjectKotlin', 'testProjectBase', 'testProjectKotlin')
+
+    when: "build is invoked"
+    BuildResult result = GradleRunner.create()
+      .withProjectDir(projectDir)
+      .withArguments('build')
+      .withDebug(true)
+      .build()
+
+    then: "it succeed"
+    result.task(":build").outcome == TaskOutcome.SUCCESS
+    verifyProjectDirHelper(projectDir)
+
+    where:
+    gradleVersion << GRADLE_VERSIONS
+  }
+
+  void "testProjectJavaAndKotlin should be successfully executed (java+kotlin project)"() {
+    given: "project from testProjecJavaAndKotlin overlaid on testProjectKotlin, testProject"
+    File projectDir = ProtobufPluginTestHelper.createTestProject(
+        'testProjectJavaAndKotlin',
+        'testProjectBase',
+        'testProject',
+        'testProjectKotlin',
+        'testProjectJavaAndKotlin')
+
+    when: "build is invoked"
+    BuildResult result = GradleRunner.create()
+      .withProjectDir(projectDir)
+      .withArguments('build')
+      .withDebug(true)
+      .build()
+
+    then: "it succeed"
+    result.task(":build").outcome == TaskOutcome.SUCCESS
+    verifyProjectDirHelper(projectDir)
 
     where:
     gradleVersion << GRADLE_VERSIONS
@@ -91,8 +126,8 @@ class ProtobufJavaPluginTest extends Specification {
 
   void "testProjectLite should be successfully executed"() {
     given: "project from testProjectLite"
-    File projectDir = ProtobufPluginTestHelper.prepareTestTempDir('testProjectLite')
-    ProtobufPluginTestHelper.copyTestProject(projectDir, 'testProjectLite')
+    File projectDir = ProtobufPluginTestHelper.createTestProject(
+        'testProjectLite', 'testProjectBase', 'testProjectLite')
 
     when: "build is invoked"
     BuildResult result = GradleRunner.create()
@@ -113,8 +148,13 @@ class ProtobufJavaPluginTest extends Specification {
 
   void "testProjectDependent should be successfully executed"() {
     given: "project from testProject & testProjectDependent"
-    File mainProjectDir = ProtobufPluginTestHelper.prepareTestTempDir('testProjectDependent')
-    ProtobufPluginTestHelper.copyTestProjects(mainProjectDir, 'testProject', 'testProjectDependent')
+    File testProjectStaging = ProtobufPluginTestHelper.createTestProject(
+        'testProject', 'testProjectBase', 'testProject')
+    File testProjectDependentStaging =  ProtobufPluginTestHelper.createTestProject(
+        'testProjectDependent', 'testProjectDependent')
+
+    File mainProjectDir = ProtobufPluginTestHelper.createTestProject('testProjectDependentMain')
+    ProtobufPluginTestHelper.initializeSubProjects(mainProjectDir, testProjectStaging, testProjectDependentStaging)
 
     when: "build is invoked"
     BuildResult result = GradleRunner.create()
@@ -135,8 +175,8 @@ class ProtobufJavaPluginTest extends Specification {
 
   void "testProjectCustomProtoDir should be successfully executed"() {
     given: "project from testProjectCustomProtoDir"
-    File projectDir = ProtobufPluginTestHelper.prepareTestTempDir('testProjectCustomProtoDir')
-    ProtobufPluginTestHelper.copyTestProject(projectDir, 'testProjectCustomProtoDir', )
+    File projectDir = ProtobufPluginTestHelper.createTestProject(
+        'testProjectCustomProtoDir', 'testProjectCustomProtoDir')
 
     when: "build is invoked"
     BuildResult result = GradleRunner.create()
@@ -157,8 +197,8 @@ class ProtobufJavaPluginTest extends Specification {
 
   void "testProject proto and generated output directories should be added to intellij"() {
     given: "project from testProject"
-    File projectDir = ProtobufPluginTestHelper.prepareTestTempDir('testProject')
-    ProtobufPluginTestHelper.copyTestProject(projectDir, 'testProject', )
+    File projectDir = ProtobufPluginTestHelper.createTestProject(
+        'testIdea', 'testProjectBase', 'testProject')
 
     when: "idea is invoked"
     BuildResult result = GradleRunner.create()
@@ -169,7 +209,7 @@ class ProtobufJavaPluginTest extends Specification {
 
     then: "it succeed"
     result.task(":idea").outcome == TaskOutcome.SUCCESS
-    Node imlRoot = new XmlParser().parse(projectDir.toPath().resolve("testProject.iml").toFile())
+    Node imlRoot = new XmlParser().parse(projectDir.toPath().resolve("testIdea.iml").toFile())
     Collection rootMgr = imlRoot.component.findAll { it.'@name' == 'NewModuleRootManager' }
     assert rootMgr.size() == 1
     assert rootMgr.content.sourceFolder.size() == 1
@@ -295,5 +335,18 @@ class ProtobufJavaPluginTest extends Specification {
 
     then: "it returns maximum integer value"
     limit == Integer.MAX_VALUE
+  }
+
+  private static void verifyProjectDirHelper(File projectDir) {
+    ['grpc', 'main', 'test'].each {
+      File generatedSrcDir = new File(projectDir.path, "build/generated/source/proto/$it")
+      List<File> fileList = []
+      generatedSrcDir.eachFileRecurse { file ->
+        if (file.path.endsWith('.java')) {
+          fileList.add (file)
+        }
+      }
+      assert fileList.size > 0
+    }
   }
 }

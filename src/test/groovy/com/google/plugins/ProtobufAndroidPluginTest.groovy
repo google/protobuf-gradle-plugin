@@ -12,8 +12,15 @@ class ProtobufAndroidPluginTest extends Specification {
 
   void "testProjectAndroid should be successfully executed"() {
     given: "project from testProject, testProjectLite & testProjectAndroid"
-    File mainProjectDir = ProtobufPluginTestHelper.prepareTestTempDir('testProjectAndroid')
-    ProtobufPluginTestHelper.copyTestProjects(mainProjectDir, 'testProject', 'testProjectLite', 'testProjectAndroid')
+    File testProjectStaging = ProtobufPluginTestHelper.createTestProject(
+        'testProject', 'testProjectBase', 'testProject')
+    File testProjectAndroidStaging = ProtobufPluginTestHelper.createTestProject(
+        'testProjectAndroid', 'testProjectAndroid')
+    File testProjectLiteStaging = ProtobufPluginTestHelper.createTestProject(
+        'testProjectLite', 'testProjectLite')
+    File mainProjectDir = ProtobufPluginTestHelper.createTestProject('testProjectAndroidMain')
+    ProtobufPluginTestHelper.initializeSubProjects(
+        mainProjectDir, testProjectStaging, testProjectLiteStaging, testProjectAndroidStaging)
 
     // Add android plugin to the test root project so that Gradle can resolve
     // classpath correctly.

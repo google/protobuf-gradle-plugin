@@ -1,0 +1,131 @@
+// This build is not a complete project, but is used to generate a project.
+// See: ProtobufPluginTestHelper.groovy
+
+apply plugin: 'com.google.protobuf'
+
+repositories {
+    maven { url "https://plugins.gradle.org/m2/" }
+}
+
+sourceCompatibility = JavaVersion.VERSION_1_7
+targetCompatibility = JavaVersion.VERSION_1_7
+
+configurations {
+    grpcCompile
+}
+
+sourceSets {
+  grpc {
+    compileClasspath += configurations.grpcCompile
+  }
+  test {
+    compileClasspath += grpc.output
+    runtimeClasspath += grpc.output
+  }
+}
+
+def protobufDep = 'com.google.protobuf:protobuf-java:3.0.0'
+
+dependencies {
+  protobuf files("lib/protos.tar.gz")
+  protobuf fileTree("ext/")
+  testProtobuf files("lib/protos-test.tar.gz")
+
+  compile protobufDep
+  testCompile 'junit:junit:4.12'
+  // KotlinFooTest.kt requires reflection utilities
+  testCompile "org.jetbrains.kotlin:kotlin-reflect:1.2.0"
+  grpcCompile protobufDep
+  grpcCompile 'io.grpc:grpc-stub:1.0.0-pre2'
+  grpcCompile 'io.grpc:grpc-protobuf:1.0.0-pre2'
+}
+
+protobuf {
+  protoc {
+    artifact = 'com.google.protobuf:protoc:3.0.0'
+  }
+  plugins {
+    grpc {
+      artifact = 'io.grpc:protoc-gen-grpc-java:1.0.0-pre2'
+    }
+  }
+  generateProtoTasks {
+    ofSourceSet('grpc').each { task ->
+      task.plugins {
+        grpc {
+          outputSubDir = 'grpc_output'
+        }
+      }
+      task.generateDescriptorSet = true
+    }
+  }
+}
+
+// To include all sourceSets in the project jar
+jar {
+  sourceSets.all { sourceSet ->
+    from sourceSet.output
+    dependsOn sourceSet.getCompileTaskName('java')
+  }
+}
+
+def assertJavaCompileHasProtoGeneratedDir(String sourceSet, Collection<String> codegenPlugins) {
+  def compileJavaTask = tasks.getByName(sourceSets.getByName(sourceSet).getCompileTaskName("java"))
+  assertJavaCompileHasProtoGeneratedDir(project, sourceSet, compileJavaTask, codegenPlugins)
+}
+
+def assertFileExists(boolean exists, String path) {
+  if (exists) {
+    assert (path as File).exists()
+  } else {
+    assert !(path as File).exists()
+  }
+}
+
+test.doLast {
+  assert ['generateProto', 'generateGrpcProto', 'generateTestProto'] as Set ==
+      protobuf.generateProtoTasks.all().collect({ it.name }) as Set
+
+  assert ['generateProto'] as Set == protobuf.generateProtoTasks.ofSourceSet('main').collect({ it.name }) as Set
+
+  assertJavaCompileHasProtoGeneratedDir('main', ['java'])
+  assertJavaCompileHasProtoGeneratedDir('test', ['java'])
+  assertJavaCompileHasProtoGeneratedDir('grpc', ['java', 'grpc_output'])
+
+  // Check generateDescriptorSet option has been honored
+  ['main', 'test'].each { sourceSet ->
+    assertFileExists(false, "$buildDir/generated/source/proto/$sourceSet/descriptor_set.desc")
+  }
+  assertFileExists(true, "$buildDir/generated/source/proto/grpc/descriptor_set.desc")
+}
+
+rootProject.ext {
+  // Shared test utility. Checks a JavaCompile task for the given sourceSet
+  // includes the generated source dirs for the given codegenPlugins, and does
+  // not include any other dirs under the generated code base dir.
+  assertJavaCompileHasProtoGeneratedDir = {
+      Project project, String sourceSet, JavaCompile compileJavaTask, Collection<String> codegenPlugins ->
+    def baseDir = "${project.buildDir}/generated/source/proto/$sourceSet" as File
+    // The expected direct subdirectories under baseDir
+    def expectedDirs = codegenPlugins.collect { codegenPlugin ->
+      "${project.buildDir}/generated/source/proto/$sourceSet/$codegenPlugin" as File
+    } as Set
+
+    def actualDirs = new HashSet()
+    compileJavaTask.source.visit { fileVisitDetails ->
+      // If the visited file is or is under a direct subdirectory of baseDir, add
+      // that subdirectory to actualDirs.
+      def file = fileVisitDetails.file
+      while (true) {
+        if (file.parentFile == baseDir) {
+          actualDirs.add file
+        }
+        if (file.parentFile == null) {
+          break
+        }
+        file = file.parentFile
+      }
+    }
+    assert expectedDirs == actualDirs
+  }
+}

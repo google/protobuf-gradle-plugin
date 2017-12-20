@@ -1,5 +1,4 @@
 // This build is not a complete project, but is used to generate a project.
 // See: ProtobufPluginTestHelper.groovy
-apply plugin: 'java'
-apply plugin: 'idea'
+apply plugin: 'kotlin'
 apply from: 'build_base.gradle'
