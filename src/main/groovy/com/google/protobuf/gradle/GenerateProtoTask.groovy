@@ -37,6 +37,10 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.Named
 import org.gradle.api.NamedDomainObjectContainer
+import org.gradle.api.file.SourceDirectorySet
+import org.gradle.api.internal.file.DefaultSourceDirectorySet
+import org.gradle.api.internal.file.FileResolver
+import org.gradle.api.internal.file.collections.DefaultDirectoryFileTreeFactory
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskAction
@@ -65,6 +69,7 @@ public class GenerateProtoTask extends DefaultTask {
   private ImmutableList<String> flavors
   private String buildType
   private boolean isTestVariant
+  private FileResolver fileResolver
 
   /**
    * If true, will set the protoc flag
@@ -154,6 +159,11 @@ public class GenerateProtoTask extends DefaultTask {
     this.buildType = buildType
   }
 
+  void setFileResolver(FileResolver fileResolver) {
+    checkInitializing()
+    this.fileResolver = fileResolver
+  }
+
   SourceSet getSourceSet() {
     Preconditions.checkState(!Utils.isAndroidProject(project),
         'sourceSet should not be used in an Android project')
@@ -187,6 +197,11 @@ public class GenerateProtoTask extends DefaultTask {
         'buildType should not be used in a Java project')
     Preconditions.checkNotNull(buildType, 'buildType is not set')
     return buildType
+  }
+
+  FileResolver getFileResolver() {
+    Preconditions.checkNotNull(fileResolver)
+    return fileResolver
   }
 
   void doneInitializing() {
@@ -358,15 +373,21 @@ public class GenerateProtoTask extends DefaultTask {
     return "${outputBaseDir}/${plugin.outputSubDir}"
   }
 
-  Collection<File> getAllOutputDirs() {
-    ImmutableList.Builder<File> dirs = ImmutableList.builder()
+  /**
+   * Returns a {@code SourceDirectorySet} representing the generated source
+   * directories.
+   */
+  SourceDirectorySet getOutputSourceDirectorySet() {
+    Preconditions.checkNotNull(fileResolver)
+    SourceDirectorySet srcSet = new DefaultSourceDirectorySet(
+        "generate-proto-" + name, this.fileResolver, new DefaultDirectoryFileTreeFactory())
     builtins.each { builtin ->
-      dirs.add(new File(getOutputDir(builtin)))
+      srcSet.srcDir new File(getOutputDir(builtin))
     }
     plugins.each { plugin ->
-      dirs.add(new File(getOutputDir(plugin)))
+      srcSet.srcDir new File(getOutputDir(plugin))
     }
-    return dirs.build()
+    return srcSet
   }
 
   @TaskAction

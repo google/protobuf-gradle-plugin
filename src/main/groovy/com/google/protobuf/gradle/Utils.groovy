@@ -28,13 +28,16 @@
  */
 package com.google.protobuf.gradle
 
+import com.google.common.base.Preconditions
 import org.apache.commons.lang.StringUtils
 import org.gradle.api.GradleException
 import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskInputs
 import org.gradle.plugins.ide.idea.GenerateIdeaModule
 import org.gradle.plugins.ide.idea.model.IdeaModel
+import org.gradle.util.GUtil
 
 import java.util.regex.Matcher
 
@@ -61,6 +64,17 @@ class Utils {
 
   static boolean isAndroidProject(Project project) {
     return project.hasProperty('android') && project.android.sourceSets
+  }
+
+  /**
+   * Returns the compile task for Kotlin.
+   */
+  static Task getKotlinAndroidCompileTask(Project project, String variantName) {
+    // The kotlin plugin does not provide a utility for this.
+    // Fortunately, the naming scheme is well defined:
+    // https://kotlinlang.org/docs/reference/using-gradle.html#compiler-options
+    Preconditions.checkState(isAndroidProject(project))
+    return project.tasks.findByName("compile" + GUtil.toCamelCase(variantName) + "Kotlin")
   }
 
   static void addFilesToTaskInputs(Project project, TaskInputs inputs, Object files) {
