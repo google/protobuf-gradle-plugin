@@ -3,5 +3,6 @@
 
 apply plugin: 'com.android.application'
 apply plugin: 'com.google.protobuf'
+apply plugin: 'kotlin-android'
 
 apply from: 'build_base.gradle'

@@ -39,6 +39,7 @@ import org.gradle.api.Task
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.internal.file.FileResolver
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.plugins.AppliedPlugin
@@ -317,6 +318,7 @@ class ProtobufPlugin implements Plugin<Project> {
       return project.tasks.create(generateProtoTaskName, GenerateProtoTask) {
         description = "Compiles Proto source for '${sourceSetOrVariantName}'"
         outputBaseDir = "${project.protobuf.generatedFilesBaseDir}/${sourceSetOrVariantName}"
+        it.fileResolver = this.fileResolver
         sourceSets.each { sourceSet ->
           // Include sources
           Utils.addFilesToTaskInputs(project, inputs, sourceSet.proto)
@@ -420,27 +422,26 @@ class ProtobufPlugin implements Plugin<Project> {
     private linkGenerateProtoTasksToJavaCompile() {
       if (Utils.isAndroidProject(project)) {
         (getNonTestVariants() + project.android.testVariants).each { variant ->
-          project.protobuf.generateProtoTasks.ofVariant(variant.name).each { generateProtoTask ->
-            // This cannot be called once task execution has started
-            variant.registerJavaGeneratingTask(generateProtoTask, generateProtoTask.getAllOutputDirs())
+          project.protobuf.generateProtoTasks.ofVariant(variant.name).each { GenerateProtoTask genProtoTask ->
+            SourceDirectorySet generatedSources = genProtoTask.getOutputSourceDirectorySet()
+            // This cannot be called once task execution has started.
+            variant.registerJavaGeneratingTask(genProtoTask, generatedSources.source)
+            Task kotlinCompileTask = Utils.getKotlinAndroidCompileTask(project, variant.name)
+            if (kotlinCompileTask != null) {
+              kotlinCompileTask.dependsOn genProtoTask
+              kotlinCompileTask.source generatedSources
+            }
           }
         }
       } else {
         project.sourceSets.each { SourceSet sourceSet ->
-          project.protobuf.generateProtoTasks.ofSourceSet(sourceSet.name).each { GenerateProtoTask genProto ->
+          project.protobuf.generateProtoTasks.ofSourceSet(sourceSet.name).each { GenerateProtoTask genProtoTask ->
+            SourceDirectorySet generatedSources = genProtoTask.getOutputSourceDirectorySet()
             getLanguages(project).each { String lang ->
               Task compileTask = project.tasks.findByName(sourceSet.getCompileTaskName(lang))
               if (compileTask != null) {
-                compileTask.dependsOn(genProto)
-                genProto.getAllOutputDirs().each { dir ->
-                  // The Java plugin requires the dir in FileTree form, but the Kotlin plugin requires
-                  // a File. It appears safe to generically supply both here. This
-                  // *may* also work for additional languages such as scala, but this theory
-                  // is untested. Set the project property read in getSupportedLanguages to
-                  // to add other languages to the whitelist.
-                  compileTask.source project.fileTree([dir:dir])
-                  compileTask.source dir
-                }
+                compileTask.dependsOn(genProtoTask)
+                compileTask.source generatedSources
               }
             }
           }
@@ -473,7 +474,7 @@ class ProtobufPlugin implements Plugin<Project> {
       }
       // Make the generated code dirs known to IDEs
       project.tasks.withType(GenerateProtoTask).each {  GenerateProtoTask generateProtoTask ->
-        generateProtoTask.allOutputDirs.each { File outputDir ->
+        generateProtoTask.getOutputSourceDirectorySet().srcDirs.each { File outputDir ->
           Utils.addToIdeSources(project, generateProtoTask.isTest, outputDir)
         }
       }
