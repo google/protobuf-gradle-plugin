@@ -43,8 +43,8 @@ final class ProtobufPluginTestHelper {
 
   static final class TestProjectBuilder {
     String testProjectName
-    List<String> sourceDirs = new ArrayList<>()
-    List<File> subProjects = new ArrayList<>()
+    List<String> sourceDirs = []
+    List<File> subProjects = []
 
     private TestProjectBuilder(String projectName) {
       this.testProjectName = projectName
