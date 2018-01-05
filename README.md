@@ -449,6 +449,56 @@ dependencies {
 This [Maven Central directory](https://repo1.maven.org/maven2/com/google/protobuf/protoc/)
 lists pre-compiled ``protoc`` artifacts that can be used by this plugin.
 
+## Gradle Kotlin-dsl
+Example of configuration by kotlin-dsl
+```
+plugins {
+    java
+    id("com.google.protobuf") version ("0.8.3")
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile("io.grpc:grpc-netty:1.8.0")
+    compile("io.grpc:grpc-protobuf:1.8.0")
+    compile("io.grpc:grpc-stub:1.8.0")
+}
+
+configure<ProtobufConvention> {
+    protobuf(closureOf<ProtobufConfigurator> {
+        generatedFilesBaseDir = "$projectDir/src/generated"
+        protoc(closureOf<ExecutableLocator> {
+            artifact = "com.google.protobuf:protoc:3.5.0"
+        })
+        plugins(closureOf<NamedDomainObjectContainer<ExecutableLocator>> {
+            create("grpc", closureOf<ExecutableLocator> {
+                artifact = "io.grpc:protoc-gen-grpc-java:1.8.0"
+            })
+        })
+        generateProtoTasks(closureOf<ProtobufConfigurator.JavaGenerateProtoTaskCollection> {
+            all().forEach {
+                it?.plugins(closureOf<NamedDomainObjectContainer<GenerateProtoTask.PluginOptions>> {
+                    add(create("grpc"))
+                })
+            }
+        })
+    })
+}
+
+java.sourceSets {
+    getByName("main") {
+        withGroovyBuilder {
+            "proto" {
+                "srcDir"("proto")
+            }
+        }
+    }
+}
+``` 
+
 ## Tips for IDEs
 
 ### IntelliJ IDEA
