@@ -72,24 +72,6 @@ configure<ProtobufConvention> {
     })
 }
 
-tasks {
-
-    withType<KotlinCompile> {
-        dependsOn("generateProto")
-        kotlinOptions.jvmTarget = "1.8"
-    }
-
-    withType<Wrapper> {
-        gradleVersion = "4.4.1"
-        distributionType = Wrapper.DistributionType.ALL
-    }
-
-    withType<Delete> {
-        delete("$projectDir/src/generated")
-    }
-}
-
-
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
     sourceSets {
@@ -121,5 +103,22 @@ idea {
         sourceDirs.plus(file("$projectDir/src/generated/main/grpc"))
         testSourceDirs.plus(file("$projectDir/src/test/java"))
         testSourceDirs.plus(file("$projectDir/src/test/kotlin"))
+    }
+}
+
+tasks {
+
+    withType<KotlinCompile> {
+        dependsOn("generateProto")
+        kotlinOptions.jvmTarget = "1.8"
+    }
+
+    withType<Wrapper> {
+        gradleVersion = "4.4.1"
+        distributionType = Wrapper.DistributionType.ALL
+    }
+
+    withType<Delete> {
+        delete("$projectDir/src/generated")
     }
 }
