@@ -120,7 +120,7 @@ class ProtobufPlugin implements Plugin<Project> {
 
     private void doApply() {
         // Provides the osdetector extension
-        project.apply([plugin:'com.google.osdetector'])
+        project.apply([plugin:com.google.gradle.osdetector.OsDetectorPlugin])
 
         project.convention.plugins.protobuf = new ProtobufConvention(project, fileResolver)
 
