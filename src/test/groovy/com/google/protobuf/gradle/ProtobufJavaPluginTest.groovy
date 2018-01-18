@@ -1,8 +1,6 @@
-package com.google.protobuf.gradle.plugins
+package com.google.protobuf.gradle
 
 import com.google.common.collect.ImmutableSet
-import com.google.protobuf.gradle.GenerateProtoTask
-import com.google.protobuf.gradle.ProtobufExtract
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.testkit.runner.BuildResult
@@ -59,8 +57,9 @@ class ProtobufJavaPluginTest extends Specification {
 
   void "testProject should be successfully executed (java-only project)"() {
     given: "project from testProject"
-    File projectDir = ProtobufPluginTestHelper.createTestProject(
-        'testProject', 'testProjectBase', 'testProject')
+    File projectDir = ProtobufPluginTestHelper.projectBuilder('testProject')
+        .copyDirs('testProjectBase', 'testProject')
+        .build()
 
     when: "build is invoked"
     BuildResult result = GradleRunner.create()
@@ -82,8 +81,9 @@ class ProtobufJavaPluginTest extends Specification {
 
   void "testProjectKotlin should be successfully executed (kotlin-only project)"() {
     given: "project from testProjectKotlin overlaid on testProject"
-    File projectDir = ProtobufPluginTestHelper.createTestProject(
-        'testProjectKotlin', 'testProjectBase', 'testProjectKotlin')
+    File projectDir = ProtobufPluginTestHelper.projectBuilder('testProjectKotlin')
+        .copyDirs('testProjectBase', 'testProjectKotlin')
+        .build()
 
     when: "build is invoked"
     BuildResult result = GradleRunner.create()
@@ -102,12 +102,9 @@ class ProtobufJavaPluginTest extends Specification {
 
   void "testProjectJavaAndKotlin should be successfully executed (java+kotlin project)"() {
     given: "project from testProjecJavaAndKotlin overlaid on testProjectKotlin, testProject"
-    File projectDir = ProtobufPluginTestHelper.createTestProject(
-        'testProjectJavaAndKotlin',
-        'testProjectBase',
-        'testProject',
-        'testProjectKotlin',
-        'testProjectJavaAndKotlin')
+    File projectDir = ProtobufPluginTestHelper.projectBuilder('testProjectJavaAndKotlin')
+        .copyDirs('testProjectBase', 'testProject', 'testProjectKotlin', 'testProjectJavaAndKotlin')
+        .build()
 
     when: "build is invoked"
     BuildResult result = GradleRunner.create()
@@ -126,8 +123,9 @@ class ProtobufJavaPluginTest extends Specification {
 
   void "testProjectLite should be successfully executed"() {
     given: "project from testProjectLite"
-    File projectDir = ProtobufPluginTestHelper.createTestProject(
-        'testProjectLite', 'testProjectBase', 'testProjectLite')
+    File projectDir = ProtobufPluginTestHelper.projectBuilder('testProjectLite')
+        .copyDirs('testProjectBase', 'testProjectLite')
+        .build()
 
     when: "build is invoked"
     BuildResult result = GradleRunner.create()
@@ -148,13 +146,16 @@ class ProtobufJavaPluginTest extends Specification {
 
   void "testProjectDependent should be successfully executed"() {
     given: "project from testProject & testProjectDependent"
-    File testProjectStaging = ProtobufPluginTestHelper.createTestProject(
-        'testProject', 'testProjectBase', 'testProject')
-    File testProjectDependentStaging =  ProtobufPluginTestHelper.createTestProject(
-        'testProjectDependent', 'testProjectDependent')
+    File testProjectStaging = ProtobufPluginTestHelper.projectBuilder('testProject')
+        .copyDirs('testProjectBase', 'testProject')
+        .build()
+    File testProjectDependentStaging = ProtobufPluginTestHelper.projectBuilder('testProjectDependent')
+        .copyDirs('testProjectDependent')
+        .build()
 
-    File mainProjectDir = ProtobufPluginTestHelper.createTestProject('testProjectDependentMain')
-    ProtobufPluginTestHelper.initializeSubProjects(mainProjectDir, testProjectStaging, testProjectDependentStaging)
+    File mainProjectDir = ProtobufPluginTestHelper.projectBuilder('testProjectDependentMain')
+        .copySubProjects(testProjectStaging, testProjectDependentStaging)
+        .build()
 
     when: "build is invoked"
     BuildResult result = GradleRunner.create()
@@ -175,8 +176,9 @@ class ProtobufJavaPluginTest extends Specification {
 
   void "testProjectCustomProtoDir should be successfully executed"() {
     given: "project from testProjectCustomProtoDir"
-    File projectDir = ProtobufPluginTestHelper.createTestProject(
-        'testProjectCustomProtoDir', 'testProjectCustomProtoDir')
+    File projectDir = ProtobufPluginTestHelper.projectBuilder('testProjectCustomProtoDir')
+        .copyDirs('testProjectCustomProtoDir')
+        .build()
 
     when: "build is invoked"
     BuildResult result = GradleRunner.create()
@@ -197,8 +199,9 @@ class ProtobufJavaPluginTest extends Specification {
 
   void "testProject proto and generated output directories should be added to intellij"() {
     given: "project from testProject"
-    File projectDir = ProtobufPluginTestHelper.createTestProject(
-        'testIdea', 'testProjectBase', 'testProject')
+    File projectDir = ProtobufPluginTestHelper.projectBuilder('testIdea')
+        .copyDirs('testProjectBase', 'testProject')
+        .build()
 
     when: "idea is invoked"
     BuildResult result = GradleRunner.create()
