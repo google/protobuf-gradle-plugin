@@ -193,11 +193,8 @@ class ProtobufPlugin implements Plugin<Project> {
      */
     private addProtoTasks() {
       if (Utils.isAndroidProject(project)) {
-        getNonTestVariants().each { variant ->
-          addTasksForVariant(variant, false)
-        }
-        project.android.testVariants.each { testVariant ->
-          addTasksForVariant(testVariant, true)
+        (getNonTestVariants() + project.android.testVariants + project.android.unitTestVariants).each { variant ->
+          addTasksForVariant(variant)
         }
       } else {
         getSourceSets().each { sourceSet ->
@@ -235,19 +232,22 @@ class ProtobufPlugin implements Plugin<Project> {
     /**
      * Creates Protobuf tasks for a variant in an Android project.
      */
-    private addTasksForVariant(final Object variant, final boolean isTestVariant) {
+    private addTasksForVariant(final Object variant) {
       // The collection of sourceSets that will be compiled for this variant
       List sourceSetNames = []
       List sourceSets = []
-      if (isTestVariant) {
-        // All test variants will include the androidTest sourceSet
-        sourceSetNames.add 'androidTest'
-      } else {
+      boolean isTestVariant = ['ANDROID_TEST', "UNIT_TEST"].contains(variant.variantData.type.toString())
+      if (!isTestVariant) {
         // All non-test variants will include the main sourceSet
         sourceSetNames.add 'main'
       }
-      sourceSetNames.add variant.name
-      sourceSetNames.add variant.buildType.name
+      // see: https://android.googlesource.com/platform/tools/build/+/master/builder/src/main/java/
+      // com/android/builder/VariantConfiguration.java
+      sourceSetNames.add variant.variantData.variantConfiguration.defaultSourceSet.name // e.g. main, androidTest, test
+      sourceSetNames.add variant.name // e.g. x86FreeappDebug
+      if (variant.hasProperty('buildType')) {
+        sourceSetNames.add variant.buildType.name
+      }
       ImmutableList.Builder<String> flavorListBuilder = ImmutableList.builder()
       if (variant.hasProperty('productFlavors')) {
         variant.productFlavors.each { flavor ->
@@ -262,7 +262,9 @@ class ProtobufPlugin implements Plugin<Project> {
       Task generateProtoTask = addGenerateProtoTask(variant.name, sourceSets)
       generateProtoTask.setVariant(variant, isTestVariant)
       generateProtoTask.flavors = flavorListBuilder.build()
-      generateProtoTask.buildType = variant.buildType.name
+      if (variant.hasProperty('buildType')) {
+        generateProtoTask.buildType = variant.buildType.name
+      }
       generateProtoTask.doneInitializing()
 
       sourceSetNames.each { sourceSetName ->
@@ -448,6 +450,20 @@ class ProtobufPlugin implements Plugin<Project> {
             variant.registerJavaGeneratingTask(genProtoTask, generatedSources.source)
             linkGenerateProtoTasksToTaskName(
                 Utils.getKotlinAndroidCompileTaskName(project, variant.name), genProtoTask)
+          }
+        }
+
+        project.android.unitTestVariants.each { variant ->
+          project.protobuf.generateProtoTasks.ofVariant(variant.name).each { GenerateProtoTask genProtoTask ->
+            // unit test variants do not implement registerJavaGeneratingTask
+            Task javaCompileTask = variant.variantData.javaCompilerTask
+            if (javaCompileTask != null) {
+              linkGenerateProtoTasksToTask(javaCompileTask, genProtoTask)
+            }
+
+            linkGenerateProtoTasksToTaskName(
+                Utils.getKotlinAndroidCompileTaskName(project, variant.name),
+                genProtoTask)
           }
         }
       } else {
