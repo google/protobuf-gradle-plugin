@@ -133,12 +133,12 @@ class ProtobufPlugin implements Plugin<Project> {
           addProtoTasks()
           project.protobuf.runTaskConfigClosures()
           // Disallow user configuration outside the config closures, because
-          // next in linkGenerateProtoTasksToJavaCompile() we add generated,
+          // next in linkGenerateProtoTasksToSourceCompile() we add generated,
           // outputs to the inputs of javaCompile tasks, and any new codegen
           // plugin output added after this point won't be added to javaCompile
           // tasks.
           project.protobuf.generateProtoTasks.all()*.doneConfig()
-          linkGenerateProtoTasksToJavaCompile()
+          linkGenerateProtoTasksToSourceCompile()
           // protoc and codegen plugin configuration may change through the protobuf{}
           // block. Only at this point the configuration has been finalized.
           project.protobuf.tools.registerTaskDependencies(project.protobuf.getGenerateProtoTasks().all())
@@ -419,30 +419,39 @@ class ProtobufPlugin implements Plugin<Project> {
       }
     }
 
-    private linkGenerateProtoTasksToJavaCompile() {
+    private linkGenerateProtoTasksToCompileTask(String compileTaskName, GenerateProtoTask genProtoTask) {
+      Task compileTask = project.tasks.findByName(compileTaskName)
+      if (compileTask != null) {
+        compileTask.dependsOn(genProtoTask)
+        compileTask.source genProtoTask.getOutputSourceDirectorySet()
+      } else {
+        // It is possible for a compile task to not exist yet. For example, if someone applied
+        // the proto plugin and then later applies the kotlin plugin.
+        project.tasks.whenTaskAdded { Task task ->
+          if (task.name == compileTaskName) {
+            task.dependsOn(genProtoTask)
+            task.source genProtoTask.getOutputSourceDirectorySet()
+          }
+        }
+      }
+    }
+
+    private linkGenerateProtoTasksToSourceCompile() {
       if (Utils.isAndroidProject(project)) {
         (getNonTestVariants() + project.android.testVariants).each { variant ->
           project.protobuf.generateProtoTasks.ofVariant(variant.name).each { GenerateProtoTask genProtoTask ->
             SourceDirectorySet generatedSources = genProtoTask.getOutputSourceDirectorySet()
             // This cannot be called once task execution has started.
             variant.registerJavaGeneratingTask(genProtoTask, generatedSources.source)
-            Task kotlinCompileTask = Utils.getKotlinAndroidCompileTask(project, variant.name)
-            if (kotlinCompileTask != null) {
-              kotlinCompileTask.dependsOn genProtoTask
-              kotlinCompileTask.source generatedSources
-            }
+            linkGenerateProtoTasksToCompileTask(
+                Utils.getKotlinAndroidCompileTaskName(project, variant.name), genProtoTask)
           }
         }
       } else {
         project.sourceSets.each { SourceSet sourceSet ->
           project.protobuf.generateProtoTasks.ofSourceSet(sourceSet.name).each { GenerateProtoTask genProtoTask ->
-            SourceDirectorySet generatedSources = genProtoTask.getOutputSourceDirectorySet()
             getLanguages(project).each { String lang ->
-              Task compileTask = project.tasks.findByName(sourceSet.getCompileTaskName(lang))
-              if (compileTask != null) {
-                compileTask.dependsOn(genProtoTask)
-                compileTask.source generatedSources
-              }
+              linkGenerateProtoTasksToCompileTask(sourceSet.getCompileTaskName(lang), genProtoTask)
             }
           }
         }
