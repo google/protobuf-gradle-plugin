@@ -118,59 +118,92 @@ afterEvaluate {
   }
 
   test.doLast {
-    assert ['generateArmFreeappDebugAndroidTestProto', 'generateArmFreeappDebugProto',
-         'generateArmFreeappReleaseProto', 'generateArmRetailappDebugAndroidTestProto',
-         'generateArmRetailappDebugProto', 'generateArmRetailappReleaseProto',
-         'generateX86FreeappDebugAndroidTestProto', 'generateX86FreeappDebugProto',
-         'generateX86FreeappReleaseProto', 'generateX86RetailappDebugAndroidTestProto',
-         'generateX86RetailappDebugProto', 'generateX86RetailappReleaseProto'] as Set ==
-         protobuf.generateProtoTasks.all().collect({ it.name }) as Set
+    assert [
+        'generateArmFreeappDebugAndroidTestProto',
+        'generateArmFreeappDebugProto',
+        'generateArmFreeappReleaseProto',
+        'generateArmRetailappDebugAndroidTestProto',
+        'generateArmRetailappDebugProto',
+        'generateArmRetailappReleaseProto',
+        'generateX86FreeappDebugAndroidTestProto',
+        'generateX86FreeappDebugProto',
+        'generateX86FreeappReleaseProto',
+        'generateX86RetailappDebugAndroidTestProto',
+        'generateX86RetailappDebugProto',
+        'generateX86RetailappReleaseProto',
+    ] as Set == protobuf.generateProtoTasks.all().collect({ it.name }) as Set
 
-    assert ['generateArmFreeappDebugAndroidTestProto',
-         'generateArmRetailappDebugAndroidTestProto',
-         'generateX86FreeappDebugAndroidTestProto',
-         'generateX86RetailappDebugAndroidTestProto'] as Set ==
-         protobuf.generateProtoTasks.ofTest().collect({ it.name }) as Set
+    assert [
+        'generateArmFreeappDebugAndroidTestProto',
+        'generateArmRetailappDebugAndroidTestProto',
+        'generateX86FreeappDebugAndroidTestProto',
+        'generateX86RetailappDebugAndroidTestProto',
+    ] as Set == protobuf.generateProtoTasks.ofTest().collect({ it.name }) as Set
 
-    assert ['generateArmFreeappDebugProto', 'generateArmFreeappReleaseProto',
-         'generateArmRetailappDebugProto', 'generateArmRetailappReleaseProto',
-         'generateX86FreeappDebugProto', 'generateX86FreeappReleaseProto',
-         'generateX86RetailappDebugProto', 'generateX86RetailappReleaseProto'] as Set ==
-         protobuf.generateProtoTasks.ofNonTest().collect({ it.name }) as Set
+    assert [
+        'generateArmFreeappDebugProto',
+        'generateArmFreeappReleaseProto',
+        'generateArmRetailappDebugProto',
+        'generateArmRetailappReleaseProto',
+        'generateX86FreeappDebugProto',
+        'generateX86FreeappReleaseProto',
+        'generateX86RetailappDebugProto',
+        'generateX86RetailappReleaseProto',
+    ] as Set == protobuf.generateProtoTasks.ofNonTest().collect({ it.name }) as Set
 
-    assert ['generateArmFreeappDebugAndroidTestProto', 'generateArmFreeappDebugProto',
-         'generateArmFreeappReleaseProto',
-         'generateX86FreeappDebugAndroidTestProto', 'generateX86FreeappDebugProto',
-         'generateX86FreeappReleaseProto'] as Set ==
-         protobuf.generateProtoTasks.ofFlavor('freeapp').collect({ it.name }) as Set
+    assert [
+        'generateArmFreeappDebugAndroidTestProto',
+        'generateArmFreeappDebugProto',
+        'generateArmFreeappReleaseProto',
+        'generateX86FreeappDebugAndroidTestProto',
+        'generateX86FreeappDebugProto',
+        'generateX86FreeappReleaseProto',
+    ] as Set == protobuf.generateProtoTasks.ofFlavor('freeapp').collect({ it.name }) as Set
 
-    assert ['generateArmRetailappDebugAndroidTestProto', 'generateArmRetailappDebugProto',
-         'generateArmRetailappReleaseProto',
-         'generateX86RetailappDebugAndroidTestProto', 'generateX86RetailappDebugProto',
-         'generateX86RetailappReleaseProto'] as Set ==
-         protobuf.generateProtoTasks.ofFlavor('retailapp').collect({ it.name }) as Set
+    assert [
+        'generateArmRetailappDebugAndroidTestProto',
+        'generateArmRetailappDebugProto',
+        'generateArmRetailappReleaseProto',
+        'generateX86RetailappDebugAndroidTestProto',
+        'generateX86RetailappDebugProto',
+        'generateX86RetailappReleaseProto',
+    ] as Set == protobuf.generateProtoTasks.ofFlavor('retailapp').collect({ it.name }) as Set
 
-    assert ['generateX86FreeappDebugAndroidTestProto', 'generateX86FreeappDebugProto',
-         'generateX86FreeappReleaseProto', 'generateX86RetailappDebugAndroidTestProto',
-         'generateX86RetailappDebugProto', 'generateX86RetailappReleaseProto'] as Set ==
-         protobuf.generateProtoTasks.ofFlavor('x86').collect({ it.name }) as Set
+    assert [
+        'generateX86FreeappDebugAndroidTestProto',
+        'generateX86FreeappDebugProto',
+        'generateX86FreeappReleaseProto',
+        'generateX86RetailappDebugAndroidTestProto',
+        'generateX86RetailappDebugProto',
+        'generateX86RetailappReleaseProto',
+    ] as Set == protobuf.generateProtoTasks.ofFlavor('x86').collect({ it.name }) as Set
 
-    assert ['generateArmFreeappDebugAndroidTestProto', 'generateArmFreeappDebugProto',
-         'generateArmFreeappReleaseProto', 'generateArmRetailappDebugAndroidTestProto',
-         'generateArmRetailappDebugProto', 'generateArmRetailappReleaseProto'] as Set ==
-         protobuf.generateProtoTasks.ofFlavor('arm').collect({ it.name }) as Set
+    assert [
+        'generateArmFreeappDebugAndroidTestProto',
+        'generateArmFreeappDebugProto',
+        'generateArmFreeappReleaseProto',
+        'generateArmRetailappDebugAndroidTestProto',
+        'generateArmRetailappDebugProto',
+        'generateArmRetailappReleaseProto',
+    ] as Set == protobuf.generateProtoTasks.ofFlavor('arm').collect({ it.name }) as Set
 
-    assert ['generateArmFreeappDebugAndroidTestProto', 'generateArmFreeappDebugProto',
-         'generateArmRetailappDebugAndroidTestProto',
-         'generateArmRetailappDebugProto',
-         'generateX86FreeappDebugAndroidTestProto', 'generateX86FreeappDebugProto',
-         'generateX86RetailappDebugAndroidTestProto',
-         'generateX86RetailappDebugProto'] as Set ==
-            protobuf.generateProtoTasks.ofBuildType('debug').collect({ it.name }) as Set
+    assert [
+        'generateArmFreeappDebugAndroidTestProto',
+        'generateArmFreeappDebugProto',
+        'generateArmRetailappDebugAndroidTestProto',
+        'generateArmRetailappDebugProto',
+        'generateX86FreeappDebugAndroidTestProto',
+        'generateX86FreeappDebugProto',
+        'generateX86RetailappDebugAndroidTestProto',
+        'generateX86RetailappDebugProto',
+    ] as Set == protobuf.generateProtoTasks.ofBuildType('debug').collect({ it.name }) as Set
 
-    assert ['generateArmFreeappReleaseProto', 'generateArmRetailappReleaseProto',
-         'generateX86FreeappReleaseProto', 'generateX86RetailappReleaseProto'] as Set ==
-            protobuf.generateProtoTasks.ofBuildType('release').collect({ it.name }) as Set
+    assert [
+        'generateArmFreeappReleaseProto',
+        'generateArmRetailappReleaseProto',
+        'generateX86FreeappReleaseProto',
+        'generateX86RetailappReleaseProto',
+    ] as Set == protobuf.generateProtoTasks.ofBuildType('release').collect({ it.name }) as Set
 
     assert ['generateX86FreeappDebugAndroidTestProto'] as Set ==
             protobuf.generateProtoTasks.ofVariant('x86FreeappDebugAndroidTest').collect({ it.name }) as Set
