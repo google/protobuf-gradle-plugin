@@ -92,11 +92,12 @@ buildscript {
         // set android build cache to avoid using home directory on travis CI.
         "-Pandroid.buildCacheDir=" + localBuildCache,
         "testProjectAndroid:build",
+        "-x", "lint", // linter causes .withDebug(true) to fail
         "--stacktrace")
         .withGradleVersion(gradleVersion)
         .forwardStdOutput(new OutputStreamWriter(System.out))
         .forwardStdError(new OutputStreamWriter(System.err))
-        .withDebug(false) // debug MUST be off, otherwise the build will fail due to lint issues
+        .withDebug(true)
         .build()
   }
 }
