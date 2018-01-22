@@ -419,18 +419,21 @@ class ProtobufPlugin implements Plugin<Project> {
       }
     }
 
-    private linkGenerateProtoTasksToCompileTask(String compileTaskName, GenerateProtoTask genProtoTask) {
+    private static linkGenerateProtoTasksToTask(Task task, GenerateProtoTask genProtoTask) {
+      task.dependsOn(genProtoTask)
+      task.source genProtoTask.getOutputSourceDirectorySet()
+    }
+
+    private linkGenerateProtoTasksToTaskName(String compileTaskName, GenerateProtoTask genProtoTask) {
       Task compileTask = project.tasks.findByName(compileTaskName)
       if (compileTask != null) {
-        compileTask.dependsOn(genProtoTask)
-        compileTask.source genProtoTask.getOutputSourceDirectorySet()
+        linkGenerateProtoTasksToTask(compileTask, genProtoTask)
       } else {
         // It is possible for a compile task to not exist yet. For example, if someone applied
         // the proto plugin and then later applies the kotlin plugin.
         project.tasks.whenTaskAdded { Task task ->
           if (task.name == compileTaskName) {
-            task.dependsOn(genProtoTask)
-            task.source genProtoTask.getOutputSourceDirectorySet()
+            linkGenerateProtoTasksToTask(task, genProtoTask)
           }
         }
       }
@@ -443,7 +446,7 @@ class ProtobufPlugin implements Plugin<Project> {
             SourceDirectorySet generatedSources = genProtoTask.getOutputSourceDirectorySet()
             // This cannot be called once task execution has started.
             variant.registerJavaGeneratingTask(genProtoTask, generatedSources.source)
-            linkGenerateProtoTasksToCompileTask(
+            linkGenerateProtoTasksToTaskName(
                 Utils.getKotlinAndroidCompileTaskName(project, variant.name), genProtoTask)
           }
         }
@@ -451,7 +454,7 @@ class ProtobufPlugin implements Plugin<Project> {
         project.sourceSets.each { SourceSet sourceSet ->
           project.protobuf.generateProtoTasks.ofSourceSet(sourceSet.name).each { GenerateProtoTask genProtoTask ->
             getLanguages(project).each { String lang ->
-              linkGenerateProtoTasksToCompileTask(sourceSet.getCompileTaskName(lang), genProtoTask)
+              linkGenerateProtoTasksToTaskName(sourceSet.getCompileTaskName(lang), genProtoTask)
             }
           }
         }
