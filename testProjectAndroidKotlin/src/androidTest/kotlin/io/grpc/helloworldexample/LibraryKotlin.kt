@@ -6,7 +6,7 @@ class LibraryKotlin {
   var response = Helloworld.HelloReply.getDefaultInstance()
   // From lib/protos.jar
   var blob = com.google.protobuf.gradle.test.External.BlobMessage.getDefaultInstance()
-  // From andoridTest proto:
+  // From androidTest proto:
   var msg1 = com.example.tutorial.Msg.getDefaultInstance()
   var msg2 = com.example.tutorial.SecondMsg.getDefaultInstance()
 
