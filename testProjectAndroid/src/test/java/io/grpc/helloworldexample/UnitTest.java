@@ -24,7 +24,7 @@ public final class UnitTest {
   @Test
   public void ensureAndroidTestProtosNotVisible() throws Exception {
     // we should not see the protos from src/androidTest/proto/
-    try{
+    try {
       Class<?> ignored = Class.forName("com.example.tutorial.Msg");
       fail();
     } catch (ClassNotFoundException expected){
