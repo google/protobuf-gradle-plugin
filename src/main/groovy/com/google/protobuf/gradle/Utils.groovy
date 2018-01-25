@@ -112,7 +112,8 @@ class Utils {
    */
   static boolean isTest(String sourceSetOrVariantName) {
     return sourceSetOrVariantName == "test" ||
-      sourceSetOrVariantName.toLowerCase().contains('androidtest')
+        sourceSetOrVariantName.toLowerCase().contains('androidtest') ||
+        sourceSetOrVariantName.toLowerCase().contains('unittest')
   }
 
   /**

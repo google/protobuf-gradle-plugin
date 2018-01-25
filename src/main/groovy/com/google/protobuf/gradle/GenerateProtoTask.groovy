@@ -195,7 +195,9 @@ public class GenerateProtoTask extends DefaultTask {
   String getBuildType() {
     Preconditions.checkState(Utils.isAndroidProject(project),
         'buildType should not be used in a Java project')
-    Preconditions.checkNotNull(buildType, 'buildType is not set')
+    Preconditions.checkState(
+        variant.name == 'test' || buildType,
+        'buildType is not set and task is not for local unit test variant')
     return buildType
   }
 
