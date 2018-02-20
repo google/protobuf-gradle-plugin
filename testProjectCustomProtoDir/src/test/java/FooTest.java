@@ -2,7 +2,7 @@
 public class FooTest {
   @org.junit.Test
   public void testMainProtos() {
-    org.junit.Assert.assertEquals(8, Foo.getDefaultInstances().size());
+    org.junit.Assert.assertEquals(10, Foo.getDefaultInstances().size());
   }
 
   @org.junit.Test

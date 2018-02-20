@@ -17,6 +17,9 @@ public class Foo {
     // from src/main/protocolbuffers/more.proto
     list.add(More.MoreMsg.getDefaultInstance());
     list.add(More.Foo.getDefaultInstance());
+    // from "src/main/protocol buffers/more2.proto"
+    list.add(More2.MoreMsg2.getDefaultInstance());
+    list.add(More2.Foo2.getDefaultInstance());
     return list;
   }
 }
