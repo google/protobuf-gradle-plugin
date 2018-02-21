@@ -1,0 +1,5 @@
+syntax = "proto3";
+
+message SpaceInPath {
+    string bar = 1;
+}

@@ -256,43 +256,43 @@ class ProtobufJavaPluginTest extends Specification {
   void "test generateCmds should split commands when limit exceeded"() {
     given: "a cmd length limit and two proto files"
 
-    String baseCmd = "protoc"
+    List<String> baseCmd = ["protoc"]
     List<File> protoFiles = [ new File("short.proto"), new File("long_proto_name.proto") ]
     int cmdLengthLimit = 32
 
     when: "the commands are generated"
 
-    List<String> cmds = GenerateProtoTask.generateCmds(baseCmd, protoFiles, cmdLengthLimit)
+    List<List<String>> cmds = GenerateProtoTask.generateCmds(baseCmd, protoFiles, cmdLengthLimit)
 
     then: "it splits appropriately"
-    cmds.size() == 2 && cmds[0] == "protoc short.proto" && cmds[1] == "protoc long_proto_name.proto"
+    cmds.size() == 2 && cmds[0] == ["protoc", "short.proto"] && cmds[1] == ["protoc", "long_proto_name.proto"]
   }
 
   void "test generateCmds should not split commands when under limit"() {
     given: "a cmd length limit and two proto files"
 
-    String baseCmd = "protoc"
+    List<String> baseCmd = ["protoc"]
     List<File> protoFiles = [ new File("short.proto"), new File("long_proto_name.proto") ]
     int cmdLengthLimit = 64
 
     when: "the commands are generated"
 
-    List<String> cmds = GenerateProtoTask.generateCmds(baseCmd, protoFiles, cmdLengthLimit)
+    List<List<String>> cmds = GenerateProtoTask.generateCmds(baseCmd, protoFiles, cmdLengthLimit)
 
     then: "it splits appropriately"
-    cmds.size() == 1 && cmds[0] == "protoc short.proto long_proto_name.proto"
+    cmds.size() == 1 && cmds[0] == ["protoc", "short.proto", "long_proto_name.proto"]
   }
 
   void "test generateCmds should not return commands when no protos are given"() {
     given: "a cmd length limit and no proto files"
 
-    String baseCmd = "protoc"
+    List<String> baseCmd = ["protoc"]
     List<File> protoFiles = []
     int cmdLengthLimit = 32
 
     when: "the commands are generated"
 
-    List<String> cmds = GenerateProtoTask.generateCmds(baseCmd, protoFiles, cmdLengthLimit)
+    List<List<String>> cmds = GenerateProtoTask.generateCmds(baseCmd, protoFiles, cmdLengthLimit)
 
     then: "it returns no commands"
     cmds.isEmpty()

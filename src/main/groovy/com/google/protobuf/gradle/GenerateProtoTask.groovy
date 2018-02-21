@@ -447,14 +447,14 @@ public class GenerateProtoTask extends DefaultTask {
       }
     }
 
-    List<String> cmds = generateCmds(baseCmd.join(" "), protoFiles, getCmdLengthLimit())
-    for (String cmd : cmds) {
+    List<List<String>> cmds = generateCmds(baseCmd, protoFiles, getCmdLengthLimit())
+    for (List<String> cmd : cmds) {
       compileFiles(cmd)
     }
   }
 
-  private void compileFiles(String cmd) {
-    logger.log(LogLevel.INFO, cmd)
+  private void compileFiles(List<String> cmd) {
+    logger.log(LogLevel.INFO, cmd.toString())
 
     StringBuffer stdout = new StringBuffer()
     StringBuffer stderr = new StringBuffer()
@@ -468,23 +468,32 @@ public class GenerateProtoTask extends DefaultTask {
     }
   }
 
-  static List<String> generateCmds(String baseCmd, List<File> protoFiles, int cmdLengthLimit) {
-    List<String> cmds = []
+  static List<List<String>> generateCmds(List<String> baseCmd, List<File> protoFiles, int cmdLengthLimit) {
+    List<List<String>> cmds = []
     if (!protoFiles.isEmpty()) {
-      StringBuilder currentCmd = new StringBuilder(baseCmd)
+      // We count one additional space needed for each command line
+      // argument.  The result will be one more than the actual
+      // commandline length, but we can tolerate it for the sake of
+      // simplicity.
+      int baseCmdLength = baseCmd.sum { it.length() + 1 }
+      List<String> currentArgs = new ArrayList<String>()
+      int currentArgsLength = 0
       for (File proto: protoFiles) {
         String protoFileName = proto
+        int currentFileLength = protoFileName.length() + 1
         // Check if appending the next proto string will overflow the cmd length limit
-        if (currentCmd.length() + protoFileName.length() + 1 > cmdLengthLimit) {
+        if (baseCmdLength + currentArgsLength + currentFileLength > cmdLengthLimit) {
           // Add the current cmd before overflow
-          cmds.add(currentCmd.toString())
-          currentCmd.setLength(baseCmd.length())
+          cmds.add(baseCmd + currentArgs)
+          currentArgs.clear()
+          currentArgsLength = 0
         }
-        // Append the proto file to the command
-        currentCmd.append(" ").append(protoFileName)
+        // Append the proto file to the args
+        currentArgs.add(protoFileName)
+        currentArgsLength += currentFileLength
       }
       // Add the last cmd for execution
-      cmds.add(currentCmd.toString())
+      cmds.add(baseCmd + currentArgs)
     }
     return cmds
   }

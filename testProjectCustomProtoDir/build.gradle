@@ -14,6 +14,7 @@ sourceSets {
       // In addition to the default 'src/main/proto'
       srcDir 'src/main/protobuf'
       srcDir 'src/main/protocolbuffers'
+      srcDir 'src/main/protocol buffers'
       // In addition to '**/*.proto' (use with caution).
       // Using an extension other than 'proto' is NOT recommended, because when
       // proto files are published along with class files, we can only tell the
