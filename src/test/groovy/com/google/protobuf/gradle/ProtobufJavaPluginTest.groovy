@@ -298,32 +298,17 @@ class ProtobufJavaPluginTest extends Specification {
     cmds.isEmpty()
   }
 
-  void "test getCmdLengthLimit returns correct limit for Windows XP"() {
-    given: "Windows OS at major version 5"
+  void "test getCmdLengthLimit returns correct limit for Windows"() {
+    given: "Windows OS"
 
     String os = "windows"
-    String version = "5.0.0"
 
     when: "the command length limit is queried"
 
-    int limit = GenerateProtoTask.getCmdLengthLimit(os, version)
+    int limit = GenerateProtoTask.getCmdLengthLimit(os)
 
     then: "it returns the XP limit"
-    limit == GenerateProtoTask.XP_CMD_LENGTH_LIMIT
-  }
-
-  void "test getCmdLengthLimit returns correct limit for Windows Vista"() {
-    given: "Windows OS at major version 6"
-
-    String os = "Windows"
-    String version = "6.0.0"
-
-    when: "the command length limit is queried"
-
-    int limit = GenerateProtoTask.getCmdLengthLimit(os, version)
-
-    then: "it returns the Vista limit"
-    limit == GenerateProtoTask.VISTA_CMD_LENGTH_LIMIT
+    limit == GenerateProtoTask.WINDOWS_CMD_LENGTH_LIMIT
   }
 
   void "test getCmdLengthLimit returns correct limit for non-Windows OS"() {
@@ -334,7 +319,7 @@ class ProtobufJavaPluginTest extends Specification {
 
     when: "the command length limit is queried"
 
-    int limit = GenerateProtoTask.getCmdLengthLimit(os, version)
+    int limit = GenerateProtoTask.getCmdLengthLimit(os)
 
     then: "it returns maximum integer value"
     limit == Integer.MAX_VALUE
