@@ -51,8 +51,12 @@ import org.gradle.util.ConfigureUtil
  */
 // TODO(zhangkun83): add per-plugin output dir reconfiguraiton.
 public class GenerateProtoTask extends DefaultTask {
-  static final int VISTA_CMD_LENGTH_LIMIT = 8191
-  static final int XP_CMD_LENGTH_LIMIT = 2047
+  // Windows CreateProcess has command line limit of 32768:
+  // https://msdn.microsoft.com/en-us/library/windows/desktop/ms682425(v=vs.85).aspx
+  static final int WINDOWS_CMD_LENGTH_LIMIT = 32760
+  // Extra command line length when added an additional argument on Windows.
+  // Two quotes and a space.
+  static final int CMD_ARGUMENT_EXTRA_LENGTH = 3
 
   private final List includeDirs = []
   private final NamedDomainObjectContainer<PluginOptions> builtins
@@ -471,16 +475,12 @@ public class GenerateProtoTask extends DefaultTask {
   static List<List<String>> generateCmds(List<String> baseCmd, List<File> protoFiles, int cmdLengthLimit) {
     List<List<String>> cmds = []
     if (!protoFiles.isEmpty()) {
-      // We count one additional space needed for each command line
-      // argument.  The result will be one more than the actual
-      // commandline length, but we can tolerate it for the sake of
-      // simplicity.
-      int baseCmdLength = baseCmd.sum { it.length() + 1 }
+      int baseCmdLength = baseCmd.sum { it.length() + CMD_ARGUMENT_EXTRA_LENGTH }
       List<String> currentArgs = new ArrayList<String>()
       int currentArgsLength = 0
       for (File proto: protoFiles) {
         String protoFileName = proto
-        int currentFileLength = protoFileName.length() + 1
+        int currentFileLength = protoFileName.length() + CMD_ARGUMENT_EXTRA_LENGTH
         // Check if appending the next proto string will overflow the cmd length limit
         if (baseCmdLength + currentArgsLength + currentFileLength > cmdLengthLimit) {
           // Add the current cmd before overflow
@@ -499,24 +499,12 @@ public class GenerateProtoTask extends DefaultTask {
   }
 
   static int getCmdLengthLimit() {
-    return getCmdLengthLimit(System.getProperty("os.name"), System.getProperty("os.version"))
+    return getCmdLengthLimit(System.getProperty("os.name"))
   }
 
-  static int getCmdLengthLimit(String os, String version) {
-    // Check if operating system is Windows
+  static int getCmdLengthLimit(String os) {
     if (os != null && os.toLowerCase(Locale.ROOT).indexOf("win") > -1) {
-      if (version != null) {
-        int idx = version.indexOf('.')
-        if (idx > 0) {
-          // If the major version is > 5, we are on Windows Vista or higher
-          int majorVersion = Ints.tryParse(version[0..(idx - 1)]) ?: 0
-          if (majorVersion > 5) {
-            return VISTA_CMD_LENGTH_LIMIT
-          }
-        }
-      }
-      // Failed to read version, assume Windows XP or lower
-      return XP_CMD_LENGTH_LIMIT
+      return WINDOWS_CMD_LENGTH_LIMIT
     }
     return Integer.MAX_VALUE
   }
