@@ -315,7 +315,6 @@ class ProtobufJavaPluginTest extends Specification {
     given: "MacOS X at major version 10"
 
     String os = "Mac OS X"
-    String version = "10.0.0"
 
     when: "the command length limit is queried"
 
