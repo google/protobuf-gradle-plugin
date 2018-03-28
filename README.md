@@ -50,8 +50,7 @@ buildscript {
 
 ## Examples
 
-A stand-alone example project is located under [exampleProject]
-(https://github.com/google/protobuf-gradle-plugin/tree/master/exampleProject).
+A stand-alone example project is located under [exampleProject](https://github.com/google/protobuf-gradle-plugin/tree/master/exampleProject).
 Run `../gradlew build` under that directory to test it out.
 
 Directories that start with `testProject` can also serve as usage
