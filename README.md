@@ -181,7 +181,7 @@ protobuf {
 }
 ```
 
-Mulitple assignments are allowed in the ``protoc`` block. The last one wins.
+Multiple assignments are allowed in the ``protoc`` block. The last one wins.
 
 You may also run ``protoc`` with codegen plugins. You need to define all the
 codegen plugins you will use in the ``plugins`` block, by specifying the
