@@ -96,7 +96,7 @@ _sourceSet_ (or _variant_ in an Android project) are compiled in a single
 ``protoc`` run, and the generated files are added to the input of the Java
 compilation run of that _sourceSet_ (or _variant_).
 
-### Cutomizing source directories
+### Customizing source directories
 The plugin adds a new sources block named ``proto`` alongside ``java`` to every
 sourceSet. By default, it includes all ``*.proto`` files under
 ``src/$sourceSetName/proto``. You can customize it in the same way as you would
