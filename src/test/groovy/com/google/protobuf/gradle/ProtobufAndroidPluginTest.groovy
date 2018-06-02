@@ -88,7 +88,6 @@ buildscript {
     return GradleRunner.create()
         .withProjectDir(mainProjectDir)
         .withArguments(
-        "-DANDROID_PLUGIN_VERSION=${androidPluginVersion}",
         // set android build cache to avoid using home directory on travis CI.
         "-Pandroid.buildCacheDir=" + localBuildCache,
         "testProjectAndroid:build",
