@@ -36,6 +36,7 @@ import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.FileCollection
@@ -489,21 +490,60 @@ class ProtobufPlugin implements Plugin<Project> {
      * Adds proto sources and generated sources to supported IDE plugins.
      */
     private void addSourcesToIde() {
-      // Make the proto source dirs known to IDEs
-      getSourceSets().each { sourceSet ->
-        ProtobufSourceDirectorySet protoSrcDirSet = sourceSet.proto
-        protoSrcDirSet.srcDirs.each { File protoDir ->
-          Utils.addToIdeSources(project, Utils.isTest(sourceSet.name), protoDir)
+      // The generated javalite sources have lint issues:
+      //   https://github.com/google/protobuf/pull/2823
+      // Strangely, this does not cause Android Studio warnings for sources registered via
+      // registerJavaGeneratingTask. Only these extra sources cause problems.
+      // If users would rather have a clean Android Studio project refresh than registered
+      // sources, they can use the flag to disable this section.
+      if (Utils.isAndroidProject(project)
+          && project.getProperties().get('protobuf.androidstudio.extrasrcs.experimental', true)) {
+        // variant.registerJavaGeneratingTask called earlier already registers the generated
+        // sources for normal variants, but unit test variants work differently and do not
+        // use registerJavaGeneratingTask. Let's call addJavaSourceFoldersToModel for all tasks
+        // to ensure all variants (including unit test variants) have sources registered.
+        project.tasks.withType(GenerateProtoTask).each { GenerateProtoTask generateProtoTask ->
+          generateProtoTask.getOutputSourceDirectorySet().srcDirs.each { File outputDir ->
+            generateProtoTask.variant.variantData.addJavaSourceFoldersToModel(outputDir)
+          }
         }
-      }
-      // Make the extracted proto dirs known to IDEs
-      project.tasks.withType(ProtobufExtract).each { ProtobufExtract extractProtoTask ->
-        Utils.addToIdeSources(project, extractProtoTask.isTest, extractProtoTask.destDir)
-      }
-      // Make the generated code dirs known to IDEs
-      project.tasks.withType(GenerateProtoTask).each {  GenerateProtoTask generateProtoTask ->
-        generateProtoTask.getOutputSourceDirectorySet().srcDirs.each { File outputDir ->
-          Utils.addToIdeSources(project, generateProtoTask.isTest, outputDir)
+
+        // An android project can depend on a different subproject and use its protos.
+        // This is not a very common project structure but it is possible.
+        (getNonTestVariants() + project.android.testVariants
+            + project.android.unitTestVariants).each { variant ->
+          variant.variantData.variantDependency.compileConfiguration.allDependencies.findAll {
+            it instanceof ProjectDependency
+          } each {
+            ProjectDependency it ->
+              it.dependencyProject.tasks.withType(GenerateProtoTask).each {
+                GenerateProtoTask generateProtoTask ->
+                  generateProtoTask.getOutputSourceDirectorySet().srcDirs.each { File outputDir ->
+                    variant.variantData.addJavaSourceFoldersToModel(outputDir)
+                  }
+              }
+          }
+        }
+
+        // TODO(zpencer): find a way to make android studio aware of the .proto files
+        // Simply adding the .proto dirs via addJavaSourceFoldersToModel does not seem to work.
+      } else {
+        // Make the proto source dirs known to IDEs
+        getSourceSets().each { sourceSet ->
+          ProtobufSourceDirectorySet protoSrcDirSet = sourceSet.proto
+          protoSrcDirSet.srcDirs.each { File protoDir ->
+            Utils.addToIdeSources(project, Utils.isTest(sourceSet.name), protoDir)
+          }
+        }
+        // Make the extracted proto dirs known to IDEs
+        project.tasks.withType(ProtobufExtract).each { ProtobufExtract extractProtoTask ->
+          Utils.addToIdeSources(project, extractProtoTask.isTest, extractProtoTask.destDir)
+        }
+        // Make the generated code dirs known to IDEs
+        project.tasks.withType(GenerateProtoTask).each { GenerateProtoTask generateProtoTask ->
+          generateProtoTask.getOutputSourceDirectorySet().srcDirs.each { File outputDir ->
+            Utils.addToIdeSources(project, generateProtoTask.isTest, outputDir)
+          }
         }
       }
     }
