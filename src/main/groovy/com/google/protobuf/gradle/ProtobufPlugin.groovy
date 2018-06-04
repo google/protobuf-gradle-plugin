@@ -491,7 +491,7 @@ class ProtobufPlugin implements Plugin<Project> {
      */
     private void addSourcesToIde() {
       // The generated javalite sources have lint issues:
-      //   https://github.com/google/protobuf/pull/2823
+      //   https://github.com/google/protobuf/pull/2823.
       // Strangely, this does not cause Android Studio warnings for sources registered via
       // registerJavaGeneratingTask. Only these extra sources cause problems.
       // If users would rather have a clean Android Studio project refresh than registered
@@ -504,26 +504,17 @@ class ProtobufPlugin implements Plugin<Project> {
         // to ensure all variants (including unit test variants) have sources registered.
         project.tasks.withType(GenerateProtoTask).each { GenerateProtoTask generateProtoTask ->
           generateProtoTask.getOutputSourceDirectorySet().srcDirs.each { File outputDir ->
-            generateProtoTask.variant.variantData.addJavaSourceFoldersToModel(outputDir)
+            generateProtoTask.variant.addJavaSourceFoldersToModel(outputDir)
           }
         }
 
-        // An android project can depend on a different subproject and use its protos.
-        // This is not a very common project structure but it is possible.
-        (getNonTestVariants() + project.android.testVariants
-            + project.android.unitTestVariants).each { variant ->
-          variant.variantData.variantDependency.compileConfiguration.allDependencies.findAll {
-            it instanceof ProjectDependency
-          } each {
-            ProjectDependency it ->
-              it.dependencyProject.tasks.withType(GenerateProtoTask).each {
-                GenerateProtoTask generateProtoTask ->
-                  generateProtoTask.getOutputSourceDirectorySet().srcDirs.each { File outputDir ->
-                    variant.variantData.addJavaSourceFoldersToModel(outputDir)
-                  }
-              }
-          }
-        }
+        // TODO(zpencer): add gen sources from cross project GenerateProtoTasks
+        // This is an uncommon project set up but it is possible.
+        // We must avoid using private android APIs to find subprojects that the variant depends
+        // on, such as by walking through
+        //   variant.variantData.variantDependency.compileConfiguration.allDependencies
+        // In theory, we should be able to take an arbitrary task and walk its dependency
+        // graph using only vanilla Gradle APIs to identify all parent GenerateProtoTasks.
 
         // TODO(zpencer): find a way to make android studio aware of the .proto files
         // Simply adding the .proto dirs via addJavaSourceFoldersToModel does not seem to work.
