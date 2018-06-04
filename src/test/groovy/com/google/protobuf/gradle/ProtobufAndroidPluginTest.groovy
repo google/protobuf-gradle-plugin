@@ -68,7 +68,7 @@ class ProtobufAndroidPluginTest extends Specification {
     // classpath correctly.
     new File(mainProjectDir, "build.gradle") << """
 buildscript {
-    String androidPluginVersion = System.properties.get("ANDROID_PLUGIN_VERSION") ?: "2.2.0"
+    String androidPluginVersion = "${androidPluginVersion}"
     repositories {
         maven { url "https://plugins.gradle.org/m2/" }
         if (androidPluginVersion.startsWith("3.")) {
@@ -88,7 +88,6 @@ buildscript {
     return GradleRunner.create()
         .withProjectDir(mainProjectDir)
         .withArguments(
-        "-DANDROID_PLUGIN_VERSION=${androidPluginVersion}",
         // set android build cache to avoid using home directory on travis CI.
         "-Pandroid.buildCacheDir=" + localBuildCache,
         "testProjectAndroid:build",
