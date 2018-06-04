@@ -193,7 +193,7 @@ class ProtobufPlugin implements Plugin<Project> {
      */
     private addProtoTasks() {
       if (Utils.isAndroidProject(project)) {
-        (getNonTestVariants()).each { variant ->
+        getNonTestVariants().each { variant ->
           addTasksForVariant(variant, false)
         }
         (project.android.unitTestVariants + project.android.testVariants).each { variant ->
