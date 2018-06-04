@@ -490,14 +490,10 @@ class ProtobufPlugin implements Plugin<Project> {
      * Adds proto sources and generated sources to supported IDE plugins.
      */
     private void addSourcesToIde() {
-      // The generated javalite sources have lint issues:
-      //   https://github.com/google/protobuf/pull/2823.
-      // Strangely, this does not cause Android Studio warnings for sources registered via
-      // registerJavaGeneratingTask. Only these extra sources cause problems.
-      // If users would rather have a clean Android Studio project refresh than registered
-      // sources, they can use the flag to disable this section.
-      if (Utils.isAndroidProject(project)
-          && project.getProperties().get('protobuf.androidstudio.extrasrcs.experimental', true)) {
+      // The generated javalite sources have lint issues. This is fixed upstream but
+      // there is still no release with the fix yet.
+      //   https://github.com/google/protobuf/pull/2823
+      if (Utils.isAndroidProject(project)) {
         // variant.registerJavaGeneratingTask called earlier already registers the generated
         // sources for normal variants, but unit test variants work differently and do not
         // use registerJavaGeneratingTask. Let's call addJavaSourceFoldersToModel for all tasks
