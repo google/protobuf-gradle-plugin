@@ -238,7 +238,7 @@ class ProtobufPlugin implements Plugin<Project> {
     private addTasksForVariant(final Object variant, boolean isTestVariant) {
       Task generateProtoTask = addGenerateProtoTask(variant.name, variant.sourceSets)
       generateProtoTask.setVariant(variant, isTestVariant)
-      generateProtoTask.flavors = ImmutableList.copyOf(variant.productFlavors.collect {it.name})
+      generateProtoTask.flavors = ImmutableList.copyOf(variant.productFlavors.collect { it.name })
       if (variant.hasProperty('buildType')) {
         generateProtoTask.buildType = variant.buildType.name
       }
