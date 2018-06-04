@@ -193,8 +193,11 @@ class ProtobufPlugin implements Plugin<Project> {
      */
     private addProtoTasks() {
       if (Utils.isAndroidProject(project)) {
-        (getNonTestVariants() + project.android.testVariants + project.android.unitTestVariants).each { variant ->
-          addTasksForVariant(variant)
+        (getNonTestVariants()).each { variant ->
+          addTasksForVariant(variant, false)
+        }
+        (project.android.unitTestVariants + project.android.testVariants).each { variant ->
+          addTasksForVariant(variant, true)
         }
       } else {
         getSourceSets().each { sourceSet ->
@@ -232,43 +235,17 @@ class ProtobufPlugin implements Plugin<Project> {
     /**
      * Creates Protobuf tasks for a variant in an Android project.
      */
-    private addTasksForVariant(final Object variant) {
-      // The collection of sourceSets that will be compiled for this variant
-      List sourceSetNames = []
-      List sourceSets = []
-      boolean isTestVariant = ['ANDROID_TEST', "UNIT_TEST"].contains(variant.variantData.type.toString())
-      if (!isTestVariant) {
-        // All non-test variants will include the main sourceSet
-        sourceSetNames.add 'main'
-      }
-      // see: https://android.googlesource.com/platform/tools/build/+/master/builder/src/main/java/
-      // com/android/builder/VariantConfiguration.java
-      sourceSetNames.add variant.variantData.variantConfiguration.defaultSourceSet.name // e.g. main, androidTest, test
-      sourceSetNames.add variant.name // e.g. x86FreeappDebug
-      if (variant.hasProperty('buildType')) {
-        sourceSetNames.add variant.buildType.name
-      }
-      ImmutableList.Builder<String> flavorListBuilder = ImmutableList.builder()
-      if (variant.hasProperty('productFlavors')) {
-        variant.productFlavors.each { flavor ->
-          sourceSetNames.add flavor.name
-          flavorListBuilder.add flavor.name
-        }
-      }
-      sourceSetNames.each { sourceSetName ->
-        sourceSets.add project.android.sourceSets.maybeCreate(sourceSetName)
-      }
-
-      Task generateProtoTask = addGenerateProtoTask(variant.name, sourceSets)
+    private addTasksForVariant(final Object variant, boolean isTestVariant) {
+      Task generateProtoTask = addGenerateProtoTask(variant.name, variant.sourceSets)
       generateProtoTask.setVariant(variant, isTestVariant)
-      generateProtoTask.flavors = flavorListBuilder.build()
+      generateProtoTask.flavors = ImmutableList.copyOf(variant.productFlavors.collect {it.name})
       if (variant.hasProperty('buildType')) {
         generateProtoTask.buildType = variant.buildType.name
       }
       generateProtoTask.doneInitializing()
 
-      sourceSetNames.each { sourceSetName ->
-        Task extractProtosTask = maybeAddExtractProtosTask(sourceSetName)
+      variant.sourceSets.each {
+        Task extractProtosTask = maybeAddExtractProtosTask(it.name)
         generateProtoTask.dependsOn(extractProtosTask)
       }
 
@@ -293,9 +270,9 @@ class ProtobufPlugin implements Plugin<Project> {
         generateProtoTask.dependsOn(extractIncludeProtosTask)
       } else {
         // For Android Gradle plugin < 2.5
-        sourceSetNames.each { sourceSetName ->
+        variant.sourceSets.each {
           Task extractIncludeProtosTask =
-              maybeAddExtractIncludeProtosTask(sourceSetName)
+              maybeAddExtractIncludeProtosTask(it.name)
           generateProtoTask.dependsOn(extractIncludeProtosTask)
         }
       }
@@ -456,7 +433,7 @@ class ProtobufPlugin implements Plugin<Project> {
         project.android.unitTestVariants.each { variant ->
           project.protobuf.generateProtoTasks.ofVariant(variant.name).each { GenerateProtoTask genProtoTask ->
             // unit test variants do not implement registerJavaGeneratingTask
-            Task javaCompileTask = variant.variantData.javaCompilerTask
+            Task javaCompileTask = variant.javaCompile
             if (javaCompileTask != null) {
               linkGenerateProtoTasksToTask(javaCompileTask, genProtoTask)
             }
