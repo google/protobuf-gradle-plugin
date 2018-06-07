@@ -82,7 +82,7 @@ dependencies {
     // Add android plugin to the test classpath, so that we can jump into class definitions,
     // read their sources, set break points, etc while debugging android unit tests.
     // Change the version if necessary to match the specific unit test.
-    testRuntime 'com.android.tools.build:gradle:2.3.0'
+    testCompile 'com.android.tools.build:gradle:3.1.2'
     // Add the classpath file to the test runtime classpath
     testRuntime files(createClasspathManifest)
 }
