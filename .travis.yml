@@ -21,6 +21,7 @@ env:
 script:
   - ./gradlew clean assemble test --tests com.google.protobuf.gradle.ProtobufJavaPluginTest --stacktrace
   - ./gradlew test --tests com.google.protobuf.gradle.ProtobufAndroidPluginTest --stacktrace
+  - ./gradlew test --tests com.google.protobuf.gradle.UtilsTest --stacktrace
   - ./gradlew codenarcMain || (cat ./build/reports/codenarc/main.txt && false)
   - ./gradlew codenarcTest || (cat ./build/reports/codenarc/test.txt && false)
 
