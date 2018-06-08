@@ -508,8 +508,10 @@ class ProtobufPlugin implements Plugin<Project> {
         // We must avoid using private android APIs to find subprojects that the variant depends
         // on, such as by walking through
         //   variant.variantData.variantDependency.compileConfiguration.allDependencies
-        // In theory, we should be able to take an arbitrary task and walk its dependency
-        // graph using only vanilla Gradle APIs to identify all parent GenerateProtoTasks.
+        // Gradle.getTaskGraph().getDependencies() should allow us to walk the task graph,
+        // but unfortunately that API is @Incubating. We can revisit it when it becomes stable.
+        // https://docs.gradle.org/4.8/javadoc/org/gradle/api/execution/
+        // TaskExecutionGraph.html#getDependencies-org.gradle.api.Task-
 
         // TODO(zpencer): find a way to make android studio aware of the .proto files
         // Simply adding the .proto dirs via addJavaSourceFoldersToModel does not seem to work.
