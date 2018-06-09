@@ -6,23 +6,26 @@ import org.gradle.testfixtures.ProjectBuilder
 import spock.lang.Requires
 import spock.lang.Specification
 
+/**
+ * Unit tests for utility functions
+ */
 class UtilsTest extends Specification {
 
   private Project setupBasicAndroidLibraryProject() {
     Project project = ProjectBuilder.builder().build()
-    project.apply plugin: 'com.android.library'
+    project.apply plugin:'com.android.library'
     return project
   }
 
   private Project setupThreeZeroZeroUpAndroidProject() {
     Project project = ProjectBuilder.builder().build()
-    project.apply plugin: 'com.android.base'
+    project.apply plugin:'com.android.base'
     return project
   }
 
   private Project setupBasicJavaProject(Project parent) {
     Project project = ProjectBuilder.builder().withParent(parent).build()
-    project.apply plugin: 'java'
+    project.apply plugin:'java'
     return project
   }
 
