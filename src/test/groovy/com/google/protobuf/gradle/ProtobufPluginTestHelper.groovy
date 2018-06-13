@@ -94,7 +94,7 @@ buildscript {
        "-Pandroid.buildCacheDir=$localBuildCache",
        fullPathTask,
        "-x", "lint", // linter causes .withDebug(true) to fail
-       "--stacktrace")
+       "--stacktrace", '--info')
        .withGradleVersion(gradleVersion)
        .forwardStdOutput(new OutputStreamWriter(System.out))
        .forwardStdError(new OutputStreamWriter(System.err))

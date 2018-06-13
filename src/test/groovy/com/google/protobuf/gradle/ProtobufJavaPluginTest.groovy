@@ -64,7 +64,7 @@ class ProtobufJavaPluginTest extends Specification {
     when: "build is invoked"
     BuildResult result = GradleRunner.create()
       .withProjectDir(projectDir)
-      .withArguments('build', '--stacktrace')
+      .withArguments('build', '--stacktrace', '--info')
       .withGradleVersion(gradleVersion)
       .forwardStdOutput(new OutputStreamWriter(System.out))
       .forwardStdError(new OutputStreamWriter(System.err))
@@ -88,7 +88,7 @@ class ProtobufJavaPluginTest extends Specification {
     when: "build is invoked"
     BuildResult result = GradleRunner.create()
       .withProjectDir(projectDir)
-      .withArguments('build')
+      .withArguments('build', '--info')
       .withDebug(true)
       .build()
 
@@ -109,7 +109,7 @@ class ProtobufJavaPluginTest extends Specification {
     when: "build is invoked"
     BuildResult result = GradleRunner.create()
       .withProjectDir(projectDir)
-      .withArguments('build')
+      .withArguments('build', '--info')
       .withDebug(true)
       .build()
 
@@ -130,7 +130,7 @@ class ProtobufJavaPluginTest extends Specification {
     when: "build is invoked"
     BuildResult result = GradleRunner.create()
       .withProjectDir(projectDir)
-      .withArguments('build', '--stacktrace')
+      .withArguments('build', '--stacktrace', '--info')
       .withGradleVersion(gradleVersion)
       .forwardStdOutput(new OutputStreamWriter(System.out))
       .forwardStdError(new OutputStreamWriter(System.err))
@@ -160,7 +160,7 @@ class ProtobufJavaPluginTest extends Specification {
     when: "build is invoked"
     BuildResult result = GradleRunner.create()
       .withProjectDir(mainProjectDir)
-      .withArguments('testProjectDependent:build', '--stacktrace')
+      .withArguments('testProjectDependent:build', '--stacktrace', '--info')
       .withGradleVersion(gradleVersion)
       .forwardStdOutput(new OutputStreamWriter(System.out))
       .forwardStdError(new OutputStreamWriter(System.err))
@@ -183,7 +183,7 @@ class ProtobufJavaPluginTest extends Specification {
     when: "build is invoked"
     BuildResult result = GradleRunner.create()
       .withProjectDir(projectDir)
-      .withArguments('build', '--stacktrace')
+      .withArguments('build', '--stacktrace', '--info')
       .withGradleVersion(gradleVersion)
       .forwardStdOutput(new OutputStreamWriter(System.out))
       .forwardStdError(new OutputStreamWriter(System.err))
@@ -206,7 +206,7 @@ class ProtobufJavaPluginTest extends Specification {
     when: "idea is invoked"
     BuildResult result = GradleRunner.create()
       .withProjectDir(projectDir)
-      .withArguments('idea')
+      .withArguments('idea', '--info')
       .withGradleVersion(gradleVersion)
       .build()
 
