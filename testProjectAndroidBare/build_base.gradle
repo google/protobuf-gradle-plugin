@@ -1,0 +1,17 @@
+android {
+  compileSdkVersion 26
+  buildToolsVersion "26.0.1"
+
+  defaultConfig {
+    applicationId "io.dont.build.me"
+    minSdkVersion 7
+    targetSdkVersion 23
+    versionCode 1
+    versionName "1.0"
+  }
+
+  compileOptions {
+    sourceCompatibility = JavaVersion.VERSION_1_7
+    targetCompatibility = JavaVersion.VERSION_1_7
+  }
+}

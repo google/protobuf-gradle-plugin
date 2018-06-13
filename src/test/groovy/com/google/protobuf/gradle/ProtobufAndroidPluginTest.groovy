@@ -1,7 +1,8 @@
 package com.google.protobuf.gradle
 
+import static com.google.protobuf.gradle.ProtobufPluginTestHelper.buildAndroidProject
+
 import org.gradle.testkit.runner.BuildResult
-import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import spock.lang.Specification
 
@@ -27,7 +28,12 @@ class ProtobufAndroidPluginTest extends Specification {
         .copySubProjects(testProjectStaging, testProjectLiteStaging, testProjectAndroidStaging)
         .build()
     when: "build is invoked"
-    BuildResult result = testHelper(mainProjectDir, androidPluginVersion, gradleVersion)
+    BuildResult result = buildAndroidProject(
+       mainProjectDir,
+       androidPluginVersion,
+       gradleVersion,
+       "testProjectAndroid:build"
+    )
 
     then: "it succeed"
     result.task(":testProjectAndroid:build").outcome == TaskOutcome.SUCCESS
@@ -52,7 +58,12 @@ class ProtobufAndroidPluginTest extends Specification {
         .copySubProjects(testProjectStaging, testProjectLiteStaging, testProjectAndroidStaging)
         .build()
     when: "build is invoked"
-    BuildResult result = testHelper(mainProjectDir, androidPluginVersion, gradleVersion)
+    BuildResult result = buildAndroidProject(
+       mainProjectDir,
+       androidPluginVersion,
+       gradleVersion,
+       "testProjectAndroid:build"
+    )
 
     then: "it succeed"
     result.task(":testProjectAndroid:build").outcome == TaskOutcome.SUCCESS
@@ -60,43 +71,5 @@ class ProtobufAndroidPluginTest extends Specification {
     where:
     androidPluginVersion << ANDROID_PLUGIN_VERSION
     gradleVersion << GRADLE_VERSION
-  }
-
-  private static BuildResult testHelper(
-      File mainProjectDir, String androidPluginVersion, String gradleVersion) {
-    // Add android plugin to the test root project so that Gradle can resolve
-    // classpath correctly.
-    new File(mainProjectDir, "build.gradle") << """
-buildscript {
-    String androidPluginVersion = "${androidPluginVersion}"
-    repositories {
-        maven { url "https://plugins.gradle.org/m2/" }
-        if (androidPluginVersion.startsWith("3.")) {
-            google()
-        }
-    }
-    dependencies {
-        classpath "com.android.tools.build:gradle:\$androidPluginVersion"
-    }
-}
-"""
-
-    File localBuildCache = new File(mainProjectDir, ".buildCache")
-    if (localBuildCache.exists()) {
-      localBuildCache.deleteDir()
-    }
-    return GradleRunner.create()
-        .withProjectDir(mainProjectDir)
-        .withArguments(
-        // set android build cache to avoid using home directory on travis CI.
-        "-Pandroid.buildCacheDir=" + localBuildCache,
-        "testProjectAndroid:build",
-        "-x", "lint", // linter causes .withDebug(true) to fail
-        "--stacktrace")
-        .withGradleVersion(gradleVersion)
-        .forwardStdOutput(new OutputStreamWriter(System.out))
-        .forwardStdError(new OutputStreamWriter(System.err))
-        .withDebug(true)
-        .build()
   }
 }
