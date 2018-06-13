@@ -297,9 +297,8 @@ public class GenerateProtoTask extends DefaultTask {
   public boolean getIsTest() {
     if (Utils.isAndroidProject(project)) {
       return isTestVariant
-    } else {
-      return Utils.isTest(sourceSet.name)
     }
+    return Utils.isTest(sourceSet.name)
   }
 
   /**
@@ -337,7 +336,7 @@ public class GenerateProtoTask extends DefaultTask {
     /**
      * Set the output directory for this plugin, relative to {@link GenerateProtoTask#outputBaseDir}.
      */
-    public setOutputSubDir(String outputSubDir) {
+    void setOutputSubDir(String outputSubDir) {
       this.outputSubDir = outputSubDir
     }
 

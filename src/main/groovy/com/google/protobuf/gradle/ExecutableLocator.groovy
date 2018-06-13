@@ -36,19 +36,19 @@ import org.gradle.api.Named
  * configured, the plugin should try to run the executable from system search
  * path.
  */
-public class ExecutableLocator implements Named {
+class ExecutableLocator implements Named {
 
   private final String name
 
   private String artifact
   private String path
 
-  public ExecutableLocator(String name) {
+  ExecutableLocator(String name) {
     this.name = name
   }
 
   @Override
-  public String getName() {
+  String getName() {
     return name
   }
 
@@ -56,7 +56,7 @@ public class ExecutableLocator implements Named {
    * Specifies an artifact spec for downloading the executable from
    * repositories. spec format: '<groupId>:<artifactId>:<version>'
    */
-  public setArtifact(String spec) {
+  void setArtifact(String spec) {
     this.artifact = spec
     this.path = null
   }
@@ -64,16 +64,16 @@ public class ExecutableLocator implements Named {
   /**
    * Specifies a local path.
    */
-  public setPath(String path) {
+  void setPath(String path) {
     this.path = path
     this.artifact = null
   }
 
-  public String getArtifact() {
+  String getArtifact() {
     return artifact
   }
 
-  public String getPath() {
+  String getPath() {
     return path
   }
 }

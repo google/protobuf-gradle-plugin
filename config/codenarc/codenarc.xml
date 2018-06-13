@@ -37,13 +37,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <ruleset-ref path='rulesets/design.xml'>
     <exclude name="Instanceof"/>
     <exclude name="ImplementationAsType"/>
+    <exclude name="BuilderMethodWithSideEffects"/>
   </ruleset-ref>
   <ruleset-ref path='rulesets/dry.xml'>
     <exclude name="DuplicateStringLiteral"/>
     <exclude name="DuplicateNumberLiteral"/>
   </ruleset-ref>
   <ruleset-ref path='rulesets/exceptions.xml'/>
-  <ruleset-ref path='rulesets/formatting.xml'/>
+  <ruleset-ref path='rulesets/formatting.xml'>
+    <exclude name="Indentation"/>
+  </ruleset-ref>
   <ruleset-ref path='rulesets/generic.xml'/>
   <ruleset-ref path='rulesets/grails.xml'/>
   <ruleset-ref path='rulesets/groovyism.xml'/>
@@ -69,12 +72,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <exclude name="CrapMetric"/>
     <exclude name="CyclomaticComplexity"/>
     <exclude name="NestedBlockDepth"/>
+    <exclude name="MethodCount"/>
   </ruleset-ref>
   <ruleset-ref path='rulesets/unused.xml'/>
   <ruleset-ref path='rulesets/unnecessary.xml'>
     <exclude name="UnnecessaryCollectCall"/>
     <exclude name="UnnecessaryGetter"/>
     <exclude name="UnnecessaryGString"/>
+    <exclude name="UnnecessarySetter"/>
     <exclude name="UnnecessaryPublicModifier"/>
     <exclude name="UnnecessaryReturnKeyword"/>
   </ruleset-ref>
