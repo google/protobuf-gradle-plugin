@@ -1,6 +1,8 @@
 package com.google.protobuf.gradle
 
 import org.apache.commons.io.FileUtils
+import org.gradle.testkit.runner.BuildResult
+import org.gradle.testkit.runner.GradleRunner
 
 /**
  * Utility class.
@@ -18,19 +20,86 @@ final class ProtobufPluginTestHelper {
           'run `testClasses` build task.')
     }
 
-    String pluginClasspath = pluginClasspathResource.readLines()
+    List<String> pluginClasspath = pluginClasspathResource.readLines()
       .collect { it.replace('\\', '\\\\') } // escape backslashes in Windows paths
       .collect { "'$it'" }
-      .join(", ")
 
     // Add the logic under test to the test build
     buildFile << """
         buildscript {
             dependencies {
-                classpath files($pluginClasspath)
+    """
+
+    //android gradle plugin needs guava 22 so check for that before including guava from pluginClasspath
+    pluginClasspath.each { dependency ->
+        if (dependency.contains("guava")) {
+            buildFile << """
+                if (!project.hasProperty("androidPluginVersion") ||
+                    !project.findProperty("androidPluginVersion").startsWith("3.")) {
+                    classpath files($dependency)
+                }
+            """
+        } else {
+            buildFile << """
+                classpath files($dependency)
+            """
+        }
+    }
+
+    buildFile << """
             }
         }
     """
+  }
+
+  static BuildResult buildAndroidProject(
+     File mainProjectDir, String androidPluginVersion, String gradleVersion, String fullPathTask) {
+    // Prepend android plugin (and guava when appropriate) to the test root project so that Gradle
+    // can resolve classpath correctly.
+
+    File buildFile = new File(mainProjectDir, "build.gradle")
+    List<String> previousFileContents = buildFile.readLines()
+    buildFile.delete()
+    buildFile.createNewFile()
+
+    buildFile << """
+buildscript {
+    ext.androidPluginVersion = "${androidPluginVersion}"
+    repositories {
+        jcenter()
+        maven { url "https://plugins.gradle.org/m2/" }
+        maven { url "https://dl.google.com/dl/android/maven2/" }
+    }
+    dependencies {
+        classpath "com.android.tools.build:gradle:\$androidPluginVersion"
+        if (androidPluginVersion.startsWith("3.")) {
+            //agp 3.+ needs guava 22 but the protobuf project uses a lower version
+            classpath 'com.google.guava:guava:22.0'
+        }
+    }
+}
+"""
+    previousFileContents.each { line ->
+      buildFile << line + '\n'
+    }
+
+    File localBuildCache = new File(mainProjectDir, ".buildCache")
+    if (localBuildCache.exists()) {
+      localBuildCache.deleteDir()
+    }
+    return GradleRunner.create()
+       .withProjectDir(mainProjectDir)
+       .withArguments(
+       // set android build cache to avoid using home directory on travis CI.
+       "-Pandroid.buildCacheDir=$localBuildCache",
+       fullPathTask,
+       "-x", "lint", // linter causes .withDebug(true) to fail
+       "--stacktrace")
+       .withGradleVersion(gradleVersion)
+       .forwardStdOutput(new OutputStreamWriter(System.out))
+       .forwardStdError(new OutputStreamWriter(System.err))
+       .withDebug(true)
+       .build()
   }
 
   /**
@@ -79,7 +148,7 @@ final class ProtobufPluginTestHelper {
           settingsFile << """
           include ':$it.name'
           project(':$it.name').projectDir = "\$rootDir/$it.name" as File
-"""
+          """
         }
       }
 
