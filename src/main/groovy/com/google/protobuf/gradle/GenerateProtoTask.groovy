@@ -31,7 +31,6 @@ package com.google.protobuf.gradle
 
 import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
-import com.google.common.primitives.Ints
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
@@ -475,7 +474,7 @@ public class GenerateProtoTask extends DefaultTask {
     List<List<String>> cmds = []
     if (!protoFiles.isEmpty()) {
       int baseCmdLength = baseCmd.sum { it.length() + CMD_ARGUMENT_EXTRA_LENGTH }
-      List<String> currentArgs = new ArrayList<String>()
+      List<String> currentArgs = []
       int currentArgsLength = 0
       for (File proto: protoFiles) {
         String protoFileName = proto
