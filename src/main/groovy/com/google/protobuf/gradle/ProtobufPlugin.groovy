@@ -98,7 +98,6 @@ class ProtobufPlugin implements Plugin<Project> {
           if (wasApplied) {
             project.logger.warn('The com.google.protobuf plugin was already applied to the project: ' + project.path
                 + ' and will not be applied again after plugin: ' + prerequisitePlugin.id)
-
           } else {
             wasApplied = true
 
@@ -152,7 +151,7 @@ class ProtobufPlugin implements Plugin<Project> {
      * Creates a configuration if necessary for a source set so that the build
      * author can configure dependencies for it.
      */
-    private createConfiguration(String sourceSetName) {
+    private void  createConfiguration(String sourceSetName) {
       String configName = Utils.getConfigName(sourceSetName, 'protobuf')
       if (project.configurations.findByName(configName) == null) {
         project.configurations.create(configName) {
@@ -167,7 +166,7 @@ class ProtobufPlugin implements Plugin<Project> {
      * Adds the proto extension to all SourceSets, e.g., it creates
      * sourceSets.main.proto and sourceSets.test.proto.
      */
-    private addSourceSetExtensions() {
+    private void addSourceSetExtensions() {
       getSourceSets().all {  sourceSet ->
         sourceSet.extensions.create('proto', ProtobufSourceDirectorySet, sourceSet.name, fileResolver)
       }
@@ -191,7 +190,7 @@ class ProtobufPlugin implements Plugin<Project> {
     /**
      * Adds Protobuf-related tasks to the project.
      */
-    private addProtoTasks() {
+    private void addProtoTasks() {
       if (Utils.isAndroidProject(project)) {
         getNonTestVariants().each { variant ->
           addTasksForVariant(variant, false)
@@ -209,7 +208,7 @@ class ProtobufPlugin implements Plugin<Project> {
     /**
      * Creates Protobuf tasks for a sourceSet in a Java project.
      */
-    private addTasksForSourceSet(final SourceSet sourceSet) {
+    private void addTasksForSourceSet(final SourceSet sourceSet) {
       Task generateProtoTask = addGenerateProtoTask(sourceSet.name, [sourceSet])
       generateProtoTask.sourceSet = sourceSet
       generateProtoTask.doneInitializing()
@@ -235,7 +234,7 @@ class ProtobufPlugin implements Plugin<Project> {
     /**
      * Creates Protobuf tasks for a variant in an Android project.
      */
-    private addTasksForVariant(final Object variant, boolean isTestVariant) {
+    private void addTasksForVariant(final Object variant, boolean isTestVariant) {
       Task generateProtoTask = addGenerateProtoTask(variant.name, variant.sourceSets)
       generateProtoTask.setVariant(variant, isTestVariant)
       generateProtoTask.flavors = ImmutableList.copyOf(variant.productFlavors.collect { it.name } )
@@ -398,12 +397,12 @@ class ProtobufPlugin implements Plugin<Project> {
       }
     }
 
-    private static linkGenerateProtoTasksToTask(Task task, GenerateProtoTask genProtoTask) {
+    private static void linkGenerateProtoTasksToTask(Task task, GenerateProtoTask genProtoTask) {
       task.dependsOn(genProtoTask)
       task.source genProtoTask.getOutputSourceDirectorySet()
     }
 
-    private linkGenerateProtoTasksToTaskName(String compileTaskName, GenerateProtoTask genProtoTask) {
+    private void linkGenerateProtoTasksToTaskName(String compileTaskName, GenerateProtoTask genProtoTask) {
       Task compileTask = project.tasks.findByName(compileTaskName)
       if (compileTask != null) {
         linkGenerateProtoTasksToTask(compileTask, genProtoTask)
@@ -418,7 +417,7 @@ class ProtobufPlugin implements Plugin<Project> {
       }
     }
 
-    private linkGenerateProtoTasksToSourceCompile() {
+    private void linkGenerateProtoTasksToSourceCompile() {
       if (Utils.isAndroidProject(project)) {
         (getNonTestVariants() + project.android.testVariants).each { variant ->
           project.protobuf.generateProtoTasks.ofVariant(variant.name).each { GenerateProtoTask genProtoTask ->
