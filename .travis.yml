@@ -8,6 +8,7 @@ android:
     - platform-tools
     - tools
     - build-tools-26.0.1
+    - build-tools-27.0.3
     - android-26
     - extra-android-support
     - extra-android-m2repository
@@ -21,6 +22,7 @@ env:
 script:
   - ./gradlew clean assemble test --tests com.google.protobuf.gradle.ProtobufJavaPluginTest --stacktrace
   - ./gradlew test --tests com.google.protobuf.gradle.ProtobufAndroidPluginTest --stacktrace
+  - ./gradlew test --tests com.google.protobuf.gradle.AndroidProjectDetectionTest --stacktrace
   - ./gradlew codenarcMain || (cat ./build/reports/codenarc/main.txt && false)
   - ./gradlew codenarcTest || (cat ./build/reports/codenarc/test.txt && false)
 

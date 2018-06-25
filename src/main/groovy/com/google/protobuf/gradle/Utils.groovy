@@ -61,8 +61,27 @@ class Utils {
         '' : StringUtils.capitalize(sourceSetName)
   }
 
+  private static final String ANDROID_BASE_PLUGIN_ID = "com.android.base"
+  private static final List<String> ANDROID_PLUGIN_IDS = [
+      'android',
+      'android-library',
+      'com.android.application',
+      'com.android.feature',
+      'com.android.instantapp',
+      'com.android.library',
+      'com.android.test',
+  ]
+
+  /**
+   * Detects if an android plugin has been applied to the project
+   */
   static boolean isAndroidProject(Project project) {
-    return project.hasProperty('android') && project.android.sourceSets
+    // Projects are marked with com.android.base plugin from version 3.0.0 up
+    // OR fall back to a list of plugin id's to support versions prior to 3.0.0
+    return project.plugins.hasPlugin(ANDROID_BASE_PLUGIN_ID) ||
+        ANDROID_PLUGIN_IDS.any { String pluginId ->
+          project.plugins.hasPlugin(pluginId)
+        }
   }
 
   /**
