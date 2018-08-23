@@ -11,6 +11,7 @@ apply plugin: 'codenarc'
 apply plugin: 'idea'
 apply plugin: 'eclipse'
 apply plugin: 'groovy'
+apply plugin: 'kotlin'
 apply plugin: 'maven'
 apply plugin: 'signing'
 apply plugin: 'com.jfrog.bintray'
@@ -31,11 +32,13 @@ buildscript {
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.6'
         classpath "com.gradle.publish:plugin-publish-plugin:0.9.7"
         classpath "com.github.ben-manes:gradle-versions-plugin:0.12.0"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.2.61"
     }
 }
 
 repositories {
     maven { url "https://plugins.gradle.org/m2/" }
+    maven { url "https://repo.gradle.org/gradle/libs-releases-local/" }
     google()
 }
 
@@ -65,6 +68,9 @@ task createClasspathManifest {
 dependencies {
     compileOnly gradleApi()
     compileOnly localGroovy()
+    // TODO: Update to use 'gradleKotlinDsl()' instead
+    compileOnly "org.gradle:gradle-kotlin-dsl:1.0-rc-3"
+
     compile 'com.google.guava:guava:18.0'
     compile 'com.google.gradle:osdetector-gradle-plugin:1.4.0'
     compile 'commons-lang:commons-lang:2.6'
@@ -222,3 +228,10 @@ if (System.env.TRAVIS == 'true') {
     }
   }
 }
+
+// Temporary work around to get compilation working
+// https://discuss.gradle.org/t/kotlin-groovy-and-java-compilation/14903/10
+compileGroovy.dependsOn = compileGroovy.taskDependencies.mutableValues - 'compileJava'
+compileKotlin.dependsOn compileGroovy
+compileKotlin.classpath += files(compileGroovy.destinationDir)
+classes.dependsOn compileKotlin
