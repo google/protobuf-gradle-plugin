@@ -26,13 +26,13 @@ dependencies {
     }
     // Extra proto source files besides the ones residing under
     // "src/main".
-    "protobuf"(files("lib/protos.tar.gz"))
-    "protobuf"(fileTree("ext/"))
+    protobuf(files("lib/protos.tar.gz"))
+    protobuf(fileTree("ext/"))
 
     testCompile("junit:junit:4.12")
     // Extra proto source files for test besides the ones residing under
     // "src/test".
-    "testProtobuf"(files("lib/protos-test.tar.gz"))
+    testProtobuf(files("lib/protos-test.tar.gz"))
 }
 
 protobuf {
