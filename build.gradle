@@ -230,7 +230,7 @@ if (System.env.TRAVIS == 'true') {
 }
 
 // Temporary work around to get compilation working during development
-// Considering moving to a separate module 
+// Considering moving to a separate module
 // https://discuss.gradle.org/t/kotlin-groovy-and-java-compilation/14903/10
 compileGroovy.dependsOn = compileGroovy.taskDependencies.mutableValues - 'compileJava'
 compileKotlin.dependsOn compileGroovy
