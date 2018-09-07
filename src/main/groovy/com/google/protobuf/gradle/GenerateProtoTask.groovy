@@ -31,7 +31,7 @@ package com.google.protobuf.gradle
 
 import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
-
+import org.gradle.api.Action
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.Named
@@ -43,6 +43,8 @@ import org.gradle.api.internal.file.collections.DefaultDirectoryFileTreeFactory
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskAction
+import org.gradle.process.ExecResult
+import org.gradle.process.ExecSpec
 import org.gradle.util.ConfigureUtil
 
 /**
@@ -73,6 +75,7 @@ public class GenerateProtoTask extends DefaultTask {
   private String buildType
   private boolean isTestVariant
   private FileResolver fileResolver
+  private Action<ExecSpec> execCustomizer
 
   /**
    * If true, will set the protoc flag
@@ -165,6 +168,11 @@ public class GenerateProtoTask extends DefaultTask {
   void setFileResolver(FileResolver fileResolver) {
     checkInitializing()
     this.fileResolver = fileResolver
+  }
+
+  void setExecCustomizer(Action<ExecSpec> execCustomizer) {
+    checkInitializing()
+    this.execCustomizer = execCustomizer
   }
 
   SourceSet getSourceSet() {
@@ -458,12 +466,22 @@ public class GenerateProtoTask extends DefaultTask {
   private void compileFiles(List<String> cmd) {
     logger.log(LogLevel.INFO, cmd.toString())
 
-    StringBuffer stdout = new StringBuffer()
-    StringBuffer stderr = new StringBuffer()
-    Process result = cmd.execute()
-    result.waitForProcessOutput(stdout, stderr)
-    String output = "protoc: stdout: ${stdout}. stderr: ${stderr}"
-    if (result.exitValue() == 0) {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream()
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream()
+
+    Action<ExecSpec> execCustomizer = this.execCustomizer
+    ExecResult result = getProject().exec { exec ->
+      exec.commandLine(cmd)
+      exec.standardOutput = stdout
+      exec.errorOutput = stderr
+      exec.ignoreExitValue = true
+      if (execCustomizer != null) {
+        execCustomizer.execute(exec)
+      }
+    }
+
+    String output = "protoc: stdout: ${stdout.toString()}. stderr: ${stderr.toString()}"
+    if (result.exitValue == 0) {
       logger.log(LogLevel.INFO, output)
     } else {
       throw new GradleException(output)
