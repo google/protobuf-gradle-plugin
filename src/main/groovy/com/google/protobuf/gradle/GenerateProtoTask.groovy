@@ -47,8 +47,6 @@ import org.gradle.process.ExecResult
 import org.gradle.process.ExecSpec
 import org.gradle.util.ConfigureUtil
 
-import java.nio.charset.StandardCharsets
-
 /**
  * The task that compiles proto files into Java files.
  */
@@ -77,7 +75,7 @@ public class GenerateProtoTask extends DefaultTask {
   private String buildType
   private boolean isTestVariant
   private FileResolver fileResolver
-  private Action<ExecSpec> execCustomizer;
+  private Action<ExecSpec> execCustomizer
 
   /**
    * If true, will set the protoc flag
@@ -472,10 +470,11 @@ public class GenerateProtoTask extends DefaultTask {
     ByteArrayOutputStream stderr = new ByteArrayOutputStream()
 
     Action<ExecSpec> execCustomizer = this.execCustomizer
-    ExecResult result = getProject().exec { exec->
+    ExecResult result = getProject().exec { exec ->
       exec.commandLine(cmd)
       exec.standardOutput = stdout
       exec.errorOutput = stderr
+      exec.ignoreExitValue = true
       if (execCustomizer != null) {
         execCustomizer.execute(exec)
       }
