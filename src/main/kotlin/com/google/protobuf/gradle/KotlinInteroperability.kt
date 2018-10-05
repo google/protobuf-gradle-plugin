@@ -23,7 +23,7 @@ fun ProtobufConfigurator.plugins(closure: NamedDomainObjectContainerScope<Execut
 
 fun <T : Any> NamedDomainObjectContainerScope<T>.id(id: String, closure: (T.() -> Unit)? = null) {
     closure?.let { create(id, delegateClosureOf(it)) }
-            ?: create(id)
+        ?: create(id)
 }
 
 fun <T : Any> NamedDomainObjectContainerScope<T>.remove(id: String) {
@@ -47,28 +47,28 @@ fun GenerateProtoTask.plugins(closure: NamedDomainObjectContainerScope<GenerateP
 }
 
 fun ProtobufConfigurator.GenerateProtoTaskCollection.ofSourceSet(sourceSet: String): Collection<GenerateProtoTask> =
-        if (this is ProtobufConfigurator.JavaGenerateProtoTaskCollection)
-            this.ofSourceSet(sourceSet) else emptyList()
+    if (this is ProtobufConfigurator.JavaGenerateProtoTaskCollection)
+        this.ofSourceSet(sourceSet) else emptyList()
 
 fun ProtobufConfigurator.GenerateProtoTaskCollection.ofFlavor(flavor: String): Collection<GenerateProtoTask> =
-        if (this is ProtobufConfigurator.AndroidGenerateProtoTaskCollection)
-            this.ofFlavor(flavor) else emptyList()
+    if (this is ProtobufConfigurator.AndroidGenerateProtoTaskCollection)
+        this.ofFlavor(flavor) else emptyList()
 
 fun ProtobufConfigurator.GenerateProtoTaskCollection.ofBuildType(buildType: String): Collection<GenerateProtoTask> =
-        if (this is ProtobufConfigurator.AndroidGenerateProtoTaskCollection)
-            this.ofBuildType(buildType) else emptyList()
+    if (this is ProtobufConfigurator.AndroidGenerateProtoTaskCollection)
+        this.ofBuildType(buildType) else emptyList()
 
 fun ProtobufConfigurator.GenerateProtoTaskCollection.ofVariant(variant: String): Collection<GenerateProtoTask> =
-        if (this is ProtobufConfigurator.AndroidGenerateProtoTaskCollection)
-            this.ofVariant(variant) else emptyList()
+    if (this is ProtobufConfigurator.AndroidGenerateProtoTaskCollection)
+        this.ofVariant(variant) else emptyList()
 
 fun ProtobufConfigurator.GenerateProtoTaskCollection.ofNonTest(): Collection<GenerateProtoTask> =
-        if (this is ProtobufConfigurator.AndroidGenerateProtoTaskCollection)
-            this.ofNonTest() else emptyList()
+    if (this is ProtobufConfigurator.AndroidGenerateProtoTaskCollection)
+        this.ofNonTest() else emptyList()
 
 fun ProtobufConfigurator.GenerateProtoTaskCollection.ofTest(): Collection<GenerateProtoTask> =
-        if (this is ProtobufConfigurator.AndroidGenerateProtoTaskCollection)
-            this.ofTest() else emptyList()
+    if (this is ProtobufConfigurator.AndroidGenerateProtoTaskCollection)
+        this.ofTest() else emptyList()
 
 /**
  * The 'protobuf' configuration.
@@ -77,34 +77,37 @@ val ConfigurationContainer.protobuf: Configuration
     get() = getByName("protobuf")
 
 fun DependencyHandler.protobuf(dependencyNotation: Any): Dependency? =
-        add("protobuf", dependencyNotation)
+    add("protobuf", dependencyNotation)
 
 inline fun DependencyHandler.protobuf(
-        dependencyNotation: String,
-        dependencyConfiguration: ExternalModuleDependency.() -> Unit): ExternalModuleDependency =
-        add("protobuf", dependencyNotation, dependencyConfiguration)
+    dependencyNotation: String,
+    dependencyConfiguration: ExternalModuleDependency.() -> Unit
+): ExternalModuleDependency =
+    add("protobuf", dependencyNotation, dependencyConfiguration)
 
 fun DependencyHandler.protobuf(
-        group: String,
-        name: String,
-        version: String? = null,
-        configuration: String? = null,
-        classifier: String? = null,
-        ext: String? = null): ExternalModuleDependency =
-        create(group, name, version, configuration, classifier, ext).apply { add("protobuf", this) }
+    group: String,
+    name: String,
+    version: String? = null,
+    configuration: String? = null,
+    classifier: String? = null,
+    ext: String? = null
+): ExternalModuleDependency =
+    create(group, name, version, configuration, classifier, ext).apply { add("protobuf", this) }
 
 inline fun DependencyHandler.protobuf(
-        group: String,
-        name: String,
-        version: String? = null,
-        configuration: String? = null,
-        classifier: String? = null,
-        ext: String? = null,
-        dependencyConfiguration: ExternalModuleDependency.() -> Unit): ExternalModuleDependency =
-        add("protobuf", create(group, name, version, configuration, classifier, ext), dependencyConfiguration)
+    group: String,
+    name: String,
+    version: String? = null,
+    configuration: String? = null,
+    classifier: String? = null,
+    ext: String? = null,
+    dependencyConfiguration: ExternalModuleDependency.() -> Unit
+): ExternalModuleDependency =
+    add("protobuf", create(group, name, version, configuration, classifier, ext), dependencyConfiguration)
 
 inline fun <T : ModuleDependency> DependencyHandler.protobuf(dependency: T, dependencyConfiguration: T.() -> Unit): T =
-        add("protobuf", dependency, dependencyConfiguration)
+    add("protobuf", dependency, dependencyConfiguration)
 
 /**
  * The 'testProtobuf' configuration.
@@ -113,31 +116,37 @@ val ConfigurationContainer.testProtobuf: Configuration
     get() = getByName("testProtobuf")
 
 fun DependencyHandler.testProtobuf(dependencyNotation: Any): Dependency? =
-        add("testProtobuf", dependencyNotation)
+    add("testProtobuf", dependencyNotation)
 
 inline fun DependencyHandler.testProtobuf(
-        dependencyNotation: String,
-        dependencyConfiguration: ExternalModuleDependency.() -> Unit): ExternalModuleDependency =
-        add("testProtobuf", dependencyNotation, dependencyConfiguration)
+    dependencyNotation: String,
+    dependencyConfiguration: ExternalModuleDependency.() -> Unit
+): ExternalModuleDependency =
+    add("testProtobuf", dependencyNotation, dependencyConfiguration)
 
 fun DependencyHandler.testProtobuf(
-        group: String,
-        name: String,
-        version: String? = null,
-        configuration: String? = null,
-        classifier: String? = null,
-        ext: String? = null): ExternalModuleDependency =
-        create(group, name, version, configuration, classifier, ext).apply { add("testProtobuf", this) }
+    group: String,
+    name: String,
+    version: String? = null,
+    configuration: String? = null,
+    classifier: String? = null,
+    ext: String? = null
+): ExternalModuleDependency =
+    create(group, name, version, configuration, classifier, ext).apply { add("testProtobuf", this) }
 
 inline fun DependencyHandler.testProtobuf(
-        group: String,
-        name: String,
-        version: String? = null,
-        configuration: String? = null,
-        classifier: String? = null,
-        ext: String? = null,
-        dependencyConfiguration: ExternalModuleDependency.() -> Unit): ExternalModuleDependency =
-        add("testProtobuf", create(group, name, version, configuration, classifier, ext), dependencyConfiguration)
+    group: String,
+    name: String,
+    version: String? = null,
+    configuration: String? = null,
+    classifier: String? = null,
+    ext: String? = null,
+    dependencyConfiguration: ExternalModuleDependency.() -> Unit
+): ExternalModuleDependency =
+    add("testProtobuf", create(group, name, version, configuration, classifier, ext), dependencyConfiguration)
 
-inline fun <T : ModuleDependency> DependencyHandler.testProtobuf(dependency: T, dependencyConfiguration: T.() -> Unit): T =
-        add("testProtobuf", dependency, dependencyConfiguration)
+inline fun <T : ModuleDependency> DependencyHandler.testProtobuf(
+    dependency: T,
+    dependencyConfiguration: T.() -> Unit
+): T =
+    add("testProtobuf", dependency, dependencyConfiguration)
