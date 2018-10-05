@@ -32,7 +32,7 @@ buildscript {
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.6'
         classpath "com.gradle.publish:plugin-publish-plugin:0.9.7"
         classpath "com.github.ben-manes:gradle-versions-plugin:0.12.0"
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.2.61"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.2.71"
     }
 }
 
@@ -68,7 +68,6 @@ task createClasspathManifest {
 dependencies {
     compileOnly gradleApi()
     compileOnly localGroovy()
-    // TODO: Update to use 'gradleKotlinDsl()' instead
     compileOnly "org.gradle:gradle-kotlin-dsl:1.0-rc-3"
 
     compile 'com.google.guava:guava:18.0'
@@ -229,10 +228,13 @@ if (System.env.TRAVIS == 'true') {
   }
 }
 
-// Temporary work around to get compilation working during development
-// Considering moving to a separate module
+// Required in order to support building a mixed kotlin/groovy project. With out this,
+// we would get a cyclic dependency error, since both compileKotlin and compileGroovy
+// depend on compileJava.
 // https://discuss.gradle.org/t/kotlin-groovy-and-java-compilation/14903/10
-compileGroovy.dependsOn = compileGroovy.taskDependencies.mutableValues - 'compileJava'
-compileKotlin.dependsOn compileGroovy
-compileKotlin.classpath += files(compileGroovy.destinationDir)
-classes.dependsOn compileKotlin
+project.afterEvaluate {
+  compileGroovy.dependsOn = compileGroovy.taskDependencies.mutableValues - 'compileJava'
+  compileKotlin.dependsOn compileGroovy
+  compileKotlin.classpath += files(compileGroovy.destinationDir)
+  classes.dependsOn compileKotlin
+}
