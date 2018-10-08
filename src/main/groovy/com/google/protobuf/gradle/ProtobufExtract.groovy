@@ -89,7 +89,10 @@ class ProtobufExtract extends DefaultTask {
           }
           into(destDir)
         }
-      } else if (file.path.endsWith('.tar') || file.path.endsWith('.tar.gz') || file.path.endsWith('.tar.bz2')) {
+      } else if (file.path.endsWith('.tar')
+              || file.path.endsWith('.tar.gz')
+              || file.path.endsWith('.tar.bz2')
+              || file.path.endsWith('.tgz')) {
         project.copy {
           includeEmptyDirs(false)
           from(project.tarTree(file.path)) {
@@ -98,7 +101,7 @@ class ProtobufExtract extends DefaultTask {
           into(destDir)
         }
       } else {
-        logger.debug "Skipping unsupported file type (${file.path}); handles only jar, tar, tar.gz & tar.bz2"
+        logger.debug "Skipping unsupported file type (${file.path}); handles only jar, tar, tar.gz, tar.bz2 & tgz"
       }
     }
   }
