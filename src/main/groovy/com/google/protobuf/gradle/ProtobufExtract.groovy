@@ -101,7 +101,7 @@ class ProtobufExtract extends DefaultTask {
           into(destDir)
         }
       } else {
-        logger.debug "Skipping unsupported file type (${file.path}); handles only jar, tar, tar.gz & tar.bz2"
+        logger.debug "Skipping unsupported file type (${file.path}); handles only jar, tar, tar.gz, tar.bz2 & tgz"
       }
     }
   }
