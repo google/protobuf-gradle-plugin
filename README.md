@@ -20,7 +20,7 @@ For more information about the Protobuf Compiler, please refer to
 [Google Developers Site](https://developers.google.com/protocol-buffers/docs/reference/java-generated?csw=1).
 
 ## Latest Version
-The latest version is ``0.8.6``. It requires at least __Gradle 2.12__ and __Java 7__.
+The latest version is ``0.8.7``. It requires at least __Gradle 2.12__ and __Java 7__.
 It is available on Maven Central. To add dependency to it:
 ```gradle
 buildscript {
@@ -43,7 +43,7 @@ buildscript {
     mavenLocal()
   }
   dependencies {
-    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.6-SNAPSHOT'
+    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.7'
   }
 }
 ```
@@ -82,7 +82,7 @@ The order of the plugins doesn't matter:
 
 ```gradle
 plugins {
-  id "com.google.protobuf" version "0.8.6"
+  id "com.google.protobuf" version "0.8.7"
   id "java"
 }
 ```
