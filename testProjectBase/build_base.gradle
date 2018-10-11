@@ -34,7 +34,7 @@ dependencies {
   compile protobufDep
   testCompile 'junit:junit:4.12'
   // KotlinFooTest.kt requires reflection utilities
-  testCompile "org.jetbrains.kotlin:kotlin-reflect:1.2.0"
+  testCompile "org.jetbrains.kotlin:kotlin-reflect:1.2.60"
   grpcCompile protobufDep
   grpcCompile 'io.grpc:grpc-stub:1.0.0-pre2'
   grpcCompile 'io.grpc:grpc-protobuf:1.0.0-pre2'
