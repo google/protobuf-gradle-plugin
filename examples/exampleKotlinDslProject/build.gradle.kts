@@ -18,7 +18,7 @@ buildscript {
     // We add the root projects output directory as a repo
     // since the snapshot is not published yet.
     repositories {
-        flatDir{
+        flatDir {
             dir("$projectDir/../../build/libs/")
         }
     }
@@ -41,7 +41,22 @@ plugins {
 apply(plugin = "com.google.protobuf")
 
 repositories {
-    maven("https://plugins.gradle.org/m2/" )
+    maven("https://plugins.gradle.org/m2/")
+}
+
+the<JavaPluginConvention>().sourceSets {
+
+    "main" {
+        proto {
+            srcDir("src/main/protobuf")
+        }
+    }
+
+    create("sample") {
+        proto {
+            srcDir("src/sample/protobuf")
+        }
+    }
 }
 
 dependencies {
@@ -78,7 +93,7 @@ protobuf {
         }
     }
     generateProtoTasks {
-        ofSourceSet("main").forEach{
+        ofSourceSet("main").forEach {
             it.plugins {
                 // Apply the "grpc" plugin whose spec is defined above, without
                 // options.  Note the braces cannot be omitted, otherwise the
