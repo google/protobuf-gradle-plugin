@@ -2,11 +2,20 @@ package com.google.protobuf.gradle
 
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
+import org.gradle.api.plugins.ExtensionAware
+import org.gradle.api.tasks.SourceSet
 import org.gradle.kotlin.dsl.*
 
 
 fun Project.protobuf(action: ProtobufConfigurator.()->Unit) {
     project.convention.getPlugin(ProtobufConvention::class.java).protobuf.apply(action)
+}
+
+fun SourceSet.proto(action: ProtobufSourceDirectorySet.() -> Unit) {
+    (this as? ExtensionAware)
+        ?.extensions
+        ?.getByType(ProtobufSourceDirectorySet::class.java)
+        ?.apply(action)
 }
 
 fun ProtobufConfigurator.protoc(closure: ExecutableLocator.() -> Unit) {
