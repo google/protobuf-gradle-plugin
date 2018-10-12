@@ -73,6 +73,10 @@ dependencies {
     protobuf(files("lib/protos.tar.gz"))
     protobuf(fileTree("ext/"))
 
+    // Adding dependency for configuration from custom sourceSet
+    // Supports all common dependency notations. ie. protobuf["sample"]("com.google.protobuf:protobuf-java:3.6.1")
+    protobuf["sample"](files("lib/protos.tar.gz"))
+
     testCompile("junit:junit:4.12")
     // Extra proto source files for test besides the ones residing under
     // "src/test".
