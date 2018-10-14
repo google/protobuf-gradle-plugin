@@ -1,34 +1,28 @@
 package com.google.protobuf.gradle
 
-import org.gradle.api.artifacts.Configuration
-import org.gradle.api.artifacts.Dependency
-import org.gradle.api.artifacts.ExternalModuleDependency
-import org.gradle.api.artifacts.ModuleDependency
+import org.gradle.api.artifacts.*
 import org.gradle.api.artifacts.dsl.DependencyHandler
 import org.gradle.kotlin.dsl.add
 import org.gradle.kotlin.dsl.create
 
-interface ProtobufDependencyHelperProvider {
 
-    operator fun get(configurationName: String): ProtobufDependencyHelper
+val ConfigurationContainer.protobuf: Configuration
+    get() = getByName("protobuf")
 
-    operator fun get(configuration: Configuration): ProtobufDependencyHelper =
-        get(configuration.name)
-}
+inline val DependencyHandler.protobuf: ProtobufDependencyHelper.Default
+    get() = ProtobufDependencyHelper.Default(dependencyHandler = this)
 
-inline val DependencyHandler.protobuf: ProtobufDependencyHelperProvider
-    get() = object : ProtobufDependencyHelperProvider {
-        override fun get(configurationName: String) =
-            ProtobufDependencyHelper(configurationName, this@protobuf)
-    }
+val ConfigurationContainer.testProtobuf: Configuration
+    get() = getByName("testProtobuf")
 
+inline val DependencyHandler.testProtobuf: ProtobufDependencyHelper
+    get() = protobuf["test"]
 
-class ProtobufDependencyHelper(
-    configuration: String,
-    private val dependencyHandler: DependencyHandler
-) {
+interface ProtobufDependencyHelper {
 
-    private val configurationName: String = "${configuration}Protobuf"
+    val dependencyHandler: DependencyHandler
+
+    val configurationName: String
 
     operator fun invoke(dependencyNotation: Any): Dependency? =
         dependencyHandler.add(configurationName, dependencyNotation)
@@ -72,4 +66,20 @@ class ProtobufDependencyHelper(
     ): T =
         dependencyHandler.add(configurationName, dependency, dependencyConfiguration)
 
+    class Default(
+        override val configurationName: String = "protobuf",
+        override val dependencyHandler: DependencyHandler
+    ) : ProtobufDependencyHelper, ProtobufDependencyHelperProvider {
+
+        override fun get(configuration: String): ProtobufDependencyHelper =
+            Default("${configuration}Protobuf", dependencyHandler)
+    }
+}
+
+interface ProtobufDependencyHelperProvider {
+
+    operator fun get(configuration: String): ProtobufDependencyHelper
+
+    operator fun get(configuration: Configuration): ProtobufDependencyHelper =
+        get(configuration.name)
 }
