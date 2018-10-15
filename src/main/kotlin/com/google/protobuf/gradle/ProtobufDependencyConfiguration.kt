@@ -71,15 +71,16 @@ interface ProtobufDependencyHelper {
         override val dependencyHandler: DependencyHandler
     ) : ProtobufDependencyHelper, ProtobufDependencyHelperProvider {
 
-        override fun get(configuration: String): ProtobufDependencyHelper =
-            Default("${configuration}Protobuf", dependencyHandler)
+        override fun get(sourceSetName: String): ProtobufDependencyHelper =
+            Default(
+                Utils.getConfigName(sourceSetName, "protobuf"),
+                dependencyHandler
+            )
     }
 }
 
 interface ProtobufDependencyHelperProvider {
 
-    operator fun get(configuration: String): ProtobufDependencyHelper
+    operator fun get(sourceSetName: String): ProtobufDependencyHelper
 
-    operator fun get(configuration: Configuration): ProtobufDependencyHelper =
-        get(configuration.name)
 }
