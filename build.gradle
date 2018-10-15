@@ -32,7 +32,7 @@ buildscript {
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.6'
         classpath "com.gradle.publish:plugin-publish-plugin:0.9.7"
         classpath "com.github.ben-manes:gradle-versions-plugin:0.12.0"
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.2.60"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.2.0"
     }
 }
 
@@ -68,7 +68,7 @@ task createClasspathManifest {
 dependencies {
     compileOnly gradleApi()
     compileOnly localGroovy()
-    compileOnly "org.gradle:gradle-kotlin-dsl:1.0-rc-3"
+    compileOnly "org.gradle:gradle-kotlin-dsl:1.0-rc-6"
 
     compile 'com.google.guava:guava:18.0'
     compile 'com.google.gradle:osdetector-gradle-plugin:1.4.0'
@@ -83,7 +83,7 @@ dependencies {
     }
     testCompile 'commons-io:commons-io:2.5'
 
-    testProjectRuntime "org.jetbrains.kotlin:kotlin-gradle-plugin:1.2.60"
+    testProjectRuntime "org.jetbrains.kotlin:kotlin-gradle-plugin:1.2.0"
 
     // Add android plugin to the test classpath, so that we can jump into class definitions,
     // read their sources, set break points, etc while debugging android unit tests.

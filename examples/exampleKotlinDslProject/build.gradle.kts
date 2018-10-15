@@ -4,60 +4,25 @@ import org.gradle.kotlin.dsl.provider.gradleKotlinDslOf
 // A minimal example Java project that uses the protobuf plugin.
 // To build it:
 // $ ../gradlew clean build
-
-buildscript {
-    repositories {
-        maven("https://plugins.gradle.org/m2/")
-    }
-    dependencies {
-        classpath("com.google.protobuf:protobuf-gradle-plugin:0.8.7-SNAPSHOT")
-    }
-
-    // ********************************************************************************* //
-    // TODO: Remove after snapshot publish
-    // We add the root projects output directory as a repo
-    // since the snapshot is not published yet.
-    repositories {
-        flatDir {
-            dir("$projectDir/../../build/libs/")
-        }
-    }
-    dependencies {
-        // We have to explicitly add the plugin dependencies to the classpath
-        // since we are using a local artifact here.
-        classpath("com.google.gradle:osdetector-gradle-plugin:1.6.0")
-        classpath("com.google.guava:guava:18.0")
-        classpath("com.google.gradle:osdetector-gradle-plugin:1.4.0")
-        classpath("commons-lang:commons-lang:2.6")
-    }
-    // ********************************************************************************* //
-}
-
 plugins {
     java
     idea
+    id("com.google.protobuf") version "0.8.7-SNAPSHOT"
 }
-
-apply(plugin = "com.google.protobuf")
 
 repositories {
     maven("https://plugins.gradle.org/m2/")
 }
 
-the<JavaPluginConvention>().sourceSets {
-
-    "main" {
-        proto {
-            srcDir("src/main/protobuf")
-        }
-    }
-
-    create("sample") {
+sourceSets{
+    create("sample"){
         proto {
             srcDir("src/sample/protobuf")
         }
     }
 }
+
+val sampleProtobuf by configurations
 
 dependencies {
     compile("com.google.protobuf:protobuf-java:3.6.1")
@@ -76,6 +41,9 @@ dependencies {
     // Adding dependency for configuration from custom sourceSet
     // Supports all common dependency notations. ie. protobuf["sample"]("com.google.protobuf:protobuf-java:3.6.1")
     protobuf["sample"](files("lib/protos.tar.gz"))
+    // The alternative is explicitly defining the configuration in the project as so
+    // "val sampleProtobuf by configurations"
+    sampleProtobuf(fileTree("ext/"))
 
     testCompile("junit:junit:4.12")
     // Extra proto source files for test besides the ones residing under
