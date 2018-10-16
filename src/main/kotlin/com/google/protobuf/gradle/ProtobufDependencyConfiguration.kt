@@ -4,25 +4,24 @@ import org.gradle.api.artifacts.*
 import org.gradle.api.artifacts.dsl.DependencyHandler
 import org.gradle.kotlin.dsl.add
 import org.gradle.kotlin.dsl.create
+import kotlin.properties.ReadOnlyProperty
+import kotlin.reflect.KProperty
 
 
 val ConfigurationContainer.protobuf: Configuration
     get() = getByName("protobuf")
 
-inline val DependencyHandler.protobuf: ProtobufDependencyHelper.Default
-    get() = ProtobufDependencyHelper.Default(dependencyHandler = this)
+val DependencyHandler.protobuf by  ProtobufDependencyHelper
 
 val ConfigurationContainer.testProtobuf: Configuration
     get() = getByName("testProtobuf")
 
-inline val DependencyHandler.testProtobuf: ProtobufDependencyHelper
-    get() = protobuf["test"]
+val DependencyHandler.testProtobuf by  ProtobufDependencyHelper
 
-interface ProtobufDependencyHelper {
-
-    val dependencyHandler: DependencyHandler
-
-    val configurationName: String
+class ProtobufDependencyHelper(
+    private val configurationName: String,
+    private val dependencyHandler: DependencyHandler
+) {
 
     operator fun invoke(dependencyNotation: Any): Dependency? =
         dependencyHandler.add(configurationName, dependencyNotation)
@@ -66,21 +65,9 @@ interface ProtobufDependencyHelper {
     ): T =
         dependencyHandler.add(configurationName, dependency, dependencyConfiguration)
 
-    class Default(
-        override val configurationName: String = "protobuf",
-        override val dependencyHandler: DependencyHandler
-    ) : ProtobufDependencyHelper, ProtobufDependencyHelperProvider {
+    companion object : ReadOnlyProperty<DependencyHandler, ProtobufDependencyHelper> {
 
-        override fun get(sourceSetName: String): ProtobufDependencyHelper =
-            Default(
-                Utils.getConfigName(sourceSetName, "protobuf"),
-                dependencyHandler
-            )
+        override fun getValue(thisRef: DependencyHandler, property: KProperty<*>): ProtobufDependencyHelper =
+            ProtobufDependencyHelper(property.name, thisRef)
     }
-}
-
-interface ProtobufDependencyHelperProvider {
-
-    operator fun get(sourceSetName: String): ProtobufDependencyHelper
-
 }
