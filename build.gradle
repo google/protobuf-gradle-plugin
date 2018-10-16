@@ -66,9 +66,11 @@ task createClasspathManifest {
 }
 
 dependencies {
+    def kotlinDslDep = "org.gradle:gradle-kotlin-dsl:1.0-rc-6" 
+    
     compileOnly gradleApi()
     compileOnly localGroovy()
-    compileOnly "org.gradle:gradle-kotlin-dsl:1.0-rc-6"
+    compileOnly kotlinDslDep
 
     compile 'com.google.guava:guava:18.0'
     compile 'com.google.gradle:osdetector-gradle-plugin:1.4.0'
@@ -77,6 +79,7 @@ dependencies {
     testCompile gradleTestKit()
     testCompile gradleApi()
     testCompile localGroovy()
+    testCompile kotlinDslDep
     testCompile 'junit:junit:4.12'
     testCompile ('org.spockframework:spock-core:1.0-groovy-2.4') {
       exclude module : 'groovy-all'

@@ -5,6 +5,8 @@ import org.gradle.kotlin.dsl.provider.gradleKotlinDslOf
 
 buildscript {
     dependencies {
+        // We cant add classpath dependencies to the build script via applying an external file.
+        // So we have to parse the classpath manifest locally.
         File("$projectDir/../../createClasspathManifest/plugin-classpath.txt")
             .readLines()
             .forEach { classpathEntry ->
