@@ -324,7 +324,7 @@ class ProtobufJavaPluginTest extends Specification {
     limit == Integer.MAX_VALUE
   }
 
-  private static void verifyProjectDirHelper(File projectDir) {
+  static void verifyProjectDirHelper(File projectDir) {
     ['grpc', 'main', 'test'].each {
       File generatedSrcDir = new File(projectDir.path, "build/generated/source/proto/$it")
       List<File> fileList = []
