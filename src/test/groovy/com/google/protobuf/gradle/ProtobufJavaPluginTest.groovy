@@ -73,7 +73,7 @@ class ProtobufJavaPluginTest extends Specification {
 
     then: "it succeed"
     result.task(":build").outcome == TaskOutcome.SUCCESS
-    verifyProjectDirHelper(projectDir)
+    ProtobufPluginTestHelper.verifyProjectDir(projectDir)
 
     where:
     gradleVersion << GRADLE_VERSIONS
@@ -94,7 +94,7 @@ class ProtobufJavaPluginTest extends Specification {
 
     then: "it succeed"
     result.task(":build").outcome == TaskOutcome.SUCCESS
-    verifyProjectDirHelper(projectDir)
+    ProtobufPluginTestHelper.verifyProjectDir(projectDir)
 
     where:
     gradleVersion << GRADLE_VERSIONS
@@ -115,7 +115,7 @@ class ProtobufJavaPluginTest extends Specification {
 
     then: "it succeed"
     result.task(":build").outcome == TaskOutcome.SUCCESS
-    verifyProjectDirHelper(projectDir)
+    ProtobufPluginTestHelper.verifyProjectDir(projectDir)
 
     where:
     gradleVersion << GRADLE_VERSIONS
@@ -322,18 +322,5 @@ class ProtobufJavaPluginTest extends Specification {
 
     then: "it returns maximum integer value"
     limit == Integer.MAX_VALUE
-  }
-
-  static void verifyProjectDirHelper(File projectDir) {
-    ['grpc', 'main', 'test'].each {
-      File generatedSrcDir = new File(projectDir.path, "build/generated/source/proto/$it")
-      List<File> fileList = []
-      generatedSrcDir.eachFileRecurse { file ->
-        if (file.path.endsWith('.java')) {
-          fileList.add (file)
-        }
-      }
-      assert fileList.size > 0
-    }
   }
 }

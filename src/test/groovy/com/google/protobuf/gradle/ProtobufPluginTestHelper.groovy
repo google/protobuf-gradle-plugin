@@ -12,6 +12,19 @@ final class ProtobufPluginTestHelper {
     // do not instantiate
   }
 
+  static void verifyProjectDir(File projectDir) {
+    ['grpc', 'main', 'test'].each {
+      File generatedSrcDir = new File(projectDir.path, "build/generated/source/proto/$it")
+      List<File> fileList = []
+      generatedSrcDir.eachFileRecurse { file ->
+        if (file.path.endsWith('.java')) {
+          fileList.add (file)
+        }
+      }
+      assert fileList.size > 0
+    }
+  }
+
   static void appendPluginClasspath(File buildFile) {
     URL pluginClasspathResource =
         ProtobufPluginTestHelper.classLoader.findResource("plugin-classpath.txt")

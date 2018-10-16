@@ -1,6 +1,5 @@
 package com.google.protobuf.gradle
 
-
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
@@ -32,10 +31,9 @@ class ProtobufKotlinDslPluginTest extends Specification {
 
     then: "it succeed"
     result.task(":build").outcome == TaskOutcome.SUCCESS
-    ProtobufJavaPluginTest.verifyProjectDirHelper(projectDir)
+    ProtobufPluginTestHelper.verifyProjectDir(projectDir)
 
     where:
     gradleVersion << GRADLE_VERSIONS
   }
-
 }
