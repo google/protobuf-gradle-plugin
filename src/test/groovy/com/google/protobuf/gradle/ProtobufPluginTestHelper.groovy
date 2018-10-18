@@ -131,8 +131,8 @@ buildscript {
 
     File build() {
       File projectDir = new File(System.getProperty('user.dir'), 'build/tests/' + testProjectName)
-      FileUtils.deleteDirectory(projectDir)
-      FileUtils.forceMkdir(projectDir)
+      projectDir.deleteDir()
+      projectDir.mkdirs()
       sourceDirs.each {
         FileUtils.copyDirectory(new File(System.getProperty("user.dir"), it), projectDir)
       }

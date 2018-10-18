@@ -65,9 +65,7 @@ task createClasspathManifest {
 dependencies {
     compileOnly gradleApi()
     compileOnly localGroovy()
-    compile 'com.google.guava:guava:18.0'
     compile 'com.google.gradle:osdetector-gradle-plugin:1.4.0'
-    compile 'commons-lang:commons-lang:2.6'
 
     testCompile gradleTestKit()
     testCompile gradleApi()
