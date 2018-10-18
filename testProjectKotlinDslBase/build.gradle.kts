@@ -170,5 +170,4 @@ fun assertJavaCompileHasProtoGeneratedDir(
 // This extension is not auto generated when we apply the plugin using
 // apply(plugin = "com.google.protobuf")
 val Project.protobuf: ProtobufConvention get() =
-    ((this as? Project)?.convention ?: (this as HasConvention).convention)
-        .getPluginByName("protobuf")
+    this.convention.getPlugin(ProtobufConvention::class)
