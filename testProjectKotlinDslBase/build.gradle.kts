@@ -28,6 +28,10 @@ plugins {
 }
 
 apply(plugin = "com.google.protobuf")
+// This extension is not auto generated when we apply the plugin using
+// apply(plugin = "com.google.protobuf")
+val Project.protobuf: ProtobufConvention get() =
+    this.convention.getPlugin(ProtobufConvention::class)
 
 repositories {
     maven("https://plugins.gradle.org/m2/")
@@ -167,7 +171,3 @@ fun assertJavaCompileHasProtoGeneratedDir(
     assert(expectedDirs == actualDirs)
 }
 
-// This extension is not auto generated when we apply the plugin using
-// apply(plugin = "com.google.protobuf")
-val Project.protobuf: ProtobufConvention get() =
-    this.convention.getPlugin(ProtobufConvention::class)
