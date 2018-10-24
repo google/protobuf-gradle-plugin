@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+// From the main sourceSet
+import "com/example/tutorial/sample.proto";
+
+message MsgTest {
+  Msg msg = 1;
+}

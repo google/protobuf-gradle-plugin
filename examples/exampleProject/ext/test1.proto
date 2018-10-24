@@ -1,0 +1,12 @@
+/**
+ * Created with IntelliJ IDEA.
+ * User: aantonov
+ * Date: 1/17/13
+ * Time: 3:44 PM
+ * To change this template use File | Settings | File Templates.
+ */
+syntax = "proto3";
+
+message Test1Msg {
+    string bar = 1;
+}
