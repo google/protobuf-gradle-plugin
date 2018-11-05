@@ -423,12 +423,13 @@ public class GenerateProtoTask extends DefaultTask {
     plugins.each { plugin ->
       String name = plugin.name
       ExecutableLocator locator = tools.plugins.findByName(name)
-      if (locator == null) {
-        throw new GradleException("Codegen plugin ${name} not defined")
+      if (locator != null) {
+        baseCmd += "--plugin=protoc-gen-${name}=${locator.path}"
+      } else {
+        logger.warn "protoc plugin '${name}' not defined. Trying to use 'protoc-gen-${name}' from system path"
       }
       String pluginOutPrefix = makeOptionsPrefix(plugin.options)
       baseCmd += "--${name}_out=${pluginOutPrefix}${getOutputDir(plugin)}"
-      baseCmd += "--plugin=protoc-gen-${name}=${locator.path}"
     }
 
     if (generateDescriptorSet) {
