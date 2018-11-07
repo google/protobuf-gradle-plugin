@@ -187,19 +187,23 @@ protobuf {
 
 Multiple assignments are allowed in the ``protoc`` block. The last one wins.
 
-You may also run ``protoc`` with codegen plugins. You need to define all the
-codegen plugins you will use in the ``plugins`` block, by specifying the
-downloadable artifact or a local path, in the same syntax as in the ``protoc``
-block above. This will __not__ apply the plugins. You need to configure the
-tasks in the ``generateProtoTasks`` block introduced below to apply the plugins
+You may also run ``protoc`` with codegen plugins.  For a codegen
+plugin named as "foo", ``protoc`` will by default use
+``protoc-gen-foo`` from system search path.  You can also specify a
+downloadable artifact or a local path for it in the ``plugins`` block,
+in the same syntax as in the ``protoc`` block above. This will __not__
+apply the plugins. You need to configure the tasks in the
+``generateProtoTasks`` block introduced below to apply the plugins
 defined here.
 
 ```gradle
 protobuf {
   ...
-  // Configure the codegen plugins
+  // Locate the codegen plugins
   plugins {
-    // Define a plugin with name 'grpc'
+    // Locate a plugin with name 'grpc'. This step is optional.
+    // If you don't locate it, protoc will try to use "protoc-gen-grpc" from
+    // system search path.
     grpc {
       artifact = 'io.grpc:protoc-gen-grpc-java:1.0.0-pre2'
       // or
