@@ -100,7 +100,7 @@ tasks {
             from(sourceSet.output)
 
             val compileTaskName = sourceSet.getCompileTaskName("java")
-            dependsOn(tasks.getByName(compileTaskName))
+            dependsOn(project.tasks.getByName(compileTaskName))
         }
     }
 

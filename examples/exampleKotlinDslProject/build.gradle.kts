@@ -7,7 +7,7 @@ import org.gradle.kotlin.dsl.provider.gradleKotlinDslOf
 plugins {
     java
     idea
-    id("com.google.protobuf") version "0.8.7-SNAPSHOT"
+    id("com.google.protobuf") version "0.8.8-SNAPSHOT"
 }
 
 repositories {

@@ -24,7 +24,7 @@ fun ProtobufConfigurator.protoc(closure: ExecutableLocator.() -> Unit) {
 
 fun ProtobufConfigurator.plugins(closure: NamedDomainObjectContainerScope<ExecutableLocator>.() -> Unit) {
     plugins(closureOf<NamedDomainObjectContainer<ExecutableLocator>> {
-        this(closure)
+        closure(NamedDomainObjectContainerScope.of(this))
     })
 }
 
@@ -41,15 +41,15 @@ fun ProtobufConfigurator.generateProtoTasks(closure: ProtobufConfigurator.Genera
     generateProtoTasks(closureOf(closure))
 }
 
-fun GenerateProtoTask.builtins(closure: NamedDomainObjectContainerScope<GenerateProtoTask.PluginOptions>.()->Unit) {
+fun GenerateProtoTask.builtins(configuration: NamedDomainObjectContainerScope<GenerateProtoTask.PluginOptions>.()->Unit) {
     builtins(closureOf<NamedDomainObjectContainer<GenerateProtoTask.PluginOptions>> {
-        this(closure)
+        configuration(NamedDomainObjectContainerScope.of(this))
     })
 }
 
-fun GenerateProtoTask.plugins(closure: NamedDomainObjectContainerScope<GenerateProtoTask.PluginOptions>.()-> Unit) {
+fun GenerateProtoTask.plugins(configuration: NamedDomainObjectContainerScope<GenerateProtoTask.PluginOptions>.()-> Unit) {
     plugins(closureOf<NamedDomainObjectContainer<GenerateProtoTask.PluginOptions>> {
-        this(closure)
+        configuration(NamedDomainObjectContainerScope.of(this))
     })
 }
 
