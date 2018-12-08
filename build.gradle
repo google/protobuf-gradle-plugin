@@ -86,6 +86,8 @@ dependencies {
     }
     testCompile 'commons-io:commons-io:2.5'
 
+    // This kotlin version needs to be compatible with the 
+    // android plugin being used in the test runtime.
     testProjectRuntime "org.jetbrains.kotlin:kotlin-gradle-plugin:1.2.0"
 
     // Add android plugin to the test classpath, so that we can jump into class definitions,
