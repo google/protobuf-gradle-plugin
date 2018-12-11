@@ -85,7 +85,7 @@ fun ProtobufConfigurator.protoc(action: ExecutableLocator.() -> Unit) {
 
 fun ProtobufConfigurator.plugins(action: NamedDomainObjectContainerScope<ExecutableLocator>.() -> Unit) {
     plugins(closureOf<NamedDomainObjectContainer<ExecutableLocator>> {
-        NamedDomainObjectContainerScope.of(this).action()
+        KtDslCompatibilityUtils.configureNamedDomainObjectContainer<ExecutableLocator>(this, action)
     })
 }
 
@@ -95,13 +95,13 @@ fun ProtobufConfigurator.generateProtoTasks(action: ProtobufConfigurator.Generat
 
 fun GenerateProtoTask.builtins(action: NamedDomainObjectContainerScope<GenerateProtoTask.PluginOptions>.()->Unit) {
     builtins(closureOf<NamedDomainObjectContainer<GenerateProtoTask.PluginOptions>> {
-        NamedDomainObjectContainerScope.of(this).action()
+        KtDslCompatibilityUtils.configureNamedDomainObjectContainer<GenerateProtoTask.PluginOptions>(this, action)
     })
 }
 
 fun GenerateProtoTask.plugins(action: NamedDomainObjectContainerScope<GenerateProtoTask.PluginOptions>.()-> Unit) {
     plugins(closureOf<NamedDomainObjectContainer<GenerateProtoTask.PluginOptions>> {
-        NamedDomainObjectContainerScope.of(this).action()
+        KtDslCompatibilityUtils.configureNamedDomainObjectContainer<GenerateProtoTask.PluginOptions>(this, action)
     })
 }
 

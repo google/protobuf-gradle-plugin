@@ -54,7 +54,7 @@ Stand-alone examples are available for each of gradle's supported languages.
  * [Groovy](https://github.com/google/protobuf-gradle-plugin/tree/master/examples/exampleProject) ___(Default)___
    * Run `../../gradlew build` under the example directory to test it out.
  * [Kotlin](https://github.com/google/protobuf-gradle-plugin/tree/master/examples/exampleKotlinDslProject) ___(Experimental)___
-   * Run `./gradlew build` under the Kotlin example directory to test it out. This example is set up with Gradle 5.0, the minimum required version.
+   * Run `./gradlew build` under the Kotlin example directory to test it out. This example is set up with Gradle 4.10, the minimum required version.
 
 
 Directories that start with `testProject` can also serve as usage

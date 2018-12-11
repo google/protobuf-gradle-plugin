@@ -3,7 +3,7 @@ import org.gradle.kotlin.dsl.provider.gradleKotlinDslOf
 
 // A minimal example Java project that uses the protobuf plugin.
 // To build it:
-// $ ../gradlew clean build
+// $ ./gradlew clean build
 plugins {
     java
     idea
@@ -61,10 +61,7 @@ protobuf {
     generateProtoTasks {
         ofSourceSet("main").forEach {
             it.plugins {
-                // Apply the "grpc" plugin whose spec is defined above, without
-                // options.  Note the braces cannot be omitted, otherwise the
-                // plugin will not be added. This is because of the implicit way
-                // NamedDomainObjectContainer binds the methods.
+                // Apply the "grpc" plugin whose spec is defined above, without options.
                 id("grpc")
             }
         }
