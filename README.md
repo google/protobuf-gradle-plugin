@@ -434,12 +434,16 @@ changed by setting the ``outputSubDir`` property in the ``builtins`` or
 ### Protos in dependencies
 
 If a Java project contains proto files, they will be packaged in the jar files
-along with the compiled classes. If a ``compile`` configuration has a
-dependency on a project or library jar that contains proto files, they will be
-added to the ``--proto_path`` flag of the protoc command line, so that they can
-be imported in the proto files of the dependent project. The imported proto
-files will not be compiled since they have already been compiled in their own
-projects. Example:
+along with the compiled classes.
+
+Protos in dependencies (e.g. upstream jars) can be put in either in the ``compile``
+configuration or the ``protobuf`` configuration.
+
+If the dependency is put in the ``compile`` configuration, the proto files are
+extracted to an ``extracted-include-protos`` directory and added to the ``--proto_path``
+flag of the protoc command line, so that they can be imported by the proto files
+of the current project. The imported proto files will not be compiled since
+they have already been compiled in their own projects. Example:
 
 ```gradle
 dependencies {
@@ -448,11 +452,10 @@ dependencies {
 }
 ```
 
-
-If there is a project, package or published artifact that contains just protos
-files, whose compiled classes are absent, and you want to use these proto files
-in your project and compile them, you can add it to ``protobuf`` dependencies.
-Example:
+If the dependency is put in the ``protobuf`` configuration, the proto files are
+extracted to a ``extracted-protos`` directory and added to the protoc command
+line as files to compile, in the same protoc invocation as the current project's
+proto files (if any). Example:
 
 ```gradle
 dependencies {
