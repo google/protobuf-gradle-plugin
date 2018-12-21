@@ -48,6 +48,23 @@ buildscript {
 }
 ```
 
+## Using Gradle 5.0
+
+The protobuf plugin is not registered in the community repository, so you must use
+buildscript configuration. Here's an example:
+
+```gradle
+buildscript {
+    dependencies {
+        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.7'
+    }
+}
+
+apply plugin: 'com.google.protobuf'
+
+```
+
+
 ## Examples
 
 Stand-alone examples are available for each of gradle's supported languages.
