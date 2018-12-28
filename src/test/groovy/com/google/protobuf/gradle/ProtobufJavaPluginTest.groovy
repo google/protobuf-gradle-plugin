@@ -90,6 +90,7 @@ class ProtobufJavaPluginTest extends Specification {
       .withProjectDir(projectDir)
       .withArguments('build')
       .withDebug(true)
+      .withGradleVersion(gradleVersion)
       .build()
 
     then: "it succeed"
@@ -111,6 +112,7 @@ class ProtobufJavaPluginTest extends Specification {
       .withProjectDir(projectDir)
       .withArguments('build')
       .withDebug(true)
+      .withGradleVersion(gradleVersion)
       .build()
 
     then: "it succeed"
@@ -212,7 +214,7 @@ class ProtobufJavaPluginTest extends Specification {
 
     then: "it succeed"
     result.task(":idea").outcome == TaskOutcome.SUCCESS
-    Node imlRoot = new XmlParser().parse(projectDir.toPath().resolve("testIdea.iml").toFile())
+    Node imlRoot = new XmlParser().parse(projectDir.toPath().resolve("testProject.iml").toFile())
     Collection rootMgr = imlRoot.component.findAll { it.'@name' == 'NewModuleRootManager' }
     assert rootMgr.size() == 1
     assert rootMgr.content.sourceFolder.size() == 1
