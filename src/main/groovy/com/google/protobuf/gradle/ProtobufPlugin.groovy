@@ -67,17 +67,6 @@ class ProtobufPlugin implements Plugin<Project> {
         'kotlin',
     ]
 
-    private static List<String> getLanguages(Project project) {
-      List<String> additionalLanguages = []
-      if (project.hasProperty(USER_LANG_PROP)) {
-        additionalLanguages = (List<String>) project.property(USER_LANG_PROP)
-        project.logger.log(
-            LogLevel.WARN,
-            "protobuf plugin is now using additional unsupported languages: " + additionalLanguages)
-      }
-      return SUPPORTED_LANGUAGES + additionalLanguages
-    }
-
     private final FileResolver fileResolver
     private Project project
     private boolean wasApplied = false
@@ -115,6 +104,22 @@ class ProtobufPlugin implements Plugin<Project> {
                 + ' The Java plugin or one of the Android plugins must be applied to the project first.')
           }
         }
+    }
+
+    private static List<String> getLanguages(Project project) {
+      List<String> additionalLanguages = []
+      if (project.hasProperty(USER_LANG_PROP)) {
+        additionalLanguages = (List<String>) project.property(USER_LANG_PROP)
+        project.logger.log(
+            LogLevel.WARN,
+            "protobuf plugin is now using additional unsupported languages: " + additionalLanguages)
+      }
+      return SUPPORTED_LANGUAGES + additionalLanguages
+    }
+
+    private static void linkGenerateProtoTasksToTask(Task task, GenerateProtoTask genProtoTask) {
+      task.dependsOn(genProtoTask)
+      task.source genProtoTask.getOutputSourceDirectorySet()
     }
 
     private void doApply() {
@@ -395,11 +400,6 @@ class ProtobufPlugin implements Plugin<Project> {
         }
         isTest = Utils.isTest(sourceSetOrVariantName)
       }
-    }
-
-    private static void linkGenerateProtoTasksToTask(Task task, GenerateProtoTask genProtoTask) {
-      task.dependsOn(genProtoTask)
-      task.source genProtoTask.getOutputSourceDirectorySet()
     }
 
     private void linkGenerateProtoTasksToTaskName(String compileTaskName, GenerateProtoTask genProtoTask) {

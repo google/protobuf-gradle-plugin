@@ -14,13 +14,6 @@ import spock.lang.Specification
 class ProtobufJavaPluginTest extends Specification {
   private static final List<String> GRADLE_VERSIONS = ["2.12", "3.0", "4.0", "4.3"]
 
-  private Project setupBasicProject() {
-    Project project = ProjectBuilder.builder().build()
-    project.apply plugin:'java'
-    project.apply plugin:'com.google.protobuf'
-    return project
-  }
-
   void "testApplying java and com.google.protobuf adds corresponding task to project"() {
     given: "a basic project with java and com.google.protobuf"
     Project project = setupBasicProject()
@@ -324,5 +317,12 @@ class ProtobufJavaPluginTest extends Specification {
 
     then: "it returns maximum integer value"
     limit == Integer.MAX_VALUE
+  }
+
+  private Project setupBasicProject() {
+    Project project = ProjectBuilder.builder().build()
+    project.apply plugin:'java'
+    project.apply plugin:'com.google.protobuf'
+    return project
   }
 }

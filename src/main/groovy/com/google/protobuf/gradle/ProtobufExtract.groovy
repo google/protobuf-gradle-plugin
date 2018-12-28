@@ -44,12 +44,6 @@ class ProtobufExtract extends DefaultTask {
   private File destDir
   private Boolean isTest = null
 
-  protected void setDestDir(File destDir) {
-    Preconditions.checkState(this.destDir == null, 'destDir already set')
-    this.destDir = destDir
-    outputs.dir destDir
-  }
-
   public void setIsTest(boolean isTest) {
     this.isTest = isTest
   }
@@ -57,10 +51,6 @@ class ProtobufExtract extends DefaultTask {
   public boolean getIsTest() {
     Preconditions.checkNotNull(isTest)
     return isTest
-  }
-
-  protected File getDestDir() {
-    return destDir
   }
 
   @TaskAction
@@ -104,5 +94,15 @@ class ProtobufExtract extends DefaultTask {
         logger.debug "Skipping unsupported file type (${file.path}); handles only jar, tar, tar.gz, tar.bz2 & tgz"
       }
     }
+  }
+
+  protected void setDestDir(File destDir) {
+    Preconditions.checkState(this.destDir == null, 'destDir already set')
+    this.destDir = destDir
+    outputs.dir destDir
+  }
+
+  protected File getDestDir() {
+    return destDir
   }
 }

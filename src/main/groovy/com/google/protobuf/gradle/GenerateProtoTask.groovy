@@ -111,19 +111,60 @@ public class GenerateProtoTask extends DefaultTask {
 
   final DescriptorSetOptions descriptorSetOptions = new DescriptorSetOptions()
 
-  private static enum State {
-    INIT, CONFIG, FINALIZED
+  // protoc allows you to prefix comma-delimited options to the path in
+  // the --*_out flags, e.g.,
+  // - Without options: --java_out=/path/to/output
+  // - With options: --java_out=option1,option2:/path/to/output
+  // This method generates the prefix out of the given options.
+  static String makeOptionsPrefix(List<String> options) {
+    StringBuilder prefix = new StringBuilder()
+    if (!options.isEmpty()) {
+      options.each { option ->
+        if (prefix.length() > 0) {
+          prefix.append(',')
+        }
+        prefix.append(option)
+      }
+      prefix.append(':')
+    }
+    return prefix.toString()
   }
 
-  private State state = State.INIT
-
-  private void checkInitializing() {
-    Preconditions.checkState(state == State.INIT, 'Should not be called after initilization has finished')
+  static List<List<String>> generateCmds(List<String> baseCmd, List<File> protoFiles, int cmdLengthLimit) {
+    List<List<String>> cmds = []
+    if (!protoFiles.isEmpty()) {
+      int baseCmdLength = baseCmd.sum { it.length() + CMD_ARGUMENT_EXTRA_LENGTH }
+      List<String> currentArgs = []
+      int currentArgsLength = 0
+      for (File proto: protoFiles) {
+        String protoFileName = proto
+        int currentFileLength = protoFileName.length() + CMD_ARGUMENT_EXTRA_LENGTH
+        // Check if appending the next proto string will overflow the cmd length limit
+        if (baseCmdLength + currentArgsLength + currentFileLength > cmdLengthLimit) {
+          // Add the current cmd before overflow
+          cmds.add(baseCmd + currentArgs)
+          currentArgs.clear()
+          currentArgsLength = 0
+        }
+        // Append the proto file to the args
+        currentArgs.add(protoFileName)
+        currentArgsLength += currentFileLength
+      }
+      // Add the last cmd for execution
+      cmds.add(baseCmd + currentArgs)
+    }
+    return cmds
   }
 
-  private void checkCanConfig() {
-    Preconditions.checkState(state == State.CONFIG || state == State.INIT,
-        'Should not be called after configuration has finished')
+  static int getCmdLengthLimit() {
+    return getCmdLengthLimit(System.getProperty("os.name"))
+  }
+
+  static int getCmdLengthLimit(String os) {
+    if (os != null && os.toLowerCase(Locale.ROOT).indexOf("win") > -1) {
+      return WINDOWS_CMD_LENGTH_LIMIT
+    }
+    return Integer.MAX_VALUE
   }
 
   void setOutputBaseDir(String outputBaseDir) {
@@ -353,25 +394,6 @@ public class GenerateProtoTask extends DefaultTask {
   //    protoc invocation logic
   //===========================================================================
 
-  // protoc allows you to prefix comma-delimited options to the path in
-  // the --*_out flags, e.g.,
-  // - Without options: --java_out=/path/to/output
-  // - With options: --java_out=option1,option2:/path/to/output
-  // This method generates the prefix out of the given options.
-  static String makeOptionsPrefix(List<String> options) {
-    StringBuilder prefix = new StringBuilder()
-    if (!options.isEmpty()) {
-      options.each { option ->
-        if (prefix.length() > 0) {
-          prefix.append(',')
-        }
-        prefix.append(option)
-      }
-      prefix.append(':')
-    }
-    return prefix.toString()
-  }
-
   String getOutputDir(PluginOptions plugin) {
     return "${outputBaseDir}/${plugin.outputSubDir}"
   }
@@ -455,6 +477,21 @@ public class GenerateProtoTask extends DefaultTask {
     }
   }
 
+  private static enum State {
+    INIT, CONFIG, FINALIZED
+  }
+
+  private State state = State.INIT
+
+  private void checkInitializing() {
+    Preconditions.checkState(state == State.INIT, 'Should not be called after initilization has finished')
+  }
+
+  private void checkCanConfig() {
+    Preconditions.checkState(state == State.CONFIG || state == State.INIT,
+        'Should not be called after configuration has finished')
+  }
+
   private void compileFiles(List<String> cmd) {
     logger.log(LogLevel.INFO, cmd.toString())
 
@@ -469,42 +506,4 @@ public class GenerateProtoTask extends DefaultTask {
       throw new GradleException(output)
     }
   }
-
-  static List<List<String>> generateCmds(List<String> baseCmd, List<File> protoFiles, int cmdLengthLimit) {
-    List<List<String>> cmds = []
-    if (!protoFiles.isEmpty()) {
-      int baseCmdLength = baseCmd.sum { it.length() + CMD_ARGUMENT_EXTRA_LENGTH }
-      List<String> currentArgs = []
-      int currentArgsLength = 0
-      for (File proto: protoFiles) {
-        String protoFileName = proto
-        int currentFileLength = protoFileName.length() + CMD_ARGUMENT_EXTRA_LENGTH
-        // Check if appending the next proto string will overflow the cmd length limit
-        if (baseCmdLength + currentArgsLength + currentFileLength > cmdLengthLimit) {
-          // Add the current cmd before overflow
-          cmds.add(baseCmd + currentArgs)
-          currentArgs.clear()
-          currentArgsLength = 0
-        }
-        // Append the proto file to the args
-        currentArgs.add(protoFileName)
-        currentArgsLength += currentFileLength
-      }
-      // Add the last cmd for execution
-      cmds.add(baseCmd + currentArgs)
-    }
-    return cmds
-  }
-
-  static int getCmdLengthLimit() {
-    return getCmdLengthLimit(System.getProperty("os.name"))
-  }
-
-  static int getCmdLengthLimit(String os) {
-    if (os != null && os.toLowerCase(Locale.ROOT).indexOf("win") > -1) {
-      return WINDOWS_CMD_LENGTH_LIMIT
-    }
-    return Integer.MAX_VALUE
-  }
-
 }
