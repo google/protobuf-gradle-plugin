@@ -34,7 +34,7 @@ import spock.lang.Specification
  * Tests for ToolsLocator
  */
 class ToolsLocatorSpec extends Specification {
-  void '`classifier` and `extension` should both be `null`'() {
+  void 'test: `classifier` and `extension` should both be `null`'() {
     given:
     String input = 'com.example:example-plugin:0.0.0-rc0+experimental'
 
@@ -42,7 +42,7 @@ class ToolsLocatorSpec extends Specification {
     ['com.example', 'example-plugin', '0.0.0-rc0+experimental', null, null] == ToolsLocator.artifactParts(input)
   }
 
-  void '`classifier` should be parsed and `extension` should be null'() {
+  void 'test: `classifier` should be parsed and `extension` should be null'() {
     given:
     String input = 'com.example:example-plugin:0.0.0-rc0+experimental:classifier'
 
@@ -50,7 +50,7 @@ class ToolsLocatorSpec extends Specification {
     ['com.example', 'example-plugin', '0.0.0-rc0+experimental', 'classifier', null] == ToolsLocator.artifactParts(input)
   }
 
-  void '`classifier` should be `null` and `extension` should be parsed'() {
+  void 'test: `classifier` should be `null` and `extension` should be parsed'() {
     given:
     String input = 'com.example:example-plugin:0.0.0-rc0+experimental@extension'
 
@@ -58,7 +58,7 @@ class ToolsLocatorSpec extends Specification {
     ['com.example', 'example-plugin', '0.0.0-rc0+experimental', null, 'extension'] == ToolsLocator.artifactParts(input)
   }
 
-  void '`classifier` and `extension` should both be parsed'() {
+  void 'test: `classifier` and `extension` should both be parsed'() {
     given:
     String input = 'com.example:example-plugin:0.0.0-rc0+experimental:classifier@extension'
     List<String> expected = ['com.example', 'example-plugin', '0.0.0-rc0+experimental', 'classifier', 'extension']

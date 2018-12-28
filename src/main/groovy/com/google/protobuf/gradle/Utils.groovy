@@ -118,14 +118,6 @@ class Utils {
     return gv.group(2).toInteger() - tv.group(2).toInteger()
   }
 
-  private static Matcher parseVersionString(String version) {
-    Matcher matcher = version =~ "(\\d*)\\.(\\d*).*"
-    if (!matcher || !matcher.matches()) {
-      throw new GradleException("Failed to parse version \"${version}\"")
-    }
-    return matcher
-  }
-
   /**
    * Returns true if the source set is a test related source set.
    */
@@ -158,5 +150,13 @@ class Utils {
         }
       }
     }
+  }
+
+  private static Matcher parseVersionString(String version) {
+    Matcher matcher = version =~ "(\\d*)\\.(\\d*).*"
+    if (!matcher || !matcher.matches()) {
+      throw new GradleException("Failed to parse version \"${version}\"")
+    }
+    return matcher
   }
 }

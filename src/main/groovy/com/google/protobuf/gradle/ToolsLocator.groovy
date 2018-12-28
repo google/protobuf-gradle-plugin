@@ -43,6 +43,20 @@ class ToolsLocator {
   private final ExecutableLocator protoc
   private final NamedDomainObjectContainer<ExecutableLocator> plugins
 
+  static List<String> artifactParts(String artifactCoordinate) {
+    String artifact
+    String extension
+    String group
+    String name
+    String version
+    String classifier
+
+    (artifact, extension) = artifactCoordinate.tokenize('@')
+    (group, name, version, classifier) = artifact.tokenize(':')
+
+    return [group, name, version, classifier, extension]
+  }
+
   ToolsLocator(Project project) {
     this.project = project
     protoc = new ExecutableLocator('protoc')
@@ -107,19 +121,5 @@ class ToolsLocator {
         }
       }
     }
-  }
-
-  static List<String> artifactParts(String artifactCoordinate) {
-    String artifact
-    String extension
-    String group
-    String name
-    String version
-    String classifier
-
-    (artifact, extension) = artifactCoordinate.tokenize('@')
-    (group, name, version, classifier) = artifact.tokenize(':')
-
-    return [group, name, version, classifier, extension]
   }
 }
