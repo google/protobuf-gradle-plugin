@@ -77,6 +77,11 @@ class ProtobufPlugin implements Plugin<Project> {
     }
 
     void apply(final Project project) {
+      if (Utils.compareGradleVersion(project, "3.0") < 0) {
+        throw new GradleException(
+          "Gradle version is ${project.gradle.gradleVersion}. Minimum supported version is 3.0")
+      }
+
         this.project = project
         // At least one of the prerequisite plugins must by applied before this plugin can be applied, so
         // we will use the PluginManager.withPlugin() callback mechanism to delay applying this plugin until
