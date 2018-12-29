@@ -330,7 +330,7 @@ class ProtobufPlugin implements Plugin<Project> {
               }
           // Register them as input, but not as "source".
           // Inputs are checked in incremental builds, but only "source" files are compiled.
-          inputs.dir extractedIncludeProtoSources
+          //inputs.dir extractedIncludeProtoSources
           // Add the extracted include dir to the --proto_path include paths.
           include extractedIncludeProtoSources.dir
         }

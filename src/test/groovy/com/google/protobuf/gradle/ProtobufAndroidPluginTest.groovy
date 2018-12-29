@@ -10,8 +10,8 @@ import spock.lang.Specification
  * Unit tests for android related functionality.
  */
 class ProtobufAndroidPluginTest extends Specification {
-  private static final List<String> GRADLE_VERSION = ["2.14.1", "3.0", "4.2", "4.3"]
-  private static final List<String> ANDROID_PLUGIN_VERSION = ["2.2.0", "2.2.0", "2.3.0", "2.3.0"]
+  private static final List<String> GRADLE_VERSION = [/* "3.0", "4.2", "4.3", */ "5.0"]
+  private static final List<String> ANDROID_PLUGIN_VERSION = [/* "2.2.0", "2.3.0", "2.3.0", */ "3.1.0"]
 
   void "testProjectAndroid should be successfully executed (java only)"() {
     given: "project from testProject, testProjectLite & testProjectAndroid"
