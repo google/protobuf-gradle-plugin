@@ -10,8 +10,8 @@ import spock.lang.Specification
  * Verify android projects are identified correctly
  */
 class AndroidProjectDetectionTest extends Specification {
-  private static final List<String> GRADLE_VERSION = ["3.0", "4.2", "4.3", "4.8", "5.0"]
-  private static final List<String> ANDROID_PLUGIN_VERSION = ["2.2.0", "2.3.0", "2.3.0", "3.1.2", "3.1.2"]
+  private static final List<String> GRADLE_VERSION = [/* "3.0", */ "4.2", "4.3", "5.0"]
+  private static final List<String> ANDROID_PLUGIN_VERSION = [/* "2.2.0", */ "2.3.0", "2.3.0", "3.1.0"]
 
   static void appendUtilIsAndroidProjectCheckTask(File buildFile, boolean assertResult) {
     buildFile << """
