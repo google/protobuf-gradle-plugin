@@ -351,7 +351,7 @@ class ProtobufPlugin implements Plugin<Project> {
      *
      * <p>This task is per-sourceSet for both Java and per variant for Android.
      */
-    private Task setupExtractIncludeProtosTask(
+    private void setupExtractIncludeProtosTask(
         GenerateProtoTask generateProtoTask,
         String sourceSetOrVariantName,
         FileCollection compileClasspathConfiguration = null,
@@ -393,11 +393,11 @@ class ProtobufPlugin implements Plugin<Project> {
 
       generateProtoTask.dependsOn task
 
-      // Register them as input, but not as "source".
+      File extractedIncludeProtosDir = task.destDir
+      generateProtoTask.include extractedIncludeProtosDir
+      // Register the include dir as input, but not as "source".
       // Inputs are checked in incremental builds, but only "source" files are compiled.
-      //XXX generateProtoTask.inputs.dir extractedIncludeProtoSources
-
-      generateProtoTask.include new File(getExtractedIncludeProtosDir(sourceSetOrVariantName))
+      generateProtoTask.inputs.dir extractedIncludeProtosDir
     }
 
     private void linkGenerateProtoTasksToTaskName(String compileTaskName, GenerateProtoTask genProtoTask) {
