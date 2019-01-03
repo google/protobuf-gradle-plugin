@@ -12,7 +12,7 @@ import spock.lang.Specification
  * Unit tests for normal java and kotlin functionality.
  */
 class ProtobufJavaPluginTest extends Specification {
-  private static final List<String> GRADLE_VERSIONS = [/* "3.0", "4.0", "4.3", */ "5.0"]
+  private static final List<String> GRADLE_VERSIONS = [/* "3.0",*/ "4.0", "4.3", "5.1"]
 
   void "testApplying java and com.google.protobuf adds corresponding task to project"() {
     given: "a basic project with java and com.google.protobuf"
