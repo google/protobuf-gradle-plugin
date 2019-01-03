@@ -277,17 +277,27 @@ class ProtobufPlugin implements Plugin<Project> {
         Task extractIncludeProtosTask = maybeAddExtractIncludeProtosTask(
             name, classPathConfig, testClassPathConfig)
         generateProtoTask.dependsOn(extractIncludeProtosTask)
+        attachExtractedIncludeProtosDir(generateProtoTask, name)
       } else {
         // For Android Gradle plugin < 2.5
         variant.sourceSets.each {
           Task extractIncludeProtosTask =
               maybeAddExtractIncludeProtosTask(it.name)
           generateProtoTask.dependsOn(extractIncludeProtosTask)
+          attachExtractedIncludeProtosDir(generateProtoTask, it.name)
         }
       }
 
       // TODO(zhangkun83): Include source proto files in the compiled archive,
       // so that proto files from dependent projects can import them.
+    }
+
+    private void attachExtractedIncludeProtosDir(GenerateProtoTask task, String sourceSetOrVariantName) {
+      // Register them as input, but not as "source".
+      // Inputs are checked in incremental builds, but only "source" files are compiled.
+      //XXX inputs.dir extractedIncludeProtoSources
+
+      task.include new File(getExtractedIncludeProtosDir(sourceSetOrVariantName))
     }
 
     /**
@@ -322,17 +332,6 @@ class ProtobufPlugin implements Plugin<Project> {
               }
           Utils.addFilesToTaskInputs(project, inputs, extractedProtoSources)
           include extractedProtoSources.dir
-
-          // Register extracted include protos
-          ConfigurableFileTree extractedIncludeProtoSources =
-              project.fileTree(getExtractedIncludeProtosDir(sourceSet.name)) {
-                include "**/*.proto"
-              }
-          // Register them as input, but not as "source".
-          // Inputs are checked in incremental builds, but only "source" files are compiled.
-          //inputs.dir extractedIncludeProtoSources
-          // Add the extracted include dir to the --proto_path include paths.
-          include extractedIncludeProtoSources.dir
         }
       }
     }
