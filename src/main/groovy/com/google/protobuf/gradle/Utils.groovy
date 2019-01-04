@@ -95,7 +95,7 @@ class Utils {
     return "compile" + GUtil.toCamelCase(variantName) + "Kotlin"
   }
 
-  static void addFilesToTaskInputs(Project project, TaskInputs inputs, Object files) {
+  static void addFilesToTaskInputs(TaskInputs inputs, Object files) {
     inputs.files(files).skipWhenEmpty()
   }
 

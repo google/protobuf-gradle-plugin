@@ -304,7 +304,7 @@ class ProtobufPlugin implements Plugin<Project> {
         it.fileResolver = this.fileResolver
         sourceSets.each { sourceSet ->
           // Include sources
-          Utils.addFilesToTaskInputs(project, inputs, sourceSet.proto)
+          Utils.addFilesToTaskInputs(inputs, sourceSet.proto)
           ProtobufSourceDirectorySet protoSrcDirSet = sourceSet.proto
           protoSrcDirSet.srcDirs.each { srcDir ->
             include srcDir
@@ -315,7 +315,7 @@ class ProtobufPlugin implements Plugin<Project> {
               project.fileTree(getExtractedProtosDir(sourceSet.name)) {
                 include "**/*.proto"
               }
-          Utils.addFilesToTaskInputs(project, inputs, extractedProtoSources)
+          Utils.addFilesToTaskInputs(inputs, extractedProtoSources)
           include extractedProtoSources.dir
         }
       }
