@@ -95,10 +95,6 @@ class Utils {
     return "compile" + GUtil.toCamelCase(variantName) + "Kotlin"
   }
 
-  static void addFilesToTaskInputs(Project project, TaskInputs inputs, Object files) {
-    inputs.files(files).skipWhenEmpty()
-  }
-
   /**
    * Returns positive/0/negative if current Gradle version is higher than/equal to/lower than the
    * given target version.  Only major and minor versions are checked.  Patch version is ignored.

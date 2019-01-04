@@ -36,6 +36,8 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.Named
 import org.gradle.api.NamedDomainObjectContainer
+import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.FileCollection
 import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.internal.file.DefaultSourceDirectorySet
 import org.gradle.api.internal.file.FileResolver
@@ -57,7 +59,8 @@ public class GenerateProtoTask extends DefaultTask {
   // Two quotes and a space.
   static final int CMD_ARGUMENT_EXTRA_LENGTH = 3
 
-  private final List includeDirs = []
+  private final List<File> includeDirs = []
+  private final ConfigurableFileCollection sourceFiles = project.files()
   private final NamedDomainObjectContainer<PluginOptions> builtins
   private final NamedDomainObjectContainer<PluginOptions> plugins
 
@@ -215,6 +218,10 @@ public class GenerateProtoTask extends DefaultTask {
     return sourceSet
   }
 
+  FileCollection getSourceFiles() {
+    return sourceFiles
+  }
+
   Object getVariant() {
     Preconditions.checkState(Utils.isAndroidProject(project),
         'variant should not be used in a Java project')
@@ -321,13 +328,19 @@ public class GenerateProtoTask extends DefaultTask {
   /**
    * Add a directory to protoc's include path.
    */
-  public void include(Object dir) {
+  public void include(File dir) {
     checkCanConfig()
-    if (dir instanceof File) {
-      includeDirs.add(dir)
-    } else {
-      includeDirs.add(project.file(dir))
-    }
+    includeDirs.add(dir)
+    inputs.files(dir)
+  }
+
+  /**
+   * Add a collection of proto source files to be compiled.
+   */
+  public void source(Object files) {
+    checkCanConfig()
+    sourceFiles.from(files)
+    inputs.files(files)
   }
 
   /**
@@ -422,7 +435,7 @@ public class GenerateProtoTask extends DefaultTask {
     ToolsLocator tools = project.protobuf.tools
     // Sort to ensure generated descriptors have a canonical representation
     // to avoid triggering unnecessary rebuilds downstream
-    List<File> protoFiles = inputs.sourceFiles.files.sort()
+    List<File> protoFiles = sourceFiles.files.sort()
 
     [builtins, plugins]*.each { plugin ->
       File outputDir = new File(getOutputDir(plugin))
