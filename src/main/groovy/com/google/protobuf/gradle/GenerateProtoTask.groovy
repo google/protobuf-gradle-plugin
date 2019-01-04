@@ -331,7 +331,9 @@ public class GenerateProtoTask extends DefaultTask {
   public void include(File dir) {
     checkCanConfig()
     includeDirs.add(dir)
-    inputs.files(dir)
+    // Register all files under the directory as input so that Gradle will check their changes for
+    // incremental build
+    inputs.dir(dir)
   }
 
   /**
@@ -340,6 +342,7 @@ public class GenerateProtoTask extends DefaultTask {
   public void source(Object files) {
     checkCanConfig()
     sourceFiles.from(files)
+    // Register the files as input so that Gradle will check their changes for incremental build
     inputs.files(files)
   }
 

@@ -303,7 +303,11 @@ class ProtobufPlugin implements Plugin<Project> {
           source sourceSet.proto
           ProtobufSourceDirectorySet protoSrcDirSet = sourceSet.proto
           protoSrcDirSet.srcDirs.each { srcDir ->
-            include srcDir
+            // The source directory designated from sourceSet may not actually exist on disk.
+            // "include" it only when it exists, so that Gradle and protoc won't complain
+            if (srcDir.exists()) {
+              include srcDir
+            }
           }
         }
       }
