@@ -33,7 +33,6 @@ import org.apache.commons.lang.StringUtils
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.tasks.SourceSet
-import org.gradle.api.tasks.TaskInputs
 import org.gradle.plugins.ide.idea.GenerateIdeaModule
 import org.gradle.plugins.ide.idea.model.IdeaModel
 import org.gradle.util.GUtil
