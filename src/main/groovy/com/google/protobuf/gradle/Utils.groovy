@@ -32,6 +32,7 @@ import com.google.common.base.Preconditions
 import org.apache.commons.lang.StringUtils
 import org.gradle.api.GradleException
 import org.gradle.api.Project
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskInputs
 import org.gradle.plugins.ide.idea.GenerateIdeaModule
@@ -95,8 +96,12 @@ class Utils {
     return "compile" + GUtil.toCamelCase(variantName) + "Kotlin"
   }
 
-  static void addFilesToTaskInputs(TaskInputs inputs, Object files) {
-    inputs.files(files).skipWhenEmpty()
+  static void addFilesToTaskInputs(Project project, TaskInputs inputs, Object files) {
+    if (compareGradleVersion(project, "4.0") >= 0) {
+      inputs.files(files).skipWhenEmpty().withPathSensitivity(PathSensitivity.RELATIVE)
+    } else {
+      inputs.files(files).skipWhenEmpty()
+    }
   }
 
   /**
