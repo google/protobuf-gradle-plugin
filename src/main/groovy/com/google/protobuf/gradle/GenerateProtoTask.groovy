@@ -59,7 +59,10 @@ public class GenerateProtoTask extends DefaultTask {
   // Two quotes and a space.
   static final int CMD_ARGUMENT_EXTRA_LENGTH = 3
 
+  // include dirs are passed to the '-I' option of protoc.  They contain protos
+  // that may be "imported" from the source protos, but will not be compiled.
   private final List<File> includeDirs = []
+  // source files are proto files that will be compiled by protoc
   private final ConfigurableFileCollection sourceFiles = project.files()
   private final NamedDomainObjectContainer<PluginOptions> builtins
   private final NamedDomainObjectContainer<PluginOptions> plugins
@@ -328,7 +331,7 @@ public class GenerateProtoTask extends DefaultTask {
   /**
    * Add a directory to protoc's include path.
    */
-  public void include(File dir) {
+  public void addIncludeDir(File dir) {
     checkCanConfig()
     includeDirs.add(dir)
     // Register all files under the directory as input so that Gradle will check their changes for
@@ -339,7 +342,7 @@ public class GenerateProtoTask extends DefaultTask {
   /**
    * Add a collection of proto source files to be compiled.
    */
-  public void source(Object files) {
+  public void addSourceFiles(Object files) {
     checkCanConfig()
     sourceFiles.from(files)
     // Register the files as input so that Gradle will check their changes for incremental build

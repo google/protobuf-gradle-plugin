@@ -299,13 +299,13 @@ class ProtobufPlugin implements Plugin<Project> {
         outputBaseDir = "${project.protobuf.generatedFilesBaseDir}/${sourceSetOrVariantName}"
         it.fileResolver = this.fileResolver
         sourceSets.each { sourceSet ->
-          source sourceSet.proto
+          addSourceFiles(sourceSet.proto)
           ProtobufSourceDirectorySet protoSrcDirSet = sourceSet.proto
           protoSrcDirSet.srcDirs.each { srcDir ->
             // The source directory designated from sourceSet may not actually exist on disk.
             // "include" it only when it exists, so that Gradle and protoc won't complain
             if (srcDir.exists()) {
-              include srcDir
+              addIncludeDir(srcDir)
             }
           }
         }
@@ -335,7 +335,7 @@ class ProtobufPlugin implements Plugin<Project> {
       }
 
       linkExtractTaskToGenerateTask(task, generateProtoTask)
-      generateProtoTask.source(project.fileTree(task.destDir) { include "**/*.proto" })
+      generateProtoTask.addSourceFiles(project.fileTree(task.destDir) { include "**/*.proto" })
     }
 
     /**
@@ -389,8 +389,8 @@ class ProtobufPlugin implements Plugin<Project> {
     }
 
     private void linkExtractTaskToGenerateTask(ProtobufExtract extractTask, GenerateProtoTask generateTask) {
-      generateTask.dependsOn extractTask
-      generateTask.include extractTask.destDir
+      generateTask.dependsOn(extractTask)
+      generateTask.addIncludeDir(extractTask.destDir)
     }
 
     private void linkGenerateProtoTasksToTaskName(String compileTaskName, GenerateProtoTask genProtoTask) {
