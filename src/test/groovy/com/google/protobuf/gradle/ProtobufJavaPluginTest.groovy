@@ -12,7 +12,8 @@ import spock.lang.Specification
  * Unit tests for normal java and kotlin functionality.
  */
 class ProtobufJavaPluginTest extends Specification {
-  private static final List<String> GRADLE_VERSIONS = ["2.12", "3.0", "4.0", "4.3"]
+  // TODO(zhangkun83): restore 3.0 once https://github.com/gradle/gradle/issues/8158 is resolved
+  private static final List<String> GRADLE_VERSIONS = [/* "3.0",*/ "4.0", "4.3", "5.1"]
 
   void "testApplying java and com.google.protobuf adds corresponding task to project"() {
     given: "a basic project with java and com.google.protobuf"
@@ -81,7 +82,7 @@ class ProtobufJavaPluginTest extends Specification {
     when: "build is invoked"
     BuildResult result = GradleRunner.create()
       .withProjectDir(projectDir)
-      .withArguments('build')
+      .withArguments('build', '--stacktrace')
       .withDebug(true)
       .withGradleVersion(gradleVersion)
       .build()

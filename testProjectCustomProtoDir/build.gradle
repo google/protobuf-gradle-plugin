@@ -40,12 +40,14 @@ protobuf.protoc {
   artifact = 'com.google.protobuf:protoc:3.0.0'
 }
 
-task printDeps(dependsOn: build) << {
-  configurations.each { println it }
-  sourceSets.each { println it.getCompileTaskName("proto") }
-  sourceSets.each { println it.getCompileTaskName("java") }
-  sourceSets.each { println it }
-  println tasks['compileJava'].source
-  println project.buildDir
-  println project.buildDir.path
+task printDeps(dependsOn: build) {
+  doLast {
+    configurations.each { println it }
+    sourceSets.each { println it.getCompileTaskName("proto") }
+    sourceSets.each { println it.getCompileTaskName("java") }
+    sourceSets.each { println it }
+    println tasks['compileJava'].source
+    println project.buildDir
+    println project.buildDir.path
+  }
 }

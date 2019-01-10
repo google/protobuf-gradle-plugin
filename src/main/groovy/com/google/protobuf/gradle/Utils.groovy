@@ -95,13 +95,8 @@ class Utils {
     return "compile" + GUtil.toCamelCase(variantName) + "Kotlin"
   }
 
-  static void addFilesToTaskInputs(Project project, TaskInputs inputs, Object files) {
-    if (compareGradleVersion(project, "3.0") >= 0) {
-      inputs.files(files).skipWhenEmpty()
-    } else {
-      // source() is deprecated since Gradle 3.0
-      inputs.source(files)
-    }
+  static void addFilesToTaskInputs(TaskInputs inputs, Object files) {
+    inputs.files(files).skipWhenEmpty()
   }
 
   /**
