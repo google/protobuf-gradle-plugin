@@ -35,6 +35,7 @@ import org.gradle.api.internal.file.collections.DefaultDirectoryFileTreeFactory
 /**
  * The backing class of the proto extension added to sourceSets, e.g., sourceSets.main.proto
  */
+// TODO(zhangkun83): remove this file once we drop support for Gradle < 5.0
 public class ProtobufSourceDirectorySet extends DefaultSourceDirectorySet {
 
   public ProtobufSourceDirectorySet(String name, FileResolver fileResolver) {
