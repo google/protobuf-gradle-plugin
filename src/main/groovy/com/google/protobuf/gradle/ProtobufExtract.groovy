@@ -55,6 +55,7 @@ class ProtobufExtract extends DefaultTask {
 
   @TaskAction
   void extract() {
+    destDir.mkdir()
     inputs.files.each { file ->
       logger.debug "Extracting protos from ${file} to ${destDir}"
       if (file.isDirectory()) {

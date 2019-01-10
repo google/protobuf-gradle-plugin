@@ -33,7 +33,6 @@ import org.apache.commons.lang.StringUtils
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.tasks.SourceSet
-import org.gradle.api.tasks.TaskInputs
 import org.gradle.plugins.ide.idea.GenerateIdeaModule
 import org.gradle.plugins.ide.idea.model.IdeaModel
 import org.gradle.util.GUtil
@@ -93,10 +92,6 @@ class Utils {
     // https://kotlinlang.org/docs/reference/using-gradle.html#compiler-options
     Preconditions.checkState(isAndroidProject(project))
     return "compile" + GUtil.toCamelCase(variantName) + "Kotlin"
-  }
-
-  static void addFilesToTaskInputs(TaskInputs inputs, Object files) {
-    inputs.files(files).skipWhenEmpty()
   }
 
   /**

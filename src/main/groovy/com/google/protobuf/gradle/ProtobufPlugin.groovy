@@ -37,7 +37,6 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.attributes.Attribute
-import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.internal.file.FileResolver
@@ -226,16 +225,14 @@ class ProtobufPlugin implements Plugin<Project> {
         java { }
       }
 
-      Task extractProtosTask = maybeAddExtractProtosTask(sourceSet.name)
-      generateProtoTask.dependsOn(extractProtosTask)
-
+      setupExtractProtosTask(generateProtoTask, sourceSet.name)
       setupExtractIncludeProtosTask(generateProtoTask, sourceSet.name)
 
       // Include source proto files in the compiled archive, so that proto files from
       // dependent projects can import them.
       Task processResourcesTask =
           project.tasks.getByName(sourceSet.getTaskName('process', 'resources'))
-      processResourcesTask.from(generateProtoTask.inputs.sourceFiles) {
+      processResourcesTask.from(generateProtoTask.sourceFiles) {
         include '**/*.proto'
       }
     }
@@ -253,8 +250,7 @@ class ProtobufPlugin implements Plugin<Project> {
       generateProtoTask.doneInitializing()
 
       variant.sourceSets.each {
-        Task extractProtosTask = maybeAddExtractProtosTask(it.name)
-        generateProtoTask.dependsOn(extractProtosTask)
+        setupExtractProtosTask(generateProtoTask, it.name)
       }
 
       if (variant.hasProperty("compileConfiguration")) {
@@ -303,45 +299,43 @@ class ProtobufPlugin implements Plugin<Project> {
         outputBaseDir = "${project.protobuf.generatedFilesBaseDir}/${sourceSetOrVariantName}"
         it.fileResolver = this.fileResolver
         sourceSets.each { sourceSet ->
-          // Include sources
-          Utils.addFilesToTaskInputs(inputs, sourceSet.proto)
+          addSourceFiles(sourceSet.proto)
           ProtobufSourceDirectorySet protoSrcDirSet = sourceSet.proto
           protoSrcDirSet.srcDirs.each { srcDir ->
-            include srcDir
+            // The source directory designated from sourceSet may not actually exist on disk.
+            // "include" it only when it exists, so that Gradle and protoc won't complain
+            if (srcDir.exists()) {
+              addIncludeDir(srcDir)
+            }
           }
-
-          // Include extracted sources
-          ConfigurableFileTree extractedProtoSources =
-              project.fileTree(getExtractedProtosDir(sourceSet.name)) {
-                include "**/*.proto"
-              }
-          Utils.addFilesToTaskInputs(inputs, extractedProtoSources)
-          include extractedProtoSources.dir
         }
       }
     }
 
     /**
-     * Adds a task to extract protos from protobuf dependencies. They are
+     * Sets up a task to extract protos from protobuf dependencies. They are
      * treated as sources and will be compiled.
      *
      * <p>This task is per-sourceSet, for both Java and Android. In Android a
      * variant may have multiple sourceSets, each of these sourceSets will have
      * its own extraction task.
      */
-    private Task maybeAddExtractProtosTask(String sourceSetName) {
+    private void setupExtractProtosTask(
+        GenerateProtoTask generateProtoTask, String sourceSetName) {
       String extractProtosTaskName = 'extract' +
           Utils.getSourceSetSubstringForTaskNames(sourceSetName) + 'Proto'
-      Task existingTask = project.tasks.findByName(extractProtosTaskName)
-      if (existingTask != null) {
-        return existingTask
+      Task task = project.tasks.findByName(extractProtosTaskName)
+      if (task == null) {
+        task = project.tasks.create(extractProtosTaskName, ProtobufExtract) {
+          description = "Extracts proto files/dependencies specified by 'protobuf' configuration"
+          destDir = getExtractedProtosDir(sourceSetName) as File
+          inputs.files project.configurations[Utils.getConfigName(sourceSetName, 'protobuf')]
+          isTest = Utils.isTest(sourceSetName)
+        }
       }
-      return project.tasks.create(extractProtosTaskName, ProtobufExtract) {
-        description = "Extracts proto files/dependencies specified by 'protobuf' configuration"
-        destDir = getExtractedProtosDir(sourceSetName) as File
-        inputs.files project.configurations[Utils.getConfigName(sourceSetName, 'protobuf')]
-        isTest = Utils.isTest(sourceSetName)
-      }
+
+      linkExtractTaskToGenerateTask(task, generateProtoTask)
+      generateProtoTask.addSourceFiles(project.fileTree(task.destDir) { include "**/*.proto" })
     }
 
     /**
@@ -391,13 +385,12 @@ class ProtobufPlugin implements Plugin<Project> {
         }
       }
 
-      generateProtoTask.dependsOn task
+      linkExtractTaskToGenerateTask(task, generateProtoTask)
+    }
 
-      File extractedIncludeProtosDir = task.destDir
-      generateProtoTask.include extractedIncludeProtosDir
-      // Register the include dir as input, but not as "source".
-      // Inputs are checked in incremental builds, but only "source" files are compiled.
-      generateProtoTask.inputs.dir extractedIncludeProtosDir
+    private void linkExtractTaskToGenerateTask(ProtobufExtract extractTask, GenerateProtoTask generateTask) {
+      generateTask.dependsOn(extractTask)
+      generateTask.addIncludeDir(extractTask.destDir)
     }
 
     private void linkGenerateProtoTasksToTaskName(String compileTaskName, GenerateProtoTask genProtoTask) {
