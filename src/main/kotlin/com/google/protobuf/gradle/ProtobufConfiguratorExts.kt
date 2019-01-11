@@ -2,6 +2,7 @@ package com.google.protobuf.gradle
 
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
+import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.plugins.ExtensionAware
 import org.gradle.api.tasks.SourceSet
 import org.gradle.kotlin.dsl.NamedDomainObjectContainerScope
@@ -45,16 +46,16 @@ fun Project.protobuf(action: ProtobufConfigurator.()->Unit) {
  * }
  * ```
  *
- * @receiver [SourceSet] The source set for which the [ProtobufSourceDirectorySet] extension
+ * @receiver [SourceSet] The source set for which the "proto" [SourceDirectorySet] extension
  * will be configured
  *
- * @param action A configuration lambda to apply on a receiver of type [ProtobufSourceDirectorySet]
+ * @param action A configuration lambda to apply on a receiver of type [SourceDirectorySet]
  * @return [Unit]
  */
-fun SourceSet.proto(action: ProtobufSourceDirectorySet.() -> Unit) {
+fun SourceSet.proto(action: SourceDirectorySet.() -> Unit) {
     (this as? ExtensionAware)
         ?.extensions
-        ?.getByType(ProtobufSourceDirectorySet::class.java)
+        ?.getByName("proto")
         ?.apply(action)
 }
 

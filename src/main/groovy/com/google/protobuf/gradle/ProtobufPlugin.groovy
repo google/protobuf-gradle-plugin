@@ -39,7 +39,9 @@ import org.gradle.api.Task
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.SourceDirectorySet
+import org.gradle.api.internal.file.DefaultSourceDirectorySet
 import org.gradle.api.internal.file.FileResolver
+import org.gradle.api.internal.file.collections.DefaultDirectoryFileTreeFactory
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.plugins.AppliedPlugin
 import org.gradle.api.tasks.SourceSet
@@ -178,16 +180,17 @@ class ProtobufPlugin implements Plugin<Project> {
     private void addSourceSetExtensions() {
       getSourceSets().all {  sourceSet ->
         String name = sourceSet.name
+        SourceDirectorySet sds
         if (Utils.compareGradleVersion(project, "5.0") < 0) {
           // TODO(zhangkun83): remove dependency on Gradle internal APIs once we drop support for < 5.0
-          sourceSet.extensions.create('proto', ProtobufSourceDirectorySet, sourceSet.name, fileResolver)
+          sds = new DefaultSourceDirectorySet(
+              name, "${name} Proto source", fileResolver, new DefaultDirectoryFileTreeFactory())
         } else {
-          sourceSet.extensions.add('proto', project.objects.sourceDirectorySet(name, "${name} Proto source"))
-          sourceSet.extensions.configure('proto') { sds ->
-            sds.srcDir("src/${name}/proto")
-            sds.include("**/*.proto")
-          }
+          sds = project.objects.sourceDirectorySet(name, "${name} Proto source")
         }
+        sourceSet.extensions.add('proto', sds)
+        sds.srcDir("src/${name}/proto")
+        sds.include("**/*.proto")
       }
     }
 
