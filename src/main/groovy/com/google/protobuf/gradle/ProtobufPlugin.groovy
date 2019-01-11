@@ -39,7 +39,9 @@ import org.gradle.api.Task
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.SourceDirectorySet
+import org.gradle.api.internal.file.DefaultSourceDirectorySet
 import org.gradle.api.internal.file.FileResolver
+import org.gradle.api.internal.file.collections.DefaultDirectoryFileTreeFactory
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.plugins.AppliedPlugin
 import org.gradle.api.tasks.SourceSet
@@ -177,7 +179,18 @@ class ProtobufPlugin implements Plugin<Project> {
      */
     private void addSourceSetExtensions() {
       getSourceSets().all {  sourceSet ->
-        sourceSet.extensions.create('proto', ProtobufSourceDirectorySet, sourceSet.name, fileResolver)
+        String name = sourceSet.name
+        SourceDirectorySet sds
+        if (Utils.compareGradleVersion(project, "5.0") < 0) {
+          // TODO(zhangkun83): remove dependency on Gradle internal APIs once we drop support for < 5.0
+          sds = new DefaultSourceDirectorySet(
+              name, "${name} Proto source", fileResolver, new DefaultDirectoryFileTreeFactory())
+        } else {
+          sds = project.objects.sourceDirectorySet(name, "${name} Proto source")
+        }
+        sourceSet.extensions.add('proto', sds)
+        sds.srcDir("src/${name}/proto")
+        sds.include("**/*.proto")
       }
     }
 
@@ -300,7 +313,7 @@ class ProtobufPlugin implements Plugin<Project> {
         it.fileResolver = this.fileResolver
         sourceSets.each { sourceSet ->
           addSourceFiles(sourceSet.proto)
-          ProtobufSourceDirectorySet protoSrcDirSet = sourceSet.proto
+          SourceDirectorySet protoSrcDirSet = sourceSet.proto
           protoSrcDirSet.srcDirs.each { srcDir ->
             // The source directory designated from sourceSet may not actually exist on disk.
             // "include" it only when it exists, so that Gradle and protoc won't complain
@@ -485,7 +498,7 @@ class ProtobufPlugin implements Plugin<Project> {
       } else {
         // Make the proto source dirs known to IDEs
         getSourceSets().each { sourceSet ->
-          ProtobufSourceDirectorySet protoSrcDirSet = sourceSet.proto
+          SourceDirectorySet protoSrcDirSet = sourceSet.proto
           protoSrcDirSet.srcDirs.each { File protoDir ->
             Utils.addToIdeSources(project, Utils.isTest(sourceSet.name), protoDir)
           }

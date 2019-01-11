@@ -422,9 +422,15 @@ public class GenerateProtoTask extends DefaultTask {
    * directories.
    */
   SourceDirectorySet getOutputSourceDirectorySet() {
-    Preconditions.checkNotNull(fileResolver)
-    SourceDirectorySet srcSet = new DefaultSourceDirectorySet(
-        "generate-proto-" + name, this.fileResolver, new DefaultDirectoryFileTreeFactory())
+    String srcSetName = "generate-proto-" + name
+    SourceDirectorySet srcSet
+    if (Utils.compareGradleVersion(project, "5.0") < 0) {
+      Preconditions.checkNotNull(fileResolver)
+      srcSet = new DefaultSourceDirectorySet(
+          srcSetName, this.fileResolver, new DefaultDirectoryFileTreeFactory())
+    } else {
+      srcSet = project.objects.sourceDirectorySet(srcSetName, srcSetName)
+    }
     builtins.each { builtin ->
       srcSet.srcDir new File(getOutputDir(builtin))
     }
