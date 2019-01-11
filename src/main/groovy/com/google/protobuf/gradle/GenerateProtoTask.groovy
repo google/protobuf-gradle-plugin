@@ -31,7 +31,6 @@ package com.google.protobuf.gradle
 
 import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
-
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.Named
@@ -43,6 +42,7 @@ import org.gradle.api.internal.file.DefaultSourceDirectorySet
 import org.gradle.api.internal.file.FileResolver
 import org.gradle.api.internal.file.collections.DefaultDirectoryFileTreeFactory
 import org.gradle.api.logging.LogLevel
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskAction
 import org.gradle.util.ConfigureUtil
@@ -336,7 +336,7 @@ public class GenerateProtoTask extends DefaultTask {
     includeDirs.add(dir)
     // Register all files under the directory as input so that Gradle will check their changes for
     // incremental build
-    inputs.dir(dir)
+    inputs.dir(dir).withPathSensitivity(PathSensitivity.RELATIVE)
   }
 
   /**
@@ -346,7 +346,7 @@ public class GenerateProtoTask extends DefaultTask {
     checkCanConfig()
     sourceFiles.from(files)
     // Register the files as input so that Gradle will check their changes for incremental build
-    inputs.files(files)
+    inputs.files(files).withPathSensitivity(PathSensitivity.RELATIVE)
   }
 
   /**

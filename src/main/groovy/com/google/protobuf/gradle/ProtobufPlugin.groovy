@@ -30,7 +30,6 @@
 package com.google.protobuf.gradle
 
 import com.google.common.collect.ImmutableList
-
 import org.gradle.api.Action
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
@@ -42,6 +41,7 @@ import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.internal.file.FileResolver
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.plugins.AppliedPlugin
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.SourceSet
 
 import javax.inject.Inject
@@ -359,6 +359,7 @@ class ProtobufPlugin implements Plugin<Project> {
           destDir = getExtractedIncludeProtosDir(sourceSetOrVariantName) as File
           inputs.files (compileClasspathConfiguration
             ?: project.configurations[Utils.getConfigName(sourceSetOrVariantName, 'compile')])
+                  .withPathSensitivity(PathSensitivity.NAME_ONLY)
 
           // TL; DR: Make protos in 'test' sourceSet able to import protos from the 'main'
           // sourceSet.  Sub-configurations, e.g., 'testCompile' that extends 'compile', don't
@@ -379,7 +380,8 @@ class ProtobufPlugin implements Plugin<Project> {
             // 'resources' of the output of 'main', in which the source protos are placed.  This is
             // nicer than the ad-hoc solution that Android has, because it works for any extended
             // configuration, not just 'testCompile'.
-            inputs.files getSourceSets()[sourceSetOrVariantName].compileClasspath
+            inputs.files (getSourceSets()[sourceSetOrVariantName].compileClasspath)
+                    .withPathSensitivity(PathSensitivity.NAME_ONLY)
           }
           isTest = Utils.isTest(sourceSetOrVariantName)
         }
