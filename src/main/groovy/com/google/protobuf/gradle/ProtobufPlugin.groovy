@@ -183,12 +183,10 @@ class ProtobufPlugin implements Plugin<Project> {
           sourceSet.extensions.create('proto', ProtobufSourceDirectorySet, sourceSet.name, fileResolver)
         } else {
           sourceSet.extensions.add('proto', project.objects.sourceDirectorySet(name, "${name} Proto source"))
-          sourceSet.extensions.configure(
-            'proto',
-            { sds ->
-              sds.srcDir("src/${name}/proto")
-              sds.include("**/*.proto")
-            })
+          sourceSet.extensions.configure('proto') { sds ->
+            sds.srcDir("src/${name}/proto")
+            sds.include("**/*.proto")
+          }
         }
       }
     }
