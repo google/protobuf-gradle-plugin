@@ -56,6 +56,7 @@ fun SourceSet.proto(action: SourceDirectorySet.() -> Unit) {
     (this as? ExtensionAware)
         ?.extensions
         ?.getByName("proto")
+        ?.let { it as?  SourceDirectorySet }
         ?.apply(action)
 }
 
