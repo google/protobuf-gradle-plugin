@@ -1,11 +1,5 @@
-:exclamation: Starting from version __0.7.6__, the plugin requires Gradle __2.12__ and later.
-Please check your Gradle version if you see the following error:
-```
-Error:Unable to load class 'org.gradle.api.internal.file.collections.DefaultDirectoryFileTreeFactory'.
-```
-
 :exclamation: Please [read release notes](https://github.com/google/protobuf-gradle-plugin/releases)
-before upgrading the plugin.
+before upgrading the plugin, as usage or compatibility requirements may change.
 
 # Protobuf Plugin for Gradle [![Status](https://travis-ci.org/google/protobuf-gradle-plugin.svg?branch=master)](https://travis-ci.org/google/protobuf-gradle-plugin)
 The Gradle plugin that compiles Protocol Buffer (aka. Protobuf) definition
@@ -20,7 +14,7 @@ For more information about the Protobuf Compiler, please refer to
 [Google Developers Site](https://developers.google.com/protocol-buffers/docs/reference/java-generated?csw=1).
 
 ## Latest Version
-The latest version is ``0.8.7``. It requires at least __Gradle 2.12__ and __Java 8__.
+The latest version is ``0.8.8``. It requires at least __Gradle 3.0__ and __Java 8__.
 It is available on Maven Central. To add dependency to it:
 ```gradle
 buildscript {
@@ -28,7 +22,7 @@ buildscript {
     mavenCentral()
   }
   dependencies {
-    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.7'
+    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.8'
   }
 }
 ```
@@ -86,7 +80,7 @@ The order of the plugins doesn't matter:
 
 ```gradle
 plugins {
-  id "com.google.protobuf" version "0.8.7"
+  id "com.google.protobuf" version "0.8.8"
   id "java"
 }
 ```
