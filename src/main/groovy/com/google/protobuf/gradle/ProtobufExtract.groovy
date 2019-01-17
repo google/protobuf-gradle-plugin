@@ -56,6 +56,7 @@ class ProtobufExtract extends DefaultTask {
   @TaskAction
   void extract() {
     destDir.mkdir()
+    boolean warningLogged = false
     inputs.files.each { file ->
       logger.debug "Extracting protos from ${file} to ${destDir}"
       if (file.isDirectory()) {
@@ -67,6 +68,15 @@ class ProtobufExtract extends DefaultTask {
           into(destDir)
         }
       } else if (file.path.endsWith('.proto')) {
+        if (!warningLogged) {
+          warningLogged = true
+          project.logger.warn "proto file '${file.path}' directly specified in configuration. " +
+              "It's likely you specified files('path/to/foo.proto') or " +
+              "fileTree('path/to/directory') in protobuf or compile configuration. " +
+              "This makes you vulnerable to " +
+              "https://github.com/google/protobuf-gradle-plugin/issues/248. " +
+              "Please use files('path/to/directory') instead."
+        }
         project.copy {
           includeEmptyDirs(false)
           from(file.path)
