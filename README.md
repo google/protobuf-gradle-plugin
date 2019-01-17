@@ -453,7 +453,11 @@ proto files (if any). Example:
 
 ```gradle
 dependencies {
+  // protos can be from a local package,
   protobuf files('lib/protos.tar.gz')
+  // ... a local directory,
+  protobuf files('ext/')   // NEVER use fileTree(). See issue #248.
+  // ... or an artifact from a repository
   testProtobuf 'com.example:published-protos:1.0.0'
 }
 ```
