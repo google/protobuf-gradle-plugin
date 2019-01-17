@@ -4,7 +4,7 @@ import static org.junit.Assert.assertTrue;
 public class FooTest {
   @org.junit.Test
   public void testMainProtos() {
-    assertEquals(11, Foo.getDefaultInstances().size());
+    assertEquals(12, Foo.getDefaultInstances().size());
   }
 
   @org.junit.Test

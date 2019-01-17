@@ -4,7 +4,7 @@ import org.junit.Assert.assertTrue
 class KotlinFooTest {
   @org.junit.Test
   fun testMainProtos() {
-    assertEquals(11, KotlinFoo().getDefaultInstances().size)
+    assertEquals(12, KotlinFoo().getDefaultInstances().size)
   }
 
   @org.junit.Test

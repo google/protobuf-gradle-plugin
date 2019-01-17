@@ -7,7 +7,7 @@ import org.gradle.kotlin.dsl.provider.gradleKotlinDslOf
 plugins {
     java
     idea
-    id("com.google.protobuf") version "0.8.8-SNAPSHOT"
+    id("com.google.protobuf") version "0.8.8"
 }
 
 repositories {
@@ -34,10 +34,10 @@ dependencies {
     // Extra proto source files besides the ones residing under
     // "src/main".
     protobuf(files("lib/protos.tar.gz"))
-    protobuf(fileTree("ext/"))
+    protobuf(files("ext/"))
 
     // Adding dependency for configuration from custom sourceSet
-    "sampleProtobuf"(fileTree("ext/"))
+    "sampleProtobuf"(files("ext/"))
 
     testCompile("junit:junit:4.12")
     // Extra proto source files for test besides the ones residing under

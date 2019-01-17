@@ -20,9 +20,11 @@ public class Foo {
     list.add(More.MoreMsg.getDefaultInstance());
     list.add(More.Foo.getDefaultInstance());
     // from ext/test1.proto
-    list.add(Test1.Test1Msg.getDefaultInstance());
+    list.add(test1.Test1.Test1Msg.getDefaultInstance());
+    // from ext/ext1/test1.proto
+    list.add(ext1.Ext1Test1.Ext1Test1Msg.getDefaultInstance());
     // from ext/test2.proto
-    list.add(Test2.Test2Msg.getDefaultInstance());
+    list.add(test2.Test2.Test2Msg.getDefaultInstance());
     return list;
   }
 }
