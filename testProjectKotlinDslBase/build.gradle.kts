@@ -60,7 +60,7 @@ val protobufDep = "com.google.protobuf:protobuf-java:3.0.0"
 
 dependencies {
     protobuf(files("lib/protos.tar.gz"))
-    protobuf(fileTree("ext/"))
+    protobuf(files("ext/"))
     testProtobuf(files("lib/protos-test.tar.gz"))
 
     compile(protobufDep)

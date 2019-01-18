@@ -5,6 +5,6 @@ public class CallKotlinClass {
   @org.junit.Test
   public void testMainProtosKotlin() {
     // call kotlin class from java
-    assertEquals(11, new KotlinFoo().getDefaultInstances().size());
+    assertEquals(12, new KotlinFoo().getDefaultInstances().size());
   }
 }

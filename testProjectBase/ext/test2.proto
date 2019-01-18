@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+option java_package = "test2";
+
 message Test2Msg {
     string bar = 1;
 }
