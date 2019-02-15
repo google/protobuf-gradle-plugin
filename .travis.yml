@@ -20,10 +20,10 @@ env:
     - GRADLE_OPTS="-Xms128m"
 
 script:
-  - ./gradlew clean assemble test --tests com.google.protobuf.gradle.ProtobufJavaPluginTest --stacktrace
-  - ./gradlew test --tests com.google.protobuf.gradle.ProtobufKotlinDslPluginTest --stacktrace
-  - ./gradlew test --tests com.google.protobuf.gradle.ProtobufAndroidPluginTest --stacktrace
-  - ./gradlew test --tests com.google.protobuf.gradle.AndroidProjectDetectionTest --stacktrace
+  - ./gradlew clean assemble test --tests com.google.protobuf.gradle.ProtobufJavaPluginTest --stacktrace --scan
+  - ./gradlew test --tests com.google.protobuf.gradle.ProtobufKotlinDslPluginTest --stacktrace --scan
+  - ./gradlew test --tests com.google.protobuf.gradle.ProtobufAndroidPluginTest --stacktrace --scan
+  - ./gradlew test --tests com.google.protobuf.gradle.AndroidProjectDetectionTest --stacktrace --scan
   - ./gradlew codenarcMain || (cat ./build/reports/codenarc/main.txt && false)
   - ./gradlew codenarcTest || (cat ./build/reports/codenarc/test.txt && false)
 
