@@ -381,6 +381,12 @@ class ProtobufPlugin implements Plugin<Project> {
           // 'compile' and it cannot get the proto files from 'main' sourceSet through the
           // configuration. However,
           if (Utils.isAndroidProject(project)) {
+              //because compileClasspathConfiguration only contain jar  ( it.attribute(artifactType, "jar")  line 273),
+              // but we want *.proto ,
+              // so we have to get  dependencies project proto  Manually (eg:  implementation/api/compile project(':secondlib'))
+              Set<String> pathList = getDependenceProjectProtoDir(project)
+              it.inputs.files project.files(pathList.asCollection())
+
             // TODO(zhangkun83): Android sourceSet doesn't have compileClasspath. If it did, we
             // haven't figured out a way to put source protos in 'resources'. For now we use an
             // ad-hoc solution that manually includes the source protos of 'main' and its
@@ -517,5 +523,54 @@ class ProtobufPlugin implements Plugin<Project> {
           }
         }
       }
+    }
+
+
+    static String getSlash() {
+        String slash = '\\'
+        String os = System.getProperty("os.name");
+        if (!os.toLowerCase().startsWith("win")) {
+            slash = '/'//mac os
+        }
+        return slash
+    }
+
+    static Set<String> getDependenceProjectProtoDir(Project project) {
+        String slash = getSlash()
+        Set<String> pathList = new HashSet<>()//avoid repeat
+        project.configurations.api.allDependencies.each {
+            if (it instanceof ProjectDependency) {
+                String path = it.dependencyProject.getProject().getProjectDir().path
+                path += "${slash}src${slash}main${slash}proto"
+                File file = new File(path)
+                if (file.exists()) {
+                    pathList.add(path)
+                }
+            }
+        }
+
+        project.configurations.implementation.allDependencies.each {
+            if (it instanceof ProjectDependency) {
+                String path = it.dependencyProject.getProject().getProjectDir().path
+                path += "${slash}src${slash}main${slash}proto"
+                File file = new File(path)
+                if (file.exists()) {
+                    pathList.add(path)
+                }
+            }
+        }
+
+        project.configurations.compile.allDependencies.each {
+            if (it instanceof ProjectDependency) {
+                String path = it.dependencyProject.getProject().getProjectDir().path
+                path += "${slash}src${slash}main${slash}proto"
+                File file = new File(path)
+                if (file.exists()) {
+                    pathList.add(path)
+                }
+            }
+        }
+
+        return pathList
     }
 }
