@@ -35,6 +35,7 @@ import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.SourceDirectorySet
@@ -384,9 +385,7 @@ class ProtobufPlugin implements Plugin<Project> {
               //because compileClasspathConfiguration only contain jar  ( it.attribute(artifactType, "jar")  line 273),
               // but we want *.proto ,
               // so we have to get  dependencies project proto  Manually (eg:  implementation/api/compile project(':secondlib'))
-              Set<String> pathList = getDependenceProjectProtoDir(project)
-              it.inputs.files project.files(pathList.asCollection())
-
+              it.inputs.files project.files(getDependenceProjectProtoDir(project).asCollection())
             // TODO(zhangkun83): Android sourceSet doesn't have compileClasspath. If it did, we
             // haven't figured out a way to put source protos in 'resources'. For now we use an
             // ad-hoc solution that manually includes the source protos of 'main' and its
@@ -525,19 +524,9 @@ class ProtobufPlugin implements Plugin<Project> {
       }
     }
 
-
-    static String getSlash() {
-        String slash = '\\'
-        String os = System.getProperty("os.name");
-        if (!os.toLowerCase().startsWith("win")) {
-            slash = '/'//mac os
-        }
-        return slash
-    }
-
-    static Set<String> getDependenceProjectProtoDir(Project project) {
-        String slash = getSlash()
-        Set<String> pathList = new HashSet<>()//avoid repeat
+    private Set<String> getDependenceProjectProtoDir(Project project) {
+        String slash = "/"//getSlash()
+        Set<String> pathList = new String()[]//avoid repeat
         project.configurations.api.allDependencies.each {
             if (it instanceof ProjectDependency) {
                 String path = it.dependencyProject.getProject().getProjectDir().path
