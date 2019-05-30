@@ -45,7 +45,6 @@ import org.gradle.api.logging.LogLevel
 import org.gradle.api.plugins.AppliedPlugin
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.SourceSet
-import org.gradle.api.tasks.TaskProvider
 
 import javax.inject.Inject
 
