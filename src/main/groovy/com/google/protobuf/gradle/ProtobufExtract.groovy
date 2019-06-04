@@ -31,7 +31,6 @@ package com.google.protobuf.gradle
 
 import com.google.common.base.Preconditions
 import org.gradle.api.DefaultTask
-import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.TaskAction
 
 /**
@@ -42,7 +41,7 @@ class ProtobufExtract extends DefaultTask {
   /**
    * The directory for the extracted files.
    */
-  private FileCollection destDir
+  private File destDir
   private Boolean isTest = null
 
   public void setIsTest(boolean isTest) {
@@ -56,7 +55,7 @@ class ProtobufExtract extends DefaultTask {
 
   @TaskAction
   void extract() {
-    destDir.getSingleFile().mkdir()
+    destDir.mkdir()
     boolean warningLogged = false
     inputs.files.each { file ->
       logger.debug "Extracting protos from ${file} to ${destDir}"
@@ -110,11 +109,11 @@ class ProtobufExtract extends DefaultTask {
 
   protected void setDestDir(File destDir) {
     Preconditions.checkState(this.destDir == null, 'destDir already set')
-    this.destDir = project.files(destDir)
-    outputs.dirs(this.destDir)
+    this.destDir = destDir
+    outputs.dirs destDir
   }
 
   protected File getDestDir() {
-    return destDir.getSingleFile()
+    return destDir
   }
 }
