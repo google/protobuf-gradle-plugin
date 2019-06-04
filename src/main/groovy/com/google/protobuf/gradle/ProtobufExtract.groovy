@@ -110,7 +110,7 @@ class ProtobufExtract extends DefaultTask {
   protected void setDestDir(File destDir) {
     Preconditions.checkState(this.destDir == null, 'destDir already set')
     this.destDir = destDir
-    outputs.dirs destDir
+    outputs.dir destDir
   }
 
   protected File getDestDir() {
