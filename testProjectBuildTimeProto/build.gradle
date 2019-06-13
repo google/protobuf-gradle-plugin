@@ -1,0 +1,44 @@
+apply plugin: 'java'
+apply plugin: 'com.google.protobuf'
+
+repositories {
+    maven { url "https://plugins.gradle.org/m2/" }
+}
+
+dependencies {
+    compile 'com.google.protobuf:protobuf-java:3.0.0'
+}
+
+sourceSets {
+    main {
+        proto {
+            srcDir "${buildDir}/proto"
+        }
+    }
+}
+
+// An example task that "generates" protobuf files. A real project
+// would fetch protobuf definitions from an HTTP site and/or have
+// a code generator task that would generate protobufs.
+task generateProtobuf() {
+    def file = new File("${buildDir}/proto/example.proto")
+    doLast {
+        file.parentFile.mkdirs()
+        file.text = '''
+        syntax = "proto2";
+
+        message TestMessage {
+            optional int32 example = 1;
+        }
+        '''
+    }
+}
+
+protobuf {
+    protoc {
+        artifact = 'com.google.protobuf:protoc:3.0.0'
+    }
+    generateProtoTasks {
+        all().each { task -> task.dependsOn generateProtobuf }
+    }
+}
