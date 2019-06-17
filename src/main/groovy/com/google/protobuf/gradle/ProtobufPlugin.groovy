@@ -433,7 +433,7 @@ class ProtobufPlugin implements Plugin<Project> {
         project.android.unitTestVariants.each { variant ->
           project.protobuf.generateProtoTasks.ofVariant(variant.name).each { GenerateProtoTask genProtoTask ->
             // unit test variants do not implement registerJavaGeneratingTask
-            Task javaCompileTask = variant.javaCompile
+            Task javaCompileTask
             if (variant.hasProperty('javaCompileProvider')) {
               // Android 3.3.0+
               javaCompileTask = variant.javaCompileProvider.get()
