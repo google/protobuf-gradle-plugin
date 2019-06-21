@@ -80,14 +80,11 @@ The order of the plugins doesn't matter:
 
 ```gradle
 plugins {
-  id "com.google.protobuf" version "0.8.8"
+  id "com.google.protobuf" version "0.8.9"
   id "java"
 }
 ```
 
-:exclamation: the latest version 0.8.9 is temporarily unavailable
-through the Gradle Plugins Portal. Please use Maven Central as
-mentioned above if you want to use 0.8.9.
 
 ## Configuring Protobuf compilation
 
