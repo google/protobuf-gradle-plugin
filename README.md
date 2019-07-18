@@ -334,9 +334,14 @@ See [this section](#change-where-files-are-generated) for details about where th
 
 
 **Android** projects: no default output will be added.  Since Protobuf
-3.0.0, [protobuf-lite](http://search.maven.org/#search%7Cga%7C1%7Ca%3A%22protobuf-lite%22)
-is the recommended Protobuf library for Android, and you will need to
-add it as a codegen plugin.  For example:
+3.0.0, the
+[lite runtime](https://github.com/protocolbuffers/protobuf/blob/v3.9.0/java/lite.md)
+is the recommended Protobuf library for Android.
+
+For Protobuf versions from 3.0.x through 3.7.x, lite code generation is
+provided as a protoc plugin
+([protobuf-lite](http://search.maven.org/#search%7Cga%7C1%7Ca%3A%22protobuf-lite%22)).
+Example:
 
 ```gradle
 
@@ -348,7 +353,7 @@ dependencies {
 protobuf {
   protoc {
     // You still need protoc like in the non-Android case
-    artifact = 'com.google.protobuf:protoc:3.0.0'
+    artifact = 'com.google.protobuf:protoc:3.7.0'
   }
   plugins {
     javalite {
@@ -370,6 +375,32 @@ protobuf {
   }
 }
 ```
+
+Starting from Protobuf 3.8.0, lite code generation is built into
+protoc's "java" output. Example:
+
+```gradle
+dependencies {
+  // You need to depend on the lite runtime library, not protobuf-java
+  compile 'com.google.protobuf:protobuf-javalite:3.8.0'
+}
+
+protobuf {
+  protoc {
+    artifact = 'com.google.protobuf:protoc:3.8.0'
+  }
+  generateProtoTasks {
+    all().each { task ->
+      task.builtins {
+        java {
+          option "lite"
+        }
+      }
+    }
+  }
+}
+```
+
 
 #### Generate descriptor set files
 
