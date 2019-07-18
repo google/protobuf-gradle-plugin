@@ -61,7 +61,7 @@ public class GenerateProtoTask extends DefaultTask {
 
   // include dirs are passed to the '-I' option of protoc.  They contain protos
   // that may be "imported" from the source protos, but will not be compiled.
-  private final List<File> includeDirs = []
+  private final ConfigurableFileCollection includeDirs = project.files()
   // source files are proto files that will be compiled by protoc
   private final ConfigurableFileCollection sourceFiles = project.files()
   private final NamedDomainObjectContainer<PluginOptions> builtins
@@ -331,18 +331,18 @@ public class GenerateProtoTask extends DefaultTask {
   /**
    * Add a directory to protoc's include path.
    */
-  public void addIncludeDir(File dir) {
+  public void addIncludeDir(FileCollection dir) {
     checkCanConfig()
-    includeDirs.add(dir)
+    includeDirs.from(dir)
     // Register all files under the directory as input so that Gradle will check their changes for
     // incremental build
-    inputs.dir(dir).withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.files(dir).withPathSensitivity(PathSensitivity.RELATIVE)
   }
 
   /**
    * Add a collection of proto source files to be compiled.
    */
-  public void addSourceFiles(Object files) {
+  public void addSourceFiles(FileCollection files) {
     checkCanConfig()
     sourceFiles.from(files)
     // Register the files as input so that Gradle will check their changes for incremental build
@@ -454,7 +454,9 @@ public class GenerateProtoTask extends DefaultTask {
       outputDir.mkdirs()
     }
 
-    List<String> dirs = includeDirs*.path.collect { "-I${it}" }
+    // The source directory designated from sourceSet may not actually exist on disk.
+    // "include" it only when it exists, so that Gradle and protoc won't complain.
+    List<String> dirs = includeDirs.filter { it.exists() }*.path.collect { "-I${it}" }
     logger.debug "ProtobufCompile using directories ${dirs}"
     logger.debug "ProtobufCompile using files ${protoFiles}"
     List<String> baseCmd = [ tools.protoc.path ]

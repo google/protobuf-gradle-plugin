@@ -73,6 +73,29 @@ class ProtobufJavaPluginTest extends Specification {
     gradleVersion << GRADLE_VERSIONS
   }
 
+  void "testProjectBuildTimeProto should be successfully executed"() {
+    given: "project from testProjectGeneratedProto"
+    File projectDir = ProtobufPluginTestHelper.projectBuilder('testProjectBuildTimeProto')
+            .copyDirs('testProjectBuildTimeProto')
+            .build()
+
+    when: "build is invoked"
+    BuildResult result = GradleRunner.create()
+            .withProjectDir(projectDir)
+            .withArguments('build', '--stacktrace')
+            .withGradleVersion(gradleVersion)
+            .forwardStdOutput(new OutputStreamWriter(System.out))
+            .forwardStdError(new OutputStreamWriter(System.err))
+            .withDebug(true)
+            .build()
+
+    then: "it succeed"
+    result.task(":build").outcome == TaskOutcome.SUCCESS
+
+    where:
+    gradleVersion << GRADLE_VERSIONS
+  }
+
   void "testProjectKotlin should be successfully executed (kotlin-only project)"() {
     given: "project from testProjectKotlin overlaid on testProject"
     File projectDir = ProtobufPluginTestHelper.projectBuilder('testProjectKotlin')
