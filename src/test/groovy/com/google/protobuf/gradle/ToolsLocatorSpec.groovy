@@ -66,4 +66,14 @@ class ToolsLocatorSpec extends Specification {
     expect:
     expected == ToolsLocator.artifactParts(input)
   }
+
+  void 'test: empty extension should still be parsed as is'() {
+    given:
+    String input = 'com.example::example-plugin:0.0.0-rc0+experimental:classifier@'
+
+    List<String> expected = ['com.example', 'example-plugin', '0.0.0-rc0+experimental', 'classifier', '']
+
+    expect:
+    expected == ToolsLocator.artifactParts(input)
+  }
 }
