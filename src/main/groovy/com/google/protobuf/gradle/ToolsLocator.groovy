@@ -52,6 +52,9 @@ class ToolsLocator {
     String classifier
 
     (artifact, extension) = artifactCoordinate.tokenize('@')
+    if (extension == null && artifactCoordinate.endsWith('@')) {
+      extension = ''
+    }
     (group, name, version, classifier) = artifact.tokenize(':')
 
     return [group, name, version, classifier, extension]
