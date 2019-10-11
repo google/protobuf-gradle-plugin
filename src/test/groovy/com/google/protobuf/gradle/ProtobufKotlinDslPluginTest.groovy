@@ -9,7 +9,7 @@ import spock.lang.Specification
  * Unit tests for kotlin dsl extensions.
  */
 class ProtobufKotlinDslPluginTest extends Specification {
-  private static final List<String> GRADLE_VERSIONS = ["4.10", "5.0"]
+  private static final List<String> GRADLE_VERSIONS = ["5.0", "5.4", "5.6"]
 
   void "testProjectKotlinDsl should be successfully executed (java-only project)"() {
     given: "project from testProjectKotlinDslBase"

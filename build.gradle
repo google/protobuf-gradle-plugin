@@ -73,7 +73,7 @@ dependencies {
     compileOnly localGroovy()
     compileOnly "org.gradle:gradle-kotlin-dsl:1.0.4"
 
-    compile 'com.google.guava:guava:18.0'
+    compile 'com.google.guava:guava:27.0.1-jre'
     compile 'com.google.gradle:osdetector-gradle-plugin:1.6.2'
     compile 'commons-lang:commons-lang:2.6'
 
