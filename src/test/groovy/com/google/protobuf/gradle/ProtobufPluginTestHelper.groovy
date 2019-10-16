@@ -113,7 +113,9 @@ buildscript {
        .withGradleVersion(gradleVersion)
        .forwardStdOutput(new OutputStreamWriter(System.out))
        .forwardStdError(new OutputStreamWriter(System.err))
-       .withDebug(true)
+    // Enabling debug causes the test to fail with Android plugin version 3.3.0+.
+    // See https://docs.gradle.org/current/javadoc/org/gradle/testkit/runner/GradleRunner.html#isDebug--
+    // .withDebug(true)
        .build()
   }
 
