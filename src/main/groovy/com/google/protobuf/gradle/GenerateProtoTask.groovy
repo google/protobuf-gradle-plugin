@@ -451,6 +451,7 @@ public class GenerateProtoTask extends DefaultTask {
 
     [builtins, plugins]*.each { plugin ->
       File outputDir = new File(getOutputDir(plugin))
+      outputDir.deleteDir()
       outputDir.mkdirs()
     }
 
