@@ -43,20 +43,10 @@ final class ProtobufPluginTestHelper {
             dependencies {
     """
 
-    //android gradle plugin needs guava 22 so check for that before including guava from pluginClasspath
     pluginClasspath.each { dependency ->
-        if (dependency.contains("guava")) {
-            buildFile << """
-                if (!project.hasProperty("androidPluginVersion") ||
-                    !project.findProperty("androidPluginVersion").startsWith("3.")) {
-                    classpath files($dependency)
-                }
-            """
-        } else {
-            buildFile << """
-                classpath files($dependency)
-            """
-        }
+      buildFile << """
+          classpath files($dependency)
+      """
     }
 
     buildFile << """
@@ -87,10 +77,6 @@ buildscript {
     }
     dependencies {
         classpath "com.android.tools.build:gradle:\$androidPluginVersion"
-        if (androidPluginVersion.startsWith("3.")) {
-            //agp 3.+ needs guava 22 but the protobuf project uses a lower version
-            classpath 'com.google.guava:guava:22.0'
-        }
     }
 }
 """
