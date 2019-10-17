@@ -108,7 +108,6 @@ buildscript {
        // set android build cache to avoid using home directory on travis CI.
        "-Pandroid.buildCacheDir=$localBuildCache",
        fullPathTask,
-       "-x", "lint", // linter causes .withDebug(true) to fail
        "--stacktrace")
        .withGradleVersion(gradleVersion)
        .forwardStdOutput(new OutputStreamWriter(System.out))
