@@ -12,8 +12,8 @@ import spock.lang.Specification
  * Unit tests for normal java and kotlin functionality.
  */
 class ProtobufJavaPluginTest extends Specification {
-  // TODO(zhangkun83): restore 3.0 once https://github.com/gradle/gradle/issues/8158 is resolved
-  private static final List<String> GRADLE_VERSIONS = [/* "3.0",*/ "4.0", "4.3", "5.1"]
+  // Current supported version is Gradle 5+.
+  private static final List<String> GRADLE_VERSIONS = ["5.0", "5.1", "5.4", "5.6"]
 
   void "testApplying java and com.google.protobuf adds corresponding task to project"() {
     given: "a basic project with java and com.google.protobuf"

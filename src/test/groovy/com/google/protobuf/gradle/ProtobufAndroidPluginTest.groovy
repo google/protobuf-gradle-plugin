@@ -10,9 +10,9 @@ import spock.lang.Specification
  * Unit tests for android related functionality.
  */
 class ProtobufAndroidPluginTest extends Specification {
-  // TODO(zhangkun83): restore 3.0/2.2.0 once https://github.com/gradle/gradle/issues/8158 is resolved
-  private static final List<String> GRADLE_VERSION = [/* "3.1", */ "4.2", "4.3", "5.1"]
-  private static final List<String> ANDROID_PLUGIN_VERSION = [/* "2.2.0", */ "2.3.0", "2.3.0", "3.1.0"]
+  // Current supported version is Android plugin 3.3.0+.
+  private static final List<String> GRADLE_VERSION = ["5.0", "5.1.1", "5.4.1"]
+  private static final List<String> ANDROID_PLUGIN_VERSION = ["3.3.0", "3.4.0", "3.5.0"]
 
   void "testProjectAndroid should be successfully executed (java only)"() {
     given: "project from testProject, testProjectLite & testProjectAndroid"
