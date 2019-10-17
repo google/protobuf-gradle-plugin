@@ -10,14 +10,7 @@ buildscript {
         File("$projectDir/../../createClasspathManifest/plugin-classpath.txt")
             .readLines()
             .forEach { classpathEntry ->
-                if("guava" in classpathEntry){
-                    if (!project.hasProperty("androidPluginVersion") ||
-                        !project.findProperty("androidPluginVersion").toString().startsWith("3.")) {
-                        classpath(files(classpathEntry))
-                    }
-                } else {
-                    classpath(files(classpathEntry))
-                }
+                classpath(files(classpathEntry))
             }
     }
 }
