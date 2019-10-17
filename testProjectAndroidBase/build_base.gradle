@@ -115,7 +115,7 @@ dependencies {
 }
 
 def assertJavaCompileHasProtoGeneratedDir(Object variant, Collection<String> codegenPlugins) {
-  rootProject.assertJavaCompileHasProtoGeneratedDir(project, variant.name, variant.javaCompile, codegenPlugins)
+  rootProject.assertJavaCompileHasProtoGeneratedDir(project, variant.name, variant.javaCompileProvider.get(), codegenPlugins)
 }
 
 afterEvaluate {
@@ -123,7 +123,7 @@ afterEvaluate {
   // Android plugin, and would do nothing with our setup. We make 'test' to
   // trigger the "androidTest" Java compile tasks.
   android.testVariants.each { testVariant ->
-    test.dependsOn testVariant.javaCompile
+    test.dependsOn testVariant.javaCompileProvider
   }
 
   test.doLast {
