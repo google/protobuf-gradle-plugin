@@ -144,21 +144,22 @@ public class GenerateProtoTask extends DefaultTask {
       int currentArgsLength = 0
       for (File proto: protoFiles) {
         String protoFileName = proto
-        int currentFileLength = protoFileName.length() + CMD_ARGUMENT_EXTRA_LENGTH
+//        int currentFileLength = protoFileName.length() + CMD_ARGUMENT_EXTRA_LENGTH
         // Check if appending the next proto string will overflow the cmd length limit
-        if (baseCmdLength + currentArgsLength + currentFileLength > cmdLengthLimit) {
+//        if (baseCmdLength + currentArgsLength + currentFileLength > cmdLengthLimit) {
           // Add the current cmd before overflow
-          cmds.add(baseCmd + currentArgs)
-          currentArgs.clear()
-          currentArgsLength = 0
-        }
+//          cmds.add(baseCmd + currentArgs)
+//          currentArgs.clear()
+//          currentArgsLength = 0
+//        }
         currentArgs.clear()
         // Append the proto file to the args
         currentArgs.add(protoFileName)
+        cmds.add(baseCmd + currentArgs)
 //        currentArgsLength += currentFileLength
       }
       // Add the last cmd for execution
-      cmds.add(baseCmd + currentArgs)
+//      cmds.add(baseCmd + currentArgs)
     }
     return cmds
   }
@@ -521,7 +522,9 @@ public class GenerateProtoTask extends DefaultTask {
   }
 
   private void compileFiles(List<String> cmd) {
+    logger.log(LogLevel.INFO, "protoc: stdout: Running command:")
     logger.log(LogLevel.INFO, cmd.toString())
+    logger.log(LogLevel.INFO, "")
 
     StringBuffer stdout = new StringBuffer()
     StringBuffer stderr = new StringBuffer()
