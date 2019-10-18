@@ -66,6 +66,7 @@ public class GenerateProtoTask extends DefaultTask {
   private final ConfigurableFileCollection sourceFiles = project.files()
   private final NamedDomainObjectContainer<PluginOptions> builtins
   private final NamedDomainObjectContainer<PluginOptions> plugins
+  private boolean singleProtoExecute
 
   // These fields are set by the Protobuf plugin only when initializing the
   // task.  Ideally they should be final fields, but Gradle task cannot have
@@ -136,30 +137,41 @@ public class GenerateProtoTask extends DefaultTask {
     return prefix.toString()
   }
 
-  static List<List<String>> generateCmds(List<String> baseCmd, List<File> protoFiles, int cmdLengthLimit) {
+  static List<List<String>> generateCmds(List<String> baseCmd, List<File> protoFiles, int cmdLengthLimit, boolean singleProtoExecute) {
     List<List<String>> cmds = []
     if (!protoFiles.isEmpty()) {
-      int baseCmdLength = baseCmd.sum { it.length() + CMD_ARGUMENT_EXTRA_LENGTH }
-      List<String> currentArgs = []
-      int currentArgsLength = 0
-      for (File proto: protoFiles) {
-        String protoFileName = proto
-//        int currentFileLength = protoFileName.length() + CMD_ARGUMENT_EXTRA_LENGTH
-        // Check if appending the next proto string will overflow the cmd length limit
-//        if (baseCmdLength + currentArgsLength + currentFileLength > cmdLengthLimit) {
-          // Add the current cmd before overflow
-//          cmds.add(baseCmd + currentArgs)
-//          currentArgs.clear()
-//          currentArgsLength = 0
-//        }
-        currentArgs.clear()
-        // Append the proto file to the args
-        currentArgs.add(protoFileName)
+      if (singleProtoExecute) {
+        List<String> currentArgs = []
+        for (File proto : protoFiles) {
+          String protoFileName = proto
+          currentArgs.clear()
+          // Append the proto file to the args
+          currentArgs.add(protoFileName)
+          cmds.add(baseCmd + currentArgs)
+        }
+      } else {
+        int baseCmdLength = baseCmd.sum { it.length() + CMD_ARGUMENT_EXTRA_LENGTH }
+        List<String> currentArgs = []
+        int currentArgsLength = 0
+        for (File proto : protoFiles) {
+          String protoFileName = proto
+          int currentFileLength = protoFileName.length() + CMD_ARGUMENT_EXTRA_LENGTH
+          // Check if appending the next proto string will overflow the cmd length limit
+          if (baseCmdLength + currentArgsLength + currentFileLength > cmdLengthLimit) {
+            // Add the current cmd before overflow
+            cmds.add(baseCmd + currentArgs)
+            currentArgs.clear()
+            currentArgsLength = 0
+          }
+          currentArgs.clear()
+          // Append the proto file to the args
+          currentArgs.add(protoFileName)
+          cmds.add(baseCmd + currentArgs)
+          currentArgsLength += currentFileLength
+        }
+        // Add the last cmd for execution
         cmds.add(baseCmd + currentArgs)
-//        currentArgsLength += currentFileLength
       }
-      // Add the last cmd for execution
-//      cmds.add(baseCmd + currentArgs)
     }
     return cmds
   }
@@ -330,7 +342,14 @@ public class GenerateProtoTask extends DefaultTask {
     return plugins.findByName(name) != null
   }
 
-  /**
+  boolean getSingleProtoExecute() {
+    return singleProtoExecute
+  }
+
+  void setSingleProtoExecute(final boolean singleProtoExecute) {
+    this.singleProtoExecute = singleProtoExecute
+  }
+/**
    * Add a directory to protoc's include path.
    */
   public void addIncludeDir(FileCollection dir) {
@@ -500,7 +519,7 @@ public class GenerateProtoTask extends DefaultTask {
       }
     }
 
-    List<List<String>> cmds = generateCmds(baseCmd, protoFiles, getCmdLengthLimit())
+    List<List<String>> cmds = generateCmds(baseCmd, protoFiles, getCmdLengthLimit(), singleProtoExecute)
     for (List<String> cmd : cmds) {
       compileFiles(cmd)
     }
