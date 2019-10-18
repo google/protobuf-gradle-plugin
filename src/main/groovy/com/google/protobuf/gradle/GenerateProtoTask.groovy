@@ -42,12 +42,11 @@ import org.gradle.api.internal.file.DefaultSourceDirectorySet
 import org.gradle.api.internal.file.FileResolver
 import org.gradle.api.internal.file.collections.DefaultDirectoryFileTreeFactory
 import org.gradle.api.logging.LogLevel
+import org.gradle.api.logging.Logger
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskAction
 import org.gradle.util.ConfigureUtil
-
-import java.util.logging.Logger
 
 /**
  * The task that compiles proto files into Java files.
