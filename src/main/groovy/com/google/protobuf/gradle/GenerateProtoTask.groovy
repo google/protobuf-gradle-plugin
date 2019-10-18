@@ -152,9 +152,10 @@ public class GenerateProtoTask extends DefaultTask {
           currentArgs.clear()
           currentArgsLength = 0
         }
+        currentArgs.clear()
         // Append the proto file to the args
         currentArgs.add(protoFileName)
-        currentArgsLength += currentFileLength
+//        currentArgsLength += currentFileLength
       }
       // Add the last cmd for execution
       cmds.add(baseCmd + currentArgs)
