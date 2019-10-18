@@ -47,6 +47,8 @@ import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskAction
 import org.gradle.util.ConfigureUtil
 
+import java.util.logging.Logger
+
 /**
  * The task that compiles proto files into Java files.
  */
@@ -137,10 +139,11 @@ public class GenerateProtoTask extends DefaultTask {
     return prefix.toString()
   }
 
-  static List<List<String>> generateCmds(List<String> baseCmd, List<File> protoFiles, int cmdLengthLimit, boolean singleProtoExecute) {
+  static List<List<String>> generateCmds(Logger logger, List<String> baseCmd, List<File> protoFiles, int cmdLengthLimit, boolean singleProtoExecute) {
     List<List<String>> cmds = []
     if (!protoFiles.isEmpty()) {
       if (singleProtoExecute) {
+        logger.log(LogLevel.INFO, "protoc: stdout: Generating commands: Single")
         List<String> currentArgs = []
         for (File proto : protoFiles) {
           String protoFileName = proto
@@ -150,6 +153,7 @@ public class GenerateProtoTask extends DefaultTask {
           cmds.add(baseCmd + currentArgs)
         }
       } else {
+        logger.log(LogLevel.INFO, "protoc: stdout: Generating commands: All as one")
         int baseCmdLength = baseCmd.sum { it.length() + CMD_ARGUMENT_EXTRA_LENGTH }
         List<String> currentArgs = []
         int currentArgsLength = 0
@@ -519,7 +523,7 @@ public class GenerateProtoTask extends DefaultTask {
       }
     }
 
-    List<List<String>> cmds = generateCmds(baseCmd, protoFiles, getCmdLengthLimit(), singleProtoExecute)
+    List<List<String>> cmds = generateCmds(logger, baseCmd, protoFiles, getCmdLengthLimit(), singleProtoExecute)
     for (List<String> cmd : cmds) {
       compileFiles(cmd)
     }
