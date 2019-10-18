@@ -156,7 +156,7 @@ public class GenerateProtoTask extends DefaultTask {
         int baseCmdLength = baseCmd.sum { it.length() + CMD_ARGUMENT_EXTRA_LENGTH }
         List<String> currentArgs = []
         int currentArgsLength = 0
-        for (File proto : protoFiles) {
+        for (File proto: protoFiles) {
           String protoFileName = proto
           int currentFileLength = protoFileName.length() + CMD_ARGUMENT_EXTRA_LENGTH
           // Check if appending the next proto string will overflow the cmd length limit
@@ -166,10 +166,8 @@ public class GenerateProtoTask extends DefaultTask {
             currentArgs.clear()
             currentArgsLength = 0
           }
-          currentArgs.clear()
           // Append the proto file to the args
           currentArgs.add(protoFileName)
-          cmds.add(baseCmd + currentArgs)
           currentArgsLength += currentFileLength
         }
         // Add the last cmd for execution
