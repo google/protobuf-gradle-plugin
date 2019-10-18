@@ -541,7 +541,7 @@ public class GenerateProtoTask extends DefaultTask {
   }
 
   private void compileFiles(List<String> cmd) {
-    logger.log(LogLevel.INFO, "protoc: stdout: Running command:")
+    logger.log(LogLevel.INFO, "protoc: stdout: Running command: Single: " + singleProtoExecute)
     logger.log(LogLevel.INFO, cmd.toString())
     logger.log(LogLevel.INFO, "")
 
