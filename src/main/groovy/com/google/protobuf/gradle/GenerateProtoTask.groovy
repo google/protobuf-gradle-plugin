@@ -138,7 +138,12 @@ public class GenerateProtoTask extends DefaultTask {
     return prefix.toString()
   }
 
-  static List<List<String>> generateCmds(Logger logger, List<String> baseCmd, List<File> protoFiles, int cmdLengthLimit, boolean singleProtoExecute) {
+  static List<List<String>> generateCmds(
+          Logger logger,
+          List<String> baseCmd,
+          List<File> protoFiles,
+          int cmdLengthLimit,
+          boolean singleProtoExecute) {
     List<List<String>> cmds = []
     if (!protoFiles.isEmpty()) {
       if (singleProtoExecute) {
