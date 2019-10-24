@@ -110,6 +110,8 @@ public class GenerateProtoTask extends DefaultTask {
      *
      * Default: null
      */
+    @Nullable
+    @Optional
     @Input
     GString path
 
@@ -341,7 +343,7 @@ public class GenerateProtoTask extends DefaultTask {
   /**
    * Returns the container of protoc builtins.
    */
-  @Nested
+  @Internal
   public NamedDomainObjectContainer<PluginOptions> getBuiltins() {
     checkCanConfig()
     return builtins
@@ -359,7 +361,7 @@ public class GenerateProtoTask extends DefaultTask {
   /**
    * Returns the container of protoc plugins.
    */
-  @Nested
+  @Internal
   public NamedDomainObjectContainer<PluginOptions> getPlugins() {
     checkCanConfig()
     return plugins
@@ -546,6 +548,16 @@ public class GenerateProtoTask extends DefaultTask {
     for (List<String> cmd : cmds) {
       compileFiles(cmd)
     }
+  }
+
+  @Nested
+  protected Collection<PluginOptions> getBuiltinsInternal() {
+    return builtins
+  }
+
+  @Nested
+  protected Collection<PluginOptions> getPluginsInternal() {
+    return plugins
   }
 
   private static enum State {
