@@ -336,8 +336,7 @@ class ProtobufPlugin implements Plugin<Project> {
         task = project.tasks.create(extractProtosTaskName, ProtobufExtract) {
           description = "Extracts proto files/dependencies specified by 'protobuf' configuration"
           destDir = getExtractedProtosDir(sourceSetName) as File
-          inputs.files(project.configurations[Utils.getConfigName(sourceSetName, 'protobuf')])
-                  .withPathSensitivity(PathSensitivity.NAME_ONLY)
+          inputFiles.from(project.configurations[Utils.getConfigName(sourceSetName, 'protobuf')])
           isTest = Utils.isTest(sourceSetName)
         }
       }

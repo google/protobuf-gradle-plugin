@@ -42,15 +42,26 @@ import org.gradle.api.internal.file.DefaultSourceDirectorySet
 import org.gradle.api.internal.file.FileResolver
 import org.gradle.api.internal.file.collections.DefaultDirectoryFileTreeFactory
 import org.gradle.api.logging.LogLevel
+import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Nested
+import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskAction
 import org.gradle.util.ConfigureUtil
 
+import javax.annotation.Nullable
+
 /**
  * The task that compiles proto files into Java files.
  */
 // TODO(zhangkun83): add per-plugin output dir reconfiguraiton.
+@CacheableTask
 public class GenerateProtoTask extends DefaultTask {
   // Windows CreateProcess has command line limit of 32768:
   // https://msdn.microsoft.com/en-us/library/windows/desktop/ms682425(v=vs.85).aspx
@@ -86,6 +97,7 @@ public class GenerateProtoTask extends DefaultTask {
    *
    * Default: false
    */
+  @Input
   boolean generateDescriptorSet
 
   /**
@@ -98,6 +110,7 @@ public class GenerateProtoTask extends DefaultTask {
      *
      * Default: null
      */
+    @Input
     GString path
 
     /**
@@ -105,6 +118,7 @@ public class GenerateProtoTask extends DefaultTask {
      *
      * Default: false
      */
+    @Input
     boolean includeSourceInfo
 
     /**
@@ -112,9 +126,11 @@ public class GenerateProtoTask extends DefaultTask {
      *
      * Default: false
      */
+    @Input
     boolean includeImports
   }
 
+  @Nested
   final DescriptorSetOptions descriptorSetOptions = new DescriptorSetOptions()
 
   // protoc allows you to prefix comma-delimited options to the path in
@@ -177,7 +193,11 @@ public class GenerateProtoTask extends DefaultTask {
     checkInitializing()
     Preconditions.checkState(this.outputBaseDir == null, 'outputBaseDir is already set')
     this.outputBaseDir = outputBaseDir
-    outputs.dir outputBaseDir
+  }
+
+  @OutputDirectory
+  String getOutputBaseDir() {
+    return outputBaseDir
   }
 
   void setSourceSet(SourceSet sourceSet) {
@@ -214,6 +234,7 @@ public class GenerateProtoTask extends DefaultTask {
     this.fileResolver = fileResolver
   }
 
+  @Internal
   SourceSet getSourceSet() {
     Preconditions.checkState(!Utils.isAndroidProject(project),
         'sourceSet should not be used in an Android project')
@@ -221,10 +242,26 @@ public class GenerateProtoTask extends DefaultTask {
     return sourceSet
   }
 
+  @Nullable
+  @Optional
+  @Input
+  String getSourceSetName() {
+    return sourceSet?.name
+  }
+
+  @InputFiles
+  @PathSensitive(PathSensitivity.RELATIVE)
   FileCollection getSourceFiles() {
     return sourceFiles
   }
 
+  @InputFiles
+  @PathSensitive(PathSensitivity.RELATIVE)
+  FileCollection getIncludeDirs() {
+    return includeDirs
+  }
+
+  @Internal
   Object getVariant() {
     Preconditions.checkState(Utils.isAndroidProject(project),
         'variant should not be used in a Java project')
@@ -232,6 +269,7 @@ public class GenerateProtoTask extends DefaultTask {
     return variant
   }
 
+  @Internal
   boolean getIsTestVariant() {
     Preconditions.checkState(Utils.isAndroidProject(project),
         'isTestVariant should not be used in a Java project')
@@ -239,6 +277,7 @@ public class GenerateProtoTask extends DefaultTask {
     return isTestVariant
   }
 
+  @Internal
   ImmutableList<String> getFlavors() {
     Preconditions.checkState(Utils.isAndroidProject(project),
         'flavors should not be used in a Java project')
@@ -246,6 +285,7 @@ public class GenerateProtoTask extends DefaultTask {
     return flavors
   }
 
+  @Internal
   String getBuildType() {
     Preconditions.checkState(Utils.isAndroidProject(project),
         'buildType should not be used in a Java project')
@@ -255,6 +295,7 @@ public class GenerateProtoTask extends DefaultTask {
     return buildType
   }
 
+  @Internal
   FileResolver getFileResolver() {
     Preconditions.checkNotNull(fileResolver)
     return fileResolver
@@ -270,6 +311,7 @@ public class GenerateProtoTask extends DefaultTask {
     state = State.FINALIZED
   }
 
+  @Internal
   String getDescriptorPath() {
     if (!generateDescriptorSet) {
       throw new IllegalStateException(
@@ -299,6 +341,7 @@ public class GenerateProtoTask extends DefaultTask {
   /**
    * Returns the container of protoc builtins.
    */
+  @Nested
   public NamedDomainObjectContainer<PluginOptions> getBuiltins() {
     checkCanConfig()
     return builtins
@@ -316,6 +359,7 @@ public class GenerateProtoTask extends DefaultTask {
   /**
    * Returns the container of protoc plugins.
    */
+  @Nested
   public NamedDomainObjectContainer<PluginOptions> getPlugins() {
     checkCanConfig()
     return plugins
@@ -334,9 +378,6 @@ public class GenerateProtoTask extends DefaultTask {
   public void addIncludeDir(FileCollection dir) {
     checkCanConfig()
     includeDirs.from(dir)
-    // Register all files under the directory as input so that Gradle will check their changes for
-    // incremental build
-    inputs.files(dir).withPathSensitivity(PathSensitivity.RELATIVE)
   }
 
   /**
@@ -345,13 +386,12 @@ public class GenerateProtoTask extends DefaultTask {
   public void addSourceFiles(FileCollection files) {
     checkCanConfig()
     sourceFiles.from(files)
-    // Register the files as input so that Gradle will check their changes for incremental build
-    inputs.files(files).withPathSensitivity(PathSensitivity.RELATIVE)
   }
 
   /**
    * Returns true if the Java source set or Android variant is test related.
    */
+  @Input
   public boolean getIsTest() {
     if (Utils.isAndroidProject(project)) {
       return isTestVariant
@@ -379,6 +419,7 @@ public class GenerateProtoTask extends DefaultTask {
       return this
     }
 
+    @Input
     public List<String> getOptions() {
       return options
     }
@@ -386,6 +427,7 @@ public class GenerateProtoTask extends DefaultTask {
     /**
      * Returns the name of the plugin or builtin.
      */
+    @Input
     @Override
     public String getName() {
       return name
@@ -401,6 +443,7 @@ public class GenerateProtoTask extends DefaultTask {
     /**
      * Returns the relative outputDir for this plugin.  If outputDir is not specified, name is used.
      */
+    @Input
     public String getOutputSubDir() {
       if (outputSubDir != null) {
         return outputSubDir
@@ -421,6 +464,7 @@ public class GenerateProtoTask extends DefaultTask {
    * Returns a {@code SourceDirectorySet} representing the generated source
    * directories.
    */
+  @Internal
   SourceDirectorySet getOutputSourceDirectorySet() {
     String srcSetName = "generate-proto-" + name
     SourceDirectorySet srcSet

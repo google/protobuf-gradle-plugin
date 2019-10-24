@@ -31,6 +31,12 @@ package com.google.protobuf.gradle
 
 import com.google.common.base.Preconditions
 import org.gradle.api.DefaultTask
+import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 
 /**
@@ -43,21 +49,29 @@ class ProtobufExtract extends DefaultTask {
    */
   private File destDir
   private Boolean isTest = null
+  private final ConfigurableFileCollection inputFiles = project.files()
 
   public void setIsTest(boolean isTest) {
     this.isTest = isTest
   }
 
+  @Input
   public boolean getIsTest() {
     Preconditions.checkNotNull(isTest)
     return isTest
+  }
+
+  @InputFiles
+  @PathSensitive(PathSensitivity.NAME_ONLY)
+  public ConfigurableFileCollection getInputFiles() {
+    return inputFiles
   }
 
   @TaskAction
   void extract() {
     destDir.mkdir()
     boolean warningLogged = false
-    inputs.files.each { file ->
+    inputFiles.each { file ->
       logger.debug "Extracting protos from ${file} to ${destDir}"
       if (file.isDirectory()) {
         project.copy {
@@ -113,6 +127,7 @@ class ProtobufExtract extends DefaultTask {
     outputs.dir destDir
   }
 
+  @OutputDirectory
   protected File getDestDir() {
     return destDir
   }
