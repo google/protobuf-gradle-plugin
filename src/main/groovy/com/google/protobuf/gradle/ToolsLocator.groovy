@@ -112,7 +112,7 @@ class ToolsLocator {
         // register the configuration dependency as a task input
         protoTask.inputs.files(config)
             .withPathSensitivity(PathSensitivity.NONE)
-            .withPropertyName("config")
+            .withPropertyName("config.${locator.name}")
 
         protoTask.doFirst {
           if (locator.path == null) {
