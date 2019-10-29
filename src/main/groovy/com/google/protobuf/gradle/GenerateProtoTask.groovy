@@ -51,6 +51,7 @@ import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskAction
 import org.gradle.util.ConfigureUtil
@@ -77,6 +78,7 @@ public class GenerateProtoTask extends DefaultTask {
   private final ConfigurableFileCollection sourceFiles = project.files()
   private final NamedDomainObjectContainer<PluginOptions> builtins
   private final NamedDomainObjectContainer<PluginOptions> plugins
+  private final DescriptorSetOptions descriptorSetOptions
 
   // These fields are set by the Protobuf plugin only when initializing the
   // task.  Ideally they should be final fields, but Gradle task cannot have
@@ -97,7 +99,7 @@ public class GenerateProtoTask extends DefaultTask {
    *
    * Default: false
    */
-  @Input
+  @Internal
   boolean generateDescriptorSet
 
   /**
@@ -131,9 +133,6 @@ public class GenerateProtoTask extends DefaultTask {
     @Input
     boolean includeImports
   }
-
-  @Nested
-  final DescriptorSetOptions descriptorSetOptions = new DescriptorSetOptions()
 
   // protoc allows you to prefix comma-delimited options to the path in
   // the --*_out flags, e.g.,
@@ -191,6 +190,12 @@ public class GenerateProtoTask extends DefaultTask {
     return Integer.MAX_VALUE
   }
 
+  @Optional
+  @Nested
+  DescriptorSetOptions getDescriptorSetOptions() {
+    return generateDescriptorSet ? descriptorSetOptions : null
+  }
+
   void setOutputBaseDir(String outputBaseDir) {
     checkInitializing()
     Preconditions.checkState(this.outputBaseDir == null, 'outputBaseDir is already set')
@@ -244,13 +249,7 @@ public class GenerateProtoTask extends DefaultTask {
     return sourceSet
   }
 
-  @Nullable
-  @Optional
-  @Input
-  String getSourceSetName() {
-    return sourceSet?.name
-  }
-
+  @SkipWhenEmpty
   @InputFiles
   @PathSensitive(PathSensitivity.RELATIVE)
   FileCollection getSourceFiles() {
@@ -325,6 +324,7 @@ public class GenerateProtoTask extends DefaultTask {
   public GenerateProtoTask() {
     builtins = project.container(PluginOptions)
     plugins = project.container(PluginOptions)
+    descriptorSetOptions = new DescriptorSetOptions()
   }
 
   //===========================================================================
