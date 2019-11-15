@@ -91,7 +91,7 @@ class ProtobufPlugin implements Plugin<Project> {
         // throw an Exception to alert the user of this configuration issue.
         Action<? super AppliedPlugin> applyWithPrerequisitePlugin = { prerequisitePlugin ->
           if (wasApplied) {
-            project.logger.warn('The com.google.protobuf plugin was already applied to the project: ' + project.path
+            project.logger.info('The com.google.protobuf plugin was already applied to the project: ' + project.path
                 + ' and will not be applied again after plugin: ' + prerequisitePlugin.id)
           } else {
             wasApplied = true
