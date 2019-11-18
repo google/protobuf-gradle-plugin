@@ -62,6 +62,7 @@ class ProtobufExtract extends DefaultTask {
   }
 
   @InputFiles
+  // TODO Review if NAME_ONLY is the best path sensitivity to use here
   @PathSensitive(PathSensitivity.NAME_ONLY)
   public ConfigurableFileCollection getInputFiles() {
     return inputFiles

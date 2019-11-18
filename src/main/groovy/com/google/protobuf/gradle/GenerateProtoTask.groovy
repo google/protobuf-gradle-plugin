@@ -99,7 +99,7 @@ public class GenerateProtoTask extends DefaultTask {
    *
    * Default: false
    */
-  @Internal
+  @Internal("The setting is taken into account as an input in the return value of getDescriptorSetOptions()")
   boolean generateDescriptorSet
 
   /**
@@ -190,12 +190,6 @@ public class GenerateProtoTask extends DefaultTask {
     return Integer.MAX_VALUE
   }
 
-  @Optional
-  @Nested
-  DescriptorSetOptions getDescriptorSetOptions() {
-    return generateDescriptorSet ? descriptorSetOptions : null
-  }
-
   void setOutputBaseDir(String outputBaseDir) {
     checkInitializing()
     Preconditions.checkState(this.outputBaseDir == null, 'outputBaseDir is already set')
@@ -241,7 +235,7 @@ public class GenerateProtoTask extends DefaultTask {
     this.fileResolver = fileResolver
   }
 
-  @Internal
+  @Internal("Inputs tracked in getSourceFiles()")
   SourceSet getSourceSet() {
     Preconditions.checkState(!Utils.isAndroidProject(project),
         'sourceSet should not be used in an Android project')
@@ -262,7 +256,7 @@ public class GenerateProtoTask extends DefaultTask {
     return includeDirs
   }
 
-  @Internal
+  @Internal("Not an actual input to the task, only used to find tasks belonging to a variant")
   Object getVariant() {
     Preconditions.checkState(Utils.isAndroidProject(project),
         'variant should not be used in a Java project')
@@ -270,7 +264,7 @@ public class GenerateProtoTask extends DefaultTask {
     return variant
   }
 
-  @Internal
+  @Internal("Not an actual input to the task, only used to find tasks belonging to a variant")
   boolean getIsTestVariant() {
     Preconditions.checkState(Utils.isAndroidProject(project),
         'isTestVariant should not be used in a Java project')
@@ -278,7 +272,7 @@ public class GenerateProtoTask extends DefaultTask {
     return isTestVariant
   }
 
-  @Internal
+  @Internal("Not an actual input to the task, only used to find tasks belonging to a variant")
   ImmutableList<String> getFlavors() {
     Preconditions.checkState(Utils.isAndroidProject(project),
         'flavors should not be used in a Java project')
@@ -286,7 +280,7 @@ public class GenerateProtoTask extends DefaultTask {
     return flavors
   }
 
-  @Internal
+  @Internal("Not an actual input to the task, only used to find tasks belonging to a variant")
   String getBuildType() {
     Preconditions.checkState(Utils.isAndroidProject(project),
         'buildType should not be used in a Java project')
@@ -294,12 +288,6 @@ public class GenerateProtoTask extends DefaultTask {
         variant.name == 'test' || buildType,
         'buildType is not set and task is not for local unit test variant')
     return buildType
-  }
-
-  @Internal
-  FileResolver getFileResolver() {
-    Preconditions.checkNotNull(fileResolver)
-    return fileResolver
   }
 
   void doneInitializing() {
@@ -312,7 +300,7 @@ public class GenerateProtoTask extends DefaultTask {
     state = State.FINALIZED
   }
 
-  @Internal
+  @Internal("Tracked as an input via getDescriptorSetOptions()")
   String getDescriptorPath() {
     if (!generateDescriptorSet) {
       throw new IllegalStateException(
@@ -550,11 +538,26 @@ public class GenerateProtoTask extends DefaultTask {
     }
   }
 
+  /**
+   * Used to expose inputs to Gradle, not to be called directly.
+   */
+  @Optional
+  @Nested
+  protected DescriptorSetOptions getDescriptorSetOptions() {
+    return generateDescriptorSet ? descriptorSetOptions : null
+  }
+
+  /**
+   * Used to expose inputs to Gradle, not to be called directly.
+   */
   @Nested
   protected Collection<PluginOptions> getBuiltinsInternal() {
     return builtins
   }
 
+  /**
+   * Used to expose inputs to Gradle, not to be called directly.
+   */
   @Nested
   protected Collection<PluginOptions> getPluginsInternal() {
     return plugins
