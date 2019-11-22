@@ -42,10 +42,13 @@ import org.gradle.api.internal.file.DefaultSourceDirectorySet
 import org.gradle.api.internal.file.FileResolver
 import org.gradle.api.internal.file.collections.DefaultDirectoryFileTreeFactory
 import org.gradle.api.logging.LogLevel
+import org.gradle.api.logging.Logger
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskAction
 import org.gradle.util.ConfigureUtil
+
+import javax.annotation.Nullable
 
 /**
  * The task that compiles proto files into Java files.
@@ -66,6 +69,7 @@ public class GenerateProtoTask extends DefaultTask {
   private final ConfigurableFileCollection sourceFiles = project.files()
   private final NamedDomainObjectContainer<PluginOptions> builtins
   private final NamedDomainObjectContainer<PluginOptions> plugins
+  private boolean singleProtoExecute
 
   // These fields are set by the Protobuf plugin only when initializing the
   // task.  Ideally they should be final fields, but Gradle task cannot have
@@ -136,28 +140,50 @@ public class GenerateProtoTask extends DefaultTask {
     return prefix.toString()
   }
 
-  static List<List<String>> generateCmds(List<String> baseCmd, List<File> protoFiles, int cmdLengthLimit) {
+  static List<List<String>> generateCmds(
+          @Nullable Logger logger,
+          List<String> baseCmd,
+          List<File> protoFiles,
+          int cmdLengthLimit,
+          boolean singleProtoExecute) {
     List<List<String>> cmds = []
     if (!protoFiles.isEmpty()) {
-      int baseCmdLength = baseCmd.sum { it.length() + CMD_ARGUMENT_EXTRA_LENGTH }
-      List<String> currentArgs = []
-      int currentArgsLength = 0
-      for (File proto: protoFiles) {
-        String protoFileName = proto
-        int currentFileLength = protoFileName.length() + CMD_ARGUMENT_EXTRA_LENGTH
-        // Check if appending the next proto string will overflow the cmd length limit
-        if (baseCmdLength + currentArgsLength + currentFileLength > cmdLengthLimit) {
-          // Add the current cmd before overflow
-          cmds.add(baseCmd + currentArgs)
-          currentArgs.clear()
-          currentArgsLength = 0
+      if (singleProtoExecute) {
+        if (logger != null) {
+            logger.log(LogLevel.INFO, "protoc: stdout: Generating commands: Single")
         }
-        // Append the proto file to the args
-        currentArgs.add(protoFileName)
-        currentArgsLength += currentFileLength
+        List<String> currentArgs = []
+        for (File proto : protoFiles) {
+          String protoFileName = proto
+          currentArgs.clear()
+          // Append the proto file to the args
+          currentArgs.add(protoFileName)
+          cmds.add(baseCmd + currentArgs)
+        }
+      } else {
+        if (logger != null) {
+            logger.log(LogLevel.INFO, "protoc: stdout: Generating commands: All as one")
+        }
+        int baseCmdLength = baseCmd.sum { it.length() + CMD_ARGUMENT_EXTRA_LENGTH }
+        List<String> currentArgs = []
+        int currentArgsLength = 0
+        for (File proto: protoFiles) {
+          String protoFileName = proto
+          int currentFileLength = protoFileName.length() + CMD_ARGUMENT_EXTRA_LENGTH
+          // Check if appending the next proto string will overflow the cmd length limit
+          if (baseCmdLength + currentArgsLength + currentFileLength > cmdLengthLimit) {
+            // Add the current cmd before overflow
+            cmds.add(baseCmd + currentArgs)
+            currentArgs.clear()
+            currentArgsLength = 0
+          }
+          // Append the proto file to the args
+          currentArgs.add(protoFileName)
+          currentArgsLength += currentFileLength
+        }
+        // Add the last cmd for execution
+        cmds.add(baseCmd + currentArgs)
       }
-      // Add the last cmd for execution
-      cmds.add(baseCmd + currentArgs)
     }
     return cmds
   }
@@ -328,7 +354,14 @@ public class GenerateProtoTask extends DefaultTask {
     return plugins.findByName(name) != null
   }
 
-  /**
+  boolean getSingleProtoExecute() {
+    return singleProtoExecute
+  }
+
+  void setSingleProtoExecute(final boolean singleProtoExecute) {
+    this.singleProtoExecute = singleProtoExecute
+  }
+/**
    * Add a directory to protoc's include path.
    */
   public void addIncludeDir(FileCollection dir) {
@@ -498,7 +531,7 @@ public class GenerateProtoTask extends DefaultTask {
       }
     }
 
-    List<List<String>> cmds = generateCmds(baseCmd, protoFiles, getCmdLengthLimit())
+    List<List<String>> cmds = generateCmds(logger, baseCmd, protoFiles, getCmdLengthLimit(), singleProtoExecute)
     for (List<String> cmd : cmds) {
       compileFiles(cmd)
     }
@@ -520,7 +553,9 @@ public class GenerateProtoTask extends DefaultTask {
   }
 
   private void compileFiles(List<String> cmd) {
+    logger.log(LogLevel.INFO, "protoc: stdout: Running command: Single: " + singleProtoExecute)
     logger.log(LogLevel.INFO, cmd.toString())
+    logger.log(LogLevel.INFO, "")
 
     StringBuffer stdout = new StringBuffer()
     StringBuffer stderr = new StringBuffer()

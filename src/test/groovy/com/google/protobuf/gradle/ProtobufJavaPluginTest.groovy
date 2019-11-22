@@ -281,7 +281,7 @@ class ProtobufJavaPluginTest extends Specification {
 
     when: "the commands are generated"
 
-    List<List<String>> cmds = GenerateProtoTask.generateCmds(baseCmd, protoFiles, cmdLengthLimit)
+    List<List<String>> cmds = GenerateProtoTask.generateCmds(null, baseCmd, protoFiles, cmdLengthLimit, false)
 
     then: "it splits appropriately"
     cmds.size() == 2 && cmds[0] == ["protoc", "short.proto"] && cmds[1] == ["protoc", "long_proto_name.proto"]
@@ -296,7 +296,7 @@ class ProtobufJavaPluginTest extends Specification {
 
     when: "the commands are generated"
 
-    List<List<String>> cmds = GenerateProtoTask.generateCmds(baseCmd, protoFiles, cmdLengthLimit)
+    List<List<String>> cmds = GenerateProtoTask.generateCmds(null, baseCmd, protoFiles, cmdLengthLimit, false)
 
     then: "it splits appropriately"
     cmds.size() == 1 && cmds[0] == ["protoc", "short.proto", "long_proto_name.proto"]
@@ -311,10 +311,25 @@ class ProtobufJavaPluginTest extends Specification {
 
     when: "the commands are generated"
 
-    List<List<String>> cmds = GenerateProtoTask.generateCmds(baseCmd, protoFiles, cmdLengthLimit)
+    List<List<String>> cmds = GenerateProtoTask.generateCmds(null, baseCmd, protoFiles, cmdLengthLimit, false)
 
     then: "it returns no commands"
     cmds.isEmpty()
+  }
+
+  void "test generateCmds should split commands when split is requested"() {
+    given: "a cmd length limit and two proto files"
+
+    List<String> baseCmd = ["protoc"]
+    List<File> protoFiles = [ new File("short.proto"), new File("long_proto_name.proto") ]
+    int cmdLengthLimit = 132
+
+    when: "the commands are generated"
+
+    List<List<String>> cmds = GenerateProtoTask.generateCmds(null, baseCmd, protoFiles, cmdLengthLimit, true)
+
+    then: "it splits appropriately"
+    cmds.size() == 2 && cmds[0] == ["protoc", "short.proto"] && cmds[1] == ["protoc", "long_proto_name.proto"]
   }
 
   void "test getCmdLengthLimit returns correct limit for Windows"() {
