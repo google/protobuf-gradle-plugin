@@ -78,7 +78,6 @@ public class GenerateProtoTask extends DefaultTask {
   private final ConfigurableFileCollection sourceFiles = project.files()
   private final NamedDomainObjectContainer<PluginOptions> builtins
   private final NamedDomainObjectContainer<PluginOptions> plugins
-  private final DescriptorSetOptions descriptorSetOptions
 
   // These fields are set by the Protobuf plugin only when initializing the
   // task.  Ideally they should be final fields, but Gradle task cannot have
@@ -99,7 +98,7 @@ public class GenerateProtoTask extends DefaultTask {
    *
    * Default: false
    */
-  @Internal("The setting is taken into account as an input in the return value of getDescriptorSetOptions()")
+  @Internal("Handled as input via getDescriptorSetOptionsInternal()")
   boolean generateDescriptorSet
 
   /**
@@ -133,6 +132,9 @@ public class GenerateProtoTask extends DefaultTask {
     @Input
     boolean includeImports
   }
+
+  @Internal("Handled as input via getDescriptorSetOptionsInternal()")
+  final DescriptorSetOptions descriptorSetOptions = new DescriptorSetOptions()
 
   // protoc allows you to prefix comma-delimited options to the path in
   // the --*_out flags, e.g.,
@@ -543,7 +545,7 @@ public class GenerateProtoTask extends DefaultTask {
    */
   @Optional
   @Nested
-  protected DescriptorSetOptions getDescriptorSetOptions() {
+  protected DescriptorSetOptions getDescriptorSetOptionsInternal() {
     return generateDescriptorSet ? descriptorSetOptions : null
   }
 
