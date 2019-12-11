@@ -98,7 +98,7 @@ public class GenerateProtoTask extends DefaultTask {
    *
    * Default: false
    */
-  @Internal("Handled as input via getDescriptorSetOptionsInternal()")
+  @Internal("Handled as input via getDescriptorSetOptionsForUpToDateCheck()")
   boolean generateDescriptorSet
 
   /**
@@ -133,7 +133,7 @@ public class GenerateProtoTask extends DefaultTask {
     boolean includeImports
   }
 
-  @Internal("Handled as input via getDescriptorSetOptionsInternal()")
+  @Internal("Handled as input via getDescriptorSetOptionsForUpToDateCheck()")
   final DescriptorSetOptions descriptorSetOptions = new DescriptorSetOptions()
 
   // protoc allows you to prefix comma-delimited options to the path in
@@ -302,7 +302,7 @@ public class GenerateProtoTask extends DefaultTask {
     state = State.FINALIZED
   }
 
-  @Internal("Tracked as an input via getDescriptorSetOptions()")
+  @Internal("Tracked as an input via getDescriptorSetOptionsForUpToDateCheck()")
   String getDescriptorPath() {
     if (!generateDescriptorSet) {
       throw new IllegalStateException(
@@ -314,7 +314,6 @@ public class GenerateProtoTask extends DefaultTask {
   public GenerateProtoTask() {
     builtins = project.container(PluginOptions)
     plugins = project.container(PluginOptions)
-    descriptorSetOptions = new DescriptorSetOptions()
   }
 
   //===========================================================================
@@ -333,7 +332,7 @@ public class GenerateProtoTask extends DefaultTask {
   /**
    * Returns the container of protoc builtins.
    */
-  @Internal
+  @Internal("Tracked as an input via getBuiltinsForUpToDateCheck()")
   public NamedDomainObjectContainer<PluginOptions> getBuiltins() {
     checkCanConfig()
     return builtins
@@ -351,7 +350,7 @@ public class GenerateProtoTask extends DefaultTask {
   /**
    * Returns the container of protoc plugins.
    */
-  @Internal
+  @Internal("Tracked as an input via getPluginsForUpToDateCheck()")
   public NamedDomainObjectContainer<PluginOptions> getPlugins() {
     checkCanConfig()
     return plugins
@@ -545,7 +544,7 @@ public class GenerateProtoTask extends DefaultTask {
    */
   @Optional
   @Nested
-  protected DescriptorSetOptions getDescriptorSetOptionsInternal() {
+  protected DescriptorSetOptions getDescriptorSetOptionsForUpToDateCheck() {
     return generateDescriptorSet ? descriptorSetOptions : null
   }
 
@@ -553,7 +552,7 @@ public class GenerateProtoTask extends DefaultTask {
    * Used to expose inputs to Gradle, not to be called directly.
    */
   @Nested
-  protected Collection<PluginOptions> getBuiltinsInternal() {
+  protected Collection<PluginOptions> getBuiltinsForUpToDateCheck() {
     return builtins
   }
 
@@ -561,7 +560,7 @@ public class GenerateProtoTask extends DefaultTask {
    * Used to expose inputs to Gradle, not to be called directly.
    */
   @Nested
-  protected Collection<PluginOptions> getPluginsInternal() {
+  protected Collection<PluginOptions> getPluginsForUpToDateCheck() {
     return plugins
   }
 
