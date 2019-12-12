@@ -14,7 +14,7 @@ import spock.lang.Unroll
  */
 class ProtobufJavaPluginTest extends Specification {
   // Current supported version is Gradle 5+.
-  private static final List<String> GRADLE_VERSIONS = ["5.0", "5.1", "5.4", "5.6"]
+  private static final List<String> GRADLE_VERSIONS = ["5.0", "5.1", "5.4", "5.6", "6.0"]
 
   void "testApplying java and com.google.protobuf adds corresponding task to project"() {
     given: "a basic project with java and com.google.protobuf"

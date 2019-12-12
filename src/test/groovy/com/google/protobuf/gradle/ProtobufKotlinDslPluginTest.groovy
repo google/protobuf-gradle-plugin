@@ -11,7 +11,7 @@ import spock.lang.Unroll
  */
 class ProtobufKotlinDslPluginTest extends Specification {
   // Current supported version is Gradle 5+.
-  private static final List<String> GRADLE_VERSIONS = ["5.0", "5.1", "5.4", "5.6"]
+  private static final List<String> GRADLE_VERSIONS = ["5.0", "5.1", "5.4", "5.6", "6.0"]
 
   @Unroll
   void "testProjectKotlinDsl should be successfully executed (java-only project) [gradle #gradleVersion]"() {
