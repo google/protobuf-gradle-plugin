@@ -397,6 +397,12 @@ class ProtobufPlugin implements Plugin<Project> {
               inputFiles.from getSourceSets()['main'].proto
               inputFiles.from testedCompileClasspathConfiguration ?: project.configurations['compile']
             }
+          } else {
+            // In Java projects, the compileClasspath of the 'test' sourceSet includes all the
+            // 'resources' of the output of 'main', in which the source protos are placed.  This is
+            // nicer than the ad-hoc solution that Android has, because it works for any extended
+            // configuration, not just 'testCompile'.
+            inputFiles.from getSourceSets()[sourceSetOrVariantName].compileClasspath
           }
           isTest = Utils.isTest(sourceSetOrVariantName)
         }
