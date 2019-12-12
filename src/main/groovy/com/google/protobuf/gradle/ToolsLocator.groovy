@@ -33,6 +33,7 @@ import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.Dependency
+import org.gradle.api.tasks.PathSensitivity
 
 /**
  * Holds locations of all external executables, i.e., protoc and plugins.
@@ -110,6 +111,8 @@ class ToolsLocator {
       if (protoc.is(locator) || protoTask.hasPlugin(locator.name)) {
         // register the configuration dependency as a task input
         protoTask.inputs.files(config)
+            .withPathSensitivity(PathSensitivity.NONE)
+            .withPropertyName("config.${locator.name}")
 
         protoTask.doFirst {
           if (locator.path == null) {

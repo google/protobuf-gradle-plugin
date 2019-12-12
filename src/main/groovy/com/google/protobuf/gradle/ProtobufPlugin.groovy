@@ -43,7 +43,6 @@ import org.gradle.api.internal.file.FileResolver
 import org.gradle.api.internal.file.collections.DefaultDirectoryFileTreeFactory
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.plugins.AppliedPlugin
-import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.SourceSet
 
 import javax.inject.Inject
@@ -336,8 +335,7 @@ class ProtobufPlugin implements Plugin<Project> {
         task = project.tasks.create(extractProtosTaskName, ProtobufExtract) {
           description = "Extracts proto files/dependencies specified by 'protobuf' configuration"
           destDir = getExtractedProtosDir(sourceSetName) as File
-          inputs.files(project.configurations[Utils.getConfigName(sourceSetName, 'protobuf')])
-                  .withPathSensitivity(PathSensitivity.NAME_ONLY)
+          inputFiles.from(project.configurations[Utils.getConfigName(sourceSetName, 'protobuf')])
           isTest = Utils.isTest(sourceSetName)
         }
       }
@@ -365,9 +363,8 @@ class ProtobufPlugin implements Plugin<Project> {
         task = project.tasks.create(extractIncludeProtosTaskName, ProtobufExtract) {
           description = "Extracts proto files from compile dependencies for includes"
           destDir = getExtractedIncludeProtosDir(sourceSetOrVariantName) as File
-          inputs.files (compileClasspathConfiguration
+          inputFiles.from(compileClasspathConfiguration
             ?: project.configurations[Utils.getConfigName(sourceSetOrVariantName, 'compile')])
-                  .withPathSensitivity(PathSensitivity.NAME_ONLY)
 
           // TL; DR: Make protos in 'test' sourceSet able to import protos from the 'main'
           // sourceSet.  Sub-configurations, e.g., 'testCompile' that extends 'compile', don't
@@ -380,16 +377,15 @@ class ProtobufPlugin implements Plugin<Project> {
             // ad-hoc solution that manually includes the source protos of 'main' and its
             // dependencies.
             if (Utils.isTest(sourceSetOrVariantName)) {
-              inputs.files getSourceSets()['main'].proto
-              inputs.files testedCompileClasspathConfiguration ?: project.configurations['compile']
+              inputFiles.from getSourceSets()['main'].proto
+              inputFiles.from testedCompileClasspathConfiguration ?: project.configurations['compile']
             }
           } else {
             // In Java projects, the compileClasspath of the 'test' sourceSet includes all the
             // 'resources' of the output of 'main', in which the source protos are placed.  This is
             // nicer than the ad-hoc solution that Android has, because it works for any extended
             // configuration, not just 'testCompile'.
-            inputs.files (getSourceSets()[sourceSetOrVariantName].compileClasspath)
-                    .withPathSensitivity(PathSensitivity.NAME_ONLY)
+            inputFiles.from getSourceSets()[sourceSetOrVariantName].compileClasspath
           }
           isTest = Utils.isTest(sourceSetOrVariantName)
         }
