@@ -36,6 +36,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.attributes.Attribute
+import org.gradle.api.attributes.LibraryElements
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.internal.file.DefaultSourceDirectorySet
@@ -135,7 +136,7 @@ class ProtobufPlugin implements Plugin<Project> {
 
         addSourceSetExtensions()
         getSourceSets().all { sourceSet ->
-          createConfiguration(sourceSet.name)
+          createConfigurations(sourceSet.name)
         }
         project.afterEvaluate {
           // The Android variants are only available at this point.
@@ -158,17 +159,33 @@ class ProtobufPlugin implements Plugin<Project> {
     }
 
     /**
-     * Creates a configuration if necessary for a source set so that the build
+     * Creates configurations if necessary for a source set so that the build
      * author can configure dependencies for it.
      */
-    private void  createConfiguration(String sourceSetName) {
-      String configName = Utils.getConfigName(sourceSetName, 'protobuf')
-      if (project.configurations.findByName(configName) == null) {
-        project.configurations.create(configName) {
+    private void  createConfigurations(String sourceSetName) {
+      String protobufConfigName = Utils.getConfigName(sourceSetName, 'protobuf')
+      if (project.configurations.findByName(protobufConfigName) == null) {
+        project.configurations.create(protobufConfigName) {
           visible = false
           transitive = true
           extendsFrom = []
         }
+      }
+
+      // Create a 'compileProto' configuration as a bucket of dependencies that contains resources
+      // attribute for compileClasspath dependencies. This works around 'java-library' plugin
+      // not exposing resources to consumers for compilation.
+      String compileProtoConfigName = Utils.getConfigName(sourceSetName, 'compileProto')
+      String compileClasspathConfigName = Utils.getConfigName(sourceSetName, 'compileClasspath')
+      if (project.configurations.findByName(compileProtoConfigName) == null) {
+        project.configurations.create(compileProtoConfigName) {
+          visible = false
+          transitive = true
+          extendsFrom = [project.configurations.findByName(compileClasspathConfigName)]
+          canBeConsumed = false
+        }.getAttributes().attribute(
+                LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE,
+                project.getObjects().named(LibraryElements, LibraryElements.RESOURCES))
       }
     }
 
@@ -364,7 +381,7 @@ class ProtobufPlugin implements Plugin<Project> {
           description = "Extracts proto files from compile dependencies for includes"
           destDir = getExtractedIncludeProtosDir(sourceSetOrVariantName) as File
           inputFiles.from(compileClasspathConfiguration
-            ?: project.configurations[Utils.getConfigName(sourceSetOrVariantName, 'compile')])
+            ?: project.configurations[Utils.getConfigName(sourceSetOrVariantName, 'compileProto')])
 
           // TL; DR: Make protos in 'test' sourceSet able to import protos from the 'main'
           // sourceSet.  Sub-configurations, e.g., 'testCompile' that extends 'compile', don't
@@ -380,12 +397,6 @@ class ProtobufPlugin implements Plugin<Project> {
               inputFiles.from getSourceSets()['main'].proto
               inputFiles.from testedCompileClasspathConfiguration ?: project.configurations['compile']
             }
-          } else {
-            // In Java projects, the compileClasspath of the 'test' sourceSet includes all the
-            // 'resources' of the output of 'main', in which the source protos are placed.  This is
-            // nicer than the ad-hoc solution that Android has, because it works for any extended
-            // configuration, not just 'testCompile'.
-            inputFiles.from getSourceSets()[sourceSetOrVariantName].compileClasspath
           }
           isTest = Utils.isTest(sourceSetOrVariantName)
         }
