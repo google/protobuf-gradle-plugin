@@ -5,6 +5,7 @@ import static com.google.protobuf.gradle.ProtobufPluginTestHelper.buildAndroidPr
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
 import spock.lang.Specification
+import spock.lang.Unroll
 
 /**
  * Verify android projects are identified correctly
@@ -26,7 +27,8 @@ class AndroidProjectDetectionTest extends Specification {
 """
   }
 
-  void "test Utils.isAndroidProject positively detects android project"() {
+  @Unroll
+  void "test Utils.isAndroidProject positively detects android project [android #androidPluginVersion, gradle #gradleVersion]"() {
     given: "a project with android plugin"
     File mainProjectDir = ProtobufPluginTestHelper.projectBuilder("singleModuleAndroidProject")
        .copyDirs('testProjectAndroid', 'testProjectAndroidBare')
@@ -52,7 +54,8 @@ class AndroidProjectDetectionTest extends Specification {
   /**
    * Failing test case for https://github.com/google/protobuf-gradle-plugin/issues/236
    */
-  void "test Utils.isAndroidProject returns false on sub project of android project"() {
+  @Unroll
+  void "test Utils.isAndroidProject returns false on sub project of android project [android #androidPluginVersion, gradle #gradleVersion]"() {
     given: "an android root project and java sub project"
     File subProjectStaging = ProtobufPluginTestHelper.projectBuilder('subModuleTestProjectLite')
        .copyDirs('testProjectLite')
