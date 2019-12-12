@@ -98,7 +98,7 @@ public class GenerateProtoTask extends DefaultTask {
    *
    * Default: false
    */
-  @Internal("Handled as input via getDescriptorSetOptionsForUpToDateCheck()")
+  @Internal("Handled as input via getDescriptorSetOptionsForCaching()")
   boolean generateDescriptorSet
 
   /**
@@ -133,7 +133,7 @@ public class GenerateProtoTask extends DefaultTask {
     boolean includeImports
   }
 
-  @Internal("Handled as input via getDescriptorSetOptionsForUpToDateCheck()")
+  @Internal("Handled as input via getDescriptorSetOptionsForCaching()")
   final DescriptorSetOptions descriptorSetOptions = new DescriptorSetOptions()
 
   // protoc allows you to prefix comma-delimited options to the path in
@@ -302,7 +302,7 @@ public class GenerateProtoTask extends DefaultTask {
     state = State.FINALIZED
   }
 
-  @Internal("Tracked as an input via getDescriptorSetOptionsForUpToDateCheck()")
+  @Internal("Tracked as an input via getDescriptorSetOptionsForCaching()")
   String getDescriptorPath() {
     if (!generateDescriptorSet) {
       throw new IllegalStateException(
@@ -332,7 +332,7 @@ public class GenerateProtoTask extends DefaultTask {
   /**
    * Returns the container of protoc builtins.
    */
-  @Internal("Tracked as an input via getBuiltinsForUpToDateCheck()")
+  @Internal("Tracked as an input via getBuiltinsForCaching()")
   public NamedDomainObjectContainer<PluginOptions> getBuiltins() {
     checkCanConfig()
     return builtins
@@ -350,7 +350,7 @@ public class GenerateProtoTask extends DefaultTask {
   /**
    * Returns the container of protoc plugins.
    */
-  @Internal("Tracked as an input via getPluginsForUpToDateCheck()")
+  @Internal("Tracked as an input via getPluginsForCaching()")
   public NamedDomainObjectContainer<PluginOptions> getPlugins() {
     checkCanConfig()
     return plugins
@@ -544,7 +544,7 @@ public class GenerateProtoTask extends DefaultTask {
    */
   @Optional
   @Nested
-  protected DescriptorSetOptions getDescriptorSetOptionsForUpToDateCheck() {
+  protected DescriptorSetOptions getDescriptorSetOptionsForCaching() {
     return generateDescriptorSet ? descriptorSetOptions : null
   }
 
@@ -552,7 +552,7 @@ public class GenerateProtoTask extends DefaultTask {
    * Used to expose inputs to Gradle, not to be called directly.
    */
   @Nested
-  protected Collection<PluginOptions> getBuiltinsForUpToDateCheck() {
+  protected Collection<PluginOptions> getBuiltinsForCaching() {
     return builtins
   }
 
@@ -560,7 +560,7 @@ public class GenerateProtoTask extends DefaultTask {
    * Used to expose inputs to Gradle, not to be called directly.
    */
   @Nested
-  protected Collection<PluginOptions> getPluginsForUpToDateCheck() {
+  protected Collection<PluginOptions> getPluginsForCaching() {
     return plugins
   }
 
