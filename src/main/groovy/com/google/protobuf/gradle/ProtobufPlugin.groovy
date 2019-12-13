@@ -175,9 +175,12 @@ class ProtobufPlugin implements Plugin<Project> {
       // Create a 'compileProto' configuration as a bucket of dependencies that contains resources
       // attribute for compileClasspath dependencies. This works around 'java-library' plugin
       // not exposing resources to consumers for compilation.
+      // Some Android sourceSet does not have 'compileClasspath' configuration, not even
+      // 'compile' or 'implementation'.
       String compileProtoConfigName = Utils.getConfigName(sourceSetName, 'compileProto')
       String compileClasspathConfigName = Utils.getConfigName(sourceSetName, 'compileClasspath')
-      if (project.configurations.findByName(compileProtoConfigName) == null) {
+      if (project.configurations.findByName(compileClasspathConfigName) &&
+              project.configurations.findByName(compileProtoConfigName) == null) {
         project.configurations.create(compileProtoConfigName) {
           visible = false
           transitive = true
