@@ -33,7 +33,7 @@ buildscript {
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.6'
         classpath "com.gradle.publish:plugin-publish-plugin:0.9.7"
         classpath "com.github.ben-manes:gradle-versions-plugin:0.12.0"
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.10"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.20"
     }
 }
 
@@ -89,7 +89,7 @@ dependencies {
 
     // This kotlin version needs to be compatible with the 
     // android plugin being used in the test runtime.
-    testProjectRuntime "org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.11"
+    testProjectRuntime "org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.20"
 
     // Add android plugin to the test classpath, so that we can jump into class definitions,
     // read their sources, set break points, etc while debugging android unit tests.

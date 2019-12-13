@@ -5,6 +5,7 @@ import static com.google.protobuf.gradle.ProtobufPluginTestHelper.buildAndroidPr
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
 import spock.lang.Specification
+import spock.lang.Unroll
 
 /**
  * Unit tests for android related functionality.
@@ -14,7 +15,8 @@ class ProtobufAndroidPluginTest extends Specification {
   private static final List<String> GRADLE_VERSION = ["5.0", "5.1.1", "5.4.1"]
   private static final List<String> ANDROID_PLUGIN_VERSION = ["3.3.0", "3.4.0", "3.5.0"]
 
-  void "testProjectAndroid should be successfully executed (java only)"() {
+  @Unroll
+  void "testProjectAndroid should be successfully executed [android #agpVersion, gradle #gradleVersion]"() {
     given: "project from testProject, testProjectLite & testProjectAndroid"
     File testProjectStaging = ProtobufPluginTestHelper.projectBuilder('testProject')
         .copyDirs('testProjectBase', 'testProject')
@@ -31,7 +33,7 @@ class ProtobufAndroidPluginTest extends Specification {
     when: "build is invoked"
     BuildResult result = buildAndroidProject(
        mainProjectDir,
-       androidPluginVersion,
+       agpVersion,
        gradleVersion,
        "testProjectAndroid:build"
     )
@@ -40,11 +42,12 @@ class ProtobufAndroidPluginTest extends Specification {
     result.task(":testProjectAndroid:build").outcome == TaskOutcome.SUCCESS
 
     where:
-    androidPluginVersion << ANDROID_PLUGIN_VERSION
+    agpVersion << ANDROID_PLUGIN_VERSION
     gradleVersion << GRADLE_VERSION
   }
 
-  void "testProjectAndroidKotlin should be successfully executed (kotlin only)"() {
+  @Unroll
+  void "testProjectAndroidKotlin should be successfully executed [android #agpVersion, gradle #gradleVersion]"() {
     given: "project from testProject, testProjectLite & testProjectAndroid"
     File testProjectStaging = ProtobufPluginTestHelper.projectBuilder('testProject')
         .copyDirs('testProjectBase', 'testProject')
@@ -61,7 +64,7 @@ class ProtobufAndroidPluginTest extends Specification {
     when: "build is invoked"
     BuildResult result = buildAndroidProject(
        mainProjectDir,
-       androidPluginVersion,
+       agpVersion,
        gradleVersion,
        "testProjectAndroid:build"
     )
@@ -70,7 +73,7 @@ class ProtobufAndroidPluginTest extends Specification {
     result.task(":testProjectAndroid:build").outcome == TaskOutcome.SUCCESS
 
     where:
-    androidPluginVersion << ANDROID_PLUGIN_VERSION
+    agpVersion << ANDROID_PLUGIN_VERSION
     gradleVersion << GRADLE_VERSION
   }
 }

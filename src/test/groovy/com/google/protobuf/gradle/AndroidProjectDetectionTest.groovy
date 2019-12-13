@@ -5,6 +5,7 @@ import static com.google.protobuf.gradle.ProtobufPluginTestHelper.buildAndroidPr
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
 import spock.lang.Specification
+import spock.lang.Unroll
 
 /**
  * Verify android projects are identified correctly
@@ -26,7 +27,8 @@ class AndroidProjectDetectionTest extends Specification {
 """
   }
 
-  void "test Utils.isAndroidProject positively detects android project"() {
+  @Unroll
+  void "test succeeds on android project [android #agpVersion, gradle #gradleVersion]"() {
     given: "a project with android plugin"
     File mainProjectDir = ProtobufPluginTestHelper.projectBuilder("singleModuleAndroidProject")
        .copyDirs('testProjectAndroid', 'testProjectAndroidBare')
@@ -36,7 +38,7 @@ class AndroidProjectDetectionTest extends Specification {
     when: "checkForAndroidPlugin task evaluates Utils.isAndroidProject"
     BuildResult result = buildAndroidProject(
        mainProjectDir,
-       androidPluginVersion,
+       agpVersion,
        gradleVersion,
        "checkForAndroidPlugin"
     )
@@ -45,14 +47,15 @@ class AndroidProjectDetectionTest extends Specification {
     assert result.task(":checkForAndroidPlugin").outcome == TaskOutcome.SUCCESS
 
     where:
-    androidPluginVersion << ANDROID_PLUGIN_VERSION
+    agpVersion << ANDROID_PLUGIN_VERSION
     gradleVersion << GRADLE_VERSION
   }
 
   /**
    * Failing test case for https://github.com/google/protobuf-gradle-plugin/issues/236
    */
-  void "test Utils.isAndroidProject returns false on sub project of android project"() {
+  @Unroll
+  void "test fails on sub project of android project [android #agpVersion, gradle #gradleVersion]"() {
     given: "an android root project and java sub project"
     File subProjectStaging = ProtobufPluginTestHelper.projectBuilder('subModuleTestProjectLite')
        .copyDirs('testProjectLite')
@@ -67,7 +70,7 @@ class AndroidProjectDetectionTest extends Specification {
     when: "checkForAndroidPlugin task evaluates Utils.isAndroidProject"
     BuildResult result = buildAndroidProject(
        mainProjectDir,
-       androidPluginVersion,
+            agpVersion,
        gradleVersion,
        "checkForAndroidPlugin"
     )
@@ -77,7 +80,7 @@ class AndroidProjectDetectionTest extends Specification {
     assert result.task(":subModuleTestProjectLite:checkForAndroidPlugin").outcome == TaskOutcome.SUCCESS
 
     where:
-    androidPluginVersion << ANDROID_PLUGIN_VERSION
+    agpVersion << ANDROID_PLUGIN_VERSION
     gradleVersion << GRADLE_VERSION
   }
 }
