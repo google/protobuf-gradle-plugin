@@ -55,6 +55,7 @@ class ProtobufPlugin implements Plugin<Project> {
     // any one of these plugins should be sufficient to proceed with applying this plugin
     private static final List<String> PREREQ_PLUGIN_OPTIONS = [
             'java',
+            'java-library',
             'com.android.application',
             'com.android.feature',
             'com.android.library',
