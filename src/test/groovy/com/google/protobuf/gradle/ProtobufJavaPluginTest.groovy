@@ -201,7 +201,7 @@ class ProtobufJavaPluginTest extends Specification {
   }
 
   @Unroll
-  void "testProjectJavaLibrary should be successfully executed (java-only project as a library) [gradle #gradleVersion]"() {
+  void "testProjectJavaLibrary should be successfully executed (java-only as a library) [gradle #gradleVersion]"() {
     given: "project from testProjectJavaLibrary"
     File projectDir = ProtobufPluginTestHelper.projectBuilder('testProjectJavaLibrary')
             .copyDirs('testProjectBase', 'testProjectJavaLibrary')
