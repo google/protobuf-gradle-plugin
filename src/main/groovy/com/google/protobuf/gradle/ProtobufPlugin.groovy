@@ -173,12 +173,12 @@ class ProtobufPlugin implements Plugin<Project> {
         }
       }
 
-      // Create a 'compileProto' configuration as a bucket of dependencies that contains resources
-      // attribute for compileClasspath dependencies. This works around 'java-library' plugin
-      // not exposing resources to consumers for compilation.
+      // Create a 'compileProtoPath' configuration as a bucket of dependencies that contains
+      // resources attribute for compileClasspath dependencies. This works around 'java-library'
+      // plugin not exposing resources to consumers for compilation.
       // Some Android sourceSet does not have 'compileClasspath' configuration, not even
       // 'compile' or 'implementation'.
-      String compileProtoConfigName = Utils.getConfigName(sourceSetName, 'compileProto')
+      String compileProtoConfigName = Utils.getConfigName(sourceSetName, 'compileProtoPath')
       String compileClasspathConfigName = Utils.getConfigName(sourceSetName, 'compileClasspath')
       if (project.configurations.findByName(compileClasspathConfigName) &&
               project.configurations.findByName(compileProtoConfigName) == null) {
@@ -385,7 +385,7 @@ class ProtobufPlugin implements Plugin<Project> {
           description = "Extracts proto files from compile dependencies for includes"
           destDir = getExtractedIncludeProtosDir(sourceSetOrVariantName) as File
           inputFiles.from(compileClasspathConfiguration
-            ?: project.configurations[Utils.getConfigName(sourceSetOrVariantName, 'compileProto')])
+            ?: project.configurations[Utils.getConfigName(sourceSetOrVariantName, 'compileProtoPath')])
 
           // TL; DR: Make protos in 'test' sourceSet able to import protos from the 'main'
           // sourceSet.  Sub-configurations, e.g., 'testCompile' that extends 'compile', don't
