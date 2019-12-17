@@ -35,6 +35,7 @@ import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.artifacts.Configuration
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.attributes.LibraryElements
 import org.gradle.api.file.FileCollection
@@ -173,19 +174,23 @@ class ProtobufPlugin implements Plugin<Project> {
         }
       }
 
-      // Create a 'compileProtoPath' configuration as a bucket of dependencies that contains
-      // resources attribute for compileClasspath dependencies. This works around 'java-library'
+      // Create a 'compileProtoPath' configuration that extends compilation configurations
+      // as a bucket of dependencies with resources attribute. This works around 'java-library'
       // plugin not exposing resources to consumers for compilation.
-      // Some Android sourceSet does not have 'compileClasspath' configuration, not even
-      // 'compile' or 'implementation'.
+      // Some Android sourceSets (more precisely, variants) do not have compilation configurations,
+      // they do not contain compilation dependencies, so they would not depend on any upstream
+      // proto files.
       String compileProtoConfigName = Utils.getConfigName(sourceSetName, 'compileProtoPath')
-      String compileClasspathConfigName = Utils.getConfigName(sourceSetName, 'compileClasspath')
-      if (project.configurations.findByName(compileClasspathConfigName) &&
+      Configuration compileConfig =
+              project.configurations.findByName(Utils.getConfigName(sourceSetName, 'compileOnly'))
+      Configuration implementationConfig =
+              project.configurations.findByName(Utils.getConfigName(sourceSetName, 'implementation'))
+      if (compileConfig && implementationConfig &&
               project.configurations.findByName(compileProtoConfigName) == null) {
         project.configurations.create(compileProtoConfigName) {
           visible = false
           transitive = true
-          extendsFrom = [project.configurations.findByName(compileClasspathConfigName)]
+          extendsFrom = [compileConfig, implementationConfig]
           canBeConsumed = false
         }.getAttributes().attribute(
                 LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE,
