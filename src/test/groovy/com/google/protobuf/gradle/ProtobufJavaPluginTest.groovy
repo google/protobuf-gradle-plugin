@@ -201,6 +201,62 @@ class ProtobufJavaPluginTest extends Specification {
   }
 
   @Unroll
+  void "testProjectJavaLibrary should be successfully executed (java-only as a library) [gradle #gradleVersion]"() {
+    given: "project from testProjectJavaLibrary"
+    File projectDir = ProtobufPluginTestHelper.projectBuilder('testProjectJavaLibrary')
+            .copyDirs('testProjectBase', 'testProjectJavaLibrary')
+            .build()
+
+    when: "build is invoked"
+    BuildResult result = GradleRunner.create()
+            .withProjectDir(projectDir)
+            .withArguments('build', '--stacktrace')
+            .withGradleVersion(gradleVersion)
+            .forwardStdOutput(new OutputStreamWriter(System.out))
+            .forwardStdError(new OutputStreamWriter(System.err))
+            .withDebug(true)
+            .build()
+
+    then: "it succeed"
+    result.task(":build").outcome == TaskOutcome.SUCCESS
+    ProtobufPluginTestHelper.verifyProjectDir(projectDir)
+
+    where:
+    gradleVersion << GRADLE_VERSIONS
+  }
+
+  @Unroll
+  void "testProjectDependentApp should be successfully executed [gradle #gradleVersion]"() {
+    given: "project from testProject & testProjectDependent"
+    File testProjectStaging = ProtobufPluginTestHelper.projectBuilder('testProjectJavaLibrary')
+            .copyDirs('testProjectBase', 'testProjectJavaLibrary')
+            .build()
+    File testProjectDependentStaging = ProtobufPluginTestHelper.projectBuilder('testProjectDependentApp')
+            .copyDirs('testProjectDependentApp')
+            .build()
+
+    File mainProjectDir = ProtobufPluginTestHelper.projectBuilder('testProjectDependentAppMain')
+            .copySubProjects(testProjectStaging, testProjectDependentStaging)
+            .build()
+
+    when: "build is invoked"
+    BuildResult result = GradleRunner.create()
+            .withProjectDir(mainProjectDir)
+            .withArguments('testProjectDependentApp:build', '--stacktrace')
+            .withGradleVersion(gradleVersion)
+            .forwardStdOutput(new OutputStreamWriter(System.out))
+            .forwardStdError(new OutputStreamWriter(System.err))
+            .withDebug(true)
+            .build()
+
+    then: "it succeed"
+    result.task(":testProjectDependentApp:build").outcome == TaskOutcome.SUCCESS
+
+    where:
+    gradleVersion << GRADLE_VERSIONS
+  }
+
+  @Unroll
   void "testProjectCustomProtoDir should be successfully executed [gradle #gradleVersion]"() {
     given: "project from testProjectCustomProtoDir"
     File projectDir = ProtobufPluginTestHelper.projectBuilder('testProjectCustomProtoDir')

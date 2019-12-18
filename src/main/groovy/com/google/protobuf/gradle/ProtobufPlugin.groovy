@@ -35,7 +35,9 @@ import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.artifacts.Configuration
 import org.gradle.api.attributes.Attribute
+import org.gradle.api.attributes.LibraryElements
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.internal.file.DefaultSourceDirectorySet
@@ -54,6 +56,7 @@ class ProtobufPlugin implements Plugin<Project> {
     // any one of these plugins should be sufficient to proceed with applying this plugin
     private static final List<String> PREREQ_PLUGIN_OPTIONS = [
             'java',
+            'java-library',
             'com.android.application',
             'com.android.feature',
             'com.android.library',
@@ -135,7 +138,7 @@ class ProtobufPlugin implements Plugin<Project> {
 
         addSourceSetExtensions()
         getSourceSets().all { sourceSet ->
-          createConfiguration(sourceSet.name)
+          createConfigurations(sourceSet.name)
         }
         project.afterEvaluate {
           // The Android variants are only available at this point.
@@ -158,17 +161,40 @@ class ProtobufPlugin implements Plugin<Project> {
     }
 
     /**
-     * Creates a configuration if necessary for a source set so that the build
+     * Creates configurations if necessary for a source set so that the build
      * author can configure dependencies for it.
      */
-    private void  createConfiguration(String sourceSetName) {
-      String configName = Utils.getConfigName(sourceSetName, 'protobuf')
-      if (project.configurations.findByName(configName) == null) {
-        project.configurations.create(configName) {
+    private void  createConfigurations(String sourceSetName) {
+      String protobufConfigName = Utils.getConfigName(sourceSetName, 'protobuf')
+      if (project.configurations.findByName(protobufConfigName) == null) {
+        project.configurations.create(protobufConfigName) {
           visible = false
           transitive = true
           extendsFrom = []
         }
+      }
+
+      // Create a 'compileProtoPath' configuration that extends compilation configurations
+      // as a bucket of dependencies with resources attribute. This works around 'java-library'
+      // plugin not exposing resources to consumers for compilation.
+      // Some Android sourceSets (more precisely, variants) do not have compilation configurations,
+      // they do not contain compilation dependencies, so they would not depend on any upstream
+      // proto files.
+      String compileProtoConfigName = Utils.getConfigName(sourceSetName, 'compileProtoPath')
+      Configuration compileConfig =
+              project.configurations.findByName(Utils.getConfigName(sourceSetName, 'compileOnly'))
+      Configuration implementationConfig =
+              project.configurations.findByName(Utils.getConfigName(sourceSetName, 'implementation'))
+      if (compileConfig && implementationConfig &&
+              project.configurations.findByName(compileProtoConfigName) == null) {
+        project.configurations.create(compileProtoConfigName) {
+          visible = false
+          transitive = true
+          extendsFrom = [compileConfig, implementationConfig]
+          canBeConsumed = false
+        }.getAttributes().attribute(
+                LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE,
+                project.getObjects().named(LibraryElements, LibraryElements.RESOURCES))
       }
     }
 
@@ -364,7 +390,7 @@ class ProtobufPlugin implements Plugin<Project> {
           description = "Extracts proto files from compile dependencies for includes"
           destDir = getExtractedIncludeProtosDir(sourceSetOrVariantName) as File
           inputFiles.from(compileClasspathConfiguration
-            ?: project.configurations[Utils.getConfigName(sourceSetOrVariantName, 'compile')])
+            ?: project.configurations[Utils.getConfigName(sourceSetOrVariantName, 'compileProtoPath')])
 
           // TL; DR: Make protos in 'test' sourceSet able to import protos from the 'main'
           // sourceSet.  Sub-configurations, e.g., 'testCompile' that extends 'compile', don't
