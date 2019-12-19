@@ -59,7 +59,9 @@ configurations {
 task createClasspathManifest {
     def outputDir = file("$buildDir/$name")
 
-    inputs.files sourceSets.main.runtimeClasspath
+    inputs.files sourceSets.main.runtimeClasspath.filter {
+      !it.name.contains("gradle-api") && !it.path.contains("$project.gradle.gradleHomeDir")
+    }
     inputs.files configurations.testProjectRuntime
     outputs.dir outputDir
 
