@@ -14,7 +14,7 @@ For more information about the Protobuf Compiler, please refer to
 [Google Developers Site](https://developers.google.com/protocol-buffers/docs/reference/java-generated?csw=1).
 
 ## Latest Version
-The latest version is ``0.8.11``. It requires at least __Gradle 3.0__ and __Java 8__.
+The latest version is ``0.8.11``. It requires at least __Gradle 5.6__ and __Java 8__.
 It is available on Maven Central. To add dependency to it:
 ```gradle
 buildscript {
