@@ -11,9 +11,8 @@ import spock.lang.Unroll
  * Unit tests for android related functionality.
  */
 class ProtobufAndroidPluginTest extends Specification {
-  // Current supported version is Android plugin 3.3.0+.
-  private static final List<String> GRADLE_VERSION = ["5.0", "5.1.1", "5.4.1"]
-  private static final List<String> ANDROID_PLUGIN_VERSION = ["3.3.0", "3.4.0", "3.5.0"]
+  private static final List<String> GRADLE_VERSION = ["5.6"]
+  private static final List<String> ANDROID_PLUGIN_VERSION = ["3.5.0"]
 
   @Unroll
   void "testProjectAndroid should be successfully executed [android #agpVersion, gradle #gradleVersion]"() {
