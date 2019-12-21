@@ -15,6 +15,7 @@ import spock.lang.Unroll
 class ProtobufJavaPluginTest extends Specification {
   // Current supported version is Gradle 5+.
   private static final List<String> GRADLE_VERSIONS = ["5.6", "6.0"]
+  private static final List<String> KOTLIN_VERSIONS = ["1.3.20", "1.3.30"]
 
   void "testApplying java and com.google.protobuf adds corresponding task to project"() {
     given: "a basic project with java and com.google.protobuf"
@@ -61,6 +62,7 @@ class ProtobufJavaPluginTest extends Specification {
     BuildResult result = GradleRunner.create()
       .withProjectDir(projectDir)
       .withArguments('build', '--stacktrace')
+      .withPluginClasspath()
       .withGradleVersion(gradleVersion)
       .forwardStdOutput(new OutputStreamWriter(System.out))
       .forwardStdError(new OutputStreamWriter(System.err))
@@ -86,6 +88,7 @@ class ProtobufJavaPluginTest extends Specification {
     BuildResult result = GradleRunner.create()
             .withProjectDir(projectDir)
             .withArguments('build', '--stacktrace')
+            .withPluginClasspath()
             .withGradleVersion(gradleVersion)
             .forwardStdOutput(new OutputStreamWriter(System.out))
             .forwardStdError(new OutputStreamWriter(System.err))
@@ -100,16 +103,18 @@ class ProtobufJavaPluginTest extends Specification {
   }
 
   @Unroll
-  void "testProjectKotlin should be successfully executed (kotlin-only project) [gradle #gradleVersion]"() {
+  void "testProjectKotlin (kotlin-only project) [gradle #gradleVersion, kotlin #kotlinVersion]"() {
     given: "project from testProjectKotlin overlaid on testProject"
     File projectDir = ProtobufPluginTestHelper.projectBuilder('testProjectKotlin')
         .copyDirs('testProjectBase', 'testProjectKotlin')
+        .withKotlin(kotlinVersion)
         .build()
 
     when: "build is invoked"
     BuildResult result = GradleRunner.create()
       .withProjectDir(projectDir)
       .withArguments('build', '--stacktrace')
+      .withPluginClasspath()
       .withDebug(true)
       .withGradleVersion(gradleVersion)
       .build()
@@ -120,19 +125,22 @@ class ProtobufJavaPluginTest extends Specification {
 
     where:
     gradleVersion << GRADLE_VERSIONS
+    kotlinVersion << KOTLIN_VERSIONS
   }
 
   @Unroll
-  void "testProjectJavaAndKotlin should be successfully executed (java+kotlin project) [gradle #gradleVersion]"() {
+  void "testProjectJavaAndKotlin (java+kotlin project) [gradle #gradleVersion, kotlin #kotlinVersion]"() {
     given: "project from testProjecJavaAndKotlin overlaid on testProjectKotlin, testProject"
     File projectDir = ProtobufPluginTestHelper.projectBuilder('testProjectJavaAndKotlin')
         .copyDirs('testProjectBase', 'testProject', 'testProjectKotlin', 'testProjectJavaAndKotlin')
+        .withKotlin(kotlinVersion)
         .build()
 
     when: "build is invoked"
     BuildResult result = GradleRunner.create()
       .withProjectDir(projectDir)
       .withArguments('build')
+      .withPluginClasspath()
       .withDebug(true)
       .withGradleVersion(gradleVersion)
       .build()
@@ -143,6 +151,7 @@ class ProtobufJavaPluginTest extends Specification {
 
     where:
     gradleVersion << GRADLE_VERSIONS
+    kotlinVersion << KOTLIN_VERSIONS
   }
 
   @Unroll
@@ -156,6 +165,7 @@ class ProtobufJavaPluginTest extends Specification {
     BuildResult result = GradleRunner.create()
       .withProjectDir(projectDir)
       .withArguments('build', '--stacktrace')
+      .withPluginClasspath()
       .withGradleVersion(gradleVersion)
       .forwardStdOutput(new OutputStreamWriter(System.out))
       .forwardStdError(new OutputStreamWriter(System.err))
@@ -187,6 +197,7 @@ class ProtobufJavaPluginTest extends Specification {
     BuildResult result = GradleRunner.create()
       .withProjectDir(mainProjectDir)
       .withArguments('testProjectDependent:build', '--stacktrace')
+      .withPluginClasspath()
       .withGradleVersion(gradleVersion)
       .forwardStdOutput(new OutputStreamWriter(System.out))
       .forwardStdError(new OutputStreamWriter(System.err))
@@ -211,6 +222,7 @@ class ProtobufJavaPluginTest extends Specification {
     BuildResult result = GradleRunner.create()
             .withProjectDir(projectDir)
             .withArguments('build', '--stacktrace')
+            .withPluginClasspath()
             .withGradleVersion(gradleVersion)
             .forwardStdOutput(new OutputStreamWriter(System.out))
             .forwardStdError(new OutputStreamWriter(System.err))
@@ -243,6 +255,7 @@ class ProtobufJavaPluginTest extends Specification {
     BuildResult result = GradleRunner.create()
             .withProjectDir(mainProjectDir)
             .withArguments('testProjectDependentApp:build', '--stacktrace')
+            .withPluginClasspath()
             .withGradleVersion(gradleVersion)
             .forwardStdOutput(new OutputStreamWriter(System.out))
             .forwardStdError(new OutputStreamWriter(System.err))
@@ -267,6 +280,7 @@ class ProtobufJavaPluginTest extends Specification {
     BuildResult result = GradleRunner.create()
       .withProjectDir(projectDir)
       .withArguments('build', '--stacktrace')
+      .withPluginClasspath()
       .withGradleVersion(gradleVersion)
       .forwardStdOutput(new OutputStreamWriter(System.out))
       .forwardStdError(new OutputStreamWriter(System.err))
@@ -291,6 +305,7 @@ class ProtobufJavaPluginTest extends Specification {
     BuildResult result = GradleRunner.create()
       .withProjectDir(projectDir)
       .withArguments('idea')
+      .withPluginClasspath()
       .withGradleVersion(gradleVersion)
       .build()
 

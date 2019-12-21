@@ -1,6 +1,8 @@
 // This build is not a complete project, but is used to generate a project.
 // See: ProtobufPluginTestHelper.groovy
-apply plugin: 'kotlin'
-apply plugin: 'java'
-
+plugins {
+  id 'java'
+  id 'org.jetbrains.kotlin.jvm' version "$kotlinVersion"
+  id 'com.google.protobuf'
+}
 apply from: 'build_base.gradle'

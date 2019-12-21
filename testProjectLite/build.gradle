@@ -1,7 +1,9 @@
 // A Java project that demonstrates using protobuf lite version
 
-apply plugin: 'java'
-apply plugin: 'com.google.protobuf'
+plugins {
+  id 'java'
+  id 'com.google.protobuf'
+}
 
 repositories {
     maven { url "https://plugins.gradle.org/m2/" }

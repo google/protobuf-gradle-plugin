@@ -24,6 +24,7 @@ class ProtobufKotlinDslPluginTest extends Specification {
     BuildResult result = GradleRunner.create()
       .withProjectDir(projectDir)
       .withArguments('build', '--stacktrace')
+      .withPluginClasspath()
       .withGradleVersion(gradleVersion)
       .forwardStdOutput(new OutputStreamWriter(System.out))
       .forwardStdError(new OutputStreamWriter(System.err))

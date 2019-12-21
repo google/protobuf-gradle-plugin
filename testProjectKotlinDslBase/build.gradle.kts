@@ -2,25 +2,12 @@ import com.google.protobuf.gradle.*
 import org.gradle.api.internal.HasConvention
 import org.gradle.kotlin.dsl.provider.gradleKotlinDslOf
 
-
-buildscript {
-    dependencies {
-        // We cant add classpath dependencies to the build script via applying an external file.
-        // So we have to parse the classpath manifest locally.
-        File("$projectDir/../../createClasspathManifest/plugin-classpath.txt")
-            .readLines()
-            .forEach { classpathEntry ->
-                classpath(files(classpathEntry))
-            }
-    }
-}
-
 plugins {
     java
     idea
+    id("com.google.protobuf")
 }
 
-apply(plugin = "com.google.protobuf")
 // This extension is not auto generated when we apply the plugin using
 // apply(plugin = "com.google.protobuf")
 val Project.protobuf: ProtobufConvention get() =
