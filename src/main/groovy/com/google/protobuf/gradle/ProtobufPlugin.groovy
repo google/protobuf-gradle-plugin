@@ -80,9 +80,9 @@ class ProtobufPlugin implements Plugin<Project> {
     }
 
     void apply(final Project project) {
-      if (Utils.compareGradleVersion(project, "3.0") < 0) {
+      if (Utils.compareGradleVersion(project, "5.6") < 0) {
         throw new GradleException(
-          "Gradle version is ${project.gradle.gradleVersion}. Minimum supported version is 3.0")
+          "Gradle version is ${project.gradle.gradleVersion}. Minimum supported version is 5.6")
       }
 
         this.project = project
