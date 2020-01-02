@@ -1,9 +1,12 @@
 // This build is not a complete project, but is used to generate a project.
 // See: ProtobufPluginTestHelper.groovy
 
-// it is not necessary for protobuf to be applied last
-apply plugin: 'com.google.protobuf'
-apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
+// It is not necessary for protobuf to be applied last.
+// 'kotlin-android' plugin must be applied after 'com.android.application'.
+plugins {
+  id 'com.android.application'
+  id 'kotlin-android'
+  id 'com.google.protobuf'
+}
 
 apply from: 'build_base.gradle'

@@ -11,7 +11,6 @@ import spock.lang.Unroll
  * Verify android projects are identified correctly
  */
 class AndroidProjectDetectionTest extends Specification {
-  // Current supported version is Android plugin 3.3.0+.
   private static final List<String> GRADLE_VERSION = ["5.6"]
   private static final List<String> ANDROID_PLUGIN_VERSION = ["3.5.0"]
 
@@ -32,13 +31,13 @@ class AndroidProjectDetectionTest extends Specification {
     given: "a project with android plugin"
     File mainProjectDir = ProtobufPluginTestHelper.projectBuilder("singleModuleAndroidProject")
        .copyDirs('testProjectAndroid', 'testProjectAndroidBare')
+       .withAndroidPlugin(agpVersion)
        .build()
     appendUtilIsAndroidProjectCheckTask(new File(mainProjectDir, "build.gradle"), true)
 
     when: "checkForAndroidPlugin task evaluates Utils.isAndroidProject"
     BuildResult result = buildAndroidProject(
        mainProjectDir,
-       agpVersion,
        gradleVersion,
        "checkForAndroidPlugin"
     )
@@ -64,13 +63,13 @@ class AndroidProjectDetectionTest extends Specification {
     File mainProjectDir = ProtobufPluginTestHelper.projectBuilder("rootModuleAndroidProject")
        .copyDirs('testProjectAndroid', 'testProjectAndroidBare')
        .copySubProjects(subProjectStaging)
+       .withAndroidPlugin(agpVersion)
        .build()
     appendUtilIsAndroidProjectCheckTask(new File(mainProjectDir, "build.gradle"), true)
 
     when: "checkForAndroidPlugin task evaluates Utils.isAndroidProject"
     BuildResult result = buildAndroidProject(
        mainProjectDir,
-            agpVersion,
        gradleVersion,
        "checkForAndroidPlugin"
     )

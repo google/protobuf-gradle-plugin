@@ -25,65 +25,8 @@ final class ProtobufPluginTestHelper {
     }
   }
 
-  static void appendPluginClasspath(File buildFile) {
-    URL pluginClasspathResource =
-        ProtobufPluginTestHelper.classLoader.findResource("plugin-classpath.txt")
-    if (pluginClasspathResource == null) {
-      throw new IllegalStateException('Did not find plugin classpath resource, ' +
-          'run `testClasses` build task.')
-    }
-
-    List<String> pluginClasspath = pluginClasspathResource.readLines()
-      .collect { it.replace('\\', '\\\\') } // escape backslashes in Windows paths
-      .collect { "'$it'" }
-
-    // Add the logic under test to the test build
-    buildFile << """
-        buildscript {
-            dependencies {
-    """
-
-    pluginClasspath.each { dependency ->
-      buildFile << """
-          classpath files($dependency)
-      """
-    }
-
-    buildFile << """
-            }
-        }
-    """
-  }
-
   static BuildResult buildAndroidProject(
-     File mainProjectDir, String androidPluginVersion, String gradleVersion, String fullPathTask) {
-    // Prepend android plugin (and guava when appropriate) to the test root project so that Gradle
-    // can resolve classpath correctly.
-
-    File buildFile = new File(mainProjectDir, "build.gradle")
-    List<String> previousFileContents = buildFile.readLines()
-    buildFile.delete()
-    buildFile.createNewFile()
-
-    buildFile << """
-buildscript {
-    ext.androidPluginVersion = "${androidPluginVersion}"
-    repositories {
-        // JCenter has a broken upload of lint-gradle-api-26.1.2, as it is missing the JAR. So we
-        // put thet Google repo first
-        maven { url "https://dl.google.com/dl/android/maven2/" }
-        jcenter()
-        maven { url "https://plugins.gradle.org/m2/" }
-    }
-    dependencies {
-        classpath "com.android.tools.build:gradle:\$androidPluginVersion"
-    }
-}
-"""
-    previousFileContents.each { line ->
-      buildFile << line + '\n'
-    }
-
+     File mainProjectDir, String gradleVersion, String fullPathTask) {
     File localBuildCache = new File(mainProjectDir, ".buildCache")
     if (localBuildCache.exists()) {
       localBuildCache.deleteDir()
@@ -95,6 +38,7 @@ buildscript {
        "-Pandroid.buildCacheDir=$localBuildCache",
        fullPathTask,
        "--stacktrace")
+       .withPluginClasspath()
        .withGradleVersion(gradleVersion)
        .forwardStdOutput(new OutputStreamWriter(System.out))
        .forwardStdError(new OutputStreamWriter(System.err))
@@ -116,6 +60,8 @@ buildscript {
     String testProjectName
     List<String> sourceDirs = []
     List<File> subProjects = []
+    String androidPluginVersion
+    String kotlinVersion
 
     private TestProjectBuilder(String projectName) {
       this.testProjectName = projectName
@@ -128,6 +74,16 @@ buildscript {
 
     TestProjectBuilder copySubProjects(File... subProjects) {
       this.subProjects.addAll(subProjects)
+      return this
+    }
+
+    TestProjectBuilder withAndroidPlugin(String androidPluginVersion) {
+      this.androidPluginVersion = androidPluginVersion
+      return this
+    }
+
+    TestProjectBuilder withKotlin(String kotlinVersion) {
+      this.kotlinVersion = kotlinVersion
       return this
     }
 
@@ -154,9 +110,38 @@ buildscript {
         }
       }
 
-      File buildFile = new File(projectDir.path, "build.gradle")
-      buildFile.createNewFile()
-      appendPluginClasspath(buildFile)
+      // Do not need to create a buildscript, the test project either has one from the template
+      // or it is a composite build that does not require a top-level buildscript.
+
+      if (androidPluginVersion != null || kotlinVersion != null) {
+        File buildFile = new File(projectDir.path, "build.gradle")
+        buildFile.createNewFile()
+        List<String> previousFileContents = buildFile.readLines()
+        buildFile.delete()
+        buildFile.createNewFile()
+
+        buildFile << """
+buildscript {
+    ${androidPluginVersion ? "ext.androidPluginVersion = \"${androidPluginVersion}\"" : ""}
+    ${kotlinVersion ? "ext.kotlinVersion = \"${kotlinVersion}\"" : ""}
+    repositories {
+        // JCenter has a broken upload of lint-gradle-api-26.1.2, as it is missing the JAR. So we
+        // put thet Google repo first
+        maven { url "https://dl.google.com/dl/android/maven2/" }
+        jcenter()
+        maven { url "https://plugins.gradle.org/m2/" }
+    }
+    dependencies {
+        ${androidPluginVersion ? "classpath \"com.android.tools.build:gradle:\$androidPluginVersion\"" : ""}
+        ${kotlinVersion ? "classpath \"org.jetbrains.kotlin:kotlin-gradle-plugin:\$kotlinVersion\"" : ""}
+    }
+}
+"""
+        previousFileContents.each { line ->
+          buildFile << line + '\n'
+        }
+      }
+
       return projectDir
     }
   }

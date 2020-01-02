@@ -4,8 +4,10 @@
 // import them. However, these imported proto files will not be compiled in
 // this project, since they have already been compiled in their own projects.
 
-apply plugin: 'java'
-apply plugin: 'com.google.protobuf'
+plugins {
+  id 'java'
+  id 'com.google.protobuf'
+}
 
 repositories {
     maven { url "https://plugins.gradle.org/m2/" }
