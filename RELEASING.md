@@ -57,7 +57,7 @@ Releasing
 - Run `git checkout v$RELEASE_VERSION`
 - Release on Maven Central
   - Run `./gradlew uploadArchives`
-  - Go to the [OSSRH site](oss.sonatype.org), under “Staging Repositories”, close and release the 
+  - Go to the [OSSRH site](https://oss.sonatype.org), under “Staging Repositories”, close and release the 
   artifact.
 - Release on Gradle Plugin Portal
   - Run `./gradlew publishPlugins`
