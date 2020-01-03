@@ -456,6 +456,24 @@ changed by setting the ``outputSubDir`` property in the ``builtins`` or
 }
 ```
 
+#### For non-Java/Kotlin projects
+
+Java and Kotlin are the first class supported languages, generated code will be 
+automatically added for compilation. For projects in other languages, you need
+to manually add generated code to the sourceSets based on the language plugin's
+configuration. The following example adds generated Scala code (by 
+[ScalaPB](https://scalapb.github.io/)) to the `main` sourceSet with `scala` plugin:
+
+```gradle
+sourceSets {
+  main {
+    scala {
+        srcDirs "${protobuf.generatedFilesBaseDir}/main/scalapb"
+    }
+  }
+}
+```
+
 ### Protos in dependencies
 
 If a Java project contains proto files, they will be packaged in the jar files
