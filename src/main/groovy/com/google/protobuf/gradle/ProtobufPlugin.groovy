@@ -64,7 +64,6 @@ class ProtobufPlugin implements Plugin<Project> {
             'android-library',
     ]
 
-    private static final String USER_LANG_PROP = 'protobufGradlePluginAdditionalLanguages'
     private static final List<String> SUPPORTED_LANGUAGES = [
         'java',
         'kotlin',
@@ -114,20 +113,9 @@ class ProtobufPlugin implements Plugin<Project> {
         }
     }
 
-    private static List<String> getLanguages(Project project) {
-      List<String> additionalLanguages = []
-      if (project.hasProperty(USER_LANG_PROP)) {
-        additionalLanguages = (List<String>) project.property(USER_LANG_PROP)
-        project.logger.log(
-            LogLevel.WARN,
-            "protobuf plugin is now using additional unsupported languages: " + additionalLanguages)
-      }
-      return SUPPORTED_LANGUAGES + additionalLanguages
-    }
-
     private static void linkGenerateProtoTasksToTask(Task task, GenerateProtoTask genProtoTask) {
       task.dependsOn(genProtoTask)
-      task.source genProtoTask.getOutputSourceDirectorySet()
+      task.source genProtoTask.getOutputSourceDirectorySet().include("**/*.java", "**/*.kt")
     }
 
     private void doApply() {
@@ -468,7 +456,7 @@ class ProtobufPlugin implements Plugin<Project> {
       } else {
         project.sourceSets.each { SourceSet sourceSet ->
           project.protobuf.generateProtoTasks.ofSourceSet(sourceSet.name).each { GenerateProtoTask genProtoTask ->
-            getLanguages(project).each { String lang ->
+            SUPPORTED_LANGUAGES.each { String lang ->
               linkGenerateProtoTasksToTaskName(sourceSet.getCompileTaskName(lang), genProtoTask)
             }
           }
