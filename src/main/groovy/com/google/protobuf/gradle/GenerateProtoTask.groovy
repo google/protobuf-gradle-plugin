@@ -38,9 +38,7 @@ import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.SourceDirectorySet
-import org.gradle.api.internal.file.DefaultSourceDirectorySet
 import org.gradle.api.internal.file.FileResolver
-import org.gradle.api.internal.file.collections.DefaultDirectoryFileTreeFactory
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
@@ -459,13 +457,7 @@ public class GenerateProtoTask extends DefaultTask {
   SourceDirectorySet getOutputSourceDirectorySet() {
     String srcSetName = "generate-proto-" + name
     SourceDirectorySet srcSet
-    if (Utils.compareGradleVersion(project, "5.0") < 0) {
-      Preconditions.checkNotNull(fileResolver)
-      srcSet = new DefaultSourceDirectorySet(
-          srcSetName, this.fileResolver, new DefaultDirectoryFileTreeFactory())
-    } else {
-      srcSet = project.objects.sourceDirectorySet(srcSetName, srcSetName)
-    }
+    srcSet = project.objects.sourceDirectorySet(srcSetName, srcSetName)
     builtins.each { builtin ->
       srcSet.srcDir new File(getOutputDir(builtin))
     }
