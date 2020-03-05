@@ -263,7 +263,7 @@ class ProtobufPlugin implements Plugin<Project> {
         java { }
       }
 
-      setupExtractProtosTask(generateProtoTask, sourceSet.name)
+      Task extractTask = setupExtractProtosTask(generateProtoTask, sourceSet.name)
       setupExtractIncludeProtosTask(generateProtoTask, sourceSet.name)
 
       // Include source proto files in the compiled archive, so that proto files from
@@ -273,6 +273,7 @@ class ProtobufPlugin implements Plugin<Project> {
       processResourcesTask.from(generateProtoTask.sourceFiles) {
         include '**/*.proto'
       }
+      processResourcesTask.dependsOn(extractTask)
     }
 
     /**
@@ -352,7 +353,7 @@ class ProtobufPlugin implements Plugin<Project> {
      * variant may have multiple sourceSets, each of these sourceSets will have
      * its own extraction task.
      */
-    private void setupExtractProtosTask(
+    private Task setupExtractProtosTask(
         GenerateProtoTask generateProtoTask, String sourceSetName) {
       String extractProtosTaskName = 'extract' +
           Utils.getSourceSetSubstringForTaskNames(sourceSetName) + 'Proto'
@@ -368,6 +369,7 @@ class ProtobufPlugin implements Plugin<Project> {
 
       linkExtractTaskToGenerateTask(task, generateProtoTask)
       generateProtoTask.addSourceFiles(project.fileTree(task.destDir) { include "**/*.proto" })
+      return task
     }
 
     /**
