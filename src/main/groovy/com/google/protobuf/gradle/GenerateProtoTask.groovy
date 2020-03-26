@@ -112,7 +112,7 @@ public class GenerateProtoTask extends DefaultTask {
     @Nullable
     @Optional
     @Input
-    GString path
+    String path
 
     /**
      * If true, source information (comments, locations) will be included in the descriptor set.
