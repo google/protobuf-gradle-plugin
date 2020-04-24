@@ -47,8 +47,10 @@ class Utils {
    * Returns the conventional name of a configuration for a sourceSet
    */
   static String getConfigName(String sourceSetName, String type) {
-    return sourceSetName == SourceSet.MAIN_SOURCE_SET_NAME ?
-        type : (sourceSetName + StringUtils.capitalize(type))
+    // same as DefaultSourceSet.configurationNameOf
+    String baseName = sourceSetName == SourceSet.MAIN_SOURCE_SET_NAME ?
+            '' : GUtil.toCamelCase(sourceSetName)
+    return StringUtils.uncapitalize(baseName + StringUtils.capitalize(type))
   }
 
   /**
@@ -57,7 +59,7 @@ class Utils {
    */
   static String getSourceSetSubstringForTaskNames(String sourceSetName) {
     return sourceSetName == SourceSet.MAIN_SOURCE_SET_NAME ?
-        '' : StringUtils.capitalize(sourceSetName)
+        '' : GUtil.toCamelCase(sourceSetName)
   }
 
   private static final String ANDROID_BASE_PLUGIN_ID = "com.android.base"
