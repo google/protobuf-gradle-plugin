@@ -525,6 +525,17 @@ public class GenerateProtoTask extends DefaultTask {
       }
     }
 
+    // Check if the protoc flag '--experimental_allow_proto3_optional' is
+    // supported. It is only supported for a few versions (since 3.12.0),
+    // in which case we add the flag.
+    if ([
+        tools.protoc.path,
+        "--experimental_allow_proto3_optional",
+        "--help",
+    ].execute().waitFor() == 0) {
+      baseCmd += "--experimental_allow_proto3_optional"
+    }
+
     List<List<String>> cmds = generateCmds(baseCmd, protoFiles, getCmdLengthLimit())
     for (List<String> cmd : cmds) {
       compileFiles(cmd)
