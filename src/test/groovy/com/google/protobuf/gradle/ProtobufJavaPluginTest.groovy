@@ -16,7 +16,7 @@ import spock.lang.Unroll
 @CompileDynamic
 class ProtobufJavaPluginTest extends Specification {
   // Current supported version is Gradle 5+.
-  private static final List<String> GRADLE_VERSIONS = ["5.6", "6.0", "6.1"]
+  private static final List<String> GRADLE_VERSIONS = ["5.6", "6.0", "6.5-rc-1"]
   private static final List<String> KOTLIN_VERSIONS = ["1.3.20", "1.3.30"]
 
   void "testApplying java and com.google.protobuf adds corresponding task to project"() {
@@ -80,7 +80,7 @@ class ProtobufJavaPluginTest extends Specification {
   }
 
   @Unroll
-  void "testProject should be successfully executed (instant-execution) [gradle #gradleVersion]"() {
+  void "testProject should be successfully executed (configuration cache) [gradle #gradleVersion]"() {
     given: "project from testProject"
     File projectDir = ProtobufPluginTestHelper.projectBuilder('testProject')
       .copyDirs('testProjectBase', 'testProject')
@@ -91,8 +91,7 @@ class ProtobufJavaPluginTest extends Specification {
       .withProjectDir(projectDir)
       .withArguments(
           'build', '--stacktrace',
-          '-Dorg.gradle.unsafe.instant-execution=true',
-          '-Dorg.gradle.unsafe.instant-execution.fail-on-problems=true'
+          '--configuration-cache=warn'
       )
       .withPluginClasspath()
       .withGradleVersion(gradleVersion)
@@ -113,10 +112,10 @@ class ProtobufJavaPluginTest extends Specification {
     result = runner.build()
 
     then: "it reuses the task graph"
-    result.output.contains("Reusing instant execution cache")
+    result.output.contains("Reusing configuration cache")
 
-    and: "it succeeds"
-    result.task(":build").outcome == TaskOutcome.SUCCESS
+    and: "it is up to date"
+    result.task(":build").outcome == TaskOutcome.UP_TO_DATE
     ProtobufPluginTestHelper.verifyProjectDir(projectDir)
 
     where:
