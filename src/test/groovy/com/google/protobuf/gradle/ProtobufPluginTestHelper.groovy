@@ -28,18 +28,24 @@ final class ProtobufPluginTestHelper {
   }
 
   static BuildResult buildAndroidProject(
-     File mainProjectDir, String gradleVersion, String fullPathTask) {
+     File mainProjectDir, String gradleVersion, String fullPathTask, String... arguments) {
+    return getAndroidGradleRunner(mainProjectDir, gradleVersion, fullPathTask, arguments).build()
+  }
+
+  static GradleRunner getAndroidGradleRunner(
+     File mainProjectDir, String gradleVersion, String fullPathTask, String... arguments) {
     File localBuildCache = new File(mainProjectDir, ".buildCache")
     if (localBuildCache.exists()) {
       localBuildCache.deleteDir()
     }
+    List<String> args = arguments.toList()
+    // set android build cache to avoid using home directory on travis CI.
+    args.add("-Pandroid.buildCacheDir=$localBuildCache".toString())
+    args.add(fullPathTask)
+    args.add("--stacktrace")
     return GradleRunner.create()
        .withProjectDir(mainProjectDir)
-       .withArguments(
-       // set android build cache to avoid using home directory on travis CI.
-       "-Pandroid.buildCacheDir=$localBuildCache",
-       fullPathTask,
-       "--stacktrace")
+       .withArguments(args)
        .withPluginClasspath()
        .withGradleVersion(gradleVersion)
        .forwardStdOutput(new OutputStreamWriter(System.out))
@@ -47,7 +53,6 @@ final class ProtobufPluginTestHelper {
     // Enabling debug causes the test to fail with Android plugin version 3.3.0+.
     // See https://docs.gradle.org/current/javadoc/org/gradle/testkit/runner/GradleRunner.html#isDebug--
     // .withDebug(true)
-       .build()
   }
 
   /**

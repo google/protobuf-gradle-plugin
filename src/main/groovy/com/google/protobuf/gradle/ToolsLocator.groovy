@@ -29,13 +29,11 @@
 package com.google.protobuf.gradle
 
 import groovy.transform.CompileDynamic
-import org.gradle.api.GradleException
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.file.FileCollection
-import org.gradle.api.tasks.PathSensitivity
 
 /**
  * Holds locations of all external executables, i.e., protoc and plugins.
@@ -113,22 +111,7 @@ class ToolsLocator {
 
     for (GenerateProtoTask protoTask in protoTasks) {
       if (protoc.is(locator) || protoTask.hasPlugin(locator.name)) {
-        // register the tool artifact files as a task input
-        protoTask.inputs.files(artifactFiles)
-            .withPathSensitivity(PathSensitivity.NONE)
-            .withPropertyName("config.${locator.name}")
-
-        protoTask.doFirst {
-          if (locator.path == null) {
-            project.logger.info("Resolving artifact: ${notation}")
-            File file = artifactFiles.singleFile
-            if (!file.canExecute() && !file.setExecutable(true)) {
-              throw new GradleException("Cannot set ${file} as executable")
-            }
-            project.logger.info("Resolved artifact: ${file}")
-            locator.path = file.path
-          }
-        }
+        protoTask.locatorToAlternativePathsMapping.put(locator.name, artifactFiles)
       }
     }
   }
