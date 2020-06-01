@@ -1,6 +1,7 @@
 package com.google.protobuf.gradle
 
 import com.google.common.collect.ImmutableSet
+import groovy.transform.CompileDynamic
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.testkit.runner.BuildResult
@@ -12,6 +13,7 @@ import spock.lang.Unroll
 /**
  * Unit tests for normal java and kotlin functionality.
  */
+@CompileDynamic
 class ProtobufJavaPluginTest extends Specification {
   // Current supported version is Gradle 5+.
   private static final List<String> GRADLE_VERSIONS = ["5.6", "6.0", "6.1"]

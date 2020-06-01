@@ -2,6 +2,7 @@ package com.google.protobuf.gradle
 
 import static com.google.protobuf.gradle.ProtobufPluginTestHelper.buildAndroidProject
 
+import groovy.transform.CompileDynamic
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
 import spock.lang.Specification
@@ -10,6 +11,7 @@ import spock.lang.Unroll
 /**
  * Verify android projects are identified correctly
  */
+@CompileDynamic
 class AndroidProjectDetectionTest extends Specification {
   private static final List<String> GRADLE_VERSION = ["5.6"]
   private static final List<String> ANDROID_PLUGIN_VERSION = ["3.5.0"]

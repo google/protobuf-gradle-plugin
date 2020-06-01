@@ -1,5 +1,6 @@
 package com.google.protobuf.gradle
 
+import groovy.transform.CompileDynamic
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
@@ -9,6 +10,7 @@ import spock.lang.Unroll
 /**
  * Unit tests for kotlin dsl extensions.
  */
+@CompileDynamic
 class ProtobufKotlinDslPluginTest extends Specification {
   // Current supported version is Gradle 5+.
   private static final List<String> GRADLE_VERSIONS = ["5.6", "6.0", "6.1"]
