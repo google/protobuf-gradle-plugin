@@ -31,6 +31,7 @@ package com.google.protobuf.gradle
 
 import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
+import groovy.transform.CompileDynamic
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.Named
@@ -60,6 +61,7 @@ import javax.annotation.Nullable
  * The task that compiles proto files into Java files.
  */
 // TODO(zhangkun83): add per-plugin output dir reconfiguraiton.
+@CompileDynamic
 @CacheableTask
 public class GenerateProtoTask extends DefaultTask {
   // Windows CreateProcess has command line limit of 32768:

@@ -28,6 +28,7 @@
  */
 package com.google.protobuf.gradle
 
+import groovy.transform.CompileDynamic
 import org.gradle.api.GradleException
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
@@ -39,6 +40,7 @@ import org.gradle.api.tasks.PathSensitivity
 /**
  * Holds locations of all external executables, i.e., protoc and plugins.
  */
+@CompileDynamic
 class ToolsLocator {
 
   private final Project project

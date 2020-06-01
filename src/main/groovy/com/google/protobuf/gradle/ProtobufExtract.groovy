@@ -30,6 +30,7 @@
 package com.google.protobuf.gradle
 
 import com.google.common.base.Preconditions
+import groovy.transform.CompileDynamic
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.tasks.Input
@@ -42,6 +43,7 @@ import org.gradle.api.tasks.TaskAction
 /**
  * Extracts proto files from a dependency configuration.
  */
+@CompileDynamic
 class ProtobufExtract extends DefaultTask {
 
   /**

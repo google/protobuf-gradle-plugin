@@ -30,6 +30,7 @@
 package com.google.protobuf.gradle
 
 import com.google.common.collect.ImmutableList
+import groovy.transform.CompileDynamic
 import org.gradle.api.Action
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
@@ -50,6 +51,7 @@ import javax.inject.Inject
 /**
  * The main class for the protobuf plugin.
  */
+@CompileDynamic
 class ProtobufPlugin implements Plugin<Project> {
     // any one of these plugins should be sufficient to proceed with applying this plugin
     private static final List<String> PREREQ_PLUGIN_OPTIONS = [

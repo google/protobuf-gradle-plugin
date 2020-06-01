@@ -28,6 +28,7 @@
  */
 package com.google.protobuf.gradle
 
+import groovy.transform.CompileDynamic
 import org.gradle.api.Project
 import org.gradle.api.internal.file.FileResolver
 import org.gradle.api.tasks.TaskCollection
@@ -36,6 +37,7 @@ import org.gradle.util.ConfigureUtil
 /**
  * The main configuration block exposed as {@code protobuf} in the build script.
  */
+@CompileDynamic
 public class ProtobufConfigurator {
   private final Project project
   private final GenerateProtoTaskCollection tasks

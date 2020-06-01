@@ -28,6 +28,7 @@
  */
 package com.google.protobuf.gradle
 
+import groovy.transform.CompileDynamic
 import org.gradle.api.Named
 
 /**
@@ -36,6 +37,7 @@ import org.gradle.api.Named
  * configured, the plugin should try to run the executable from system search
  * path.
  */
+@CompileDynamic
 class ExecutableLocator implements Named {
 
   private final String name

@@ -1,5 +1,6 @@
 package com.google.protobuf.gradle
 
+import groovy.transform.CompileDynamic
 import org.apache.commons.io.FileUtils
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
@@ -7,6 +8,7 @@ import org.gradle.testkit.runner.GradleRunner
 /**
  * Utility class.
  */
+@CompileDynamic
 final class ProtobufPluginTestHelper {
   private ProtobufPluginTestHelper() {
     // do not instantiate
