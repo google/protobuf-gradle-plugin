@@ -33,25 +33,29 @@ import com.google.common.base.Preconditions
 import groovy.transform.CompileDynamic
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
+import javax.inject.Inject
 
 /**
  * Extracts proto files from a dependency configuration.
  */
 @CompileDynamic
-class ProtobufExtract extends DefaultTask {
+abstract class ProtobufExtract extends DefaultTask {
 
   /**
    * The directory for the extracted files.
    */
   private File destDir
   private Boolean isTest = null
-  private final ConfigurableFileCollection inputFiles = project.files()
+  private final ConfigurableFileCollection inputFiles = objectFactory.fileCollection()
+  private final CopyActionFacade copyActionFacade = instantiateCopyActionFacade()
 
   public void setIsTest(boolean isTest) {
     this.isTest = isTest
@@ -70,6 +74,14 @@ class ProtobufExtract extends DefaultTask {
     return inputFiles
   }
 
+  @Internal
+  CopyActionFacade getCopyActionFacade() {
+    return copyActionFacade
+  }
+
+  @Inject
+  abstract ObjectFactory getObjectFactory()
+
   @TaskAction
   void extract() {
     destDir.mkdir()
@@ -77,46 +89,46 @@ class ProtobufExtract extends DefaultTask {
     inputFiles.each { file ->
       logger.debug "Extracting protos from ${file} to ${destDir}"
       if (file.isDirectory()) {
-        project.copy {
-          includeEmptyDirs(false)
-          from(file.path) {
+        copyActionFacade.copy { spec ->
+          spec.includeEmptyDirs = false
+          spec.from(file.path) {
             include '**/*.proto'
           }
-          into(destDir)
+          spec.into(destDir)
         }
       } else if (file.path.endsWith('.proto')) {
         if (!warningLogged) {
           warningLogged = true
-          project.logger.warn "proto file '${file.path}' directly specified in configuration. " +
+          logger.warn "proto file '${file.path}' directly specified in configuration. " +
               "It's likely you specified files('path/to/foo.proto') or " +
               "fileTree('path/to/directory') in protobuf or compile configuration. " +
               "This makes you vulnerable to " +
               "https://github.com/google/protobuf-gradle-plugin/issues/248. " +
               "Please use files('path/to/directory') instead."
         }
-        project.copy {
-          includeEmptyDirs(false)
-          from(file.path)
-          into(destDir)
+        copyActionFacade.copy { spec ->
+          spec.includeEmptyDirs = false
+          spec.from(file.path)
+          spec.into(destDir)
         }
       } else if (file.path.endsWith('.jar') || file.path.endsWith('.zip')) {
-        project.copy {
-          includeEmptyDirs(false)
-          from(project.zipTree(file.path)) {
+        copyActionFacade.copy { spec ->
+          spec.includeEmptyDirs = false
+          spec.from(project.zipTree(file.path)) {
             include '**/*.proto'
           }
-          into(destDir)
+          spec.into(destDir)
         }
       } else if (file.path.endsWith('.tar')
               || file.path.endsWith('.tar.gz')
               || file.path.endsWith('.tar.bz2')
               || file.path.endsWith('.tgz')) {
-        project.copy {
-          includeEmptyDirs(false)
-          from(project.tarTree(file.path)) {
+        copyActionFacade.copy { spec ->
+          spec.includeEmptyDirs = false
+          spec.from(project.tarTree(file.path)) {
             include '**/*.proto'
           }
-          into(destDir)
+          spec.into(destDir)
         }
       } else {
         logger.debug "Skipping unsupported file type (${file.path}); handles only jar, tar, tar.gz, tar.bz2 & tgz"
@@ -133,5 +145,13 @@ class ProtobufExtract extends DefaultTask {
   @OutputDirectory
   protected File getDestDir() {
     return destDir
+  }
+
+  private CopyActionFacade instantiateCopyActionFacade() {
+    if (Utils.compareGradleVersion(project, "6.0") > 0) {
+      // Use object factory to instantiate as that will inject the necessary service.
+      return objectFactory.newInstance(CopyActionFacade.FileSystemOperationsBased)
+    }
+    return new CopyActionFacade.ProjectBased(project)
   }
 }

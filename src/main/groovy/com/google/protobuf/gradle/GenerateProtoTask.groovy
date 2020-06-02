@@ -41,6 +41,9 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.internal.file.FileResolver
 import org.gradle.api.logging.LogLevel
+import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Provider
+import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -56,6 +59,7 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.util.ConfigureUtil
 
 import javax.annotation.Nullable
+import javax.inject.Inject
 
 /**
  * The task that compiles proto files into Java files.
@@ -63,7 +67,7 @@ import javax.annotation.Nullable
 // TODO(zhangkun83): add per-plugin output dir reconfiguraiton.
 @CompileDynamic
 @CacheableTask
-public class GenerateProtoTask extends DefaultTask {
+public abstract class GenerateProtoTask extends DefaultTask {
   // Windows CreateProcess has command line limit of 32768:
   // https://msdn.microsoft.com/en-us/library/windows/desktop/ms682425(v=vs.85).aspx
   static final int WINDOWS_CMD_LENGTH_LIMIT = 32760
@@ -76,21 +80,28 @@ public class GenerateProtoTask extends DefaultTask {
   private final ConfigurableFileCollection includeDirs = project.files()
   // source files are proto files that will be compiled by protoc
   private final ConfigurableFileCollection sourceFiles = project.files()
-  private final NamedDomainObjectContainer<PluginOptions> builtins
-  private final NamedDomainObjectContainer<PluginOptions> plugins
+  private final NamedDomainObjectContainer<PluginOptions> builtins = objectFactory.domainObjectContainer(PluginOptions)
+  private final NamedDomainObjectContainer<PluginOptions> plugins = objectFactory.domainObjectContainer(PluginOptions)
 
   // These fields are set by the Protobuf plugin only when initializing the
   // task.  Ideally they should be final fields, but Gradle task cannot have
   // constructor arguments. We use the initializing flag to prevent users from
   // accidentally modifying them.
   private String outputBaseDir
-  // Tags for selectors inside protobuf.generateProtoTasks
-  private SourceSet sourceSet
+  // Tags for selectors inside protobuf.generateProtoTasks; do not serialize with Gradle configuration caching
+  @SuppressWarnings("UnnecessaryTransientModifier") // It is not necessary for task to implement Serializable
+  transient private SourceSet sourceSet
   private Object variant
   private ImmutableList<String> flavors
   private String buildType
   private boolean isTestVariant
   private FileResolver fileResolver
+  private final Provider<Boolean> isTestProvider = providerFactory.provider {
+    if (Utils.isAndroidProject(project)) {
+      return isTestVariant
+    }
+    return Utils.isTest(sourceSet.name)
+  }
 
   /**
    * If true, will set the protoc flag
@@ -311,10 +322,11 @@ public class GenerateProtoTask extends DefaultTask {
     return descriptorSetOptions.path != null ? descriptorSetOptions.path : "${outputBaseDir}/descriptor_set.desc"
   }
 
-  public GenerateProtoTask() {
-    builtins = project.container(PluginOptions)
-    plugins = project.container(PluginOptions)
-  }
+  @Inject
+  abstract ProviderFactory getProviderFactory()
+
+  @Inject
+  abstract ObjectFactory getObjectFactory()
 
   //===========================================================================
   //        Configuration methods
@@ -384,10 +396,12 @@ public class GenerateProtoTask extends DefaultTask {
    */
   @Input
   public boolean getIsTest() {
-    if (Utils.isAndroidProject(project)) {
-      return isTestVariant
-    }
-    return Utils.isTest(sourceSet.name)
+    return isTestProvider.get()
+  }
+
+  @Internal("Already captured with getIsTest()")
+  Provider<Boolean> getIsTestProvider() {
+    return isTestProvider
   }
 
   /**
