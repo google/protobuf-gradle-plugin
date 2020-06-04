@@ -42,6 +42,8 @@ import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.internal.file.FileResolver
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.MapProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.tasks.CacheableTask
@@ -77,9 +79,9 @@ public abstract class GenerateProtoTask extends DefaultTask {
 
   // include dirs are passed to the '-I' option of protoc.  They contain protos
   // that may be "imported" from the source protos, but will not be compiled.
-  private final ConfigurableFileCollection includeDirs = project.files()
+  private final ConfigurableFileCollection includeDirs = objectFactory.fileCollection()
   // source files are proto files that will be compiled by protoc
-  private final ConfigurableFileCollection sourceFiles = project.files()
+  private final ConfigurableFileCollection sourceFiles = objectFactory.fileCollection()
   private final NamedDomainObjectContainer<PluginOptions> builtins = objectFactory.domainObjectContainer(PluginOptions)
   private final NamedDomainObjectContainer<PluginOptions> plugins = objectFactory.domainObjectContainer(PluginOptions)
 
@@ -91,11 +93,14 @@ public abstract class GenerateProtoTask extends DefaultTask {
   // Tags for selectors inside protobuf.generateProtoTasks; do not serialize with Gradle configuration caching
   @SuppressWarnings("UnnecessaryTransientModifier") // It is not necessary for task to implement Serializable
   transient private SourceSet sourceSet
-  private Object variant
+  @SuppressWarnings("UnnecessaryTransientModifier") // It is not necessary for task to implement Serializable
+  transient private Object variant
   private ImmutableList<String> flavors
   private String buildType
   private boolean isTestVariant
   private FileResolver fileResolver
+  private final Provider<String> variantName = providerFactory.provider { variant.name }
+  private final Provider<Boolean> isAndroidProject = providerFactory.provider { Utils.isAndroidProject(project) }
   private final Provider<Boolean> isTestProvider = providerFactory.provider {
     if (Utils.isAndroidProject(project)) {
       return isTestVariant
@@ -216,14 +221,14 @@ public abstract class GenerateProtoTask extends DefaultTask {
 
   void setSourceSet(SourceSet sourceSet) {
     checkInitializing()
-    Preconditions.checkState(!Utils.isAndroidProject(project),
+    Preconditions.checkState(!isAndroidProject.get(),
         'sourceSet should not be set in an Android project')
     this.sourceSet = sourceSet
   }
 
   void setVariant(Object variant, boolean isTestVariant) {
     checkInitializing()
-    Preconditions.checkState(Utils.isAndroidProject(project),
+    Preconditions.checkState(isAndroidProject.get(),
         'variant should not be set in a Java project')
     this.variant = variant
     this.isTestVariant = isTestVariant
@@ -231,14 +236,14 @@ public abstract class GenerateProtoTask extends DefaultTask {
 
   void setFlavors(ImmutableList<String> flavors) {
     checkInitializing()
-    Preconditions.checkState(Utils.isAndroidProject(project),
+    Preconditions.checkState(isAndroidProject.get(),
         'flavors should not be set in a Java project')
     this.flavors = flavors
   }
 
   void setBuildType(String buildType) {
     checkInitializing()
-    Preconditions.checkState(Utils.isAndroidProject(project),
+    Preconditions.checkState(isAndroidProject.get(),
         'buildType should not be set in a Java project')
     this.buildType = buildType
   }
@@ -250,7 +255,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
 
   @Internal("Inputs tracked in getSourceFiles()")
   SourceSet getSourceSet() {
-    Preconditions.checkState(!Utils.isAndroidProject(project),
+    Preconditions.checkState(!isAndroidProject.get(),
         'sourceSet should not be used in an Android project')
     Preconditions.checkNotNull(sourceSet, 'sourceSet is not set')
     return sourceSet
@@ -271,15 +276,40 @@ public abstract class GenerateProtoTask extends DefaultTask {
 
   @Internal("Not an actual input to the task, only used to find tasks belonging to a variant")
   Object getVariant() {
-    Preconditions.checkState(Utils.isAndroidProject(project),
+    Preconditions.checkState(isAndroidProject.get(),
         'variant should not be used in a Java project')
     Preconditions.checkNotNull(variant, 'variant is not set')
     return variant
   }
 
+  @Internal("Input captured by getAlternativePaths()")
+  abstract Property<ExecutableLocator> getProtocLocator()
+
+  @Internal("Input captured by getAlternativePaths(), this is used to query alternative path by locator name.")
+  abstract MapProperty<String, FileCollection> getLocatorToAlternativePathsMapping()
+
+  @InputFiles
+  @PathSensitive(PathSensitivity.NONE)
+  ConfigurableFileCollection getAlternativePaths() {
+    return objectFactory.fileCollection().from(getLocatorToAlternativePathsMapping().get().values())
+  }
+
+  @Internal("Input captured by getAlternativePaths()")
+  abstract MapProperty<String, ExecutableLocator> getPluginsExecutableLocators()
+
+  @Internal("Not an actual input to the task, only used to find tasks belonging to a variant")
+  Provider<Boolean> getIsAndroidProject() {
+    return isAndroidProject
+  }
+
+  @Internal("Not an actual input to the task, only used to find tasks belonging to a variant")
+  Provider<String> getVariantName() {
+    return variantName
+  }
+
   @Internal("Not an actual input to the task, only used to find tasks belonging to a variant")
   boolean getIsTestVariant() {
-    Preconditions.checkState(Utils.isAndroidProject(project),
+    Preconditions.checkState(isAndroidProject.get(),
         'isTestVariant should not be used in a Java project')
     Preconditions.checkNotNull(variant, 'variant is not set')
     return isTestVariant
@@ -287,7 +317,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
 
   @Internal("Not an actual input to the task, only used to find tasks belonging to a variant")
   ImmutableList<String> getFlavors() {
-    Preconditions.checkState(Utils.isAndroidProject(project),
+    Preconditions.checkState(isAndroidProject.get(),
         'flavors should not be used in a Java project')
     Preconditions.checkNotNull(flavors, 'flavors is not set')
     return flavors
@@ -295,10 +325,10 @@ public abstract class GenerateProtoTask extends DefaultTask {
 
   @Internal("Not an actual input to the task, only used to find tasks belonging to a variant")
   String getBuildType() {
-    Preconditions.checkState(Utils.isAndroidProject(project),
+    Preconditions.checkState(isAndroidProject.get(),
         'buildType should not be used in a Java project')
     Preconditions.checkState(
-        variant.name == 'test' || buildType,
+        variantName.get() == 'test' || buildType,
         'buildType is not set and task is not for local unit test variant')
     return buildType
   }
@@ -473,7 +503,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
   SourceDirectorySet getOutputSourceDirectorySet() {
     String srcSetName = "generate-proto-" + name
     SourceDirectorySet srcSet
-    srcSet = project.objects.sourceDirectorySet(srcSetName, srcSetName)
+    srcSet = objectFactory.sourceDirectorySet(srcSetName, srcSetName)
     builtins.each { builtin ->
       srcSet.srcDir new File(getOutputDir(builtin))
     }
@@ -487,7 +517,6 @@ public abstract class GenerateProtoTask extends DefaultTask {
   void compile() {
     Preconditions.checkState(state == State.FINALIZED, 'doneConfig() has not been called')
 
-    ToolsLocator tools = project.protobuf.tools
     // Sort to ensure generated descriptors have a canonical representation
     // to avoid triggering unnecessary rebuilds downstream
     List<File> protoFiles = sourceFiles.files.sort()
@@ -502,7 +531,9 @@ public abstract class GenerateProtoTask extends DefaultTask {
     List<String> dirs = includeDirs.filter { it.exists() }*.path.collect { "-I${it}" }
     logger.debug "ProtobufCompile using directories ${dirs}"
     logger.debug "ProtobufCompile using files ${protoFiles}"
-    List<String> baseCmd = [ tools.protoc.path ]
+
+    String protocPath = computeExecutablePath(protocLocator.get())
+    List<String> baseCmd = [ protocPath ]
     baseCmd.addAll(dirs)
 
     // Handle code generation built-ins
@@ -511,12 +542,13 @@ public abstract class GenerateProtoTask extends DefaultTask {
       baseCmd += "--${builtin.name}_out=${outPrefix}${getOutputDir(builtin)}"
     }
 
+    Map<String, ExecutableLocator> executableLocations = pluginsExecutableLocators.get()
     // Handle code generation plugins
     plugins.each { plugin ->
       String name = plugin.name
-      ExecutableLocator locator = tools.plugins.findByName(name)
+      ExecutableLocator locator = executableLocations.get(name)
       if (locator != null) {
-        baseCmd += "--plugin=protoc-gen-${name}=${locator.path}"
+        baseCmd += "--plugin=protoc-gen-${name}=${computeExecutablePath(locator)}"
       } else {
         logger.warn "protoc plugin '${name}' not defined. Trying to use 'protoc-gen-${name}' from system path"
       }
@@ -600,5 +632,17 @@ public abstract class GenerateProtoTask extends DefaultTask {
     } else {
       throw new GradleException(output)
     }
+  }
+
+  protected String computeExecutablePath(ExecutableLocator locator) {
+    if (locator.path != null) {
+      return locator.path
+    }
+    File file = locatorToAlternativePathsMapping.getting(locator.name).get().singleFile
+    if (!file.canExecute() && !file.setExecutable(true)) {
+      throw new GradleException("Cannot set ${file} as executable")
+    }
+    logger.info("Resolved artifact: ${file}")
+    return file.path
   }
 }
