@@ -53,6 +53,7 @@ import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.SkipWhenEmpty
@@ -129,7 +130,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
      */
     @Nullable
     @Optional
-    @Input
+    @OutputFile
     String path
 
     /**
