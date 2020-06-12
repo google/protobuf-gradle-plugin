@@ -33,6 +33,7 @@ import com.google.common.base.Preconditions
 import groovy.transform.CompileDynamic
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.FileTree
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -56,6 +57,7 @@ abstract class ProtobufExtract extends DefaultTask {
   private Boolean isTest = null
   private final ConfigurableFileCollection inputFiles = objectFactory.fileCollection()
   private final CopyActionFacade copyActionFacade = instantiateCopyActionFacade()
+  private final ArchiveActionFacade archiveActionFacade = instantiateArchiveActionFacade()
 
   public void setIsTest(boolean isTest) {
     this.isTest = isTest
@@ -77,6 +79,11 @@ abstract class ProtobufExtract extends DefaultTask {
   @Internal
   CopyActionFacade getCopyActionFacade() {
     return copyActionFacade
+  }
+
+  @Internal
+  ArchiveActionFacade getArchiveActionFacade() {
+    return archiveActionFacade
   }
 
   @Inject
@@ -112,9 +119,10 @@ abstract class ProtobufExtract extends DefaultTask {
           spec.into(destDir)
         }
       } else if (file.path.endsWith('.jar') || file.path.endsWith('.zip')) {
+        FileTree zipTree = archiveActionFacade.zipTree(file.path)
         copyActionFacade.copy { spec ->
           spec.includeEmptyDirs = false
-          spec.from(project.zipTree(file.path)) {
+          spec.from(zipTree) {
             include '**/*.proto'
           }
           spec.into(destDir)
@@ -123,9 +131,10 @@ abstract class ProtobufExtract extends DefaultTask {
               || file.path.endsWith('.tar.gz')
               || file.path.endsWith('.tar.bz2')
               || file.path.endsWith('.tgz')) {
+        FileTree tarTree = archiveActionFacade.tarTree(file.path)
         copyActionFacade.copy { spec ->
           spec.includeEmptyDirs = false
-          spec.from(project.tarTree(file.path)) {
+          spec.from(tarTree) {
             include '**/*.proto'
           }
           spec.into(destDir)
@@ -153,5 +162,13 @@ abstract class ProtobufExtract extends DefaultTask {
       return objectFactory.newInstance(CopyActionFacade.FileSystemOperationsBased)
     }
     return new CopyActionFacade.ProjectBased(project)
+  }
+
+  private ArchiveActionFacade instantiateArchiveActionFacade() {
+    if (Utils.compareGradleVersion(project, "6.0") > 0) {
+      // Use object factory to instantiate as that will inject the necessary service.
+      return objectFactory.newInstance(ArchiveActionFacade.ServiceBased)
+    }
+    return new ArchiveActionFacade.ProjectBased(project)
   }
 }
