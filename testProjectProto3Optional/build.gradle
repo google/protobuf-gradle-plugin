@@ -1,0 +1,29 @@
+// A Java project that demonstrates use of proto3 optional
+
+plugins {
+  id 'java'
+  id 'com.google.protobuf'
+}
+
+repositories {
+    maven { url "https://plugins.gradle.org/m2/" }
+}
+
+dependencies {
+    compile 'com.google.protobuf:protobuf-java:3.12.2'
+
+    testCompile 'junit:junit:4.12'
+}
+
+protobuf {
+  protoc {
+    // Note this must be >= 3.12
+    artifact = 'com.google.protobuf:protoc:3.12.2'
+  }
+
+  generateProtoTasks {
+    all().each { task ->
+      task.experimentalAllowProto3Optional = true
+    }
+  }
+}

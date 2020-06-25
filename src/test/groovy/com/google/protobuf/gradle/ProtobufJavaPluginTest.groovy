@@ -338,6 +338,31 @@ class ProtobufJavaPluginTest extends Specification {
   }
 
   @Unroll
+  void "testProjectProto3Optional should be successfully executed [gradle #gradleVersion]"() {
+    given: "project from testProjectProto3Optional"
+    File projectDir = ProtobufPluginTestHelper.projectBuilder('testProjectProto3Optional')
+        .copyDirs('testProjectProto3Optional')
+        .build()
+
+    when: "build is invoked"
+    BuildResult result = GradleRunner.create()
+      .withProjectDir(projectDir)
+      .withArguments('build', '--stacktrace')
+      .withPluginClasspath()
+      .withGradleVersion(gradleVersion)
+      .forwardStdOutput(new OutputStreamWriter(System.out))
+      .forwardStdError(new OutputStreamWriter(System.err))
+      .withDebug(true)
+      .build()
+
+    then: "it succeed"
+    result.task(":build").outcome == TaskOutcome.SUCCESS
+
+    where:
+    gradleVersion << GRADLE_VERSIONS
+  }
+
+  @Unroll
   void "testProject proto and generated output directories should be added to intellij [gradle #gradleVersion]"() {
     given: "project from testProject"
     File projectDir = ProtobufPluginTestHelper.projectBuilder('testIdea')
