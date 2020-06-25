@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-message MyMessage {
+message MsgTest {
   int32 no_visibility = 1;
 
   // this requires --experimental_allow_proto3_optional
