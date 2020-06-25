@@ -456,6 +456,21 @@ changed by setting the ``outputSubDir`` property in the ``builtins`` or
 }
 ```
 
+#### Enable experimental field visibility in proto3
+
+This requires protoc >= 3.12.
+
+Consult the Protobuf documentation for more information about
+[field visibility](https://github.com/protocolbuffers/protobuf/blob/master/docs/field_presence.md).
+
+```gradle
+{ task ->
+  // If true, enables --experimental_allow_proto3_optional flag in protoc.
+  // Default is false.
+  task.experimentalAllowProto3Optional = true
+}
+```
+
 ### Protos in dependencies
 
 If a Java project contains proto files, they will be packaged in the jar files

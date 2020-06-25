@@ -153,6 +153,14 @@ public abstract class GenerateProtoTask extends DefaultTask {
   @Internal("Handled as input via getDescriptorSetOptionsForCaching()")
   final DescriptorSetOptions descriptorSetOptions = new DescriptorSetOptions()
 
+  /**
+   * If true, will set the protoc flag --experimental_allow_proto3_optional
+   *
+   * Default: false
+   */
+  @Input
+  boolean experimentalAllowProto3Optional
+
   // protoc allows you to prefix comma-delimited options to the path in
   // the --*_out flags, e.g.,
   // - Without options: --java_out=/path/to/output
@@ -572,6 +580,10 @@ public abstract class GenerateProtoTask extends DefaultTask {
       if (descriptorSetOptions.includeSourceInfo) {
         baseCmd += "--include_source_info"
       }
+    }
+
+    if (experimentalAllowProto3Optional) {
+      baseCmd += "--experimental_allow_proto3_optional"
     }
 
     List<List<String>> cmds = generateCmds(baseCmd, protoFiles, getCmdLengthLimit())
