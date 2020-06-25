@@ -1,8 +1,8 @@
 syntax = "proto3";
 
 message MsgTest {
-  int32 no_visibility = 1;
+  int32 no_presence = 1;
 
   // this requires --experimental_allow_proto3_optional
-  optional int32 explicit_visibility = 2;
+  optional int32 explicit_presence = 2;
 }

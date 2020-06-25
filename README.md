@@ -456,12 +456,12 @@ changed by setting the ``outputSubDir`` property in the ``builtins`` or
 }
 ```
 
-#### Enable experimental field visibility in proto3
+#### Enable experimental field presence in proto3
 
 This requires protoc >= 3.12.
 
 Consult the Protobuf documentation for more information about
-[field visibility](https://github.com/protocolbuffers/protobuf/blob/master/docs/field_presence.md).
+[field presence](https://github.com/protocolbuffers/protobuf/blob/master/docs/field_presence.md).
 
 ```gradle
 { task ->
