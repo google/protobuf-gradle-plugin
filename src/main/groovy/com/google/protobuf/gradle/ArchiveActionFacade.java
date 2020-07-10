@@ -1,6 +1,5 @@
 /*
- * Original work copyright (c) 2015, Alex Antonov. All rights reserved.
- * Modified work copyright (c) 2015, Google Inc. All rights reserved.
+ * Copyright (c) 2020, Google Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -27,25 +26,53 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.google.protobuf.gradle
+package com.google.protobuf.gradle;
 
-import groovy.transform.CompileDynamic
-import org.gradle.api.Project
-import org.gradle.api.internal.file.FileResolver
-import org.gradle.util.ConfigureUtil
+import org.gradle.api.Project;
+import org.gradle.api.file.FileTree;
+import org.gradle.api.internal.file.FileOperations;
 
-/**
- * Adds the protobuf {} block as a property of the project.
- */
-@CompileDynamic
-class ProtobufConvention {
-    ProtobufConvention(Project project, FileResolver fileResolver) {
-        protobuf = new ProtobufConfigurator(project, fileResolver)
+import javax.inject.Inject;
+
+public interface ArchiveActionFacade {
+
+    FileTree zipTree(Object path);
+
+    FileTree tarTree(Object path);
+
+    class ProjectBased implements ArchiveActionFacade {
+
+        private final Project project;
+
+        ProjectBased(Project project) {
+            this.project = project;
+        }
+
+        @Override
+        public FileTree zipTree(Object path) {
+            return project.zipTree(path);
+        }
+
+        @Override
+        public FileTree tarTree(Object path) {
+            return project.tarTree(path);
+        }
     }
 
-    final ProtobufConfigurator protobuf
+    abstract class ServiceBased implements ArchiveActionFacade {
 
-    ProtobufConfigurator protobuf(Closure configureClosure) {
-        ConfigureUtil.configure(configureClosure, protobuf)
+        // TODO Use public ArchiveOperations from Gradle 6.6 instead
+        @Inject
+        public abstract FileOperations getFileOperations();
+
+        @Override
+        public FileTree zipTree(Object path) {
+            return getFileOperations().zipTree(path);
+        }
+
+        @Override
+        public FileTree tarTree(Object path) {
+            return getFileOperations().tarTree(path);
+        }
     }
 }

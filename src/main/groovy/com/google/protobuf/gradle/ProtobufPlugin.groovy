@@ -30,8 +30,10 @@
 package com.google.protobuf.gradle
 
 import com.google.common.collect.ImmutableList
+import groovy.transform.CompileDynamic
 import org.gradle.api.Action
 import org.gradle.api.GradleException
+import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -40,9 +42,7 @@ import org.gradle.api.attributes.Attribute
 import org.gradle.api.attributes.LibraryElements
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.SourceDirectorySet
-import org.gradle.api.internal.file.DefaultSourceDirectorySet
 import org.gradle.api.internal.file.FileResolver
-import org.gradle.api.internal.file.collections.DefaultDirectoryFileTreeFactory
 import org.gradle.api.plugins.AppliedPlugin
 import org.gradle.api.tasks.SourceSet
 
@@ -51,6 +51,7 @@ import javax.inject.Inject
 /**
  * The main class for the protobuf plugin.
  */
+@CompileDynamic
 class ProtobufPlugin implements Plugin<Project> {
     // any one of these plugins should be sufficient to proceed with applying this plugin
     private static final List<String> PREREQ_PLUGIN_OPTIONS = [
@@ -78,9 +79,9 @@ class ProtobufPlugin implements Plugin<Project> {
     }
 
     void apply(final Project project) {
-      if (Utils.compareGradleVersion(project, "3.0") < 0) {
+      if (Utils.compareGradleVersion(project, "5.6") < 0) {
         throw new GradleException(
-          "Gradle version is ${project.gradle.gradleVersion}. Minimum supported version is 3.0")
+          "Gradle version is ${project.gradle.gradleVersion}. Minimum supported version is 5.6")
       }
 
         this.project = project
@@ -192,14 +193,7 @@ class ProtobufPlugin implements Plugin<Project> {
     private void addSourceSetExtensions() {
       getSourceSets().all {  sourceSet ->
         String name = sourceSet.name
-        SourceDirectorySet sds
-        if (Utils.compareGradleVersion(project, "5.0") < 0) {
-          // TODO(zhangkun83): remove dependency on Gradle internal APIs once we drop support for < 5.0
-          sds = new DefaultSourceDirectorySet(
-              name, "${name} Proto source", fileResolver, new DefaultDirectoryFileTreeFactory())
-        } else {
-          sds = project.objects.sourceDirectorySet(name, "${name} Proto source")
-        }
+        SourceDirectorySet sds = project.objects.sourceDirectorySet(name, "${name} Proto source")
         sourceSet.extensions.add('proto', sds)
         sds.srcDir("src/${name}/proto")
         sds.include("**/*.proto")
@@ -250,7 +244,7 @@ class ProtobufPlugin implements Plugin<Project> {
         java { }
       }
 
-      setupExtractProtosTask(generateProtoTask, sourceSet.name)
+      Task extractTask = setupExtractProtosTask(generateProtoTask, sourceSet.name)
       setupExtractIncludeProtosTask(generateProtoTask, sourceSet.name)
 
       // Include source proto files in the compiled archive, so that proto files from
@@ -260,6 +254,7 @@ class ProtobufPlugin implements Plugin<Project> {
       processResourcesTask.from(generateProtoTask.sourceFiles) {
         include '**/*.proto'
       }
+      processResourcesTask.dependsOn(extractTask)
     }
 
     /**
@@ -328,6 +323,11 @@ class ProtobufPlugin implements Plugin<Project> {
           SourceDirectorySet protoSrcDirSet = sourceSet.proto
           addIncludeDir(protoSrcDirSet.sourceDirectories)
         }
+        ProtobufConfigurator extension = project.protobuf
+        protocLocator.set(project.providers.provider { extension.tools.protoc })
+        pluginsExecutableLocators.set(project.providers.provider {
+            ((NamedDomainObjectContainer<ExecutableLocator>) extension.tools.plugins).asMap
+        })
       }
     }
 
@@ -339,7 +339,7 @@ class ProtobufPlugin implements Plugin<Project> {
      * variant may have multiple sourceSets, each of these sourceSets will have
      * its own extraction task.
      */
-    private void setupExtractProtosTask(
+    private Task setupExtractProtosTask(
         GenerateProtoTask generateProtoTask, String sourceSetName) {
       String extractProtosTaskName = 'extract' +
           Utils.getSourceSetSubstringForTaskNames(sourceSetName) + 'Proto'
@@ -355,6 +355,7 @@ class ProtobufPlugin implements Plugin<Project> {
 
       linkExtractTaskToGenerateTask(task, generateProtoTask)
       generateProtoTask.addSourceFiles(project.fileTree(task.destDir) { include "**/*.proto" })
+      return task
     }
 
     /**

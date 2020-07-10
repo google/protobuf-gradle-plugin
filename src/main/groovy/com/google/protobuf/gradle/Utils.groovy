@@ -29,6 +29,7 @@
 package com.google.protobuf.gradle
 
 import com.google.common.base.Preconditions
+import groovy.transform.CompileDynamic
 import org.apache.commons.lang.StringUtils
 import org.gradle.api.GradleException
 import org.gradle.api.Project
@@ -42,13 +43,16 @@ import java.util.regex.Matcher
 /**
  * Utility classes.
  */
+@CompileDynamic
 class Utils {
   /**
    * Returns the conventional name of a configuration for a sourceSet
    */
   static String getConfigName(String sourceSetName, String type) {
-    return sourceSetName == SourceSet.MAIN_SOURCE_SET_NAME ?
-        type : (sourceSetName + StringUtils.capitalize(type))
+    // same as DefaultSourceSet.configurationNameOf
+    String baseName = sourceSetName == SourceSet.MAIN_SOURCE_SET_NAME ?
+            '' : GUtil.toCamelCase(sourceSetName)
+    return StringUtils.uncapitalize(baseName + StringUtils.capitalize(type))
   }
 
   /**
@@ -57,7 +61,7 @@ class Utils {
    */
   static String getSourceSetSubstringForTaskNames(String sourceSetName) {
     return sourceSetName == SourceSet.MAIN_SOURCE_SET_NAME ?
-        '' : StringUtils.capitalize(sourceSetName)
+        '' : GUtil.toCamelCase(sourceSetName)
   }
 
   private static final String ANDROID_BASE_PLUGIN_ID = "com.android.base"

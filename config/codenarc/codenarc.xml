@@ -45,6 +45,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   </ruleset-ref>
   <ruleset-ref path='rulesets/exceptions.xml'/>
   <ruleset-ref path='rulesets/formatting.xml'>
+    <exclude name="ClassEndsWithBlankLine"/>
+    <exclude name="ClassStartsWithBlankLine"/>
     <exclude name="Indentation"/>
   </ruleset-ref>
   <ruleset-ref path='rulesets/generic.xml'/>

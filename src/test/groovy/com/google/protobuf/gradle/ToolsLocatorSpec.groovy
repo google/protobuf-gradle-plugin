@@ -28,11 +28,13 @@
  */
 package com.google.protobuf.gradle
 
+import groovy.transform.CompileDynamic
 import spock.lang.Specification
 
 /**
  * Tests for ToolsLocator
  */
+@CompileDynamic
 class ToolsLocatorSpec extends Specification {
   void 'test: `classifier` and `extension` should both be `null`'() {
     given:

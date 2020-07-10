@@ -27,25 +27,44 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.google.protobuf.gradle
+package com.google.protobuf.gradle;
 
-import groovy.transform.CompileDynamic
-import org.gradle.api.Project
-import org.gradle.api.internal.file.FileResolver
-import org.gradle.util.ConfigureUtil
+import org.gradle.api.Action;
+import org.gradle.api.Project;
+import org.gradle.api.file.CopySpec;
+import org.gradle.api.file.FileSystemOperations;
+import org.gradle.api.tasks.WorkResult;
+
+import javax.inject.Inject;
 
 /**
- * Adds the protobuf {} block as a property of the project.
+ * Interface exposing the file copying feature. Actual implementations may use the
+ * {@link org.gradle.api.file.FileSystemOperations} if available (Gradle 6.0+) or {@link org.gradle.api.Project#copy} if
+ * the version of Gradle is below 6.0.
  */
-@CompileDynamic
-class ProtobufConvention {
-    ProtobufConvention(Project project, FileResolver fileResolver) {
-        protobuf = new ProtobufConfigurator(project, fileResolver)
+interface CopyActionFacade {
+    WorkResult copy(Action<? super CopySpec> var1);
+
+    class ProjectBased implements CopyActionFacade {
+        private final Project project;
+
+        public ProjectBased(Project project) {
+            this.project = project;
+        }
+
+        @Override
+        public WorkResult copy(Action<? super CopySpec> action) {
+            return project.copy(action);
+        }
     }
 
-    final ProtobufConfigurator protobuf
+    abstract class FileSystemOperationsBased implements CopyActionFacade {
+        @Inject
+        public abstract FileSystemOperations getFileSystemOperations();
 
-    ProtobufConfigurator protobuf(Closure configureClosure) {
-        ConfigureUtil.configure(configureClosure, protobuf)
+        @Override
+        public WorkResult copy(Action<? super CopySpec> action) {
+            return getFileSystemOperations().copy(action);
+        }
     }
 }

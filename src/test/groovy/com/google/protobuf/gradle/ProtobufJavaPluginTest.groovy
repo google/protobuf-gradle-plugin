@@ -1,6 +1,7 @@
 package com.google.protobuf.gradle
 
 import com.google.common.collect.ImmutableSet
+import groovy.transform.CompileDynamic
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.testkit.runner.BuildResult
@@ -12,9 +13,10 @@ import spock.lang.Unroll
 /**
  * Unit tests for normal java and kotlin functionality.
  */
+@CompileDynamic
 class ProtobufJavaPluginTest extends Specification {
   // Current supported version is Gradle 5+.
-  private static final List<String> GRADLE_VERSIONS = ["5.6", "6.0"]
+  private static final List<String> GRADLE_VERSIONS = ["5.6", "6.0", "6.5-rc-1"]
   private static final List<String> KOTLIN_VERSIONS = ["1.3.20", "1.3.30"]
 
   void "testApplying java and com.google.protobuf adds corresponding task to project"() {
@@ -78,6 +80,49 @@ class ProtobufJavaPluginTest extends Specification {
   }
 
   @Unroll
+  void "testProject should be successfully executed (configuration cache) [gradle #gradleVersion]"() {
+    given: "project from testProject"
+    File projectDir = ProtobufPluginTestHelper.projectBuilder('testProject')
+      .copyDirs('testProjectBase', 'testProject')
+      .build()
+
+    and:
+    GradleRunner runner = GradleRunner.create()
+      .withProjectDir(projectDir)
+      .withArguments(
+          'build', '--stacktrace',
+          '--configuration-cache=warn'
+      )
+      .withPluginClasspath()
+      .withGradleVersion(gradleVersion)
+      .forwardStdOutput(new OutputStreamWriter(System.out))
+      .forwardStdError(new OutputStreamWriter(System.err))
+
+    when: "build is invoked"
+    BuildResult result = runner.build()
+
+    then: "it caches the task graph"
+    result.output.contains("Calculating task graph")
+
+    and: "it succeeds"
+    result.task(":build").outcome == TaskOutcome.SUCCESS
+    ProtobufPluginTestHelper.verifyProjectDir(projectDir)
+
+    when: "build is invoked again"
+    result = runner.build()
+
+    then: "it reuses the task graph"
+    result.output.contains("Reusing configuration cache")
+
+    and: "it is up to date"
+    result.task(":build").outcome == TaskOutcome.UP_TO_DATE
+    ProtobufPluginTestHelper.verifyProjectDir(projectDir)
+
+    where:
+    gradleVersion << GRADLE_VERSIONS.takeRight(1)
+  }
+
+  @Unroll
   void "testProjectBuildTimeProto should be successfully executed [gradle #gradleVersion]"() {
     given: "project from testProjectGeneratedProto"
     File projectDir = ProtobufPluginTestHelper.projectBuilder('testProjectBuildTimeProto')
@@ -124,8 +169,7 @@ class ProtobufJavaPluginTest extends Specification {
     ProtobufPluginTestHelper.verifyProjectDir(projectDir)
 
     where:
-    gradleVersion << GRADLE_VERSIONS
-    kotlinVersion << KOTLIN_VERSIONS
+    [gradleVersion, kotlinVersion] << [GRADLE_VERSIONS, KOTLIN_VERSIONS].combinations()
   }
 
   @Unroll
@@ -150,8 +194,7 @@ class ProtobufJavaPluginTest extends Specification {
     ProtobufPluginTestHelper.verifyProjectDir(projectDir)
 
     where:
-    gradleVersion << GRADLE_VERSIONS
-    kotlinVersion << KOTLIN_VERSIONS
+    [gradleVersion, kotlinVersion] << [GRADLE_VERSIONS, KOTLIN_VERSIONS].combinations()
   }
 
   @Unroll
