@@ -73,8 +73,6 @@ apply plugin: 'com.android.application'  // or 'com.android.library'
 apply plugin: 'com.google.protobuf'
 ```
 
-The experimental Android plugin is not supported yet (#85).
-
 ### Using the Gradle plugin DSL
 The order of the plugins doesn't matter:
 
