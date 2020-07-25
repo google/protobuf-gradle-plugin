@@ -29,6 +29,8 @@
  */
 package com.google.protobuf.gradle
 
+import static java.nio.charset.StandardCharsets.US_ASCII
+
 import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
 import groovy.transform.CompileDynamic
@@ -77,6 +79,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
   // Extra command line length when added an additional argument on Windows.
   // Two quotes and a space.
   static final int CMD_ARGUMENT_EXTRA_LENGTH = 3
+  private static final String JAR_SUFFIX = ".jar"
 
   // include dirs are passed to the '-I' option of protoc.  They contain protos
   // that may be "imported" from the source protos, but will not be compiled.
@@ -203,10 +206,37 @@ public abstract class GenerateProtoTask extends DefaultTask {
   }
 
   static int getCmdLengthLimit(String os) {
-    if (os != null && os.toLowerCase(Locale.ROOT).indexOf("win") > -1) {
-      return WINDOWS_CMD_LENGTH_LIMIT
+    return isWindows(os) ? WINDOWS_CMD_LENGTH_LIMIT : Integer.MAX_VALUE
+  }
+
+  static boolean isWindows(String os) {
+    return os != null && os.toLowerCase(Locale.ROOT).indexOf("win") > -1
+  }
+
+  static boolean isWindows() {
+    return isWindows(System.getProperty("os.name"))
+  }
+
+  static boolean createNewScriptFile(File outputFile) throws IOException {
+    if (!outputFile.getParentFile().isDirectory() && !outputFile.getParentFile().mkdirs()) {
+      throw new IOException("unable to make directories for file: " + outputFile.getCanonicalPath())
     }
-    return Integer.MAX_VALUE
+    return true
+  }
+
+  static void finalizeScriptFile(File outputFile) throws IOException {
+    if (!outputFile.setExecutable(true)) {
+      outputFile.delete()
+      throw new IOException("unable to set file as executable: " + outputFile.getCanonicalPath())
+    }
+  }
+
+  static String computeJavaExePath(boolean isWindows) throws IOException {
+    File java = new File(System.getProperty("java.home"), isWindows ? "bin/java.exe" : "bin/java")
+    if (!java.exists()) {
+      throw new IOException("Could not find java executable at " + java.path)
+    }
+    return java.path
   }
 
   void setOutputBaseDir(String outputBaseDir) {
@@ -637,13 +667,50 @@ public abstract class GenerateProtoTask extends DefaultTask {
 
   protected String computeExecutablePath(ExecutableLocator locator) {
     if (locator.path != null) {
-      return locator.path
+      return locator.path.endsWith(JAR_SUFFIX) ? createJarTrampolineScript(locator.path) : locator.path
     }
     File file = locatorToAlternativePathsMapping.getting(locator.name).get().singleFile
+    if (file.name.endsWith(JAR_SUFFIX)) {
+      return createJarTrampolineScript(file.getAbsolutePath())
+    }
+
     if (!file.canExecute() && !file.setExecutable(true)) {
       throw new GradleException("Cannot set ${file} as executable")
     }
     logger.info("Resolved artifact: ${file}")
     return file.path
+  }
+
+  /**
+   * protoc only supports plugins that are a single self contained executable file. For .jar files create a trampoline
+   * script to execute the jar file. Assume the jar is a "fat jar" or "uber jar" and don't attempt any artifact
+   * resolution.
+   * @param jarAbsolutePath Absolute path to the .jar file.
+   * @return The absolute path to the trampoline executable script.
+   */
+  private String createJarTrampolineScript(String jarAbsolutePath) {
+    assert jarAbsolutePath.endsWith(JAR_SUFFIX)
+    boolean isWindows = isWindows()
+    File scriptExecutableFile = new File("${project.buildDir}/scripts/" +
+            jarAbsolutePath[0..(jarAbsolutePath.length() - JAR_SUFFIX.length())] + "-trampoline." +
+            (isWindows ? "bat" : "sh"))
+    try {
+      if (createNewScriptFile(scriptExecutableFile)) {
+        String javaExe = computeJavaExePath(isWindows)
+        // Rewrite the trampoline file unconditionally (even if it already exists) in case the dependency or versioning
+        // changes we don't need to detect the delta (and the file content is cheap to re-generate).
+        new FileOutputStream(scriptExecutableFile).withCloseable { execOutputStream ->
+          String trampoline = isWindows ?
+                  "@ECHO OFF\r\n${javaExe} -jar ${jarAbsolutePath} %*\r\n" :
+                  "#!/bin/sh\nexec ${javaExe} -jar ${jarAbsolutePath} \"\$@\"\n"
+          execOutputStream.write(trampoline.getBytes(US_ASCII))
+        }
+        finalizeScriptFile(scriptExecutableFile)
+      }
+      logger.info("Resolved artifact jar: ${jarAbsolutePath}. Created trampoline file: ${scriptExecutableFile}")
+      return scriptExecutableFile.path
+    } catch (IOException e) {
+      throw new GradleException("Unable to generate trampoline for .jar protoc plugin", e)
+    }
   }
 }
