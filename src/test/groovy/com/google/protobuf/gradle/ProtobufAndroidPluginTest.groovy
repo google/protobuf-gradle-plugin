@@ -31,8 +31,12 @@ class ProtobufAndroidPluginTest extends Specification {
     File testProjectLiteStaging = ProtobufPluginTestHelper.projectBuilder('testProjectLite')
         .copyDirs('testProjectLite')
         .build()
+    File testProjectAndroidLibrary = ProtobufPluginTestHelper.projectBuilder('testProjectAndroidLibrary')
+            .copyDirs('testProjectAndroidLibrary')
+            .build()
     File mainProjectDir = ProtobufPluginTestHelper.projectBuilder('testProjectAndroidMain')
-        .copySubProjects(testProjectStaging, testProjectLiteStaging, testProjectAndroidStaging)
+        .copySubProjects(testProjectStaging, testProjectLiteStaging, testProjectAndroidStaging,
+                testProjectAndroidLibrary)
         .withAndroidPlugin(agpVersion)
         .build()
     when: "build is invoked"
@@ -62,8 +66,12 @@ class ProtobufAndroidPluginTest extends Specification {
     File testProjectLiteStaging = ProtobufPluginTestHelper.projectBuilder('testProjectLite')
             .copyDirs('testProjectLite')
             .build()
+    File testProjectAndroidLibrary = ProtobufPluginTestHelper.projectBuilder('testProjectAndroidLibrary')
+            .copyDirs('testProjectAndroidLibrary')
+            .build()
     File mainProjectDir = ProtobufPluginTestHelper.projectBuilder('testProjectAndroidMain')
-            .copySubProjects(testProjectStaging, testProjectLiteStaging, testProjectAndroidStaging)
+            .copySubProjects(testProjectStaging, testProjectLiteStaging, testProjectAndroidStaging,
+                    testProjectAndroidLibrary)
             .withAndroidPlugin(agpVersion)
             .build()
     and:
@@ -122,8 +130,12 @@ class ProtobufAndroidPluginTest extends Specification {
     File testProjectLiteStaging = ProtobufPluginTestHelper.projectBuilder('testProjectLite')
         .copyDirs('testProjectLite')
         .build()
+    File testProjectAndroidLibraryStaging = ProtobufPluginTestHelper.projectBuilder('testProjectAndroidLibrary')
+            .copyDirs('testProjectAndroidLibrary')
+            .build()
     File mainProjectDir = ProtobufPluginTestHelper.projectBuilder('testProjectAndroidMain')
-        .copySubProjects(testProjectStaging, testProjectLiteStaging, testProjectAndroidStaging)
+        .copySubProjects(testProjectStaging, testProjectLiteStaging, testProjectAndroidStaging,
+                testProjectAndroidLibraryStaging)
         .withAndroidPlugin(agpVersion)
         .withKotlin(kotlinVersion)
         .build()
