@@ -79,8 +79,6 @@ protobuf {
 }
 
 dependencies {
-    compile 'com.android.support:appcompat-v7:23.4.0'
-    compile 'com.squareup.okhttp:okhttp:2.7.5'
     compile 'javax.annotation:javax.annotation-api:1.2'
     compile 'com.google.protobuf:protobuf-lite:3.0.0'
     compile 'io.grpc:grpc-core:1.0.0-pre2'

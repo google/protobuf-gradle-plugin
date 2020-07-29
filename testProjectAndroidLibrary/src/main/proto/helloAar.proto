@@ -1,5 +1,5 @@
 
-// Copyright 2015, Google Inc.
+// Copyright 2020, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -31,7 +31,7 @@
 // Message definitions to be used by integration test service definitions.
 syntax = "proto3";
 
-// From testProjectAndroidLibrary: src/main/proto
+// From testProjectLite: src/main/proto
 import "messages.proto";
 
 option java_package = "io.grpc.helloaarexample";
