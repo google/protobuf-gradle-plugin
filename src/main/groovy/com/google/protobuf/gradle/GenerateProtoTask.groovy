@@ -217,14 +217,22 @@ public abstract class GenerateProtoTask extends DefaultTask {
     return isWindows(System.getProperty("os.name"))
   }
 
-  static boolean createNewScriptFile(File outputFile) throws IOException {
+  static String escapePathUnix(String path) {
+    return path.replace("'", "'\\''")
+  }
+
+  static String escapePathWindows(String path) {
+    String escapedPath = path.replace("%", "%%")
+    return escapedPath.endsWith("\\") ? escapedPath + "\\" : escapedPath
+  }
+
+  static void mkdirsForFile(File outputFile) throws IOException {
     if (!outputFile.getParentFile().isDirectory() && !outputFile.getParentFile().mkdirs()) {
       throw new IOException("unable to make directories for file: " + outputFile.getCanonicalPath())
     }
-    return true
   }
 
-  static void finalizeScriptFile(File outputFile) throws IOException {
+  static void setExecutableOrFail(File outputFile) throws IOException {
     if (!outputFile.setExecutable(true)) {
       outputFile.delete()
       throw new IOException("unable to set file as executable: " + outputFile.getCanonicalPath())
@@ -691,22 +699,23 @@ public abstract class GenerateProtoTask extends DefaultTask {
   private String createJarTrampolineScript(String jarAbsolutePath) {
     assert jarAbsolutePath.endsWith(JAR_SUFFIX)
     boolean isWindows = isWindows()
+    String jarFileName = new File(jarAbsolutePath).getName()
+    if (jarFileName.length() <= JAR_SUFFIX.length()) {
+      throw new GradleException(".jar protoc plugin path '${jarAbsolutePath}' has no file name")
+    }
     File scriptExecutableFile = new File("${project.buildDir}/scripts/" +
-            jarAbsolutePath[0..(jarAbsolutePath.length() - JAR_SUFFIX.length())] + "-trampoline." +
+            jarFileName[0..(jarFileName.length() - JAR_SUFFIX.length() - 1)] + "-trampoline." +
             (isWindows ? "bat" : "sh"))
     try {
-      if (createNewScriptFile(scriptExecutableFile)) {
-        String javaExe = computeJavaExePath(isWindows)
-        // Rewrite the trampoline file unconditionally (even if it already exists) in case the dependency or versioning
-        // changes we don't need to detect the delta (and the file content is cheap to re-generate).
-        new FileOutputStream(scriptExecutableFile).withCloseable { execOutputStream ->
-          String trampoline = isWindows ?
-                  "@ECHO OFF\r\n${javaExe} -jar ${jarAbsolutePath} %*\r\n" :
-                  "#!/bin/sh\nexec ${javaExe} -jar ${jarAbsolutePath} \"\$@\"\n"
-          execOutputStream.write(trampoline.getBytes(US_ASCII))
-        }
-        finalizeScriptFile(scriptExecutableFile)
-      }
+      mkdirsForFile(scriptExecutableFile)
+      String javaExe = computeJavaExePath(isWindows)
+      // Rewrite the trampoline file unconditionally (even if it already exists) in case the dependency or versioning
+      // changes we don't need to detect the delta (and the file content is cheap to re-generate).
+      String trampoline = isWindows ?
+              "@ECHO OFF\r\n\"${escapePathWindows(javaExe)}\" -jar \"${escapePathWindows(jarAbsolutePath)}\" %*\r\n" :
+              "#!/bin/sh\nexec '${escapePathUnix(javaExe)}' -jar '${escapePathUnix(jarAbsolutePath)}' \"\$@\"\n"
+      scriptExecutableFile.write(trampoline, US_ASCII.name())
+      setExecutableOrFail(scriptExecutableFile)
       logger.info("Resolved artifact jar: ${jarAbsolutePath}. Created trampoline file: ${scriptExecutableFile}")
       return scriptExecutableFile.path
     } catch (IOException e) {
