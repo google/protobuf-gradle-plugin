@@ -704,7 +704,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
       throw new GradleException(".jar protoc plugin path '${jarAbsolutePath}' has no file name")
     }
     File scriptExecutableFile = new File("${project.buildDir}/scripts/" +
-            jarFileName[0..(jarFileName.length() - JAR_SUFFIX.length() - 1)] + "-trampoline." +
+            jarFileName[0..(jarFileName.length() - JAR_SUFFIX.length() - 1)] + "-${getName()}-trampoline." +
             (isWindows ? "bat" : "sh"))
     try {
       mkdirsForFile(scriptExecutableFile)
