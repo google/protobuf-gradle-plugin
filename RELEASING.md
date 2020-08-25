@@ -64,9 +64,9 @@ Releasing
 (may take a few minutes up to hours) and [Gradle Plugin Portal](https://plugins.gradle.org/plugin/com.google.protobuf) 
 (should be available immediately).
 
-4. Push commits:
+4. Go through PR review and push the release tag to Github:
 - Run `git push upstream master`.
-- Run `git push --tags upstream`.
+- Run `git push upstream v$RELEASE_VERSION`.
 
 5. Create release notes.
 
