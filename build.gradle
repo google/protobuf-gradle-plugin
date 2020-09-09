@@ -53,6 +53,7 @@ configurations {
 
 dependencies {
     compileOnly "org.gradle:gradle-kotlin-dsl:1.0.4"
+    compileOnly "com.android.tools.build:gradle:3.5.0"
 
     compile 'com.google.guava:guava:27.0.1-jre'
     compile 'com.google.gradle:osdetector-gradle-plugin:1.6.2'
