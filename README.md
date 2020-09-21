@@ -11,7 +11,7 @@ files (``*.proto``) in your project. There are two pieces of its job:
     Android project), so that they can be compiled along with your Java sources.
     - Note if you are generating non-Java/Kotlin source files, they will not be
     included for compilation automatically, you will need to add them to sources
-    for language-specific compilations. See details in [this section](#default-outputs).
+    for language-specific compilations. See details in [Default options section](#default-outputs).
 
 For more information about the Protobuf Compiler, please refer to
 [Google Developers Site](https://developers.google.com/protocol-buffers/docs/reference/java-generated?csw=1).
