@@ -9,6 +9,9 @@ files (``*.proto``) in your project. There are two pieces of its job:
  2. It adds the generated Java source files to the input of the corresponding
     Java compilation unit (_sourceSet_ in a Java project; _variant_ in an
     Android project), so that they can be compiled along with your Java sources.
+    - Note if you are generating non-Java/Kotlin source files, they will not be
+    included for compilation automatically, you will need to add them to sources
+    for language-specific compilations. See details in [Default options section](#default-outputs).
 
 For more information about the Protobuf Compiler, please refer to
 [Google Developers Site](https://developers.google.com/protocol-buffers/docs/reference/java-generated?csw=1).
@@ -328,6 +331,8 @@ protobuf {
 }
 ```
 
+Note the generated Python code will not be included for compilation, you will
+need to add them as sources to Python's compilation tasks manually. 
 See [this section](#change-where-files-are-generated) for details about where the code will be generated.
 
 
