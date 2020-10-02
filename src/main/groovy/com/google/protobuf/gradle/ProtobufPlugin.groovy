@@ -220,11 +220,6 @@ class ProtobufPlugin implements Plugin<Project> {
      */
     private void addProtoTasks() {
       if (Utils.isAndroidProject(project)) {
-        // Avoid packaging proto files into apk.
-        if (!project.android.hasProperty('libraryVariants')) {
-          project.android.packagingOptions.exclude("**/*.proto")
-        }
-
         getNonTestVariants().each { variant ->
           addTasksForVariant(variant, false)
         }
@@ -276,8 +271,6 @@ class ProtobufPlugin implements Plugin<Project> {
 
       variant.sourceSets.each {
         setupExtractProtosTask(generateProtoTask, it.name)
-        // Add proto files to java resources, and package them into aar/classes.jar.
-        it.resources.srcDirs += generateProtoTask.sourceFiles
       }
 
       if (variant.hasProperty("compileConfiguration")) {
