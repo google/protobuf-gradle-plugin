@@ -38,7 +38,6 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.artifacts.Configuration
-import org.gradle.api.attributes.Attribute
 import org.gradle.api.attributes.LibraryElements
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.SourceDirectorySet
@@ -269,36 +268,22 @@ class ProtobufPlugin implements Plugin<Project> {
       }
       generateProtoTask.doneInitializing()
 
-      variant.sourceSets.each {
-        setupExtractProtosTask(generateProtoTask, it.name)
-      }
-
-      if (variant.hasProperty("compileConfiguration")) {
-        // For Android Gradle plugin >= 2.5
-        Attribute artifactType = Attribute.of("artifactType", String)
-        String name = variant.name
-        FileCollection classPathConfig = variant.compileConfiguration.incoming.artifactView {
-          attributes {
-              it.attribute(artifactType, "jar")
+      if (project.android.hasProperty('libraryVariants')) {
+          Task processResourcesTask = variant.getProcessJavaResourcesProvider().get()
+          processResourcesTask.from(generateProtoTask.sourceFiles) {
+              include '**/*.proto'
           }
-        }.files
-        FileCollection testClassPathConfig =
-            variant.hasProperty("testedVariant") ?
-              variant.testedVariant.compileConfiguration.incoming.artifactView {
-                attributes {
-                  it.attribute(artifactType, "jar")
-                }
-              }.files : null
-        setupExtractIncludeProtosTask(generateProtoTask, name, classPathConfig, testClassPathConfig)
+          variant.sourceSets.each {
+              setupExtractIncludeProtosTask(generateProtoTask, it.name)
+              Task extractTask = setupExtractProtosTask(generateProtoTask, it.name)
+              processResourcesTask.dependsOn(extractTask)
+          }
       } else {
-        // For Android Gradle plugin < 2.5
-        variant.sourceSets.each {
-          setupExtractIncludeProtosTask(generateProtoTask, it.name)
-        }
+          variant.sourceSets.each {
+              setupExtractIncludeProtosTask(generateProtoTask, it.name)
+              setupExtractProtosTask(generateProtoTask, it.name)
+          }
       }
-
-      // TODO(zhangkun83): Include source proto files in the compiled archive,
-      // so that proto files from dependent projects can import them.
     }
 
     /**
