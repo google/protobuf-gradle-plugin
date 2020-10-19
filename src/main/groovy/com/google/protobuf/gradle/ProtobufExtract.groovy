@@ -33,6 +33,7 @@ import com.google.common.base.Preconditions
 import groovy.transform.CompileDynamic
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.Input
@@ -92,53 +93,45 @@ abstract class ProtobufExtract extends DefaultTask {
   @TaskAction
   void extract() {
     destDir.mkdir()
+    def extractFrom = { src ->
+      copyActionFacade.copy { spec ->
+        spec.includeEmptyDirs = false
+        spec.from(src) {
+          include '**/*.proto'
+        }
+        spec.into(destDir)
+      }
+    }
     boolean warningLogged = false
     inputFiles.each { file ->
       logger.debug "Extracting protos from ${file} to ${destDir}"
       if (file.isDirectory()) {
-        copyActionFacade.copy { spec ->
-          spec.includeEmptyDirs = false
-          spec.from(file.path) {
-            include '**/*.proto'
-          }
-          spec.into(destDir)
-        }
+        extractFrom(file)
       } else if (file.path.endsWith('.proto')) {
         if (!warningLogged) {
           warningLogged = true
           logger.warn "proto file '${file.path}' directly specified in configuration. " +
-              "It's likely you specified files('path/to/foo.proto') or " +
-              "fileTree('path/to/directory') in protobuf or compile configuration. " +
-              "This makes you vulnerable to " +
-              "https://github.com/google/protobuf-gradle-plugin/issues/248. " +
-              "Please use files('path/to/directory') instead."
+                  "It's likely you specified files('path/to/foo.proto') or " +
+                  "fileTree('path/to/directory') in protobuf or compile configuration. " +
+                  "This makes you vulnerable to " +
+                  "https://github.com/google/protobuf-gradle-plugin/issues/248. " +
+                  "Please use files('path/to/directory') instead."
         }
-        copyActionFacade.copy { spec ->
-          spec.includeEmptyDirs = false
-          spec.from(file.path)
-          spec.into(destDir)
-        }
+        extractFrom(file)
       } else if (file.path.endsWith('.jar') || file.path.endsWith('.zip')) {
         FileTree zipTree = archiveActionFacade.zipTree(file.path)
-        copyActionFacade.copy { spec ->
-          spec.includeEmptyDirs = false
-          spec.from(zipTree) {
-            include '**/*.proto'
-          }
-          spec.into(destDir)
+        extractFrom(zipTree)
+      } else if (file.path.endsWith('.aar')) {
+        FileCollection zipTree = archiveActionFacade.zipTree(file.path).filter { it.path.endsWith('.jar') }
+        zipTree.each { it ->
+          extractFrom(archiveActionFacade.zipTree(it))
         }
       } else if (file.path.endsWith('.tar')
               || file.path.endsWith('.tar.gz')
               || file.path.endsWith('.tar.bz2')
               || file.path.endsWith('.tgz')) {
         FileTree tarTree = archiveActionFacade.tarTree(file.path)
-        copyActionFacade.copy { spec ->
-          spec.includeEmptyDirs = false
-          spec.from(tarTree) {
-            include '**/*.proto'
-          }
-          spec.into(destDir)
-        }
+        extractFrom(tarTree)
       } else {
         logger.debug "Skipping unsupported file type (${file.path}); handles only jar, tar, tar.gz, tar.bz2 & tgz"
       }
