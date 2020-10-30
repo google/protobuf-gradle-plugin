@@ -93,7 +93,7 @@ abstract class ProtobufExtract extends DefaultTask {
   @TaskAction
   void extract() {
     destDir.mkdir()
-    def extractFrom = { src ->
+    Closure extractFrom = { src ->
       copyActionFacade.copy { spec ->
         spec.includeEmptyDirs = false
         spec.from(src) {
