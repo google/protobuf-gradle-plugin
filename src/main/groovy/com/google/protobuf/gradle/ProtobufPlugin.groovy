@@ -125,10 +125,14 @@ class ProtobufPlugin implements Plugin<Project> {
 
         addSourceSetExtensions()
         getSourceSets().all { sourceSet ->
-          createConfigurations(sourceSet.name)
+          createProtobufConfiguration(sourceSet.name)
         }
         project.afterEvaluate {
-          // The Android variants are only available at this point.
+          // All custom source sets, configurations created by other plugins,
+          // and Android variants are only available at this point.
+          getSourceSets().each { sourceSet ->
+            createCompileProtoPathConfiguration(sourceSet.name)
+          }
           addProtoTasks()
           project.protobuf.runTaskConfigClosures()
           // Disallow user configuration outside the config closures, because
@@ -148,10 +152,11 @@ class ProtobufPlugin implements Plugin<Project> {
     }
 
     /**
-     * Creates configurations if necessary for a source set so that the build
-     * author can configure dependencies for it.
+     * Creates a 'protobuf' configuration for the given source set. The build author can
+     * configure dependencies for it. The extract-protos task of each source set will
+     * extract protobuf files from dependencies in this configuration.
      */
-    private void  createConfigurations(String sourceSetName) {
+    private void  createProtobufConfiguration(String sourceSetName) {
       String protobufConfigName = Utils.getConfigName(sourceSetName, 'protobuf')
       if (project.configurations.findByName(protobufConfigName) == null) {
         project.configurations.create(protobufConfigName) {
@@ -160,27 +165,29 @@ class ProtobufPlugin implements Plugin<Project> {
           extendsFrom = []
         }
       }
+    }
 
-      // Create a 'compileProtoPath' configuration that extends compilation configurations
-      // as a bucket of dependencies with resources attribute. This works around 'java-library'
-      // plugin not exposing resources to consumers for compilation.
-      // Some Android sourceSets (more precisely, variants) do not have compilation configurations,
-      // they do not contain compilation dependencies, so they would not depend on any upstream
-      // proto files.
+    /**
+     * Creates an internal 'compileProtoPath' configuration for the given source set that extends
+     * compilation configurations as a bucket of dependencies with resources attribute.
+     * The extract-include-protos task of each source set will extract protobuf files from
+     * dependencies in this configuration.
+     *
+     * <p> This works around 'java-library' plugin not exposing resources to consumers for compilation.
+     */
+    private void createCompileProtoPathConfiguration(String sourceSetName) {
       String compileProtoConfigName = Utils.getConfigName(sourceSetName, 'compileProtoPath')
       Configuration compileConfig =
               project.configurations.findByName(Utils.getConfigName(sourceSetName, 'compileOnly'))
       Configuration implementationConfig =
               project.configurations.findByName(Utils.getConfigName(sourceSetName, 'implementation'))
-      if (compileConfig && implementationConfig &&
-              project.configurations.findByName(compileProtoConfigName) == null) {
+      if (project.configurations.findByName(compileProtoConfigName) == null) {
         project.configurations.create(compileProtoConfigName) {
-          visible = false
-          transitive = true
-          extendsFrom = [compileConfig, implementationConfig]
-          canBeConsumed = false
-        }.getAttributes().attribute(
-                LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE,
+            visible = false
+            transitive = true
+            extendsFrom = [compileConfig, implementationConfig]
+            canBeConsumed = false
+        }.getAttributes().attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE,
                 project.getObjects().named(LibraryElements, LibraryElements.RESOURCES))
       }
     }
