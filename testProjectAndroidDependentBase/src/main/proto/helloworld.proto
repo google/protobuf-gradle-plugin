@@ -29,7 +29,7 @@
 
 syntax = "proto3";
 
-// From testProject: src/nano/proto
+// From testProjectAndroidLibrary: src/proto
 import "messages.proto";
 
 option java_package = "io.grpc.helloworldexample";
