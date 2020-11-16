@@ -113,14 +113,17 @@ class ProtobufAndroidPluginTest extends Specification {
   @Unroll
   void "testProjectAndroidDependent [android #agpVersion, gradle #gradleVersion, kotlin #kotlinVersion]"() {
     given: "project from testProjectAndroidLibrary, testProjectAndroid"
-    File testProjectLibrary = ProtobufPluginTestHelper.projectBuilder('testProjectAndroidLibrary')
+    File testProjectStaging = ProtobufPluginTestHelper.projectBuilder('testProject')
+            .copyDirs('testProjectBase', 'testProject')
+            .build()
+    File testProjectLibraryStaging = ProtobufPluginTestHelper.projectBuilder('testProjectAndroidLibrary')
             .copyDirs('testProjectAndroidLibrary')
             .build()
-    File testProjectAndroid = ProtobufPluginTestHelper.projectBuilder('testProjectAndroid')
+    File testProjectAndroidStaging = ProtobufPluginTestHelper.projectBuilder('testProjectAndroid')
             .copyDirs('testProjectAndroidDependentBase', 'testProjectAndroid')
             .build()
     File mainProjectDir = ProtobufPluginTestHelper.projectBuilder('testProjectAndroidDependentMain')
-            .copySubProjects(testProjectLibrary, testProjectAndroid)
+            .copySubProjects(testProjectStaging, testProjectLibraryStaging, testProjectAndroidStaging)
             .withAndroidPlugin(agpVersion)
             .build()
     when: "build is invoked"
