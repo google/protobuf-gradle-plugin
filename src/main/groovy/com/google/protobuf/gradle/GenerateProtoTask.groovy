@@ -103,7 +103,6 @@ public abstract class GenerateProtoTask extends DefaultTask {
   private String buildType
   private boolean isTestVariant
   private FileResolver fileResolver
-  private final Provider<String> variantName = providerFactory.provider { variant.name }
   private final Provider<Boolean> isAndroidProject = providerFactory.provider { Utils.isAndroidProject(project) }
   private final Provider<Boolean> isTestProvider = providerFactory.provider {
     if (Utils.isAndroidProject(project)) {
@@ -342,11 +341,6 @@ public abstract class GenerateProtoTask extends DefaultTask {
   }
 
   @Internal("Not an actual input to the task, only used to find tasks belonging to a variant")
-  Provider<String> getVariantName() {
-    return variantName
-  }
-
-  @Internal("Not an actual input to the task, only used to find tasks belonging to a variant")
   boolean getIsTestVariant() {
     Preconditions.checkState(isAndroidProject.get(),
         'isTestVariant should not be used in a Java project')
@@ -367,7 +361,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
     Preconditions.checkState(isAndroidProject.get(),
         'buildType should not be used in a Java project')
     Preconditions.checkState(
-        variantName.get() == 'test' || buildType,
+        variant.name == 'test' || buildType,
         'buildType is not set and task is not for local unit test variant')
     return buildType
   }

@@ -137,7 +137,7 @@ public class ProtobufConfigurator {
 
     public TaskCollection<GenerateProtoTask> ofVariant(String variant) {
       return all().matching { GenerateProtoTask task ->
-        task.variantName.get() == variant
+        task.variant.name == variant
       }
     }
 
