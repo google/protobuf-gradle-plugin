@@ -131,8 +131,15 @@ class ProtobufPlugin implements Plugin<Project> {
         project.afterEvaluate {
           // All custom source sets, configurations created by other plugins,
           // and Android variants are only available at this point.
-          getSourceSets().each { sourceSet ->
-            createCompileProtoPathConfiguration(sourceSet.name)
+
+          // Java projects will extract included protos from a 'compileProtoPath'
+          // configuration of each source set, while Android projects will
+          // extract included protos from {@code variant.compileConfiguration}
+          // of each variant.
+          if (!Utils.isAndroidProject(project)) {
+            getSourceSets().each { sourceSet ->
+                createCompileProtoPathConfiguration(sourceSet.name)
+            }
           }
           addProtoTasks()
           project.protobuf.runTaskConfigClosures()
@@ -174,6 +181,7 @@ class ProtobufPlugin implements Plugin<Project> {
      * The extract-include-protos task of each source set will extract protobuf files from
      * dependencies in this configuration.
      *
+     * <p> For Java projects only.
      * <p> This works around 'java-library' plugin not exposing resources to consumers for compilation.
      */
     private void createCompileProtoPathConfiguration(String sourceSetName) {
@@ -268,6 +276,7 @@ class ProtobufPlugin implements Plugin<Project> {
      * Creates Protobuf tasks for a variant in an Android project.
      */
     private void addTasksForVariant(final Object variant, boolean isTestVariant) {
+      // GenerateProto task, one per variant (compilation unit).
       Task generateProtoTask = addGenerateProtoTask(variant.name, variant.sourceSets)
       generateProtoTask.setVariant(variant, isTestVariant)
       generateProtoTask.flavors = ImmutableList.copyOf(variant.productFlavors.collect { it.name } )
@@ -276,8 +285,9 @@ class ProtobufPlugin implements Plugin<Project> {
       }
       generateProtoTask.doneInitializing()
 
+      // ExtractIncludeProto task, one per variant (compilation unit).
+      // Proto definitions from an AAR dependencies are in its JAR resources.
       Attribute artifactType = Attribute.of("artifactType", String)
-      String name = variant.name
       FileCollection classPathConfig = variant.compileConfiguration.incoming.artifactView {
         attributes {
             it.attribute(artifactType, "jar")
@@ -290,11 +300,12 @@ class ProtobufPlugin implements Plugin<Project> {
                     it.attribute(artifactType, "jar")
                 }
             }.files : null
-      setupExtractIncludeProtosTask(generateProtoTask, name, classPathConfig, testClassPathConfig)
+      setupExtractIncludeProtosTask(generateProtoTask, variant.name, classPathConfig, testClassPathConfig)
 
-      // Include source proto files in the compiled archive, so that proto files from
-      // dependent projects can import them.
+      // ExtractProto task, one per source set.
       if (project.android.hasProperty('libraryVariants')) {
+          // Include source proto files in the compiled archive, so that proto files from
+          // dependent projects can import them.
           Task processResourcesTask = variant.getProcessJavaResourcesProvider().get()
           processResourcesTask.from(generateProtoTask.sourceFiles) {
               include '**/*.proto'
@@ -401,7 +412,7 @@ class ProtobufPlugin implements Plugin<Project> {
             // dependencies.
             if (Utils.isTest(sourceSetOrVariantName)) {
               inputFiles.from getSourceSets()['main'].proto
-              inputFiles.from testedCompileClasspathConfiguration ?: project.configurations['compile']
+              inputFiles.from testedCompileClasspathConfiguration
             }
           } else {
             // In Java projects, the compileClasspath of the 'test' sourceSet includes all the
