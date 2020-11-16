@@ -6,6 +6,8 @@ option java_multiple_files = true;
 
 // From the main sourceSet
 import "helloworld.proto";
+// From main's dependency testProjectAndroidLibrary: src/proto
+import "messages.proto";
 
 message UnitTestMsg {
     string foo = 1;
@@ -14,5 +16,8 @@ message UnitTestMsg {
 
 message UnitTestSecondMsg {
     int32 blah = 1;
+    // Uses message type from helloworld.proto
     helloworld.HelloReply reply = 2;
+    // Uses message type from messages.proto
+    grpc.testing.SimpleContext context = 3;
 }
