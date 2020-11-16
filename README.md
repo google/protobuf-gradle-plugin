@@ -9,12 +9,15 @@ files (``*.proto``) in your project. There are two pieces of its job:
  2. It adds the generated Java source files to the input of the corresponding
     Java compilation unit (_sourceSet_ in a Java project; _variant_ in an
     Android project), so that they can be compiled along with your Java sources.
+    - Note if you are generating non-Java/Kotlin source files, they will not be
+    included for compilation automatically, you will need to add them to sources
+    for language-specific compilations. See details in [Default options section](#default-outputs).
 
 For more information about the Protobuf Compiler, please refer to
 [Google Developers Site](https://developers.google.com/protocol-buffers/docs/reference/java-generated?csw=1).
 
 ## Latest Version
-The latest version is ``0.8.12``. It requires at least __Gradle 5.6__ and __Java 8__.
+The latest version is ``0.8.13``. It requires at least __Gradle 5.6__ and __Java 8__.
 It is available on Maven Central. To add dependency to it:
 ```gradle
 buildscript {
@@ -22,7 +25,7 @@ buildscript {
     mavenCentral()
   }
   dependencies {
-    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.12'
+    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.13'
   }
 }
 ```
@@ -37,7 +40,7 @@ buildscript {
     mavenLocal()
   }
   dependencies {
-    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.13-SNAPSHOT'
+    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.14-SNAPSHOT'
   }
 }
 ```
@@ -78,7 +81,7 @@ The order of the plugins doesn't matter:
 
 ```gradle
 plugins {
-  id "com.google.protobuf" version "0.8.12"
+  id "com.google.protobuf" version "0.8.13"
   id "java"
 }
 ```
@@ -328,6 +331,8 @@ protobuf {
 }
 ```
 
+Note the generated Python code will not be included for compilation, you will
+need to add them as sources to Python's compilation tasks manually. 
 See [this section](#change-where-files-are-generated) for details about where the code will be generated.
 
 

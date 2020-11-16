@@ -110,9 +110,6 @@ dependencies {
     compile(project(':testProjectLite')) {
       exclude module: "protobuf-lite"
     }
-    compile(project(':testProjectAndroidLibrary')) {
-        exclude module: "protobuf-lite"
-    }
     protobuf files('lib/protos.jar')
     testCompile 'junit:junit:4.12'
 }
