@@ -6,6 +6,8 @@ option java_multiple_files = true;
 
 // From the main sourceSet
 import "helloworld.proto";
+// From tested variant's dependency testProjectLite: src/proto
+import "messages.proto";
 
 message Msg {
     string foo = 1;
@@ -14,5 +16,8 @@ message Msg {
 
 message SecondMsg {
     int32 blah = 1;
+    // Uses message type from helloworld.proto
     helloworld.HelloReply reply = 2;
+    // Uses message type from messages.proto
+    grpc.testing.SimpleContext context = 3;
 }
