@@ -15,7 +15,7 @@ public final class UnitTest {
   // From src/main/proto/helloworld.proto
   private Helloworld.HelloRequest request;
 
-  // From testProjectLite: src/nano/proto/messages.proto
+  // From dependency project (testProjectLite/testProjectAndroidLibrary): src/proto/messages.proto
   private io.grpc.testing.Messages.SimpleRequest simpleRequest;
 
   // From lib/protos.jar

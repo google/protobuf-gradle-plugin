@@ -9,7 +9,7 @@ public class TestLibrary {
   // From src/main/proto/helloworld.proto
   Helloworld.HelloRequest request;
 
-  // From testProjectLite: src/nano/proto/messages.proto
+  // From dependency project (testProjectLite/testProjectAndroidLibrary): src/proto/messages.proto
   io.grpc.testing.Messages.SimpleRequest simpleRequest;
 
   // From lib/protos.jar

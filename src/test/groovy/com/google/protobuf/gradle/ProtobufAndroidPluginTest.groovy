@@ -111,6 +111,37 @@ class ProtobufAndroidPluginTest extends Specification {
   }
 
   @Unroll
+  void "testProjectAndroidDependent [android #agpVersion, gradle #gradleVersion, kotlin #kotlinVersion]"() {
+    given: "project from testProjectAndroidLibrary, testProjectAndroid"
+    File testProjectStaging = ProtobufPluginTestHelper.projectBuilder('testProject')
+            .copyDirs('testProjectBase', 'testProject')
+            .build()
+    File testProjectLibraryStaging = ProtobufPluginTestHelper.projectBuilder('testProjectAndroidLibrary')
+            .copyDirs('testProjectAndroidLibrary')
+            .build()
+    File testProjectAndroidStaging = ProtobufPluginTestHelper.projectBuilder('testProjectAndroid')
+            .copyDirs('testProjectAndroidDependentBase', 'testProjectAndroid')
+            .build()
+    File mainProjectDir = ProtobufPluginTestHelper.projectBuilder('testProjectAndroidDependentMain')
+            .copySubProjects(testProjectStaging, testProjectLibraryStaging, testProjectAndroidStaging)
+            .withAndroidPlugin(agpVersion)
+            .build()
+    when: "build is invoked"
+    BuildResult result = buildAndroidProject(
+            mainProjectDir,
+            gradleVersion,
+            "testProjectAndroid:build"
+    )
+
+    then: "it succeed"
+    result.task(":testProjectAndroid:build").outcome == TaskOutcome.SUCCESS
+
+    where:
+    agpVersion << ANDROID_PLUGIN_VERSION
+    gradleVersion << GRADLE_VERSION
+  }
+
+  @Unroll
   void "testProjectAndroidKotlin [android #agpVersion, gradle #gradleVersion, kotlin #kotlinVersion]"() {
     given: "project from testProject, testProjectLite & testProjectAndroid"
     File testProjectStaging = ProtobufPluginTestHelper.projectBuilder('testProject')

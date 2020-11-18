@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+option java_package = "com.example.tutorial";
+option java_outer_classname = "OuterSample";
+option java_multiple_files = true;
+
+// From the main sourceSet
+import "helloworld.proto";
+// From tested variant's dependency testProjectAndroidLibrary: src/proto
+import "messages.proto";
+
+message Msg {
+    string foo = 1;
+    SecondMsg blah = 2;
+}
+
+message SecondMsg {
+    int32 blah = 1;
+    // Uses message type from helloworld.proto
+    helloworld.HelloReply reply = 2;
+    // Uses message type from messages.proto
+    grpc.testing.SimpleContext context = 3;
+}
