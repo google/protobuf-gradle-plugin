@@ -17,7 +17,6 @@ import spock.lang.Unroll
 class ProtobufAndroidPluginTest extends Specification {
   private static final List<String> GRADLE_VERSION = ["5.6", "6.5-milestone-1"]
   private static final List<String> ANDROID_PLUGIN_VERSION = ["3.5.0", "4.1.0-alpha10"]
-  private static final List<String> KOTLIN_VERSION = ["1.3.20"]
 
   @Unroll
   void "testProjectAndroid should be successfully executed [android #agpVersion, gradle #gradleVersion]"() {
@@ -139,38 +138,5 @@ class ProtobufAndroidPluginTest extends Specification {
     where:
     agpVersion << ANDROID_PLUGIN_VERSION
     gradleVersion << GRADLE_VERSION
-  }
-
-  @Unroll
-  void "testProjectAndroidKotlin [android #agpVersion, gradle #gradleVersion, kotlin #kotlinVersion]"() {
-    given: "project from testProject, testProjectLite & testProjectAndroid"
-    File testProjectStaging = ProtobufPluginTestHelper.projectBuilder('testProject')
-        .copyDirs('testProjectBase', 'testProject')
-        .build()
-    File testProjectAndroidStaging = ProtobufPluginTestHelper.projectBuilder('testProjectAndroid')
-        .copyDirs('testProjectAndroidBase', 'testProjectAndroidKotlin')
-        .build()
-    File testProjectLiteStaging = ProtobufPluginTestHelper.projectBuilder('testProjectLite')
-        .copyDirs('testProjectLite')
-        .build()
-    File mainProjectDir = ProtobufPluginTestHelper.projectBuilder('testProjectAndroidMain')
-        .copySubProjects(testProjectStaging, testProjectLiteStaging, testProjectAndroidStaging)
-        .withAndroidPlugin(agpVersion)
-        .withKotlin(kotlinVersion)
-        .build()
-    when: "build is invoked"
-    BuildResult result = buildAndroidProject(
-       mainProjectDir,
-       gradleVersion,
-       "testProjectAndroid:build"
-    )
-
-    then: "it succeed"
-    result.task(":testProjectAndroid:build").outcome == TaskOutcome.SUCCESS
-
-    where:
-    agpVersion << ANDROID_PLUGIN_VERSION
-    gradleVersion << GRADLE_VERSION
-    kotlinVersion << KOTLIN_VERSION + KOTLIN_VERSION
   }
 }
