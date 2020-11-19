@@ -18,7 +18,7 @@ android:
 
 env:
   global:
-    - GRADLE_OPTS="-Xms128m"
+    - GRADLE_OPTS="-Xms128m -XX:MaxMetaspaceSize=512m"
 
 script:
   - ./gradlew clean assemble test --tests com.google.protobuf.gradle.ProtobufJavaPluginTest --stacktrace
