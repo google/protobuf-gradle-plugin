@@ -21,7 +21,7 @@ env:
     - GRADLE_OPTS="-Xms128m"
 
 script:
-  - ./gradlew clean assemble test --tests com.google.protobuf.gradle.ProtobufJavaPluginTest --stacktrace
+  - ./gradlew clean assemble -x signArchives test --tests com.google.protobuf.gradle.ProtobufJavaPluginTest --stacktrace
   - ./gradlew test --tests com.google.protobuf.gradle.ProtobufKotlinDslPluginTest --stacktrace
   - ./gradlew test --tests com.google.protobuf.gradle.ProtobufAndroidPluginTest --stacktrace
   - ./gradlew test --tests com.google.protobuf.gradle.AndroidProjectDetectionTest --stacktrace
