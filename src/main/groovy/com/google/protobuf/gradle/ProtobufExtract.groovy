@@ -64,8 +64,7 @@ abstract class ProtobufExtract extends DefaultTask {
   private final ConfigurableFileCollection inputFiles = objectFactory.fileCollection()
   private final CopyActionFacade copyActionFacade = instantiateCopyActionFacade()
   private final ArchiveActionFacade archiveActionFacade = instantiateArchiveActionFacade()
-  private final ConfigurableFileCollection filteredProtoNonDirs = instantiateFilteredProtoNonDirs()
-  private final FileCollection filteredProtoDirs = instantiateFilteredProtoDirs()
+  private final FileCollection filteredProtos = instantiateFilteredProtos()
 
   public void setIsTest(boolean isTest) {
     this.isTest = isTest
@@ -83,25 +82,13 @@ abstract class ProtobufExtract extends DefaultTask {
   }
 
   /**
-   * Non-dir inputs for this task used only for up to date checks. Add inputs to inputFiles.
-   * Uses relative path sensitivity as directory layout changes impact output.
+   * Inputs for this task containing only proto files, which is enough for up-to-date checks.
+   * Add inputs to inputFiles. Uses relative path sensitivity as directory layout changes impact output.
    */
   @InputFiles
   @PathSensitive(PathSensitivity.RELATIVE)
-  FileCollection getProtosFromNonDirs() {
-    return filteredProtoNonDirs
-  }
-
-  /**
-   * Directory inputs for this task used only for up to date checks. Add inputs to inputFiles.
-   * Uses relative path sensitivity as directory layout changes impact output.
-   */
-  @InputFiles
-  @PathSensitive(PathSensitivity.RELATIVE)
-  FileTree getProtosFromDirs() {
-    return objectFactory.fileCollection().from(filteredProtoDirs)
-            .asFileTree
-            .matching { PatternFilterable pattern -> pattern.include("**/*.proto") }
+  FileTree getFilteredProtosFromInputs() {
+    return filteredProtos.asFileTree.matching { PatternFilterable pattern -> pattern.include("**/*.proto") }
   }
 
   @Internal
@@ -120,11 +107,10 @@ abstract class ProtobufExtract extends DefaultTask {
   @TaskAction
   void extract() {
     destDir.mkdir()
-    FileCollection dirs = filteredProtoDirs
-    FileCollection nonDirs = filteredProtoNonDirs
+    FileCollection allProtoFiles = filteredProtos
     copyActionFacade.copy { spec ->
       spec.includeEmptyDirs = false
-      spec.from(dirs, nonDirs)
+      spec.from(allProtoFiles)
       spec.include('**/*.proto')
       spec.into(destDir)
     }
@@ -157,11 +143,7 @@ abstract class ProtobufExtract extends DefaultTask {
     return new ArchiveActionFacade.ProjectBased(project)
   }
 
-  private FileCollection instantiateFilteredProtoDirs() {
-    return inputFiles.filter { File file -> file.isDirectory() }
-  }
-
-  private ConfigurableFileCollection instantiateFilteredProtoNonDirs() {
+  private FileCollection instantiateFilteredProtos() {
     boolean warningLogged = false
     ArchiveActionFacade archiveFacade = this.archiveActionFacade
     Logger logger = this.logger
@@ -170,7 +152,9 @@ abstract class ProtobufExtract extends DefaultTask {
       Set<Object> protoInputs = [] as Set
       for (FileSystemLocation location : files) {
         File file = location.asFile
-        if (file.path.endsWith('.proto')) {
+        if (file.isDirectory()) {
+          protoInputs.add(file)
+        } else if (file.path.endsWith('.proto')) {
           if (!warningLogged) {
             warningLogged = true
             logger.warn "proto file '${file.path}' directly specified in configuration. " +
@@ -193,7 +177,7 @@ abstract class ProtobufExtract extends DefaultTask {
                 || file.path.endsWith('.tar.bz2')
                 || file.path.endsWith('.tgz')) {
           protoInputs.add(archiveFacade.tarTree(file.path).matching(protoFilter))
-        } else if (!file.isDirectory()) {
+        } else {
           logger.debug "Skipping unsupported file type (${file.path}); handles only jar, tar, tar.gz, tar.bz2 & tgz"
         }
       }
