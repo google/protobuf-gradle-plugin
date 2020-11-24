@@ -398,6 +398,64 @@ class ProtobufJavaPluginTest extends Specification {
     gradleVersion << GRADLE_VERSIONS
   }
 
+  @Unroll
+  void "test proto extraction is up-to-date for testProject when changing java sources [gradle #gradleVersion]"() {
+    given: "project from testProject"
+    File projectDir = ProtobufPluginTestHelper.projectBuilder('testProject')
+            .copyDirs('testProjectBase', 'testProject')
+            .build()
+
+    when: "build is invoked"
+    BuildResult result = GradleRunner.create()
+            .withProjectDir(projectDir)
+            .withArguments('build', '--stacktrace')
+            .withPluginClasspath()
+            .withGradleVersion(gradleVersion)
+            .forwardStdOutput(new OutputStreamWriter(System.out))
+            .forwardStdError(new OutputStreamWriter(System.err))
+            .withDebug(true)
+            .build()
+
+    then: "it succeed"
+    result.task(":build").outcome == TaskOutcome.SUCCESS
+
+    when: "Java class is added and build runs again"
+    new File(projectDir, "src/main/java/Bar.java").write("public class Bar {}")
+    result = GradleRunner.create()
+            .withProjectDir(projectDir)
+            .withArguments('build', '--stacktrace')
+            .withPluginClasspath()
+            .withGradleVersion(gradleVersion)
+            .forwardStdOutput(new OutputStreamWriter(System.out))
+            .forwardStdError(new OutputStreamWriter(System.err))
+            .withDebug(true)
+            .build()
+
+    then: "extract include test protos is up to date because it ignores classpath changes"
+    result.task(":extractIncludeTestProto").outcome == TaskOutcome.UP_TO_DATE
+
+    when: "proto file is added"
+    new File(projectDir, "empty_proto.proto").write("syntax = \"proto3\";")
+    new File(projectDir, "build.gradle")
+            .append("\n dependencies { implementation files ('empty_proto.proto') } ")
+    result = GradleRunner.create()
+            .withProjectDir(projectDir)
+            .withArguments('build', '--stacktrace')
+            .withPluginClasspath()
+            .withGradleVersion(gradleVersion)
+            .forwardStdOutput(new OutputStreamWriter(System.out))
+            .forwardStdError(new OutputStreamWriter(System.err))
+            .withDebug(true)
+            .build()
+
+    then: "extract include protos is not up to date"
+    result.task(":extractIncludeProto").outcome == TaskOutcome.SUCCESS
+    result.task(":extractIncludeTestProto").outcome == TaskOutcome.SUCCESS
+
+    where:
+    gradleVersion << GRADLE_VERSIONS
+  }
+
   void "test generateCmds should split commands when limit exceeded"() {
     given: "a cmd length limit and two proto files"
 
