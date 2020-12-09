@@ -350,7 +350,7 @@ Example:
 
 dependencies {
   // You need to depend on the lite runtime library, not protobuf-java
-  compile 'com.google.protobuf:protobuf-lite:3.0.0'
+  implementation 'com.google.protobuf:protobuf-lite:3.0.0'
 }
 
 protobuf {
@@ -385,7 +385,7 @@ protoc's "java" output. Example:
 ```gradle
 dependencies {
   // You need to depend on the lite runtime library, not protobuf-java
-  compile 'com.google.protobuf:protobuf-javalite:3.8.0'
+  implementation 'com.google.protobuf:protobuf-javalite:3.8.0'
 }
 
 protobuf {
@@ -475,8 +475,8 @@ they have already been compiled in their own projects. Example:
 
 ```gradle
 dependencies {
-  compile project(':someProjectWithProtos')
-  testCompile files("lib/some-testlib-with-protos.jar")
+  implementation project(':someProjectWithProtos')
+  testImplementation files("lib/some-testlib-with-protos.jar")
 }
 ```
 
