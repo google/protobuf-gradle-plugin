@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+option java_package = "com.example.more";
+option java_outer_classname = "More";
+option java_multiple_files = true;
+
+message MoreMsg {
+    string bar = 1;
+}
+
+message MoreFoo {
+    string stuff = 1;
+}
