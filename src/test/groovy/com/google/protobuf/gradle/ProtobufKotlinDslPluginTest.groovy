@@ -1,5 +1,7 @@
 package com.google.protobuf.gradle
 
+import static com.google.protobuf.gradle.ProtobufPluginTestHelper.buildAndroidProject
+
 import groovy.transform.CompileDynamic
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
@@ -12,8 +14,8 @@ import spock.lang.Unroll
  */
 @CompileDynamic
 class ProtobufKotlinDslPluginTest extends Specification {
-  // Current supported version is Gradle 5+.
-  private static final List<String> GRADLE_VERSIONS = ["5.6", "6.0", "6.1"]
+  private static final List<String> GRADLE_VERSIONS = ["5.6", "6.1.1", "6.5"]
+  private static final List<String> ANDROID_PLUGIN_VERSION = ["3.5.0", "4.0.0", "4.1.0"]
 
   @Unroll
   void "testProjectKotlinDsl should be successfully executed (java-only project) [gradle #gradleVersion]"() {
@@ -40,6 +42,35 @@ class ProtobufKotlinDslPluginTest extends Specification {
     ProtobufPluginTestHelper.verifyProjectDir(projectDir)
 
     where:
+    gradleVersion << GRADLE_VERSIONS
+  }
+
+  @Unroll
+  void "testProjectAndroidKotlinDsl should be successfully executed [android #agpVersion, gradle #gradleVersion]"() {
+    given: "project from testProjectKotlinDsl"
+    File testProjectAndroidKotlinDslStaging = ProtobufPluginTestHelper.projectBuilder('testProjectAndroidKotlinDsl')
+            .copyDirs('testProjectAndroidKotlinDsl')
+            .build()
+    File testProjectLiteStaging = ProtobufPluginTestHelper.projectBuilder('testProjectLite')
+            .copyDirs('testProjectLite')
+            .build()
+    File mainProjectDir = ProtobufPluginTestHelper.projectBuilder('testProjectAndroidDslMain')
+            .copySubProjects(testProjectAndroidKotlinDslStaging, testProjectLiteStaging)
+            .withAndroidPlugin(agpVersion)
+            .build()
+
+    when: "build is invoked"
+    BuildResult result = buildAndroidProject(
+            mainProjectDir,
+            gradleVersion,
+            "testProjectAndroidKotlinDsl:build"
+    )
+
+    then: "it succeed"
+    result.task(":testProjectAndroidKotlinDsl:build").outcome == TaskOutcome.SUCCESS
+
+    where:
+    agpVersion << ANDROID_PLUGIN_VERSION
     gradleVersion << GRADLE_VERSIONS
   }
 }
