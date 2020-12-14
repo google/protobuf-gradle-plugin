@@ -1,6 +1,5 @@
 package com.google.protobuf.gradle
 
-import com.android.build.gradle.api.AndroidSourceDirectorySet
 import com.android.build.gradle.api.AndroidSourceSet
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
@@ -63,10 +62,10 @@ fun SourceSet.proto(action: SourceDirectorySet.() -> Unit) {
 }
 
 /**
- * Applies the supplied action to the "proto" [AndroidSourceDirectorySet] extension on
+ * Applies the supplied action to the "proto" [SourceDirectorySet] extension on
  * a receiver of type [AndroidSourceSet] for Android builds.
  *
- * @since 0.8.14
+ * @since 0.8.15
  * @usage
  * ```
  * android {
@@ -81,16 +80,16 @@ fun SourceSet.proto(action: SourceDirectorySet.() -> Unit) {
  * ```
  *
  * @receiver [AndroidSourceSet] The Android source set for which the "proto"
- * [AndroidSourceDirectorySet] extension will be configured
+ * [SourceDirectorySet] extension will be configured
  *
- * @param action A configuration lambda to apply on a receiver of type [AndroidSourceDirectorySet]
+ * @param action A configuration lambda to apply on a receiver of type [SourceDirectorySet]
  * @return [Unit]
  */
-fun AndroidSourceSet.proto(action: AndroidSourceDirectorySet.() -> Unit) {
+fun AndroidSourceSet.proto(action: SourceDirectorySet.() -> Unit) {
     (this as? ExtensionAware)
         ?.extensions
         ?.getByName("proto")
-        ?.let { it as?  AndroidSourceDirectorySet }
+        ?.let { it as?  SourceDirectorySet }
         ?.apply(action)
 }
 
