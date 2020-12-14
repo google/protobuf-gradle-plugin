@@ -1,17 +1,10 @@
 import com.google.protobuf.gradle.*
-import org.gradle.api.internal.HasConvention
-import org.gradle.kotlin.dsl.provider.gradleKotlinDslOf
 
 plugins {
     java
     idea
     id("com.google.protobuf")
 }
-
-// This extension is not auto generated when we apply the plugin using
-// apply(plugin = "com.google.protobuf")
-val Project.protobuf: ProtobufConvention get() =
-    this.convention.getPlugin(ProtobufConvention::class)
 
 repositories {
     maven("https://plugins.gradle.org/m2/")
