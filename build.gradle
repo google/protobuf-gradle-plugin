@@ -71,6 +71,8 @@ test.inputs.files fileTree("$projectDir/testProjectLite")
 test.inputs.files fileTree("$projectDir/testProjectCustomProtoDir")
 test.inputs.files fileTree("$projectDir/testProjectDependent")
 test.inputs.files fileTree("$projectDir/testProjectAndroid")
+// Use -PprotocExecutable=... to use system protoc
+test.systemProperty "protocExecutable", project.findProperty("protocExecutable", )
 
 task sourcesJar(type: Jar, dependsOn:classes) {
      classifier = 'sources'

@@ -76,7 +76,11 @@ class ToolsLocator {
    * spec, downloads the artifact, and point to the local path.
    */
   void registerTaskDependencies(Collection<GenerateProtoTask> protoTasks) {
-    if (protoc.artifact != null) {
+    String protocExecutable = System.getProperty("protocExecutable")
+    if (protocExecutable != null && "" != protocExecutable) {
+      protoc.path = protocExecutable
+    }
+    else if (protoc.artifact != null) {
       registerDependencyWithTasks(protoc, protoTasks)
     } else if (protoc.path == null) {
       protoc.path = 'protoc'
