@@ -15,8 +15,8 @@ import spock.lang.Unroll
  */
 @CompileDynamic
 class ProtobufAndroidPluginTest extends Specification {
-  private static final List<String> GRADLE_VERSION = ["5.6", "6.5", "6.7"]
-  private static final List<String> ANDROID_PLUGIN_VERSION = ["3.5.0", "4.1.0", "4.2.0-alpha06"]
+  private static final List<String> GRADLE_VERSION = ["5.6", "6.5", "6.8"]
+  private static final List<String> ANDROID_PLUGIN_VERSION = ["3.5.0", "4.1.0", "4.2.0-beta04"]
 
   @Unroll
   void "testProjectAndroid should be successfully executed [android #agpVersion, gradle #gradleVersion]"() {
@@ -70,8 +70,7 @@ class ProtobufAndroidPluginTest extends Specification {
             mainProjectDir,
             gradleVersion,
             "testProjectAndroid:assembleDebug",
-            "-Dorg.gradle.unsafe.configuration-cache=true",
-            "-Dorg.gradle.unsafe.configuration-cache-problems=warn"
+            "-Dorg.gradle.unsafe.configuration-cache=true"
     )
     when: "build is invoked"
     BuildResult result = runner.build()
@@ -96,8 +95,7 @@ class ProtobufAndroidPluginTest extends Specification {
             mainProjectDir,
             gradleVersion,
             "testProjectAndroid:clean",
-            "-Dorg.gradle.unsafe.configuration-cache=true",
-            "-Dorg.gradle.unsafe.configuration-cache-problems=warn"
+            "-Dorg.gradle.unsafe.configuration-cache=true"
     )
     result = runner.build()
 
