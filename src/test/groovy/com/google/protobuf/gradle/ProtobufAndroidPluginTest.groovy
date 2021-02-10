@@ -15,8 +15,8 @@ import spock.lang.Unroll
  */
 @CompileDynamic
 class ProtobufAndroidPluginTest extends Specification {
-  private static final List<String> GRADLE_VERSION = ["5.6", "6.5-milestone-1"]
-  private static final List<String> ANDROID_PLUGIN_VERSION = ["3.5.0", "4.1.0-alpha10"]
+  private static final List<String> GRADLE_VERSION = ["5.6", "6.5", "6.8"]
+  private static final List<String> ANDROID_PLUGIN_VERSION = ["3.5.0", "4.1.0", "4.2.0-alpha10"]
 
   @Unroll
   void "testProjectAndroid should be successfully executed [android #agpVersion, gradle #gradleVersion]"() {
@@ -70,8 +70,7 @@ class ProtobufAndroidPluginTest extends Specification {
             mainProjectDir,
             gradleVersion,
             "testProjectAndroid:assembleDebug",
-            "-Dorg.gradle.unsafe.instant-execution=true",
-            "-Dorg.gradle.unsafe.instant-execution.fail-on-problems=false"
+            "-Dorg.gradle.unsafe.configuration-cache=true"
     )
     when: "build is invoked"
     BuildResult result = runner.build()
@@ -86,7 +85,7 @@ class ProtobufAndroidPluginTest extends Specification {
     result = runner.build()
 
     then: "it reuses the task graph"
-    result.output.contains("Reusing instant execution cache")
+    result.output.contains("Reusing configuration cache")
 
     and: "it is up to date"
     result.task(":testProjectAndroid:assembleDebug").outcome == TaskOutcome.UP_TO_DATE
@@ -96,8 +95,7 @@ class ProtobufAndroidPluginTest extends Specification {
             mainProjectDir,
             gradleVersion,
             "testProjectAndroid:clean",
-            "-Dorg.gradle.unsafe.instant-execution=true",
-            "-Dorg.gradle.unsafe.instant-execution.fail-on-problems=false"
+            "-Dorg.gradle.unsafe.configuration-cache=true"
     )
     result = runner.build()
 
