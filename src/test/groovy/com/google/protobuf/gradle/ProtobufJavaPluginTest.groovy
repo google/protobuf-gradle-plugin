@@ -93,8 +93,7 @@ class ProtobufJavaPluginTest extends Specification {
       .withProjectDir(projectDir)
       .withArguments(
           'build', '--stacktrace',
-          '--configuration-cache',
-          '--configuration-cache-problems=warn'
+          '--configuration-cache'
       )
       .withPluginClasspath()
       .withGradleVersion(gradleVersion)
