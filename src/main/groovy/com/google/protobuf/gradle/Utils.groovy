@@ -125,15 +125,16 @@ class Utils {
    * Adds the file to the IDE plugin's set of sources / resources. If the directory does
    * not exist, it will be created before the IDE task is run.
    */
-  static void addToIdeSources(Project project, boolean isTest, File f) {
+  static void addToIdeSources(Project project, boolean isTest, File f, boolean isGenerated) {
     IdeaModel model = project.getExtensions().findByType(IdeaModel)
     if (model != null) {
-      // TODO(zpencer): switch to model.module.generatedSourceDirs when that API becomes stable
-      // For now, just hint to the IDE that it's a source dir or a test source dir.
       if (isTest) {
         model.module.testSourceDirs += f
       } else {
         model.module.sourceDirs += f
+      }
+      if (isGenerated) {
+        model.module.generatedSourceDirs += f
       }
       project.tasks.withType(GenerateIdeaModule).each {
         it.doFirst {
