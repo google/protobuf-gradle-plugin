@@ -527,17 +527,17 @@ class ProtobufPlugin implements Plugin<Project> {
         getSourceSets().each { sourceSet ->
           SourceDirectorySet protoSrcDirSet = sourceSet.proto
           protoSrcDirSet.srcDirs.each { File protoDir ->
-            Utils.addToIdeSources(project, Utils.isTest(sourceSet.name), protoDir)
+            Utils.addToIdeSources(project, Utils.isTest(sourceSet.name), protoDir, false)
           }
         }
         // Make the extracted proto dirs known to IDEs
         project.tasks.withType(ProtobufExtract).each { ProtobufExtract extractProtoTask ->
-          Utils.addToIdeSources(project, extractProtoTask.isTest, extractProtoTask.destDir)
+          Utils.addToIdeSources(project, extractProtoTask.isTest, extractProtoTask.destDir, true)
         }
         // Make the generated code dirs known to IDEs
         project.tasks.withType(GenerateProtoTask).each { GenerateProtoTask generateProtoTask ->
           generateProtoTask.getOutputSourceDirectorySet().srcDirs.each { File outputDir ->
-            Utils.addToIdeSources(project, generateProtoTask.isTest, outputDir)
+            Utils.addToIdeSources(project, generateProtoTask.isTest, outputDir, true)
           }
         }
       }

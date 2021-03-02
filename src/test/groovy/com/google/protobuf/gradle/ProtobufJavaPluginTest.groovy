@@ -363,11 +363,15 @@ class ProtobufJavaPluginTest extends Specification {
 
     Set<String> sourceDir = [] as Set
     Set<String> testSourceDir = [] as Set
+    Set<String> generatedDirs = [] as Set
     rootMgr.content.sourceFolder[0].each {
       if (Boolean.parseBoolean(it.@isTestSource)) {
         testSourceDir.add(it.@url)
       } else {
         sourceDir.add(it.@url)
+      }
+      if (Boolean.parseBoolean(it.@generated)) {
+        generatedDirs.add(it.@url)
       }
     }
 
@@ -390,8 +394,21 @@ class ProtobufJavaPluginTest extends Specification {
         .add('file://$MODULE_DIR$/build/extracted-include-protos/test')
         .add('file://$MODULE_DIR$/build/generated/source/proto/test/java')
         .build()
+    Set<String> expectedGeneratedDirs = [
+      'file://$MODULE_DIR$/build/extracted-include-protos/grpc',
+      'file://$MODULE_DIR$/build/extracted-protos/main',
+      'file://$MODULE_DIR$/build/extracted-include-protos/main',
+      'file://$MODULE_DIR$/build/extracted-protos/grpc',
+      'file://$MODULE_DIR$/build/generated/source/proto/grpc/java',
+      'file://$MODULE_DIR$/build/generated/source/proto/grpc/grpc_output',
+      'file://$MODULE_DIR$/build/generated/source/proto/main/java',
+      'file://$MODULE_DIR$/build/extracted-protos/test',
+      'file://$MODULE_DIR$/build/extracted-include-protos/test',
+      'file://$MODULE_DIR$/build/generated/source/proto/test/java',
+    ]
     assert Objects.equals(expectedSourceDir, sourceDir)
     assert Objects.equals(expectedTestSourceDir, testSourceDir)
+    Objects.equals(expectedGeneratedDirs, generatedDirs)
 
     where:
     gradleVersion << GRADLE_VERSIONS
