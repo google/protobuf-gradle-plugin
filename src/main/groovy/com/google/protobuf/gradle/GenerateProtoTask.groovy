@@ -555,7 +555,13 @@ public abstract class GenerateProtoTask extends DefaultTask {
     List<File> protoFiles = sourceFiles.files.sort()
 
     [builtins, plugins]*.each { plugin ->
-      File outputDir = new File(getOutputDir(plugin))
+      String outputPath = getOutputDir(plugin)
+      File outputDir = new File(outputPath)
+      // protoc is capable of output generated files directly to a JAR file
+      // or ZIP archive if the output location ends with .jar/.zip
+      if (outputPath.endsWith(".jar") || outputPath.endsWith(".zip")) {
+        outputDir = outputDir.getParentFile()
+      }
       outputDir.mkdirs()
     }
 
