@@ -416,7 +416,7 @@ protobuf {
 
   // Allows to override the default for the descriptor set location
   task.descriptorSetOptions.path =
-    "${projectDir}/build/descriptors/{$task.sourceSet.name}.dsc"
+    "${projectDir}/build/descriptors/${task.sourceSet.name}.dsc"
 
   // If true, the descriptor set will contain line number information
   // and comments. Default is false.
