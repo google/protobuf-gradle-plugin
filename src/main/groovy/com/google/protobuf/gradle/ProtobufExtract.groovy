@@ -33,6 +33,7 @@ import com.google.common.base.Preconditions
 import groovy.transform.CompileDynamic
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.FileTree
@@ -113,6 +114,8 @@ abstract class ProtobufExtract extends DefaultTask {
       spec.from(allProtoFiles)
       spec.include('**/*.proto')
       spec.into(destDir)
+      // gradle 7+ requires a duplicate strategy to be explicitly defined
+      spec.duplicatesStrategy = DuplicatesStrategy.INCLUDE
     }
   }
 
