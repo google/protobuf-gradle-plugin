@@ -115,7 +115,7 @@ abstract class ProtobufExtract extends DefaultTask {
       spec.include('**/*.proto')
       spec.into(destDir)
       // gradle 7+ requires a duplicate strategy to be explicitly defined
-      // spec.duplicatesStrategy = DuplicatesStrategy.INCLUDE
+      spec.duplicatesStrategy = DuplicatesStrategy.INCLUDE
     }
   }
 
