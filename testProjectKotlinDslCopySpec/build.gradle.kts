@@ -5,14 +5,20 @@ import com.google.protobuf.gradle.plugins
 import com.google.protobuf.gradle.protobuf
 import com.google.protobuf.gradle.protoc
 
+buildscript {
+  repositories {
+    gradlePluginPortal()
+  }
+}
+
 plugins {
   java
   id("java-library")
-  id("com.google.protobuf").version("0.8.15")
+  id("com.google.protobuf")
 }
 
 repositories {
-  maven("https://plugins.gradle.org/m2/")
+  mavenCentral()
 }
 
 java {
@@ -31,7 +37,6 @@ dependencies {
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.7.1")
 }
 
-
 protobuf {
   protoc {
     artifact = "com.google.protobuf:protoc:$protobufDepVersion"
@@ -41,16 +46,8 @@ protobuf {
       artifact = "io.grpc:protoc-gen-grpc-java:$grpcVersion"
     }
   }
-  generateProtoTasks {
-    ofSourceSet("main").forEach {
-      it.plugins {
-        id("grpc") {
-          outputSubDir = "grpc"
-        }
-      }
-    }
-  }
 }
+
 tasks {
   test {
     useJUnitPlatform {

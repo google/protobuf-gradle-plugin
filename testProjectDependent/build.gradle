@@ -14,10 +14,10 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.google.protobuf:protobuf-java:3.0.0'
-    implementation project(':testProject')
+    compile 'com.google.protobuf:protobuf-java:3.0.0'
+    compile project(':testProject')
 
-    testImplementation 'junit:junit:4.12'
+    testCompile 'junit:junit:4.12'
 }
 
 protobuf.protoc {
