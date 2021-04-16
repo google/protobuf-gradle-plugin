@@ -22,6 +22,7 @@ env:
 
 script:
   - ./gradlew clean assemble -x signArchives test --tests com.google.protobuf.gradle.ProtobufJavaPluginTest --stacktrace
+  - ./gradlew test --tests com.google.protobuf.gradle.ProtobufKotlinDslCopySpecTest --stacktrace
   - ./gradlew test --tests com.google.protobuf.gradle.ProtobufKotlinDslPluginTest --stacktrace
   - ./gradlew test --tests com.google.protobuf.gradle.ProtobufAndroidPluginTest --stacktrace
   - ./gradlew -stop
