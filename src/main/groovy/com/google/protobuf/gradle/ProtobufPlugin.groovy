@@ -40,6 +40,7 @@ import org.gradle.api.Task
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.attributes.LibraryElements
+import org.gradle.api.attributes.Usage
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.internal.file.FileResolver
@@ -179,7 +180,7 @@ class ProtobufPlugin implements Plugin<Project> {
      * Creates an internal 'compileProtoPath' configuration for the given source set that extends
      * compilation configurations as a bucket of dependencies with resources attribute.
      * The extract-include-protos task of each source set will extract protobuf files from
-     * dependencies in this configuration.
+     * resolved dependencies in this configuration.
      *
      * <p> For Java projects only.
      * <p> This works around 'java-library' plugin not exposing resources to consumers for compilation.
@@ -196,8 +197,22 @@ class ProtobufPlugin implements Plugin<Project> {
             transitive = true
             extendsFrom = [compileConfig, implementationConfig]
             canBeConsumed = false
-        }.getAttributes().attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE,
-                project.getObjects().named(LibraryElements, LibraryElements.RESOURCES))
+        }.getAttributes()
+                // Variant attributes are not inherited. Setting it too loosely can
+                // result in ambiguous variant selection errors.
+                // CompileProtoPath only need proto files from dependency's resources.
+                // LibraryElement "resources" is compatible with "jar" (if a "resources" variant is
+                // not found, the "jar" variant will be used).
+                .attribute(
+                        LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE,
+                        project.getObjects().named(LibraryElements, LibraryElements.RESOURCES))
+                // Although variants with any usage has proto files, not setting usage attribute
+                // can result in ambiguous variant selection if the producer provides multiple
+                // variants with different usage attribute.
+                // Preserve the usage attribute from CompileOnly and Implementation.
+                .attribute(
+                        Usage.USAGE_ATTRIBUTE,
+                        project.getObjects().named(Usage, Usage.JAVA_RUNTIME))
       }
     }
 
