@@ -126,8 +126,8 @@ class Utils {
    * not exist, it will be created before the IDE task is run.
    */
   static void addToIdeSources(Project project, boolean isTest, File f, boolean isGenerated) {
-    IdeaModel model = project.getExtensions().findByType(IdeaModel)
-    if (model != null) {
+    project.plugins.withId("idea") {
+      IdeaModel model = project.getExtensions().findByType(IdeaModel)
       if (isTest) {
         model.module.testSourceDirs += f
       } else {
