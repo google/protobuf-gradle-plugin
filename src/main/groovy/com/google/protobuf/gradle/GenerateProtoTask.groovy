@@ -40,6 +40,7 @@ import org.gradle.api.Named
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.ProjectLayout
 import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.internal.file.FileResolver
 import org.gradle.api.logging.LogLevel
@@ -88,6 +89,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
   private final ConfigurableFileCollection sourceFiles = objectFactory.fileCollection()
   private final NamedDomainObjectContainer<PluginOptions> builtins = objectFactory.domainObjectContainer(PluginOptions)
   private final NamedDomainObjectContainer<PluginOptions> plugins = objectFactory.domainObjectContainer(PluginOptions)
+  private final ProjectLayout projectLayout = project.layout
 
   // These fields are set by the Protobuf plugin only when initializing the
   // task.  Ideally they should be final fields, but Gradle task cannot have
@@ -703,7 +705,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
     if (jarFileName.length() <= JAR_SUFFIX.length()) {
       throw new GradleException(".jar protoc plugin path '${jarAbsolutePath}' has no file name")
     }
-    File scriptExecutableFile = new File("${project.buildDir}/scripts/" +
+    File scriptExecutableFile = new File("${projectLayout.buildDirectory.get()}/scripts/" +
             jarFileName[0..(jarFileName.length() - JAR_SUFFIX.length() - 1)] + "-${getName()}-trampoline." +
             (isWindows ? "bat" : "sh"))
     try {
