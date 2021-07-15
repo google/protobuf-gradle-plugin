@@ -33,6 +33,7 @@ import groovy.transform.CompileDynamic
 import org.apache.commons.lang.StringUtils
 import org.gradle.api.GradleException
 import org.gradle.api.Project
+import org.gradle.api.artifacts.Dependency
 import org.gradle.api.tasks.SourceSet
 import org.gradle.plugins.ide.idea.GenerateIdeaModule
 import org.gradle.plugins.ide.idea.model.IdeaModel
@@ -103,7 +104,32 @@ class Utils {
    * given target version.  Only major and minor versions are checked.  Patch version is ignored.
    */
   static int compareGradleVersion(Project project, String target) {
-    Matcher gv = parseVersionString(project.gradle.gradleVersion)
+    return compareVersions(project.gradle.gradleVersion, target)
+  }
+
+  /**
+   * Returns positive/0/negative if current Protoc version is higher than/equal to/lower than the
+   * given target version.  Only major and minor versions are checked.  Patch version is ignored.
+   */
+  static int compareProtocVersion(Project project, String target) {
+    String protocVersion = null
+    Dependency protocDep = project.configurations
+            .findByName("protobufToolsLocator_protoc").getAllDependencies()[0]
+    if(protocDep != null){
+        protocVersion = protocDep.version
+    }
+    if(protocVersion == null || protocVersion == ""){
+        return -1
+    }
+    return compareVersions(protocVersion, target)
+  }
+
+  /**
+   * Returns positive/0/negative if current version is higher than/equal to/lower than the
+   * given target version.  Only major and minor versions are checked.  Patch version is ignored.
+   */
+  private static int compareVersions(String current, String target) {
+    Matcher gv = parseVersionString(current)
     Matcher tv = parseVersionString(target)
     int majorVersionDiff = gv.group(1).toInteger() - tv.group(1).toInteger()
     if (majorVersionDiff != 0) {
