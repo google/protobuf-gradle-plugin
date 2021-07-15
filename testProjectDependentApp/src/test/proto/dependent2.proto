@@ -1,8 +1,0 @@
-syntax = "proto3";
-
-// From the 'main' sourceSet
-import "dependent.proto";
-
-message TestWrapperMessage {
-  dependent.WrapperMessage m = 1;
-}
