@@ -315,7 +315,7 @@ task.plugins {
 
 ```gradle
 protobuf {
-  generatedFilesDir = "$projectDir/generated"
+  generatedFilesBaseDir = "$projectDir/generated"
 
   generateProtoTasks {
     all().each { task ->
