@@ -93,6 +93,10 @@ artifacts {
      archives javadocJar
 }
 
+codenarc {
+    toolVersion = "1.4"
+}
+
 // The Gradle plugin portal doesn't allow signature files.
 if (!gradle.startParameter.taskNames.intersect(['publishPlugins'])) {
   signing {
