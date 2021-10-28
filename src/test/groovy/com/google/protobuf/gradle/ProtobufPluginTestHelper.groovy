@@ -39,7 +39,7 @@ final class ProtobufPluginTestHelper {
       localBuildCache.deleteDir()
     }
     List<String> args = arguments.toList()
-    // set android build cache to avoid using home directory on travis CI.
+    // set android build cache to avoid using home directory on CI.
     args.add("-Pandroid.buildCacheDir=$localBuildCache".toString())
     args.add(fullPathTask)
     args.add("--stacktrace")

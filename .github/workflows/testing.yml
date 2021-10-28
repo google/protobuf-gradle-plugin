@@ -11,6 +11,7 @@ permissions:
 
 env:
     GRADLE_OPTS: "-Xms128m"
+    CI: true
 
 jobs:
   build:
