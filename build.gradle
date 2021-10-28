@@ -1,3 +1,19 @@
+buildscript {
+    repositories {
+        maven { url "https://plugins.gradle.org/m2/" } // Mirrors jcenter() and mavenCentral()
+    }
+
+    dependencies {
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.6'
+        classpath "com.gradle.publish:plugin-publish-plugin:0.11.0"
+        classpath "com.github.ben-manes:gradle-versions-plugin:0.12.0"
+    }
+}
+
+plugins {
+    id("org.gradle.kotlin.kotlin-dsl").version("1.4.9")
+}
+
 println """\
 Welcome to Gradle $gradle.gradleVersion - http://www.gradle.org
 Gradle home is set to: $gradle.gradleHomeDir
@@ -11,10 +27,8 @@ apply plugin: 'codenarc'
 apply plugin: 'idea'
 apply plugin: 'eclipse'
 apply plugin: 'groovy'
-apply plugin: 'kotlin'
 apply plugin: 'maven'
 apply plugin: 'signing'
-apply plugin: 'java-gradle-plugin'
 apply plugin: 'com.jfrog.bintray'
 apply plugin: 'com.gradle.plugin-publish'
 apply plugin: 'com.github.ben-manes.versions'
@@ -23,19 +37,6 @@ group = 'com.google.protobuf'
 version = '0.8.18-SNAPSHOT'
 
 ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
-
-buildscript {
-    repositories {
-        maven { url "https://plugins.gradle.org/m2/" } // Mirrors jcenter() and mavenCentral()
-    }
-
-    dependencies {
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.6'
-        classpath "com.gradle.publish:plugin-publish-plugin:0.11.0"
-        classpath "com.github.ben-manes:gradle-versions-plugin:0.12.0"
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.20"
-    }
-}
 
 repositories {
     maven { url "https://plugins.gradle.org/m2/" }
@@ -52,7 +53,6 @@ configurations {
 }
 
 dependencies {
-    compileOnly "org.gradle:gradle-kotlin-dsl:1.0.4"
     compileOnly "com.android.tools.build:gradle:3.5.0"
 
     compile 'com.google.guava:guava:27.0.1-jre'
