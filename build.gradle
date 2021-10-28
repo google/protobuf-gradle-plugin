@@ -202,10 +202,10 @@ if (System.env.TRAVIS == 'true') {
 // Required in order to support building a mixed kotlin/groovy project. With out this,
 // we would get a cyclic dependency error, since both compileKotlin and compileGroovy
 // depend on compileJava.
-// https://discuss.gradle.org/t/kotlin-groovy-and-java-compilation/14903/10
-project.afterEvaluate {
-  compileGroovy.dependsOn = compileGroovy.taskDependencies.mutableValues - 'compileJava'
-  compileKotlin.dependsOn compileGroovy
-  compileKotlin.classpath += files(compileGroovy.destinationDir)
-  classes.dependsOn compileKotlin
+// See https://github.com/gradle/gradle/pull/11513 and https://discuss.gradle.org/t/kotlin-groovy-and-java-compilation/14903/10
+tasks.named('compileGroovy') {
+    classpath = sourceSets.main.compileClasspath
+}
+tasks.named('compileKotlin') {
+    compileKotlin.classpath += files(compileGroovy.destinationDirectory)
 }
