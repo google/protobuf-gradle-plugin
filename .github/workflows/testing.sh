@@ -2,7 +2,7 @@
 
 set -eu -o pipefail
 
-export GRADLE_OPTS="-Xms128m"
+export GRADLE_OPTS="-Xms128m -Xmx512m"
 
 ./gradlew clean assemble -x signArchives test --tests com.google.protobuf.gradle.ProtobufJavaPluginTest --stacktrace
 ./gradlew test --tests com.google.protobuf.gradle.ProtobufKotlinDslCopySpecTest --stacktrace
