@@ -9,17 +9,53 @@ on:
 permissions:
   contents: read
 
+env:
+    GRADLE_OPTS: "-Xms128m"
+
 jobs:
-  tests:
+  build:
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-java@v2
-      with:
-        java-version: '8'
-        distribution: 'temurin'
-        cache: 'gradle'
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v2
+        with:
+          java-version: '8'
+          distribution: 'temurin'
+      - uses: gradle/gradle-build-action@v2
+        with:
+          arguments: clean assemble -x signArchives --stacktrace
+        
+  test:
+    needs: build
+    strategy:
+      matrix:
+        tests: [ProtobufJavaPluginTest, ProtobufKotlinDslCopySpecTest, ProtobufKotlinDslPluginTest, ProtobufAndroidPluginTest, ProtobufAndroidPluginKotlinTest, AndroidProjectDetectionTest]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v2
+        with:
+          java-version: '8'
+          distribution: 'temurin'
+      - uses: gradle/gradle-build-action@v2
+        with:
+          arguments: test --tests ${{ matrix.tests }} --stacktrace
 
-    - name: Build
-      run: .github/workflows/testing.sh
+  codenarc:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v2
+        with:
+          java-version: '8'
+          distribution: 'temurin'
+      - uses: gradle/gradle-build-action@v2
+        with:
+          arguments: codenarcMain codenarcTest --continue
+      - name: echo codenarcMain reports
+        if: failure()
+        run: test -f build/reports/codenarc/main.txt && cat build/reports/codenarc/main.txt
+      - name: echo codenarcTest reports
+        if: failure()
+        run: test -f build/reports/codenarc/test.txt && cat build/reports/codenarc/test.txt
