@@ -173,34 +173,10 @@ tasks.create("checkJavaVersion").doLast {
 }
 [uploadArchives, publishPlugins]*.dependsOn checkJavaVersion
 
-if (System.env.TRAVIS == 'true') {
+if (System.env.CI == 'true') {
   // Normally html output is more user friendly,
-  // but we want a console printable file for Travis logs
+  // but we want a console printable file for CI logs
   project.codenarc.reportFormat = 'text'
-
-  // To limit the memory usage when running in Travis.
-  // Travis tend to kill tasks that use too much memory.
-  allprojects {
-    tasks.withType(GroovyCompile) {
-      groovyOptions.fork = false
-    }
-    tasks.withType(Test) {
-      // containers (currently) have 2 dedicated cores and 4GB of memory
-      maxParallelForks = 2
-      minHeapSize = '128m'
-    }
-  }
-  // The Android test takes longer than 10 minutes.  Travis kills the test if it has
-  // seen no output for 10 minutes, so we need to produced output.
-  test {
-    testLogging {
-      showStandardStreams = true
-      exceptionFormat = 'full'
-      showExceptions true
-      showCauses true
-      showStackTraces true
-    }
-  }
 }
 
 // Required in order to support building a mixed kotlin/groovy project. With out this,
