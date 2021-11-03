@@ -6,7 +6,10 @@ import org.gradle.api.Project
 import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.plugins.ExtensionAware
 import org.gradle.api.tasks.SourceSet
-import org.gradle.kotlin.dsl.*
+import org.gradle.kotlin.dsl.NamedDomainObjectContainerScope
+import org.gradle.kotlin.dsl.closureOf
+import org.gradle.kotlin.dsl.get
+import org.gradle.kotlin.dsl.invoke
 
 /**
  * Applies the supplied action to the project's instance of [ProtobufConfigurator].
