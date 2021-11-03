@@ -11,7 +11,7 @@ buildscript {
 }
 
 plugins {
-    id("org.gradle.kotlin.kotlin-dsl").version("1.4.9")
+    id "org.gradle.kotlin.kotlin-dsl" version "1.4.9"
 }
 
 println """\
