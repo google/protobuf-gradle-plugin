@@ -9,10 +9,6 @@ on:
 permissions:
   contents: read
 
-env:
-    GRADLE_OPTS: "-Xms128m -Xmx512m"
-    CI: true
-
 jobs:
   build:
     runs-on: ubuntu-latest
