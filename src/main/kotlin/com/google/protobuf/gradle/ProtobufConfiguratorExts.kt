@@ -9,6 +9,7 @@ import org.gradle.api.tasks.SourceSet
 import org.gradle.kotlin.dsl.NamedDomainObjectContainerScope
 import org.gradle.kotlin.dsl.closureOf
 import org.gradle.kotlin.dsl.get
+import org.gradle.kotlin.dsl.invoke
 
 /**
  * Applies the supplied action to the project's instance of [ProtobufConfigurator].
@@ -120,7 +121,7 @@ fun ProtobufConfigurator.protoc(action: ExecutableLocator.() -> Unit) {
 
 fun ProtobufConfigurator.plugins(action: NamedDomainObjectContainerScope<ExecutableLocator>.() -> Unit) {
     plugins(closureOf<NamedDomainObjectContainer<ExecutableLocator>> {
-        KtDslCompatibilityUtils.configureNamedDomainObjectContainer<ExecutableLocator>(this, action)
+        this.invoke(action)
     })
 }
 
@@ -130,13 +131,13 @@ fun ProtobufConfigurator.generateProtoTasks(action: ProtobufConfigurator.Generat
 
 fun GenerateProtoTask.builtins(action: NamedDomainObjectContainerScope<GenerateProtoTask.PluginOptions>.()->Unit) {
     builtins(closureOf<NamedDomainObjectContainer<GenerateProtoTask.PluginOptions>> {
-        KtDslCompatibilityUtils.configureNamedDomainObjectContainer<GenerateProtoTask.PluginOptions>(this, action)
+        this.invoke(action)
     })
 }
 
 fun GenerateProtoTask.plugins(action: NamedDomainObjectContainerScope<GenerateProtoTask.PluginOptions>.()-> Unit) {
     plugins(closureOf<NamedDomainObjectContainer<GenerateProtoTask.PluginOptions>> {
-        KtDslCompatibilityUtils.configureNamedDomainObjectContainer<GenerateProtoTask.PluginOptions>(this, action)
+        this.invoke(action)
     })
 }
 
@@ -164,7 +165,7 @@ fun GenerateProtoTask.plugins(action: NamedDomainObjectContainerScope<GeneratePr
  * @return [Unit]
  */
 fun <T : Any> NamedDomainObjectContainerScope<T>.id(id: String, action: (T.() -> Unit)? = null) {
-    action?.let { create(id, closureOf(it)) }
+    action?.let { create(id, it) }
             ?: create(id)
 }
 
