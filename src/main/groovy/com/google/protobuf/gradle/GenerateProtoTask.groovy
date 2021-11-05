@@ -50,6 +50,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.IgnoreEmptyDirectories
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
@@ -302,8 +303,9 @@ public abstract class GenerateProtoTask extends DefaultTask {
   }
 
   @SkipWhenEmpty
-  @InputFiles
   @PathSensitive(PathSensitivity.RELATIVE)
+  @IgnoreEmptyDirectories
+  @InputFiles
   FileCollection getSourceFiles() {
     return sourceFiles
   }
