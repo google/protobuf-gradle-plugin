@@ -543,13 +543,13 @@ public abstract class GenerateProtoTask extends DefaultTask {
     srcSet = objectFactory.sourceDirectorySet(srcSetName, srcSetName)
     builtins.each { builtin ->
       File dir = new File(getOutputDir(builtin))
-      if (dir.isDirectory()) {
+      if (!dir.name.endsWith(".zip") && !dir.name.endsWith(".jar")) {
         srcSet.srcDir dir
       }
     }
     plugins.each { plugin ->
       File dir = new File(getOutputDir(plugin))
-      if (dir.isDirectory()) {
+      if (!dir.name.endsWith(".zip") && !dir.name.endsWith(".jar")) {
         srcSet.srcDir dir
       }
     }
