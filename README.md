@@ -40,7 +40,7 @@ buildscript {
     mavenLocal()
   }
   dependencies {
-    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.18-SNAPSHOT'
+    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.19-SNAPSHOT'
   }
 }
 ```
