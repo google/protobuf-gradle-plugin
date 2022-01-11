@@ -137,4 +137,38 @@ class ProtobufAndroidPluginTest extends Specification {
     agpVersion << ANDROID_PLUGIN_VERSION
     gradleVersion << GRADLE_VERSION
   }
+
+  @Unroll
+  void "testProjectAndroid tests build without warnings [android #agpVersion, gradle #gradleVersion]"() {
+    given: "project from testProject, testProjectLite & testProjectAndroid"
+    File testProjectStaging = ProtobufPluginTestHelper.projectBuilder('testProject')
+            .copyDirs('testProjectBase', 'testProject')
+            .build()
+    File testProjectAndroidStaging = ProtobufPluginTestHelper.projectBuilder('testProjectAndroid')
+            .copyDirs('testProjectAndroidBase', 'testProjectAndroid')
+            .build()
+    File testProjectLiteStaging = ProtobufPluginTestHelper.projectBuilder('testProjectLite')
+            .copyDirs('testProjectLite')
+            .build()
+    File mainProjectDir = ProtobufPluginTestHelper.projectBuilder('testProjectAndroidMain')
+            .copySubProjects(testProjectStaging, testProjectLiteStaging, testProjectAndroidStaging)
+            .withAndroidPlugin(agpVersion)
+            .build()
+    when: "build is invoked"
+    BuildResult result = buildAndroidProject(
+            mainProjectDir,
+            gradleVersion,
+            "testProjectAndroid:assembleAndroidTest"
+    )
+
+    then: "it succeed"
+    result.task(":testProjectAndroid:assembleAndroidTest").outcome == TaskOutcome.SUCCESS
+
+    and: "does not contain warnings about proto location"
+    !result.output.contains("This makes you vulnerable to https://github.com/google/protobuf-gradle-plugin/issues/248")
+
+    where:
+    agpVersion << ANDROID_PLUGIN_VERSION.takeRight(1)
+    gradleVersion << GRADLE_VERSION.takeRight(1)
+  }
 }

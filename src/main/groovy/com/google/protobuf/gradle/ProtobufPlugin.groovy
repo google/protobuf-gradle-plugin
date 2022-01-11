@@ -426,7 +426,7 @@ class ProtobufPlugin implements Plugin<Project> {
             // ad-hoc solution that manually includes the source protos of 'main' and its
             // dependencies.
             if (Utils.isTest(sourceSetOrVariantName)) {
-              inputFiles.from getSourceSets()['main'].proto
+              inputFiles.from getSourceSets()['main'].proto.sourceDirectories
               inputFiles.from testedCompileClasspathConfiguration
             }
           } else {
