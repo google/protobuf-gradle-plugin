@@ -455,7 +455,7 @@ class ProtobufPlugin implements Plugin<Project> {
       } else {
         // It is possible for a compile task to not exist yet. For example, if someone applied
         // the proto plugin and then later applies the kotlin plugin.
-        project.tasks.whenTaskAdded { Task task ->
+        project.tasks.configureEach { Task task ->
           if (task.name == compileTaskName) {
             linkGenerateProtoTasksToTask(task, genProtoTask)
           }
