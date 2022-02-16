@@ -44,7 +44,7 @@ dependencies {
     testProtobuf(files("lib/protos-test.tar.gz"))
 
     compile(protobufDep)
-    testCompile("junit:junit:4.12")
+    testCompile("junit:junit:4.13.2")
     // KotlinFooTest.kt requires reflection utilities
     testCompile("org.jetbrains.kotlin:kotlin-reflect:1.2.0")
     grpcCompile(protobufDep)

@@ -17,7 +17,7 @@ dependencies {
     implementation 'com.google.protobuf:protobuf-java:3.0.0'
     implementation project(':testProjectJavaLibrary')
 
-    testImplementation 'junit:junit:4.12'
+    testImplementation 'junit:junit:4.13.2'
 }
 
 protobuf.protoc {

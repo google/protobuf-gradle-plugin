@@ -15,7 +15,7 @@ targetCompatibility = JavaVersion.VERSION_1_7
 dependencies {
     compile 'com.google.protobuf:protobuf-lite:3.0.0'
     protobuf files("ext/")
-    testCompile 'junit:junit:4.12'
+    testCompile 'junit:junit:4.13.2'
 }
 
 protobuf {

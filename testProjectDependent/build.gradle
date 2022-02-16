@@ -17,7 +17,7 @@ dependencies {
     compile 'com.google.protobuf:protobuf-java:3.0.0'
     compile project(':testProject')
 
-    testCompile 'junit:junit:4.12'
+    testCompile 'junit:junit:4.13.2'
 }
 
 protobuf.protoc {
