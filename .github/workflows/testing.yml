@@ -20,7 +20,7 @@ jobs:
           distribution: 'temurin'
       - uses: gradle/gradle-build-action@v2
         with:
-          arguments: clean assemble -x signArchives --stacktrace
+          arguments: clean assemble --stacktrace
         
   test:
     needs: build
