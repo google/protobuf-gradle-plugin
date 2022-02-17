@@ -22,10 +22,10 @@ It is available on Maven Central. To add dependency to it:
 ```gradle
 buildscript {
   repositories {
-    mavenCentral()
+    gradlePluginPortal()
   }
   dependencies {
-    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.18'
+    classpath 'gradle.plugin.com.google.protobuf:protobuf-gradle-plugin:0.8.18'
   }
 }
 ```
