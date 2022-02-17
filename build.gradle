@@ -28,6 +28,7 @@ apply plugin: 'idea'
 apply plugin: 'eclipse'
 apply plugin: 'groovy'
 apply plugin: 'maven'
+apply plugin: 'maven-publish'
 apply plugin: 'signing'
 apply plugin: 'com.jfrog.bintray'
 apply plugin: 'com.gradle.plugin-publish'
@@ -87,65 +88,71 @@ task javadocJar(type: Jar, dependsOn:javadoc) {
      from javadoc.destinationDir
 }
 
-artifacts {
-     archives sourcesJar
-     archives groovydocJar
-     archives javadocJar
-}
-
 codenarc {
     toolVersion = "1.4"
+}
+
+sourceCompatibility = JavaVersion.VERSION_1_7
+targetCompatibility = JavaVersion.VERSION_1_7
+
+tasks.withType(GenerateModuleMetadata) {
+  enabled = false
+}
+
+publishing {
+  publications {
+    pluginMaven(MavenPublication) {
+      artifact sourcesJar
+      artifact groovydocJar
+      artifact javadocJar
+
+      pom {
+        name = project.name
+        description = "Gradle build plugin to handle Protocol Buffers automated code generation and compilation"
+        url = "https://github.com/google/protobuf-gradle-plugin"
+        licenses {
+          license {
+            name = "BSD 3-Clause"
+            url = "http://opensource.org/licenses/BSD-3-Clause"
+          }
+        }
+        developers {
+          developer {
+            id = "zhangkun83"
+            name = "Kun Zhang"
+            email = "zhangkun@google.com"
+          }
+        }
+        scm {
+          connection = "scm:git:git://github.com/google/protobuf-gradle-plugin.git"
+          developerConnection = "scm:git:git@github.com:google/protobuf-gradle-plugin.git"
+          url = "https://github.com/google/protobuf-gradle-plugin"
+        }
+      }
+    }
+  }
+
+  repositories {
+    maven {
+      String releaseUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+      String snapshotUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
+      url = version.endsWith('SNAPSHOT') ? snapshotUrl : releaseUrl
+
+      credentials {
+        if (rootProject.hasProperty("ossrhUsername") && rootProject.hasProperty("ossrhPassword")) {
+          username = rootProject.ossrhUsername
+          password = rootProject.ossrhPassword
+        }
+      }
+    }
+  }
 }
 
 // The Gradle plugin portal doesn't allow signature files.
 if (!gradle.startParameter.taskNames.intersect(['publishPlugins'])) {
   signing {
        required { isReleaseVersion }
-       sign configurations.archives
-  }
-}
-
-sourceCompatibility = JavaVersion.VERSION_1_7
-targetCompatibility = JavaVersion.VERSION_1_7
-
-uploadArchives {
-  repositories {
-    mavenDeployer {
-      beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-      repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-        if (rootProject.hasProperty("ossrhUsername") && rootProject.hasProperty("ossrhPassword")) {
-          authentication(userName: ossrhUsername, password: ossrhPassword)
-        }
-      }
-      snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-        if (rootProject.hasProperty("ossrhUsername") && rootProject.hasProperty("ossrhPassword")) {
-          authentication(userName: ossrhUsername, password: ossrhPassword)
-        }
-      }
-      pom.project {
-        name project.name
-        description "Gradle build plugin to handle Protocol Buffers automated code generation and compilation"
-        url "https://github.com/google/protobuf-gradle-plugin"
-        licenses {
-          license {
-            name "BSD 3-Clause"
-            url "http://opensource.org/licenses/BSD-3-Clause"
-          }
-        }
-        developers {
-          developer {
-            id "zhangkun83"
-            name "Kun Zhang"
-            email "zhangkun@google.com"
-          }
-        }
-        scm {
-          connection "scm:git:git://github.com/google/protobuf-gradle-plugin.git"
-          developerConnection "scm:git:git@github.com:google/protobuf-gradle-plugin.git"
-          url "https://github.com/google/protobuf-gradle-plugin"
-        }
-      }
-    }
+       sign publishing.publications.pluginMaven
   }
 }
 
