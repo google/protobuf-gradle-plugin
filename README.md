@@ -31,7 +31,7 @@ buildscript {
 ```
 
 To try out the head version, you can download the source and build it
-with ``./gradlew install -x test`` (we skip tests here because they
+with ``./gradlew publishToMavenLocal -x test`` (we skip tests here because they
 require Android SDK), then:
 
 ```gradle

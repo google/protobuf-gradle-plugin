@@ -55,7 +55,7 @@ Releasing
 3. Publish artifacts:
 - Run `git checkout v$RELEASE_VERSION`.
 - Release on Maven Central:
-  - Run `./gradlew uploadArchives`.
+  - Run `./gradlew publish`.
   - Go to the [OSSRH site](https://oss.sonatype.org), under “Staging Repositories”, close and release the 
   artifact.
 - Release on Gradle Plugin Portal:
