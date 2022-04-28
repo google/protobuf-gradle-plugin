@@ -330,10 +330,53 @@ public abstract class GenerateProtoTask extends DefaultTask {
   @Internal("Input captured by getAlternativePaths(), this is used to query alternative path by locator name.")
   abstract MapProperty<String, FileCollection> getLocatorToAlternativePathsMapping()
 
-  @InputFiles
-  @PathSensitive(PathSensitivity.NONE)
+  @Internal
+  abstract MapProperty<String, String> getLocatorToDependencyMapping()
+
+  @Internal
   ConfigurableFileCollection getAlternativePaths() {
     return objectFactory.fileCollection().from(getLocatorToAlternativePathsMapping().get().values())
+  }
+
+  /**
+   * For each protoc and code gen plugin defined by an artifact specification, this list will contain a String with the
+   * group, artifact, and version, as long as the version is a stable release version.
+   *
+   * Giving this as an input to the task allows gradle to ignore the OS classifier and use cached outputs generated from
+   * different operating systems since the expectation is that different operating systems will produce the same
+   * generated code.
+   */
+  @Input
+  Provider<List<String>> getReleaseArtifacts() {
+    releaseDependenciesMapping.map { it.values().collect() }
+  }
+
+  /**
+   * This file collection contains the file for each protoc and code gen plugin that is defined by an artifact
+   * specification that specifies a SNAPSHOT version.
+   *
+   * Since snapshots are expected to differ within the same version, this input allows Gradle to consider the file
+   * itself rather than the version number.
+   */
+  @InputFiles
+  @PathSensitive(PathSensitivity.NONE)
+  FileCollection getSnapshotArtifacts() {
+    def snapshotArtifacts = locatorToAlternativePathsMapping.map { map ->
+      def releaseArtifactKeys = releaseDependenciesMapping.get().keySet()
+      map.findAll { entry ->
+        !releaseArtifactKeys.contains(entry.key)
+      }.values()
+    }
+
+    objectFactory.fileCollection().from(snapshotArtifacts)
+  }
+
+  @Internal
+  Provider<Map<String, String>> getReleaseDependenciesMapping() {
+    providerFactory.provider {
+      locatorToDependencyMapping.get()
+          .findAll { entry -> ! entry.value.endsWith ("-SNAPSHOT") }
+    }
   }
 
   @Internal("Input captured by getAlternativePaths()")
