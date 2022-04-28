@@ -333,7 +333,26 @@ public abstract class GenerateProtoTask extends DefaultTask {
   @InputFiles
   @PathSensitive(PathSensitivity.NONE)
   ConfigurableFileCollection getAlternativePaths() {
-    return objectFactory.fileCollection().from(getLocatorToAlternativePathsMapping().get().values())
+    objectFactory.fileCollection().from(locatorToAlternativePathsMapping.map {
+      if (protocArtifactGav.map { !it.endsWith("-SNAPSHOT") }.getOrElse(false)) {
+        it.findAll { it.key != protocLocator.get().name }
+      } else {
+        it
+      }}.get().values())
+  }
+
+  @Input
+  @Optional
+  Provider<String> getProtocArtifactGav() {
+    // Avoiding Provider#map to support Gradle < 6.2 since artifact can be null
+    // See https://github.com/gradle/gradle/issues/11979
+    providerFactory.provider {
+      def protocArtifact = protocLocator.get().artifact
+      if (protocArtifact) {
+        def (group, artifact, version) = ToolsLocator.artifactParts(protocArtifact)
+        "$group:$artifact:$version"
+      }
+    } as Provider<String>
   }
 
   @Internal("Input captured by getAlternativePaths()")
