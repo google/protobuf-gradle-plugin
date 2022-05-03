@@ -379,6 +379,18 @@ public abstract class GenerateProtoTask extends DefaultTask {
     }
   }
 
+  @InputFiles
+  @PathSensitive(PathSensitivity.NONE)
+  FileCollection getExecutables() {
+    objectFactory.fileCollection().from {
+      protocLocator.getOrNull()?.path
+    }.from {
+      pluginsExecutableLocators.get().values()
+        .collect { it.path }
+        .findAll { it }
+    }
+  }
+
   @Internal("Input captured by getAlternativePaths()")
   abstract MapProperty<String, ExecutableLocator> getPluginsExecutableLocators()
 
