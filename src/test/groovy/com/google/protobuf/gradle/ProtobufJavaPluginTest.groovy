@@ -415,6 +415,131 @@ class ProtobufJavaPluginTest extends Specification {
   }
 
   @Unroll
+  void "test proto generation is not up-to-date on dependency changes [gradle #gradleVersion]"() {
+    given: "project from testProject"
+    File projectDir = ProtobufPluginTestHelper.projectBuilder('testProject')
+            .copyDirs('testProjectBase', 'testProject')
+            .build()
+
+    when: "build is invoked"
+    BuildResult result = GradleRunner.create()
+            .withProjectDir(projectDir)
+            .withArguments('build', '--stacktrace')
+            .withPluginClasspath()
+            .withGradleVersion(gradleVersion)
+            .forwardStdOutput(new OutputStreamWriter(System.out))
+            .forwardStdError(new OutputStreamWriter(System.err))
+            .withDebug(true)
+            .build()
+
+    then: "it succeeds"
+    result.task(":build").outcome == TaskOutcome.SUCCESS
+
+    when: "protoc artifact is changed and build runs again"
+    new File(projectDir, "build.gradle")
+            .append("""
+              protobuf {
+                protoc {
+                  artifact = 'com.google.protobuf:protoc:3.0.2'
+                }
+              }""")
+    result = GradleRunner.create()
+            .withProjectDir(projectDir)
+            .withArguments('build', '--stacktrace')
+            .withPluginClasspath()
+            .withGradleVersion(gradleVersion)
+            .forwardStdOutput(new OutputStreamWriter(System.out))
+            .forwardStdError(new OutputStreamWriter(System.err))
+            .withDebug(true)
+            .build()
+
+    then: "generateProto is not UP_TO_DATE"
+    result.task(":generateProto").outcome == TaskOutcome.SUCCESS
+
+    when: "plugin artifact is changed and build runs again"
+    new File(projectDir, "build.gradle")
+            .append("""
+              protobuf {
+                plugins {
+                  grpc {
+                    artifact = 'io.grpc:protoc-gen-grpc-java:1.0.3'
+                  }
+                }
+              }""")
+    result = GradleRunner.create()
+            .withProjectDir(projectDir)
+            .withArguments('build', '--stacktrace')
+            .withPluginClasspath()
+            .withGradleVersion(gradleVersion)
+            .forwardStdOutput(new OutputStreamWriter(System.out))
+            .forwardStdError(new OutputStreamWriter(System.err))
+            .withDebug(true)
+            .build()
+
+    then: "generateProto is not UP_TO_DATE"
+    result.task(":generateGrpcProto").outcome == TaskOutcome.SUCCESS
+
+    where:
+    gradleVersion << GRADLE_VERSIONS
+  }
+
+  @Unroll
+  void "test proto generation is not up-to-date on path changes [gradle #gradleVersion]"() {
+    given: "project from testProject"
+    File projectDir = ProtobufPluginTestHelper.projectBuilder('testProject')
+            .copyDirs('testProjectBase', 'testProject')
+            .build()
+
+    when: "protoc path is set and build is invoked"
+    File buildGradleFile = new File(projectDir, "build.gradle")
+    buildGradleFile.append("""
+        configurations {
+          protoc
+        }
+
+        dependencies {
+          protoc "com.google.protobuf:protoc:3.0.0:\$project.osdetector.classifier@exe"
+        }
+
+        protobuf {
+          protoc {
+            path = "\$configurations.protoc.singleFile"
+          }
+        }""")
+    BuildResult result = GradleRunner.create()
+            .withProjectDir(projectDir)
+            .withArguments('build', '--stacktrace')
+            .withPluginClasspath()
+            .withGradleVersion(gradleVersion)
+            .forwardStdOutput(new OutputStreamWriter(System.out))
+            .forwardStdError(new OutputStreamWriter(System.err))
+            .withDebug(true)
+            .build()
+
+    then: "it succeeds"
+    result.task(":generateProto").outcome == TaskOutcome.SUCCESS
+
+    when: "protoc path is changed and build runs again"
+    buildGradleFile.text = buildGradleFile.text.replace("com.google.protobuf:protoc:3.0.0",
+        "com.google.protobuf:protoc:3.0.2")
+    result = GradleRunner.create()
+            .withProjectDir(projectDir)
+            .withArguments('build', '--stacktrace')
+            .withPluginClasspath()
+            .withGradleVersion(gradleVersion)
+            .forwardStdOutput(new OutputStreamWriter(System.out))
+            .forwardStdError(new OutputStreamWriter(System.err))
+            .withDebug(true)
+            .build()
+
+    then: "generateProto is not UP_TO_DATE"
+    result.task(":generateProto").outcome == TaskOutcome.SUCCESS
+
+    where:
+    gradleVersion << GRADLE_VERSIONS
+  }
+
+  @Unroll
   void "test proto extraction is up-to-date for testProject when changing java sources [gradle #gradleVersion]"() {
     given: "project from testProject"
     File projectDir = ProtobufPluginTestHelper.projectBuilder('testProject')

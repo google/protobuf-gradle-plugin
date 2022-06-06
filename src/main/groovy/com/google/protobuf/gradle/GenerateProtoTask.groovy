@@ -324,19 +324,74 @@ public abstract class GenerateProtoTask extends DefaultTask {
     return variant
   }
 
-  @Internal("Input captured by getAlternativePaths()")
+  @Internal("Input captured by getExecutables()")
   abstract Property<ExecutableLocator> getProtocLocator()
 
-  @Internal("Input captured by getAlternativePaths(), this is used to query alternative path by locator name.")
+  @Internal("Input captured by getSnapshotArtifacts(), this is used to query alternative path by locator name.")
   abstract MapProperty<String, FileCollection> getLocatorToAlternativePathsMapping()
 
-  @InputFiles
-  @PathSensitive(PathSensitivity.NONE)
+  @Internal("Input captured by getReleaseDependenciesMapping()")
+  abstract MapProperty<String, String> getLocatorToDependencyMapping()
+
+  @Internal("This property is no longer an input, but kept and marked @Internal for backwards compatibility.")
   ConfigurableFileCollection getAlternativePaths() {
     return objectFactory.fileCollection().from(getLocatorToAlternativePathsMapping().get().values())
   }
 
-  @Internal("Input captured by getAlternativePaths()")
+  /**
+   * For each protoc and code gen plugin defined by an artifact specification, this list will contain a String with the
+   * group, artifact, and version, as long as the version is a stable release version.
+   *
+   * Giving this as an input to the task allows gradle to ignore the OS classifier and use cached outputs generated from
+   * different operating systems since the expectation is that different operating systems will produce the same
+   * generated code.
+   */
+  @Input
+  Provider<List<String>> getReleaseArtifacts() {
+    releaseDependenciesMapping.map { it.values().collect() }
+  }
+
+  /**
+   * This file collection contains the file for each protoc and code gen plugin that is defined by an artifact
+   * specification that specifies a SNAPSHOT version.
+   *
+   * Since snapshots are expected to differ within the same version, this input allows Gradle to consider the file
+   * itself rather than the version number.
+   */
+  @InputFiles
+  @PathSensitive(PathSensitivity.NONE)
+  FileCollection getSnapshotArtifacts() {
+    Provider<Collection<FileCollection>> snapshotArtifacts = locatorToAlternativePathsMapping.map { map ->
+      Set<String> releaseArtifactKeys = releaseDependenciesMapping.get().keySet()
+      map.findAll { entry ->
+        !releaseArtifactKeys.contains(entry.key)
+      }.values()
+    }
+
+    objectFactory.fileCollection().from(snapshotArtifacts)
+  }
+
+  @Internal
+  Provider<Map<String, String>> getReleaseDependenciesMapping() {
+    providerFactory.provider {
+      locatorToDependencyMapping.get()
+          .findAll { entry -> ! entry.value.endsWith ("-SNAPSHOT") }
+    }
+  }
+
+  @InputFiles
+  @PathSensitive(PathSensitivity.NONE)
+  FileCollection getExecutables() {
+    objectFactory.fileCollection().from {
+      protocLocator.getOrNull()?.path
+    }.from {
+      pluginsExecutableLocators.get().values()
+        .collect { it.path }
+        .findAll { it }
+    }
+  }
+
+  @Internal("Input captured by getExecutables()")
   abstract MapProperty<String, ExecutableLocator> getPluginsExecutableLocators()
 
   @Internal("Not an actual input to the task, only used to find tasks belonging to a variant")

@@ -112,6 +112,7 @@ class ToolsLocator {
     for (GenerateProtoTask protoTask in protoTasks) {
       if (protoc.is(locator) || protoTask.hasPlugin(locator.name)) {
         protoTask.locatorToAlternativePathsMapping.put(locator.name, artifactFiles)
+        protoTask.locatorToDependencyMapping.put(locator.name, "$groupId:$artifact:$version".toString())
       }
     }
   }
