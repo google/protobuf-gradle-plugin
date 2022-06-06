@@ -324,16 +324,16 @@ public abstract class GenerateProtoTask extends DefaultTask {
     return variant
   }
 
-  @Internal("Input captured by getAlternativePaths()")
+  @Internal("Input captured by getExecutables()")
   abstract Property<ExecutableLocator> getProtocLocator()
 
-  @Internal("Input captured by getAlternativePaths(), this is used to query alternative path by locator name.")
+  @Internal("Input captured by getSnapshotArtifacts(), this is used to query alternative path by locator name.")
   abstract MapProperty<String, FileCollection> getLocatorToAlternativePathsMapping()
 
-  @Internal
+  @Internal("Input captured by getReleaseDependenciesMapping()")
   abstract MapProperty<String, String> getLocatorToDependencyMapping()
 
-  @Internal
+  @Internal("This property is no longer an input, but kept and marked @Internal for backwards compatibility.")
   ConfigurableFileCollection getAlternativePaths() {
     return objectFactory.fileCollection().from(getLocatorToAlternativePathsMapping().get().values())
   }
@@ -391,7 +391,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
     }
   }
 
-  @Internal("Input captured by getAlternativePaths()")
+  @Internal("Input captured by getExecutables()")
   abstract MapProperty<String, ExecutableLocator> getPluginsExecutableLocators()
 
   @Internal("Not an actual input to the task, only used to find tasks belonging to a variant")
