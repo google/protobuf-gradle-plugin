@@ -361,8 +361,8 @@ public abstract class GenerateProtoTask extends DefaultTask {
   @InputFiles
   @PathSensitive(PathSensitivity.NONE)
   FileCollection getSnapshotArtifacts() {
-    def snapshotArtifacts = locatorToAlternativePathsMapping.map { map ->
-      def releaseArtifactKeys = releaseDependenciesMapping.get().keySet()
+    Provider<Collection<FileCollection>> snapshotArtifacts = locatorToAlternativePathsMapping.map { map ->
+      Set<String> releaseArtifactKeys = releaseDependenciesMapping.get().keySet()
       map.findAll { entry ->
         !releaseArtifactKeys.contains(entry.key)
       }.values()

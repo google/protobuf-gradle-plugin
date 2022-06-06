@@ -456,7 +456,6 @@ class ProtobufJavaPluginTest extends Specification {
     then: "generateProto is not UP_TO_DATE"
     result.task(":generateProto").outcome == TaskOutcome.SUCCESS
 
-
     when: "plugin artifact is changed and build runs again"
     new File(projectDir, "build.gradle")
             .append("""
@@ -492,7 +491,7 @@ class ProtobufJavaPluginTest extends Specification {
             .build()
 
     when: "protoc path is set and build is invoked"
-    def buildGradleFile = new File(projectDir, "build.gradle")
+    File buildGradleFile = new File(projectDir, "build.gradle")
     buildGradleFile.append("""
         configurations {
           protoc
@@ -501,13 +500,13 @@ class ProtobufJavaPluginTest extends Specification {
         dependencies {
           protoc "com.google.protobuf:protoc:3.0.0:\$project.osdetector.classifier@exe"
         }
-        
+
         protobuf {
           protoc {
             path = "\$configurations.protoc.singleFile"
           }
         }""")
-    def result = GradleRunner.create()
+    BuildResult result = GradleRunner.create()
             .withProjectDir(projectDir)
             .withArguments('build', '--stacktrace')
             .withPluginClasspath()
@@ -521,7 +520,8 @@ class ProtobufJavaPluginTest extends Specification {
     result.task(":generateProto").outcome == TaskOutcome.SUCCESS
 
     when: "protoc path is changed and build runs again"
-    buildGradleFile.text = buildGradleFile.text.replace("com.google.protobuf:protoc:3.0.0", "com.google.protobuf:protoc:3.0.2")
+    buildGradleFile.text = buildGradleFile.text.replace("com.google.protobuf:protoc:3.0.0",
+        "com.google.protobuf:protoc:3.0.2")
     result = GradleRunner.create()
             .withProjectDir(projectDir)
             .withArguments('build', '--stacktrace')
