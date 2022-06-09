@@ -1,0 +1,5 @@
+# Ignore reason: The jars contain plain text that is used for testing
+ignorePaths:
+- testProjectAndroidBase/lib/protos.jar
+- testProjectAndroidDependentBase/lib/protos.jar
+- testProjectAndroidKotlinDsl/lib/protos.jar
