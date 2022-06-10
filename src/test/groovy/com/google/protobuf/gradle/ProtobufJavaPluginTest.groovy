@@ -15,7 +15,6 @@ import spock.lang.Unroll
  */
 @CompileDynamic
 class ProtobufJavaPluginTest extends Specification {
-  // Current supported version is Gradle 5+.
   private static final List<String> GRADLE_VERSIONS = ["5.6", "6.0", "6.7.1"]
   private static final List<String> KOTLIN_VERSIONS = ["1.3.20", "1.3.30"]
 
@@ -283,23 +282,23 @@ class ProtobufJavaPluginTest extends Specification {
   }
 
   @Unroll
-  void "testProjectDependentApp should be successfully executed [gradle #gradleVersion]"() {
-    given: "project from testProject & testProjectDependent"
-    File testProjectStaging = ProtobufPluginTestHelper.projectBuilder('testProjectJavaLibrary')
+  void "testProjectLibraryDependent should be successfully executed [gradle #gradleVersion]"() {
+    given: "project from testProjectJavaLibrary & testProjectDependent"
+    File testProjectStaging = ProtobufPluginTestHelper.projectBuilder('testProject')
             .copyDirs('testProjectBase', 'testProjectJavaLibrary')
             .build()
-    File testProjectDependentStaging = ProtobufPluginTestHelper.projectBuilder('testProjectDependentApp')
-            .copyDirs('testProjectDependentApp')
+    File testProjectDependentStaging = ProtobufPluginTestHelper.projectBuilder('testProjectDependent')
+            .copyDirs('testProjectDependent')
             .build()
 
-    File mainProjectDir = ProtobufPluginTestHelper.projectBuilder('testProjectDependentAppMain')
+    File mainProjectDir = ProtobufPluginTestHelper.projectBuilder('testProjectLibraryDependentMain')
             .copySubProjects(testProjectStaging, testProjectDependentStaging)
             .build()
 
     when: "build is invoked"
     BuildResult result = GradleRunner.create()
             .withProjectDir(mainProjectDir)
-            .withArguments('testProjectDependentApp:build', '--stacktrace')
+            .withArguments('testProjectDependent:build', '--stacktrace')
             .withPluginClasspath()
             .withGradleVersion(gradleVersion)
             .forwardStdOutput(new OutputStreamWriter(System.out))
@@ -308,7 +307,7 @@ class ProtobufJavaPluginTest extends Specification {
             .build()
 
     then: "it succeed"
-    result.task(":testProjectDependentApp:build").outcome == TaskOutcome.SUCCESS
+    result.task(":testProjectDependent:build").outcome == TaskOutcome.SUCCESS
 
     where:
     gradleVersion << GRADLE_VERSIONS

@@ -2,7 +2,7 @@
 // See: ProtobufPluginTestHelper.groovy
 
 plugins {
+  id 'com.android.application'
   id 'com.google.protobuf'
 }
-apply plugin: 'com.android.application'
 apply from: 'build_base.gradle'
