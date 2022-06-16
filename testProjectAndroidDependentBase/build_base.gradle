@@ -96,22 +96,22 @@ protobuf {
 }
 
 dependencies {
-    compile 'com.android.support:appcompat-v7:23.4.0'
-    compile 'com.squareup.okhttp:okhttp:2.7.5'
-    compile 'javax.annotation:javax.annotation-api:1.2'
-    compile 'com.google.protobuf:protobuf-lite:3.0.0'
-    compile 'io.grpc:grpc-core:1.0.0-pre2'
-    compile 'io.grpc:grpc-stub:1.0.0-pre2'
-    compile 'io.grpc:grpc-okhttp:1.0.0-pre2'
-    compile('io.grpc:grpc-protobuf-lite:1.0.0-pre2') {
+    implementation 'com.android.support:appcompat-v7:23.4.0'
+    implementation 'com.squareup.okhttp:okhttp:2.7.5'
+    implementation 'javax.annotation:javax.annotation-api:1.2'
+    implementation 'com.google.protobuf:protobuf-lite:3.0.0'
+    implementation 'io.grpc:grpc-core:1.0.0-pre2'
+    implementation 'io.grpc:grpc-stub:1.0.0-pre2'
+    implementation 'io.grpc:grpc-okhttp:1.0.0-pre2'
+    implementation('io.grpc:grpc-protobuf-lite:1.0.0-pre2') {
         // Otherwise Android compile will complain "Multiple dex files define ..."
         exclude module: "protobuf-lite"
     }
-    compile(project(':testProjectAndroidLibrary')) {
+    implementation(project(':testProjectAndroidLibrary')) {
         exclude module: "protobuf-lite"
     }
     protobuf files('lib/protos.jar')
-    testCompile 'junit:junit:4.12'
+    testImplementation 'junit:junit:4.12'
 }
 
 def assertJavaCompileHasProtoGeneratedDir(Object variant, Collection<String> codegenPlugins) {

@@ -23,13 +23,13 @@ sourceSets{
 }
 
 dependencies {
-    compile("com.google.protobuf:protobuf-java:3.6.1")
-    compile("io.grpc:grpc-stub:1.15.1")
-    compile("io.grpc:grpc-protobuf:1.15.1")
+    implementation("com.google.protobuf:protobuf-java:3.6.1")
+    implementation("io.grpc:grpc-stub:1.15.1")
+    implementation("io.grpc:grpc-protobuf:1.15.1")
     if (JavaVersion.current().isJava9Compatible) {
         // Workaround for @javax.annotation.Generated
         // see: https://github.com/grpc/grpc-java/issues/3633
-        compile("javax.annotation:javax.annotation-api:1.3.1")
+        implementation("javax.annotation:javax.annotation-api:1.3.1")
     }
     // Extra proto source files besides the ones residing under
     // "src/main".
@@ -39,7 +39,7 @@ dependencies {
     // Adding dependency for configuration from custom sourceSet
     "sampleProtobuf"(files("ext/"))
 
-    testCompile("junit:junit:4.12")
+    testImplementation("junit:junit:4.12")
     // Extra proto source files for test besides the ones residing under
     // "src/test".
     testProtobuf(files("lib/protos-test.tar.gz"))
