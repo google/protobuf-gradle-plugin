@@ -88,6 +88,8 @@ public abstract class GenerateProtoTask extends DefaultTask {
   private final ConfigurableFileCollection includeDirs = objectFactory.fileCollection()
   // source files are proto files that will be compiled by protoc
   private final ConfigurableFileCollection sourceFiles = objectFactory.fileCollection()
+  // descriptor files are proto files that will be passed to protoc as --descriptor_set_in
+  private final ConfigurableFileCollection descriptorSetFiles = objectFactory.fileCollection()
   private final NamedDomainObjectContainer<PluginOptions> builtins = objectFactory.domainObjectContainer(PluginOptions)
   private final NamedDomainObjectContainer<PluginOptions> plugins = objectFactory.domainObjectContainer(PluginOptions)
   private final ProjectLayout projectLayout = project.layout
@@ -310,6 +312,14 @@ public abstract class GenerateProtoTask extends DefaultTask {
     return sourceFiles
   }
 
+  @SkipWhenEmpty
+  @PathSensitive(PathSensitivity.RELATIVE)
+  @IgnoreEmptyDirectories
+  @InputFiles
+  FileCollection getDescriptorSetFiles() {
+    return descriptorSetFiles
+  }
+
   @InputFiles
   @PathSensitive(PathSensitivity.RELATIVE)
   FileCollection getIncludeDirs() {
@@ -514,6 +524,14 @@ public abstract class GenerateProtoTask extends DefaultTask {
   }
 
   /**
+   * Add a collection of proto source files to be compiled.
+   */
+  public void addDescriptorSetFiles(FileCollection files) {
+    checkCanConfig()
+    descriptorSetFiles.from(files)
+  }
+
+  /**
    * Returns true if the Java source set or Android variant is test related.
    */
   @Input
@@ -675,6 +693,23 @@ public abstract class GenerateProtoTask extends DefaultTask {
       if (descriptorSetOptions.includeSourceInfo) {
         baseCmd += "--include_source_info"
       }
+    }
+
+    if(!descriptorSetFiles.isEmpty()){
+      StringBuilder descriptorSetInBuilder = new StringBuilder("--descriptor_set_in=")
+      descriptorSetFiles.eachWithIndex { descriptorSet, index ->
+        if(!descriptorSet.exists()){
+          throw new GradleException("DescriptorSet at ${descriptorSet.absolutePath} does not exist")
+        }
+
+        if(index != 0){
+          descriptorSetInBuilder.append(":")
+        }
+
+        descriptorSetInBuilder.append(descriptorSet.absolutePath)
+      }
+
+      baseCmd += descriptorSetInBuilder
     }
 
     List<List<String>> cmds = generateCmds(baseCmd, protoFiles, getCmdLengthLimit())
