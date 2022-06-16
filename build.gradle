@@ -54,17 +54,17 @@ configurations {
 }
 
 dependencies {
-    compileOnly "com.android.tools.build:gradle:3.5.0"
+  compileOnly "com.android.tools.build:gradle:3.5.0"
 
-    compile 'com.google.guava:guava:27.0.1-jre'
-    compile 'com.google.gradle:osdetector-gradle-plugin:1.7.0'
-    compile 'commons-lang:commons-lang:2.6'
+  implementation 'com.google.guava:guava:27.0.1-jre'
+  implementation 'com.google.gradle:osdetector-gradle-plugin:1.7.0'
+  implementation 'commons-lang:commons-lang:2.6'
 
-    testCompile 'junit:junit:4.12'
-    testCompile ('org.spockframework:spock-core:1.0-groovy-2.4') {
-      exclude module : 'groovy-all'
-    }
-    testCompile 'commons-io:commons-io:2.5'
+  testImplementation 'junit:junit:4.12'
+  testImplementation('org.spockframework:spock-core:1.0-groovy-2.4') {
+    exclude module: 'groovy-all'
+  }
+  testImplementation 'commons-io:commons-io:2.5'
 }
 
 test.inputs.files fileTree("$projectDir/testProject")

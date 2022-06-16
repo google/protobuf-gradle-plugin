@@ -22,19 +22,16 @@ java {
     targetCompatibility = JavaVersion.VERSION_1_7
 }
 
-val grpcCompile by configurations.creating
-
-the<JavaPluginConvention>().sourceSets {
-
-    val grpc by creating {
-        compileClasspath += grpcCompile
+sourceSets {
+    val grpc = create("grpc") {
     }
 
-    "test"{
+    getByName("test") {
         compileClasspath += grpc.output
         runtimeClasspath += grpc.output
     }
 }
+val grpcImplementation = configurations.getByName("grpcImplementation")
 
 val protobufDep = "com.google.protobuf:protobuf-java:3.0.0"
 
@@ -43,13 +40,13 @@ dependencies {
     protobuf(files("ext/"))
     testProtobuf(files("lib/protos-test.tar.gz"))
 
-    compile(protobufDep)
-    testCompile("junit:junit:4.12")
+    implementation(protobufDep)
+    testImplementation("junit:junit:4.12")
     // KotlinFooTest.kt requires reflection utilities
-    testCompile("org.jetbrains.kotlin:kotlin-reflect:1.2.0")
-    grpcCompile(protobufDep)
-    grpcCompile("io.grpc:grpc-stub:1.0.0-pre2")
-    grpcCompile("io.grpc:grpc-protobuf:1.0.0-pre2")
+    testImplementation("org.jetbrains.kotlin:kotlin-reflect:1.2.0")
+    grpcImplementation(protobufDep)
+    grpcImplementation("io.grpc:grpc-stub:1.0.0-pre2")
+    grpcImplementation("io.grpc:grpc-protobuf:1.0.0-pre2")
 }
 
 protobuf {
