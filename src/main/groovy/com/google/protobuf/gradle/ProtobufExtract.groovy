@@ -30,7 +30,7 @@
 package com.google.protobuf.gradle
 
 import com.google.common.base.Preconditions
-import groovy.transform.CompileDynamic
+import groovy.transform.CompileStatic
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DuplicatesStrategy
@@ -54,7 +54,7 @@ import javax.inject.Inject
 /**
  * Extracts proto files from a dependency configuration.
  */
-@CompileDynamic
+@CompileStatic
 abstract class ProtobufExtract extends DefaultTask {
 
   /**
@@ -171,7 +171,7 @@ abstract class ProtobufExtract extends DefaultTask {
         } else if (file.path.endsWith('.jar') || file.path.endsWith('.zip')) {
           protoInputs.add(archiveFacade.zipTree(file.path).matching(protoFilter))
         } else if (file.path.endsWith('.aar')) {
-          FileCollection zipTree = archiveFacade.zipTree(file.path).filter { it.path.endsWith('.jar') }
+          FileCollection zipTree = archiveFacade.zipTree(file.path).filter { File it -> it.path.endsWith('.jar') }
           zipTree.each { entry ->
             protoInputs.add(archiveFacade.zipTree(entry).matching(protoFilter))
           }

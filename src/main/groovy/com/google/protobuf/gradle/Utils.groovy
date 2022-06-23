@@ -29,7 +29,7 @@
 package com.google.protobuf.gradle
 
 import com.google.common.base.Preconditions
-import groovy.transform.CompileDynamic
+import groovy.transform.CompileStatic
 import org.apache.commons.lang.StringUtils
 import org.gradle.api.GradleException
 import org.gradle.api.Project
@@ -43,7 +43,7 @@ import java.util.regex.Matcher
 /**
  * Utility classes.
  */
-@CompileDynamic
+@CompileStatic
 class Utils {
   /**
    * Returns the conventional name of a configuration for a sourceSet
