@@ -28,7 +28,8 @@
  */
 package com.google.protobuf.gradle
 
-import groovy.transform.CompileDynamic
+import com.google.gradle.osdetector.OsDetector
+import groovy.transform.CompileStatic
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
@@ -38,12 +39,12 @@ import org.gradle.api.file.FileCollection
 /**
  * Holds locations of all external executables, i.e., protoc and plugins.
  */
-@CompileDynamic
+@CompileStatic
 class ToolsLocator {
 
   private final Project project
-  private final ExecutableLocator protoc
-  private final NamedDomainObjectContainer<ExecutableLocator> plugins
+  final ExecutableLocator protoc
+  final NamedDomainObjectContainer<ExecutableLocator> plugins
 
   static List<String> artifactParts(String artifactCoordinate) {
     String artifact
@@ -53,11 +54,14 @@ class ToolsLocator {
     String version
     String classifier
 
-    (artifact, extension) = artifactCoordinate.tokenize('@')
+    List<String> artifactCoordinateTokenized = artifactCoordinate.tokenize('@')
+    (artifact, extension) = [artifactCoordinateTokenized[0], artifactCoordinateTokenized[1]]
     if (extension == null && artifactCoordinate.endsWith('@')) {
       extension = ''
     }
-    (group, name, version, classifier) = artifact.tokenize(':')
+    List<String> artifactTokenized = artifact.tokenize(':')
+    (group, name, version, classifier) =
+      [artifactTokenized[0], artifactTokenized[1], artifactTokenized[2], artifactTokenized[3]]
 
     return [group, name, version, classifier, extension]
   }
@@ -92,19 +96,20 @@ class ToolsLocator {
 
   void registerDependencyWithTasks(ExecutableLocator locator, Collection<GenerateProtoTask> protoTasks) {
     // create a project configuration dependency for the artifact
-    Configuration config = project.configurations.create("protobufToolsLocator_${locator.name}") {
-      visible = false
-      transitive = false
-      extendsFrom = []
+    Configuration config = project.configurations.create("protobufToolsLocator_${locator.name}") { Configuration conf ->
+      conf.visible = false
+      conf.transitive = false
     }
     String groupId, artifact, version, classifier, extension
-    (groupId, artifact, version, classifier, extension) = artifactParts(locator.artifact)
+    OsDetector osdetector = project.extensions.getByName("osdetector") as OsDetector
+    List<String> parts = artifactParts(locator.artifact)
+    (groupId, artifact, version, classifier, extension) = [parts[0], parts[1], parts[2], parts[3], parts[4]]
     Map<String, String> notation = [
-            group:groupId,
-            name:artifact,
-            version:version,
-            classifier:classifier ?: project.osdetector.classifier,
-            ext:extension ?: 'exe',
+      group:groupId,
+      name:artifact,
+      version:version,
+      classifier:classifier ?: osdetector.classifier,
+      ext:extension ?: 'exe',
     ]
     Dependency dep = project.dependencies.add(config.name, notation)
     FileCollection artifactFiles = config.fileCollection(dep)

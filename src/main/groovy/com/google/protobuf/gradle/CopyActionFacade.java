@@ -29,6 +29,7 @@
  */
 package com.google.protobuf.gradle;
 
+import groovy.transform.CompileStatic;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.file.CopySpec;
@@ -42,9 +43,11 @@ import javax.inject.Inject;
  * {@link org.gradle.api.file.FileSystemOperations} if available (Gradle 6.0+) or {@link org.gradle.api.Project#copy} if
  * the version of Gradle is below 6.0.
  */
+@CompileStatic
 interface CopyActionFacade {
     WorkResult copy(Action<? super CopySpec> var1);
 
+    @CompileStatic
     class ProjectBased implements CopyActionFacade {
         private final Project project;
 
@@ -58,6 +61,7 @@ interface CopyActionFacade {
         }
     }
 
+    @CompileStatic
     abstract class FileSystemOperationsBased implements CopyActionFacade {
         @Inject
         public abstract FileSystemOperations getFileSystemOperations();

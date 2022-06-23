@@ -29,7 +29,7 @@
  */
 package com.google.protobuf.gradle
 
-import groovy.transform.CompileDynamic
+import groovy.transform.CompileStatic
 import org.gradle.api.Project
 import org.gradle.api.internal.file.FileResolver
 import org.gradle.util.ConfigureUtil
@@ -37,7 +37,7 @@ import org.gradle.util.ConfigureUtil
 /**
  * Adds the protobuf {} block as a property of the project.
  */
-@CompileDynamic
+@CompileStatic
 class ProtobufConvention {
     ProtobufConvention(Project project, FileResolver fileResolver) {
         protobuf = new ProtobufConfigurator(project, fileResolver)
