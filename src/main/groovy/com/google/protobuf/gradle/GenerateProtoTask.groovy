@@ -33,7 +33,9 @@ import static java.nio.charset.StandardCharsets.US_ASCII
 
 import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
-import groovy.transform.CompileDynamic
+import groovy.transform.CompileStatic
+import groovy.transform.TypeChecked
+import groovy.transform.TypeCheckingMode
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.Named
@@ -72,7 +74,7 @@ import javax.inject.Inject
  * The task that compiles proto files into Java files.
  */
 // TODO(zhangkun83): add per-plugin output dir reconfiguraiton.
-@CompileDynamic
+@CompileStatic
 @CacheableTask
 public abstract class GenerateProtoTask extends DefaultTask {
   // Windows CreateProcess has command line limit of 32768:
@@ -180,7 +182,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
   static List<List<String>> generateCmds(List<String> baseCmd, List<File> protoFiles, int cmdLengthLimit) {
     List<List<String>> cmds = []
     if (!protoFiles.isEmpty()) {
-      int baseCmdLength = baseCmd.sum { it.length() + CMD_ARGUMENT_EXTRA_LENGTH }
+      int baseCmdLength = baseCmd.sum { it.length() + CMD_ARGUMENT_EXTRA_LENGTH } as int
       List<String> currentArgs = []
       int currentArgsLength = 0
       for (File proto: protoFiles) {
@@ -361,7 +363,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
   @InputFiles
   @PathSensitive(PathSensitivity.NONE)
   FileCollection getSnapshotArtifacts() {
-    Provider<Collection<FileCollection>> snapshotArtifacts = locatorToAlternativePathsMapping.map { map ->
+    Provider<Collection<FileCollection>> snapshotArtifacts = locatorToAlternativePathsMapping.map { Map<String, FileCollection> map ->
       Set<String> releaseArtifactKeys = releaseDependenciesMapping.get().keySet()
       map.findAll { entry ->
         !releaseArtifactKeys.contains(entry.key)
@@ -372,6 +374,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
   }
 
   @Internal
+  @TypeChecked(TypeCheckingMode.SKIP) // entry.value always returns an Object for an unknown reason
   Provider<Map<String, String>> getReleaseDependenciesMapping() {
     providerFactory.provider {
       locatorToDependencyMapping.get()
@@ -386,7 +389,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
       protocLocator.getOrNull()?.path
     }.from {
       pluginsExecutableLocators.get().values()
-        .collect { it.path }
+        .collect { ((ExecutableLocator) it).path }
         .findAll { it }
     }
   }
@@ -415,6 +418,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
     return flavors
   }
 
+  @TypeChecked(TypeCheckingMode.SKIP) // Don't depend on AGP
   @Internal("Not an actual input to the task, only used to find tasks belonging to a variant")
   String getBuildType() {
     Preconditions.checkState(isAndroidProject.get(),
@@ -619,7 +623,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
     // to avoid triggering unnecessary rebuilds downstream
     List<File> protoFiles = sourceFiles.files.sort()
 
-    [builtins, plugins]*.each { plugin ->
+    [builtins, plugins]*.forEach { PluginOptions plugin ->
       String outputPath = getOutputDir(plugin)
       File outputDir = new File(outputPath)
       // protoc is capable of output generated files directly to a JAR file
@@ -632,7 +636,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
 
     // The source directory designated from sourceSet may not actually exist on disk.
     // "include" it only when it exists, so that Gradle and protoc won't complain.
-    List<String> dirs = includeDirs.filter { it.exists() }*.path.collect { "-I${it}" }
+    List<String> dirs = includeDirs.filter { File it -> it.exists() }*.path.collect { "-I${it}".toString() }
     logger.debug "ProtobufCompile using directories ${dirs}"
     logger.debug "ProtobufCompile using files ${protoFiles}"
 
@@ -643,7 +647,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
     // Handle code generation built-ins
     builtins.each { builtin ->
       String outPrefix = makeOptionsPrefix(builtin.options)
-      baseCmd += "--${builtin.name}_out=${outPrefix}${getOutputDir(builtin)}"
+      baseCmd += "--${builtin.name}_out=${outPrefix}${getOutputDir(builtin)}".toString()
     }
 
     Map<String, ExecutableLocator> executableLocations = pluginsExecutableLocators.get()
@@ -652,12 +656,12 @@ public abstract class GenerateProtoTask extends DefaultTask {
       String name = plugin.name
       ExecutableLocator locator = executableLocations.get(name)
       if (locator != null) {
-        baseCmd += "--plugin=protoc-gen-${name}=${computeExecutablePath(locator)}"
+        baseCmd += "--plugin=protoc-gen-${name}=${computeExecutablePath(locator)}".toString()
       } else {
         logger.warn "protoc plugin '${name}' not defined. Trying to use 'protoc-gen-${name}' from system path"
       }
       String pluginOutPrefix = makeOptionsPrefix(plugin.options)
-      baseCmd += "--${name}_out=${pluginOutPrefix}${getOutputDir(plugin)}"
+      baseCmd += "--${name}_out=${pluginOutPrefix}${getOutputDir(plugin)}".toString()
     }
 
     if (generateDescriptorSet) {
@@ -668,7 +672,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
       if (!folder.exists()) {
         folder.mkdirs()
       }
-      baseCmd += "--descriptor_set_out=${path}"
+      baseCmd += "--descriptor_set_out=${path}".toString()
       if (descriptorSetOptions.includeImports) {
         baseCmd += "--include_imports"
       }
