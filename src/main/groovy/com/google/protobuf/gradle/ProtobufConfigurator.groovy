@@ -28,7 +28,9 @@
  */
 package com.google.protobuf.gradle
 
-import groovy.transform.CompileDynamic
+import groovy.transform.CompileStatic
+import groovy.transform.TypeChecked
+import groovy.transform.TypeCheckingMode
 import org.gradle.api.Project
 import org.gradle.api.internal.file.FileResolver
 import org.gradle.api.tasks.TaskCollection
@@ -37,7 +39,7 @@ import org.gradle.util.ConfigureUtil
 /**
  * The main configuration block exposed as {@code protobuf} in the build script.
  */
-@CompileDynamic
+@CompileStatic
 public class ProtobufConfigurator {
   private final Project project
   private final GenerateProtoTaskCollection tasks
@@ -135,6 +137,7 @@ public class ProtobufConfigurator {
       }
     }
 
+    @TypeChecked(TypeCheckingMode.SKIP) // Don't depend on AGP
     public TaskCollection<GenerateProtoTask> ofVariant(String variant) {
       return all().matching { GenerateProtoTask task ->
         task.variant.name == variant
