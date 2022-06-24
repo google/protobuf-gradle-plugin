@@ -657,7 +657,13 @@ public abstract class GenerateProtoTask extends DefaultTask {
         logger.warn "protoc plugin '${name}' not defined. Trying to use 'protoc-gen-${name}' from system path"
       }
       String pluginOutPrefix = makeOptionsPrefix(plugin.options)
-      baseCmd += "--${name}_out=${pluginOutPrefix}${getOutputDir(plugin)}"
+      // Check if protoc supports opt flag
+      if(Utils.compareProtocVersion(project, "3.2") >= 0 && pluginOutPrefix.length() > 1){
+        baseCmd += "--${name}_opt=${pluginOutPrefix.substring(0, pluginOutPrefix.length() - 1)}"
+        baseCmd += "--${name}_out=${getOutputDir(plugin)}"
+      } else {
+        baseCmd += "--${name}_out=${pluginOutPrefix}${getOutputDir(plugin)}"
+      }
     }
 
     if (generateDescriptorSet) {
