@@ -59,6 +59,12 @@ final class ProtobufPluginTestHelper {
 
     args.add(fullPathTask)
     args.add("--stacktrace")
+    // DSL element 'dexOptions' is obsolete and should be removed.
+    // It will be removed in version 8.0 of the Android Gradle plugin.
+    // Using it has no effect, and the AndroidGradle plugin optimizes dexing automatically.
+    //
+    // Set memory limit for all gradle build, not only for dexing
+    args.add("-Dorg.gradle.jvmargs=-Xmx1g")
     return GradleRunner.create()
        .withProjectDir(mainProjectDir)
        .withArguments(args)
