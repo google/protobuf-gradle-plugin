@@ -28,19 +28,35 @@ final class ProtobufPluginTestHelper {
   }
 
   static BuildResult buildAndroidProject(
-     File mainProjectDir, String gradleVersion, String fullPathTask, String... arguments) {
-    return getAndroidGradleRunner(mainProjectDir, gradleVersion, fullPathTask, arguments).build()
+      File mainProjectDir,
+      String gradleVersion,
+      String agpVersion,
+      String fullPathTask,
+      String... arguments
+  ) {
+    return getAndroidGradleRunner(mainProjectDir, gradleVersion, agpVersion, fullPathTask, arguments).build()
   }
 
   static GradleRunner getAndroidGradleRunner(
-     File mainProjectDir, String gradleVersion, String fullPathTask, String... arguments) {
+      File mainProjectDir,
+      String gradleVersion,
+      String agpVersion,
+      String fullPathTask,
+      String... arguments
+  ) {
     File localBuildCache = new File(mainProjectDir, ".buildCache")
     if (localBuildCache.exists()) {
       localBuildCache.deleteDir()
     }
     List<String> args = arguments.toList()
     // set android build cache to avoid using home directory on CI.
-    args.add("-Pandroid.buildCacheDir=$localBuildCache".toString())
+    // More details about that if can be found here:
+    // https://developer.android.com/studio/releases/gradle-plugin.html#build-cache-removed
+    args.add("-Dorg.gradle.caching=false")
+    if (agpVersion.take(1).toInteger() <= 4) { // TODO: improve version comparison
+      args.add("-Pandroid.buildCacheDir=$localBuildCache".toString())
+    }
+
     args.add(fullPathTask)
     args.add("--stacktrace")
     return GradleRunner.create()

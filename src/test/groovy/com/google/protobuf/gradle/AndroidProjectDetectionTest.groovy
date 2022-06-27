@@ -13,8 +13,8 @@ import spock.lang.Unroll
  */
 @CompileDynamic
 class AndroidProjectDetectionTest extends Specification {
-  private static final List<String> GRADLE_VERSION = ["5.6"]
-  private static final List<String> ANDROID_PLUGIN_VERSION = ["3.5.0"]
+  private static final List<String> GRADLE_VERSION = ["5.6", "7.4.2"]
+  private static final List<String> ANDROID_PLUGIN_VERSION = ["3.5.0", "7.2.1"]
 
   static void appendUtilIsAndroidProjectCheckTask(File buildFile, boolean assertResult) {
     buildFile << """
@@ -39,9 +39,10 @@ class AndroidProjectDetectionTest extends Specification {
 
     when: "checkForAndroidPlugin task evaluates Utils.isAndroidProject"
     BuildResult result = buildAndroidProject(
-       mainProjectDir,
-       gradleVersion,
-       "checkForAndroidPlugin"
+        mainProjectDir,
+        gradleVersion,
+        agpVersion,
+        "checkForAndroidPlugin"
     )
 
     then: "Utils.isAndroidProject evaluation matched assertion in task checkForAndroidPlugin"
@@ -73,6 +74,7 @@ class AndroidProjectDetectionTest extends Specification {
     BuildResult result = buildAndroidProject(
        mainProjectDir,
        gradleVersion,
+       agpVersion,
        "checkForAndroidPlugin"
     )
 
