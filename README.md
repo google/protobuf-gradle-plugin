@@ -25,7 +25,7 @@ buildscript {
     gradlePluginPortal()
   }
   dependencies {
-    classpath 'gradle.plugin.com.google.protobuf:protobuf-gradle-plugin:0.8.19'
+    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.19'
   }
 }
 ```
