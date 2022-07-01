@@ -449,17 +449,8 @@ class ProtobufPlugin implements Plugin<Project> {
     }
 
     private void linkGenerateProtoTasksToTaskName(String compileTaskName, GenerateProtoTask genProtoTask) {
-      Task compileTask = project.tasks.findByName(compileTaskName)
-      if (compileTask != null) {
-        linkGenerateProtoTasksToTask(compileTask, genProtoTask)
-      } else {
-        // It is possible for a compile task to not exist yet. For example, if someone applied
-        // the proto plugin and then later applies the kotlin plugin.
-        project.tasks.configureEach { Task task ->
-          if (task.name == compileTaskName) {
-            linkGenerateProtoTasksToTask(task, genProtoTask)
-          }
-        }
+      project.tasks.named(compileTaskName).configure { Task task ->
+        linkGenerateProtoTasksToTask(task, genProtoTask)
       }
     }
 
