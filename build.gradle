@@ -196,3 +196,9 @@ tasks.named('compileGroovy') {
 tasks.named('compileKotlin') {
     compileKotlin.classpath += files(compileGroovy.destinationDirectory)
 }
+
+test {
+  testLogging {
+    events = ["standard_out", "standard_error", "started", "passed", "failed", "skipped"]
+  }
+}
