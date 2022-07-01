@@ -30,6 +30,8 @@ package com.google.protobuf.gradle
 
 import com.google.common.base.Preconditions
 import groovy.transform.CompileStatic
+import groovy.transform.TypeChecked
+import groovy.transform.TypeCheckingMode
 import org.apache.commons.lang.StringUtils
 import org.gradle.api.GradleException
 import org.gradle.api.Project
@@ -125,6 +127,7 @@ class Utils {
    * Adds the file to the IDE plugin's set of sources / resources. If the directory does
    * not exist, it will be created before the IDE task is run.
    */
+  @TypeChecked(TypeCheckingMode.SKIP) // For unknown reasons, configureEach (L:144) contains Object in closure
   static void addToIdeSources(Project project, boolean isTest, File f, boolean isGenerated) {
     project.plugins.withId("idea") {
       IdeaModel model = project.getExtensions().findByType(IdeaModel)
@@ -136,8 +139,8 @@ class Utils {
       if (isGenerated) {
         model.module.generatedSourceDirs += f
       }
-      project.tasks.withType(GenerateIdeaModule).each {
-        it.doFirst {
+      project.tasks.withType(GenerateIdeaModule).configureEach { GenerateIdeaModule task ->
+        task.doFirst {
           // This is required because the intellij plugin does not allow adding source directories
           // that do not exist. The intellij config files should be valid from the start even if a
           // user runs './gradlew idea' before running './gradlew generateProto'.
