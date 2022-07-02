@@ -587,6 +587,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
   void compile() {
     Preconditions.checkState(state == State.FINALIZED, 'doneConfig() has not been called')
 
+    project.delete(outputBaseDir)
     // Sort to ensure generated descriptors have a canonical representation
     // to avoid triggering unnecessary rebuilds downstream
     List<File> protoFiles = sourceDirs.asFileTree.files.sort()

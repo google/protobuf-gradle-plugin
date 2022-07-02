@@ -315,12 +315,10 @@ task.plugins {
 
 ```gradle
 protobuf {
-  generatedFilesBaseDir = "$projectDir/generated"
-
   generateProtoTasks {
     all().each { task ->
       task.builtins {
-        // Generates Python code in the output folder:
+        // Generates Python code
         python { }
 
         // If you wish to avoid generating Java files:
@@ -410,7 +408,7 @@ protobuf {
 ```gradle
 { task ->
   // If true, will generate a descriptor_set.desc file under
-  // $generatedFilesBaseDir/$sourceSet. Default is false.
+  // task.outputBaseDir. Default is false.
   // See --descriptor_set_out in protoc documentation about what it is.
   task.generateDescriptorSet = true
 
@@ -430,19 +428,11 @@ protobuf {
 
 #### Change where files are generated
 
-By default generated Java files are under
-``$generatedFilesBaseDir/$sourceSet/$builtinPluginName``, where
-``$generatedFilesBaseDir`` is ``$buildDir/generated/source/proto`` by default,
-and is configurable. E.g.,
+Generated files are under `task.outputBaseDir` with a subdirectory per
+builtin and plugin. This produces a folder structure of
+``$buildDir/generated/source/proto/$sourceSet/$builtinPluginName``.
 
-```gradle
-protobuf {
-  ...
-  generatedFilesBaseDir = "$projectDir/src/generated"
-}
-```
-
-The subdirectory name, which is by default ``$builtinPluginName``, can also be
+The subdirectory name, which is by default ``$builtinPluginName``, can be
 changed by setting the ``outputSubDir`` property in the ``builtins`` or
 ``plugins`` block of a task configuration within ``generateProtoTasks`` block
 (see previous section). E.g.,
@@ -451,8 +441,7 @@ changed by setting the ``outputSubDir`` property in the ``builtins`` or
 { task ->
   task.plugins {
     grpc {
-      // Write the generated files under
-      // "$generatedFilesBaseDir/$sourceSet/grpcjava"
+      // Use subdirectory 'grpcjava' instead of the default 'grpc'
       outputSubDir = 'grpcjava'
     }
   }
@@ -519,29 +508,6 @@ Settings -> Build, Execution, Deployment
 
 This plugin integrates with the ``idea`` plugin and automatically
 registers the proto files and generated Java code as sources.
-
-
-```gradle
-apply plugin: 'idea'
-
-protobuf {
-    ...
-    generatedFilesBaseDir = "$projectDir/gen"
-}
-
-clean {
-    delete protobuf.generatedFilesBaseDir
-}
-
-idea {
-    module {
-        // proto files and generated Java files are automatically added as
-        // source dirs.
-        // If you have additional sources, add them here:
-        sourceDirs += file("/path/to/other/sources");
-    }
-}
-```
 
 
 ## Testing the plugin

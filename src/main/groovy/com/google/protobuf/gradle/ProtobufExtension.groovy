@@ -54,6 +54,8 @@ abstract class ProtobufExtension {
    * "${project.buildDir}/generated/source/proto".
    */
   private String generatedFilesBaseDir
+  @PackageScope
+  final String defaultGeneratedFilesBaseDir
 
   public ProtobufExtension(final Project project) {
     this.project = project
@@ -61,6 +63,7 @@ abstract class ProtobufExtension {
     this.tools = new ToolsLocator(project)
     this.taskConfigActions = []
     this.generatedFilesBaseDir = "${project.buildDir}/generated/source/proto"
+    this.defaultGeneratedFilesBaseDir = generatedFilesBaseDir
   }
 
   @PackageScope
@@ -81,6 +84,11 @@ abstract class ProtobufExtension {
     this.taskConfigActions.each { action ->
       action.execute(tasks)
     }
+  }
+
+  @PackageScope
+  boolean isGeneratedFilesBaseDirChanged() {
+    return generatedFilesBaseDir != defaultGeneratedFilesBaseDir
   }
 
   //===========================================================================

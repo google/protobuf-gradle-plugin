@@ -383,17 +383,27 @@ class ProtobufPlugin implements Plugin<Project> {
         Action<GenerateProtoTask> configureAction) {
       String generateProtoTaskName = 'generate' +
           Utils.getSourceSetSubstringForTaskNames(sourceSetOrVariantName) + 'Proto'
-      Provider<String> outDir = project.providers.provider {
-        "${this.protobufExtension.generatedFilesBaseDir}/${sourceSetOrVariantName}".toString()
-      }
       return project.tasks.register(generateProtoTaskName, GenerateProtoTask) {
         it.description = "Compiles Proto source for '${sourceSetOrVariantName}'".toString()
-        it.outputBaseDir = outDir
+        it.outputBaseDir = project.providers.provider {
+          "${protobufExtension.defaultGeneratedFilesBaseDir}/${sourceSetOrVariantName}".toString()
+        }
         it.addSourceDirs(protoSourceSet)
         it.addIncludeDir(protoSourceSet.sourceDirectories)
         it.addSourceDirs(extractProtosDirs)
         it.addIncludeDir(extractProtosDirs)
         it.addIncludeDir(project.files(extractIncludeProtosTask))
+        it.doLast { task ->
+          if (!protobufExtension.isGeneratedFilesBaseDirChanged()) {
+            return
+          }
+          // Purposefully don't wire this up to outputs, as it can be mixed with other files.
+          project.copy { CopySpec spec ->
+            spec.includeEmptyDirs = false
+            spec.from(it.outputBaseDir)
+            spec.into("${protobufExtension.generatedFilesBaseDir}/${sourceSetOrVariantName}")
+          }
+        }
         configureAction.execute(it)
       }
     }
