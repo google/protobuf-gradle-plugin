@@ -34,7 +34,6 @@ import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.Dependency
-import org.gradle.api.file.FileCollection
 
 /**
  * Holds locations of all external executables, i.e., protoc and plugins.
@@ -42,7 +41,6 @@ import org.gradle.api.file.FileCollection
 @CompileStatic
 class ToolsLocator {
 
-  private final Project project
   final ExecutableLocator protoc
   final NamedDomainObjectContainer<ExecutableLocator> plugins
 
@@ -67,7 +65,6 @@ class ToolsLocator {
   }
 
   ToolsLocator(Project project) {
-    this.project = project
     protoc = new ExecutableLocator('protoc')
     plugins = project.container(ExecutableLocator)
   }
@@ -79,22 +76,22 @@ class ToolsLocator {
    * and adds a doFirst {} block to the specified tasks which resolves the
    * spec, downloads the artifact, and point to the local path.
    */
-  void registerTaskDependencies(Collection<GenerateProtoTask> protoTasks) {
+  void resolve(Project project) {
     if (protoc.artifact != null) {
-      registerDependencyWithTasks(protoc, protoTasks)
+      resolveLocator(project, protoc)
     } else if (protoc.path == null) {
       protoc.path = 'protoc'
     }
     for (ExecutableLocator pluginLocator in plugins) {
       if (pluginLocator.artifact != null) {
-        registerDependencyWithTasks(pluginLocator, protoTasks)
+        resolveLocator(project, pluginLocator)
       } else if (pluginLocator.path == null) {
         pluginLocator.path = "protoc-gen-${pluginLocator.name}"
       }
     }
   }
 
-  void registerDependencyWithTasks(ExecutableLocator locator, Collection<GenerateProtoTask> protoTasks) {
+  private void resolveLocator(Project project, ExecutableLocator locator) {
     // create a project configuration dependency for the artifact
     Configuration config = project.configurations.create("protobufToolsLocator_${locator.name}") { Configuration conf ->
       conf.visible = false
@@ -112,13 +109,6 @@ class ToolsLocator {
       ext:extension ?: 'exe',
     ]
     Dependency dep = project.dependencies.add(config.name, notation)
-    FileCollection artifactFiles = config.fileCollection(dep)
-
-    for (GenerateProtoTask protoTask in protoTasks) {
-      if (protoc.is(locator) || protoTask.hasPlugin(locator.name)) {
-        protoTask.locatorToAlternativePathsMapping.put(locator.name, artifactFiles)
-        protoTask.locatorToDependencyMapping.put(locator.name, "$groupId:$artifact:$version".toString())
-      }
-    }
+    locator.resolve(config.fileCollection(dep), "$groupId:$artifact:$version".toString())
   }
 }

@@ -33,7 +33,6 @@ import com.google.common.collect.ImmutableList
 import groovy.transform.CompileDynamic
 import org.gradle.api.Action
 import org.gradle.api.GradleException
-import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -165,7 +164,7 @@ class ProtobufPlugin implements Plugin<Project> {
           postConfigure.each { it.call() }
           // protoc and codegen plugin configuration may change through the protobuf{}
           // block. Only at this point the configuration has been finalized.
-          this.protobufExtension.tools.registerTaskDependencies(this.protobufExtension.generateProtoTasks.all())
+          project.protobuf.tools.resolve(project)
 
           // Register proto and generated sources with IDE
           addSourcesToIde(isAndroid)
@@ -353,10 +352,6 @@ class ProtobufPlugin implements Plugin<Project> {
           SourceDirectorySet protoSrcDirSet = sourceSet.proto
           addIncludeDir(protoSrcDirSet.sourceDirectories)
         }
-        protocLocator.set(project.providers.provider { this.protobufExtension.tools.protoc })
-        pluginsExecutableLocators.set(project.providers.provider {
-            ((NamedDomainObjectContainer<ExecutableLocator>) this.protobufExtension.tools.plugins).asMap
-        })
       }
     }
 
