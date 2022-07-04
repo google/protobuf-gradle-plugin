@@ -99,7 +99,7 @@ fun DeprecatedAndroidSourceSet.proto(action: SourceDirectorySet.() -> Unit) {
  * Applies the supplied action to the "proto" [SourceDirectorySet] extension on
  * a receiver of type [AndroidSourceSet] for Android builds.
  *
- * @since 0.8.19
+ * @since 0.9.0
  * @usage
  * ```
  * android {
