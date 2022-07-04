@@ -34,6 +34,7 @@ import static java.nio.charset.StandardCharsets.US_ASCII
 import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
 import groovy.transform.CompileStatic
+import groovy.transform.PackageScope
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.Action
@@ -98,7 +99,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
   // task.  Ideally they should be final fields, but Gradle task cannot have
   // constructor arguments. We use the initializing flag to prevent users from
   // accidentally modifying them.
-  private String outputBaseDir
+  private Provider<String> outputBaseDir
   // Tags for selectors inside protobuf.generateProtoTasks; do not serialize with Gradle configuration caching
   @SuppressWarnings("UnnecessaryTransientModifier") // It is not necessary for task to implement Serializable
   transient private SourceSet sourceSet
@@ -251,7 +252,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
     return java.path
   }
 
-  void setOutputBaseDir(String outputBaseDir) {
+  void setOutputBaseDir(Provider<String> outputBaseDir) {
     checkInitializing()
     Preconditions.checkState(this.outputBaseDir == null, 'outputBaseDir is already set')
     this.outputBaseDir = outputBaseDir
@@ -259,7 +260,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
 
   @OutputDirectory
   String getOutputBaseDir() {
-    return outputBaseDir
+    return outputBaseDir.get()
   }
 
   void setSourceSet(SourceSet sourceSet) {
@@ -446,7 +447,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
       throw new IllegalStateException(
           "requested descriptor path but descriptor generation is off")
     }
-    return descriptorSetOptions.path != null ? descriptorSetOptions.path : "${outputBaseDir}/descriptor_set.desc"
+    return descriptorSetOptions.path != null ? descriptorSetOptions.path : "${outputBaseDir.get()}/descriptor_set.desc"
   }
 
   @Inject
@@ -589,7 +590,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
   //===========================================================================
 
   String getOutputDir(PluginOptions plugin) {
-    return "${outputBaseDir}/${plugin.outputSubDir}"
+    return "${outputBaseDir.get()}/${plugin.outputSubDir}"
   }
 
   /**
@@ -601,19 +602,29 @@ public abstract class GenerateProtoTask extends DefaultTask {
     String srcSetName = "generate-proto-" + name
     SourceDirectorySet srcSet
     srcSet = objectFactory.sourceDirectorySet(srcSetName, srcSetName)
+    srcSet.srcDirs providerFactory.provider {
+      getOutputSourceDirectories()
+    }
+    return srcSet
+  }
+
+  @Internal
+  @PackageScope
+  Collection<File> getOutputSourceDirectories() {
+    Collection<File> srcDirs = []
     builtins.each { builtin ->
       File dir = new File(getOutputDir(builtin))
       if (!dir.name.endsWith(".zip") && !dir.name.endsWith(".jar")) {
-        srcSet.srcDir dir
+        srcDirs.add(dir)
       }
     }
     plugins.each { plugin ->
       File dir = new File(getOutputDir(plugin))
       if (!dir.name.endsWith(".zip") && !dir.name.endsWith(".jar")) {
-        srcSet.srcDir dir
+        srcDirs.add(dir)
       }
     }
-    return srcSet
+    return srcDirs
   }
 
   @TaskAction
