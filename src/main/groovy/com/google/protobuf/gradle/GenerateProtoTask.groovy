@@ -49,8 +49,6 @@ import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.internal.file.FileResolver
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.provider.MapProperty
-import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.tasks.CacheableTask
@@ -94,6 +92,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
   private final NamedDomainObjectContainer<PluginOptions> builtins = objectFactory.domainObjectContainer(PluginOptions)
   private final NamedDomainObjectContainer<PluginOptions> plugins = objectFactory.domainObjectContainer(PluginOptions)
   private final ProjectLayout projectLayout = project.layout
+  private final ToolsLocator toolsLocator = project.extensions.findByType(ProtobufExtension).tools
 
   // These fields are set by the Protobuf plugin only when initializing the
   // task.  Ideally they should be final fields, but Gradle task cannot have
@@ -327,21 +326,9 @@ public abstract class GenerateProtoTask extends DefaultTask {
     return variant
   }
 
-  @Internal("Input captured by getExecutables()")
-  abstract Property<ExecutableLocator> getProtocLocator()
-
-  @Internal("Input captured by getSnapshotArtifacts(), this is used to query alternative path by locator name.")
-  abstract MapProperty<String, FileCollection> getLocatorToAlternativePathsMapping()
-
-  @Internal("Input captured by getReleaseDependenciesMapping()")
-  abstract MapProperty<String, String> getLocatorToDependencyMapping()
-
-  @Internal("This property is no longer an input, but kept and marked @Internal for backwards compatibility.")
-  ConfigurableFileCollection getAlternativePaths() {
-    return objectFactory.fileCollection().from(getLocatorToAlternativePathsMapping().get().values())
-  }
-
   /**
+   * Not for external use. Used to expose inputs to Gradle.
+   *
    * For each protoc and code gen plugin defined by an artifact specification, this list will contain a String with the
    * group, artifact, and version, as long as the version is a stable release version.
    *
@@ -351,53 +338,30 @@ public abstract class GenerateProtoTask extends DefaultTask {
    */
   @Input
   Provider<List<String>> getReleaseArtifacts() {
-    releaseDependenciesMapping.map { it.values().collect() }
-  }
-
-  /**
-   * This file collection contains the file for each protoc and code gen plugin that is defined by an artifact
-   * specification that specifies a SNAPSHOT version.
-   *
-   * Since snapshots are expected to differ within the same version, this input allows Gradle to consider the file
-   * itself rather than the version number.
-   */
-  @InputFiles
-  @PathSensitive(PathSensitivity.NONE)
-  FileCollection getSnapshotArtifacts() {
-    Provider<Collection<FileCollection>> snapshotArtifacts = locatorToAlternativePathsMapping.map {
-        Map<String, FileCollection> map ->
-      Set<String> releaseArtifactKeys = releaseDependenciesMapping.get().keySet()
-      map.findAll { entry ->
-        !releaseArtifactKeys.contains(entry.key)
-      }.values()
-    }
-
-    objectFactory.fileCollection().from(snapshotArtifacts)
-  }
-
-  @Internal
-  @TypeChecked(TypeCheckingMode.SKIP) // entry.value always returns an Object for an unknown reason
-  Provider<Map<String, String>> getReleaseDependenciesMapping() {
     providerFactory.provider {
-      locatorToDependencyMapping.get()
-          .findAll { entry -> ! entry.value.endsWith ("-SNAPSHOT") }
+      releaseExecutableLocators.collect { it.simplifiedArtifactName }
     }
   }
 
+  /** Not for external use. Used to expose inputs to Gradle. */
   @InputFiles
   @PathSensitive(PathSensitivity.NONE)
   FileCollection getExecutables() {
-    objectFactory.fileCollection().from {
-      protocLocator.getOrNull()?.path
-    }.from {
-      pluginsExecutableLocators.get().values()
-        .collect { ((ExecutableLocator) it).path }
-        .findAll { it }
+    Provider<List> executables = providerFactory.provider {
+      List<ExecutableLocator> release = releaseExecutableLocators
+      allExecutableLocators.findAll { !release.contains(it) }
+        .collect { it.path != null ? it.path : it.artifactFiles }
     }
+    objectFactory.fileCollection().from(executables)
   }
 
-  @Internal("Input captured by getExecutables()")
-  abstract MapProperty<String, ExecutableLocator> getPluginsExecutableLocators()
+  private List<ExecutableLocator> getReleaseExecutableLocators() {
+    allExecutableLocators.findAll { it.path == null && !it.simplifiedArtifactName.endsWith ("-SNAPSHOT") }
+  }
+
+  private List<ExecutableLocator> getAllExecutableLocators() {
+    [toolsLocator.protoc] + plugins.collect { PluginOptions it -> toolsLocator.plugins.getByName(it.name) }
+  }
 
   @Internal("Not an actual input to the task, only used to find tasks belonging to a variant")
   Provider<Boolean> getIsAndroidProject() {
@@ -652,7 +616,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
     logger.debug "ProtobufCompile using directories ${dirs}"
     logger.debug "ProtobufCompile using files ${protoFiles}"
 
-    String protocPath = computeExecutablePath(protocLocator.get())
+    String protocPath = computeExecutablePath(toolsLocator.protoc)
     List<String> baseCmd = [ protocPath ]
     baseCmd.addAll(dirs)
 
@@ -662,7 +626,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
       baseCmd += "--${builtin.name}_out=${outPrefix}${getOutputDir(builtin)}".toString()
     }
 
-    Map<String, ExecutableLocator> executableLocations = pluginsExecutableLocators.get()
+    Map<String, ExecutableLocator> executableLocations = toolsLocator.plugins.asMap
     // Handle code generation plugins
     plugins.each { plugin ->
       String name = plugin.name
@@ -758,7 +722,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
     if (locator.path != null) {
       return locator.path.endsWith(JAR_SUFFIX) ? createJarTrampolineScript(locator.path) : locator.path
     }
-    File file = locatorToAlternativePathsMapping.getting(locator.name).get().singleFile
+    File file = locator.artifactFiles.singleFile
     if (file.name.endsWith(JAR_SUFFIX)) {
       return createJarTrampolineScript(file.getAbsolutePath())
     }
