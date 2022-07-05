@@ -123,7 +123,6 @@ class ProtobufPlugin implements Plugin<Project> {
     }
 
     private static void linkGenerateProtoTasksToTask(Task task, GenerateProtoTask genProtoTask) {
-      task.dependsOn(genProtoTask)
       task.source genProtoTask.getOutputSourceDirectorySet().include("**/*.java", "**/*.kt")
     }
 
