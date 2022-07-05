@@ -255,7 +255,7 @@ class ProtobufPlugin implements Plugin<Project> {
         java { }
       }
 
-      Task extractTask = setupExtractProtosTask(generateProtoTask, sourceSet.name)
+      setupExtractProtosTask(generateProtoTask, sourceSet.name)
       setupExtractIncludeProtosTask(generateProtoTask, sourceSet.name)
 
       // Include source proto files in the compiled archive, so that proto files from
@@ -265,7 +265,6 @@ class ProtobufPlugin implements Plugin<Project> {
       processResourcesTask.from(generateProtoTask.sourceFiles) {
         include '**/*.proto'
       }
-      processResourcesTask.dependsOn(extractTask)
 
       SUPPORTED_LANGUAGES.each { String lang ->
         linkGenerateProtoTasksToTaskName(sourceSet.getCompileTaskName(lang), generateProtoTask)
@@ -310,14 +309,9 @@ class ProtobufPlugin implements Plugin<Project> {
           processResourcesTask.from(generateProtoTask.sourceFiles) {
               include '**/*.proto'
           }
-          variant.sourceSets.each {
-              Task extractTask = setupExtractProtosTask(generateProtoTask, it.name)
-              processResourcesTask.dependsOn(extractTask)
-          }
-      } else {
-          variant.sourceSets.each {
-              setupExtractProtosTask(generateProtoTask, it.name)
-          }
+      }
+      variant.sourceSets.each {
+        setupExtractProtosTask(generateProtoTask, it.name)
       }
       postConfigure.add {
         // This cannot be called once task execution has started.
@@ -377,7 +371,7 @@ class ProtobufPlugin implements Plugin<Project> {
       }
 
       linkExtractTaskToGenerateTask(task, generateProtoTask)
-      generateProtoTask.addSourceFiles(project.fileTree(task.destDir) { include "**/*.proto" })
+      generateProtoTask.addSourceFiles(project.files(task).asFileTree)
       return task
     }
 
@@ -433,8 +427,7 @@ class ProtobufPlugin implements Plugin<Project> {
     }
 
     private void linkExtractTaskToGenerateTask(ProtobufExtract extractTask, GenerateProtoTask generateTask) {
-      generateTask.dependsOn(extractTask)
-      generateTask.addIncludeDir(project.files(extractTask.destDir))
+      generateTask.addIncludeDir(project.files(extractTask))
     }
 
     private void linkGenerateProtoTasksToTaskName(String compileTaskName, GenerateProtoTask genProtoTask) {
