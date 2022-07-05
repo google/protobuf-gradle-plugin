@@ -125,7 +125,6 @@ abstract class ProtobufExtract extends DefaultTask {
   protected void setDestDir(File destDir) {
     Preconditions.checkState(this.destDir == null, 'destDir already set')
     this.destDir = destDir
-    outputs.dir destDir
   }
 
   @OutputDirectory
