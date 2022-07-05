@@ -602,9 +602,9 @@ public abstract class GenerateProtoTask extends DefaultTask {
     String srcSetName = "generate-proto-" + name
     SourceDirectorySet srcSet
     srcSet = objectFactory.sourceDirectorySet(srcSetName, srcSetName)
-    srcSet.srcDirs providerFactory.provider {
+    srcSet.srcDirs objectFactory.fileCollection().builtBy(this).from(providerFactory.provider {
       getOutputSourceDirectories()
-    }
+    })
     return srcSet
   }
 
