@@ -87,7 +87,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
   // that may be "imported" from the source protos, but will not be compiled.
   private final ConfigurableFileCollection includeDirs = objectFactory.fileCollection()
   // source files are proto files that will be compiled by protoc
-  private final ConfigurableFileCollection sourceFiles = objectFactory.fileCollection()
+  private final ConfigurableFileCollection sourceDirs = objectFactory.fileCollection()
   private final NamedDomainObjectContainer<PluginOptions> builtins = objectFactory.domainObjectContainer(PluginOptions)
   private final NamedDomainObjectContainer<PluginOptions> plugins = objectFactory.domainObjectContainer(PluginOptions)
   private final ProjectLayout projectLayout = project.layout
@@ -289,7 +289,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
     this.buildType = buildType
   }
 
-  @Internal("Inputs tracked in getSourceFiles()")
+  @Internal("Inputs tracked in getSourceDirs()")
   SourceSet getSourceSet() {
     Preconditions.checkState(!isAndroidProject.get(),
         'sourceSet should not be used in an Android project')
@@ -301,8 +301,8 @@ public abstract class GenerateProtoTask extends DefaultTask {
   @PathSensitive(PathSensitivity.RELATIVE)
   @IgnoreEmptyDirectories
   @InputFiles
-  FileCollection getSourceFiles() {
-    return sourceFiles
+  FileCollection getSourceDirs() {
+    return sourceDirs
   }
 
   @InputFiles
@@ -471,9 +471,9 @@ public abstract class GenerateProtoTask extends DefaultTask {
   /**
    * Add a collection of proto source files to be compiled.
    */
-  public void addSourceFiles(FileCollection files) {
+  public void addSourceDirs(FileCollection dirs) {
     checkCanConfig()
-    sourceFiles.from(files)
+    sourceDirs.from(dirs)
   }
 
   /**
@@ -590,7 +590,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
 
     // Sort to ensure generated descriptors have a canonical representation
     // to avoid triggering unnecessary rebuilds downstream
-    List<File> protoFiles = sourceFiles.files.sort()
+    List<File> protoFiles = sourceDirs.asFileTree.files.sort()
 
     [builtins, plugins]*.forEach { PluginOptions plugin ->
       String outputPath = getOutputDir(plugin)
@@ -605,7 +605,8 @@ public abstract class GenerateProtoTask extends DefaultTask {
 
     // The source directory designated from sourceSet may not actually exist on disk.
     // "include" it only when it exists, so that Gradle and protoc won't complain.
-    List<String> dirs = includeDirs.filter { File it -> it.exists() }*.path.collect { "-I${it}".toString() }
+    List<String> dirs = (sourceDirs + includeDirs).filter { File it -> it.exists() }*.path
+        .collect { "-I${it}".toString() }
     logger.debug "ProtobufCompile using directories ${dirs}"
     logger.debug "ProtobufCompile using files ${protoFiles}"
 

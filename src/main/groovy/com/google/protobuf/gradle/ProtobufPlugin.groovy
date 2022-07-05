@@ -253,7 +253,7 @@ class ProtobufPlugin implements Plugin<Project> {
       // dependent projects can import them.
       Task processResourcesTask =
           project.tasks.getByName(sourceSet.getTaskName('process', 'resources'))
-      processResourcesTask.from(generateProtoTask.sourceFiles) {
+      processResourcesTask.from(generateProtoTask.sourceDirs) {
         include '**/*.proto'
       }
 
@@ -297,7 +297,7 @@ class ProtobufPlugin implements Plugin<Project> {
           // Include source proto files in the compiled archive, so that proto files from
           // dependent projects can import them.
           Task processResourcesTask = variant.getProcessJavaResourcesProvider().get()
-          processResourcesTask.from(generateProtoTask.sourceFiles) {
+          processResourcesTask.from(generateProtoTask.sourceDirs) {
               include '**/*.proto'
           }
       }
@@ -332,9 +332,7 @@ class ProtobufPlugin implements Plugin<Project> {
         description = "Compiles Proto source for '${sourceSetOrVariantName}'"
         outputBaseDir = outDir
         sourceSets.each { sourceSet ->
-          addSourceFiles(sourceSet.proto)
-          SourceDirectorySet protoSrcDirSet = sourceSet.proto
-          addIncludeDir(protoSrcDirSet.sourceDirectories)
+          addSourceDirs(sourceSet.proto.sourceDirectories)
         }
       }
     }
@@ -360,8 +358,7 @@ class ProtobufPlugin implements Plugin<Project> {
         }
       }
 
-      linkExtractTaskToGenerateTask(task, generateProtoTask)
-      generateProtoTask.addSourceFiles(project.files(task).asFileTree)
+      generateProtoTask.addSourceDirs(project.files(task))
       return task
     }
 
@@ -413,11 +410,7 @@ class ProtobufPlugin implements Plugin<Project> {
         }
       }
 
-      linkExtractTaskToGenerateTask(task, generateProtoTask)
-    }
-
-    private void linkExtractTaskToGenerateTask(ProtobufExtract extractTask, GenerateProtoTask generateTask) {
-      generateTask.addIncludeDir(project.files(extractTask))
+      generateProtoTask.addIncludeDir(project.files(task))
     }
 
     private void linkGenerateProtoTasksToTaskName(String compileTaskName, GenerateProtoTask genProtoTask) {
