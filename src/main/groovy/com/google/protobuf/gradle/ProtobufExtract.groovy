@@ -35,10 +35,10 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.file.FileCollection
-import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.FileTree
 import org.gradle.api.logging.Logger
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
@@ -105,6 +105,9 @@ abstract class ProtobufExtract extends DefaultTask {
   @Inject
   abstract ObjectFactory getObjectFactory()
 
+  @Inject
+  abstract ProviderFactory getProviderFactory()
+
   @TaskAction
   void extract() {
     destDir.mkdir()
@@ -150,11 +153,16 @@ abstract class ProtobufExtract extends DefaultTask {
     boolean warningLogged = false
     ArchiveActionFacade archiveFacade = this.archiveActionFacade
     Logger logger = this.logger
-    return objectFactory.fileCollection().from(inputFiles.getElements().map { files ->
+    // Provider.map seems broken for excluded tasks. Add inputFiles with all contents excluded for
+    // the dependency it provides, but then provide the files we actually care about in our own
+    // provider. https://github.com/google/protobuf-gradle-plugin/issues/550
+    return objectFactory.fileCollection()
+        .from(inputFiles.filter { false })
+        .from(providerFactory.provider { unused ->
+      Set<File> files = inputFiles.files
       PatternSet protoFilter = new PatternSet().include("**/*.proto")
       Set<Object> protoInputs = [] as Set
-      for (FileSystemLocation location : files) {
-        File file = location.asFile
+      for (File file : files) {
         if (file.isDirectory()) {
           protoInputs.add(file)
         } else if (file.path.endsWith('.proto')) {
