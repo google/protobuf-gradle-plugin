@@ -12,9 +12,9 @@ import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.invoke
 
 /**
- * Applies the supplied action to the project's instance of [ProtobufConfigurator].
+ * Applies the supplied action to the project's instance of [ProtobufExtension].
  *
- * @since 0.8.7
+ * @since 0.9.0
  * @usage
  * ```
  * protobuf {
@@ -24,12 +24,12 @@ import org.gradle.kotlin.dsl.invoke
  * ```
  *
  * @receiver [Project] The project for which the plugin configuration will be applied
- * @param action A configuration lambda to apply on a receiver of type [ProtobufConfigurator]
+ * @param action A configuration lambda to apply on a receiver of type [ProtobufExtension]
  *
  * @return [Unit]
  */
-fun Project.protobuf(action: ProtobufConfigurator.()->Unit) {
-    project.convention.getPlugin(ProtobufConvention::class.java).protobuf.apply(action)
+fun Project.protobuf(action: ProtobufExtension.() -> Unit) {
+    project.extensions.getByType(ProtobufExtension::class.java).apply(action)
 }
 
 /**
@@ -58,7 +58,7 @@ fun SourceSet.proto(action: SourceDirectorySet.() -> Unit) {
     (this as? ExtensionAware)
         ?.extensions
         ?.getByName("proto")
-        ?.let { it as?  SourceDirectorySet }
+        ?.let { it as? SourceDirectorySet }
         ?.apply(action)
 }
 
@@ -90,52 +90,17 @@ fun AndroidSourceSet.proto(action: SourceDirectorySet.() -> Unit) {
     (this as? ExtensionAware)
         ?.extensions
         ?.getByName("proto")
-        ?.let { it as?  SourceDirectorySet }
+        ?.let { it as? SourceDirectorySet }
         ?.apply(action)
 }
 
-/**
- * Uses the supplied action to configure the [ExecutableLocator] for protoc.
- *
- * @since 0.8.7
- * @usage
- * ```
- * protobuf {
- *     protoc {
- *         artifact = "com.google.protobuf:protoc:3.6.1"
- *     }
- * }
- * ```
- *
- * @receiver [ProtobufConfigurator] The protobuf plugin configuration instance
- * for the project.
- *
- * @param action A lambda with receiver of type [ExecutableLocator] used
- * for configuring the locator for protoc
- *
- * @return [Unit]
- */
-fun ProtobufConfigurator.protoc(action: ExecutableLocator.() -> Unit) {
-    protoc(closureOf(action))
-}
-
-fun ProtobufConfigurator.plugins(action: NamedDomainObjectContainerScope<ExecutableLocator>.() -> Unit) {
-    plugins(closureOf<NamedDomainObjectContainer<ExecutableLocator>> {
-        this.invoke(action)
-    })
-}
-
-fun ProtobufConfigurator.generateProtoTasks(action: ProtobufConfigurator.GenerateProtoTaskCollection.()->Unit) {
-    generateProtoTasks(closureOf(action))
-}
-
-fun GenerateProtoTask.builtins(action: NamedDomainObjectContainerScope<GenerateProtoTask.PluginOptions>.()->Unit) {
+fun GenerateProtoTask.builtins(action: NamedDomainObjectContainerScope<GenerateProtoTask.PluginOptions>.() -> Unit) {
     builtins(closureOf<NamedDomainObjectContainer<GenerateProtoTask.PluginOptions>> {
         this.invoke(action)
     })
 }
 
-fun GenerateProtoTask.plugins(action: NamedDomainObjectContainerScope<GenerateProtoTask.PluginOptions>.()-> Unit) {
+fun GenerateProtoTask.plugins(action: NamedDomainObjectContainerScope<GenerateProtoTask.PluginOptions>.() -> Unit) {
     plugins(closureOf<NamedDomainObjectContainer<GenerateProtoTask.PluginOptions>> {
         this.invoke(action)
     })
@@ -144,7 +109,7 @@ fun GenerateProtoTask.plugins(action: NamedDomainObjectContainerScope<GeneratePr
 /**
  * An extension for creating and configuring the elements of an instance of [NamedDomainObjectContainer].
  *
- * @since 0.8.7
+ * @since 0.9.0
  * @usage
  * ```
  * protobuf {
@@ -156,7 +121,7 @@ fun GenerateProtoTask.plugins(action: NamedDomainObjectContainerScope<GeneratePr
  * }
  * ```
  *
- * @receiver [NamedDomainObjectContainerScope] The scope of the [NamedDomainObjectContainer]
+ * @receiver [NamedDomainObjectContainer] The scope of the [NamedDomainObjectContainer]
  * on which to create or configure an element.
  *
  * @param id The string id of the element to create or configure.
@@ -164,16 +129,14 @@ fun GenerateProtoTask.plugins(action: NamedDomainObjectContainerScope<GeneratePr
  *
  * @return [Unit]
  */
-fun <T : Any> NamedDomainObjectContainerScope<T>.id(id: String, action: (T.() -> Unit)? = null) {
-    action?.let { create(id, it) }
-            ?: create(id)
+fun <T : Any> NamedDomainObjectContainer<T>.id(id: String, action: (T.() -> Unit)? = null) {
+    action?.let { create(id, it) } ?: create(id)
 }
-
 
 /**
  * An extension for removing an element by id on an instance of [NamedDomainObjectContainer].
  *
- * @since 0.8.7
+ * @since 0.9.0
  * @usage
  * ```
  * protobuf {
@@ -187,46 +150,46 @@ fun <T : Any> NamedDomainObjectContainerScope<T>.id(id: String, action: (T.() ->
  * }
  * ```
  *
- * @receiver [NamedDomainObjectContainerScope] The scope of the [NamedDomainObjectContainer]
+ * @receiver [NamedDomainObjectContainer] The scope of the [NamedDomainObjectContainer]
  * on which to remove an element.
  *
  * @param id The string id of the element to remove.
  *
  * @return [Unit]
  */
-fun <T : Any> NamedDomainObjectContainerScope<T>.remove(id: String) {
+fun <T : Any> NamedDomainObjectContainer<T>.remove(id: String) {
     remove(this[id])
 }
 
 /**
  * The method generatorProtoTasks applies the supplied closure to the
- * instance of [ProtobufConfigurator.GenerateProtoTaskCollection].
+ * instance of [ProtobufExtension.GenerateProtoTaskCollection].
  *
- * Since [ProtobufConfigurator.JavaGenerateProtoTaskCollection] and [ProtobufConfigurator.AndroidGenerateProtoTaskCollection]
+ * Since [ProtobufExtension.JavaGenerateProtoTaskCollection] and [ProtobufExtension.AndroidGenerateProtoTaskCollection]
  * each have unique methods, and only one instance is allocated per project, we need a way to statically resolve the
  * available methods. This is a necessity since Kotlin does not have any dynamic method resolution capabilities.
  */
 
-fun ProtobufConfigurator.GenerateProtoTaskCollection.ofSourceSet(sourceSet: String): Collection<GenerateProtoTask> =
-    if (this is ProtobufConfigurator.JavaGenerateProtoTaskCollection)
+fun ProtobufExtension.GenerateProtoTaskCollection.ofSourceSet(sourceSet: String): Collection<GenerateProtoTask> =
+    if (this is ProtobufExtension.JavaGenerateProtoTaskCollection)
         this.ofSourceSet(sourceSet) else emptyList()
 
-fun ProtobufConfigurator.GenerateProtoTaskCollection.ofFlavor(flavor: String): Collection<GenerateProtoTask> =
-    if (this is ProtobufConfigurator.AndroidGenerateProtoTaskCollection)
+fun ProtobufExtension.GenerateProtoTaskCollection.ofFlavor(flavor: String): Collection<GenerateProtoTask> =
+    if (this is ProtobufExtension.AndroidGenerateProtoTaskCollection)
         this.ofFlavor(flavor) else emptyList()
 
-fun ProtobufConfigurator.GenerateProtoTaskCollection.ofBuildType(buildType: String): Collection<GenerateProtoTask> =
-    if (this is ProtobufConfigurator.AndroidGenerateProtoTaskCollection)
+fun ProtobufExtension.GenerateProtoTaskCollection.ofBuildType(buildType: String): Collection<GenerateProtoTask> =
+    if (this is ProtobufExtension.AndroidGenerateProtoTaskCollection)
         this.ofBuildType(buildType) else emptyList()
 
-fun ProtobufConfigurator.GenerateProtoTaskCollection.ofVariant(variant: String): Collection<GenerateProtoTask> =
-    if (this is ProtobufConfigurator.AndroidGenerateProtoTaskCollection)
+fun ProtobufExtension.GenerateProtoTaskCollection.ofVariant(variant: String): Collection<GenerateProtoTask> =
+    if (this is ProtobufExtension.AndroidGenerateProtoTaskCollection)
         this.ofVariant(variant) else emptyList()
 
-fun ProtobufConfigurator.GenerateProtoTaskCollection.ofNonTest(): Collection<GenerateProtoTask> =
-    if (this is ProtobufConfigurator.AndroidGenerateProtoTaskCollection)
+fun ProtobufExtension.GenerateProtoTaskCollection.ofNonTest(): Collection<GenerateProtoTask> =
+    if (this is ProtobufExtension.AndroidGenerateProtoTaskCollection)
         this.ofNonTest() else emptyList()
 
-fun ProtobufConfigurator.GenerateProtoTaskCollection.ofTest(): Collection<GenerateProtoTask> =
-    if (this is ProtobufConfigurator.AndroidGenerateProtoTaskCollection)
+fun ProtobufExtension.GenerateProtoTaskCollection.ofTest(): Collection<GenerateProtoTask> =
+    if (this is ProtobufExtension.AndroidGenerateProtoTaskCollection)
         this.ofTest() else emptyList()
