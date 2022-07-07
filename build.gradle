@@ -54,7 +54,7 @@ configurations {
 }
 
 dependencies {
-  compileOnly "com.android.tools.build:gradle:3.5.0"
+  compileOnly "com.android.tools.build:gradle:4.1.0"
 
   implementation 'com.google.guava:guava:27.0.1-jre'
   implementation 'com.google.gradle:osdetector-gradle-plugin:1.7.0'
@@ -92,8 +92,8 @@ codenarc {
     toolVersion = "1.4"
 }
 
-sourceCompatibility = JavaVersion.VERSION_1_7
-targetCompatibility = JavaVersion.VERSION_1_7
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
 
 tasks.withType(GenerateModuleMetadata) {
   enabled = false
@@ -170,16 +170,6 @@ pluginBundle {
   }
 }
 
-// Releases must be built on Java 1.8.
-tasks.create("checkJavaVersion").doLast {
-  JavaVersion javaVersion = JavaVersion.current()
-  if (!javaVersion.isJava8()) {
-    throw new GradleException(
-        "The plugin must be published under Java 1.8 but ${javaVersion} is found")
-  }
-}
-[uploadArchives, publishPlugins]*.dependsOn checkJavaVersion
-
 if (System.env.CI == 'true') {
   // Normally html output is more user friendly,
   // but we want a console printable file for CI logs
@@ -195,4 +185,10 @@ tasks.named('compileGroovy') {
 }
 tasks.named('compileKotlin') {
     compileKotlin.classpath += files(compileGroovy.destinationDirectory)
+}
+
+test {
+  testLogging {
+    events = ["standard_out", "standard_error", "started", "passed", "failed", "skipped"]
+  }
 }

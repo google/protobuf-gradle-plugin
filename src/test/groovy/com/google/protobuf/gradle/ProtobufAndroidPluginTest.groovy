@@ -15,8 +15,8 @@ import spock.lang.Unroll
  */
 @CompileDynamic
 class ProtobufAndroidPluginTest extends Specification {
-  private static final List<String> GRADLE_VERSION = ["5.6", "6.5", "6.8"]
-  private static final List<String> ANDROID_PLUGIN_VERSION = ["3.5.0", "4.1.0", "4.2.0-alpha10"]
+  private static final List<String> GRADLE_VERSION = ["5.6", "6.5", "6.8", "7.4.2"]
+  private static final List<String> ANDROID_PLUGIN_VERSION = ["3.5.0", "4.1.0", "4.2.0-alpha10", "7.2.1"]
 
   @Unroll
   void "testProjectAndroid should be successfully executed [android #agpVersion, gradle #gradleVersion]"() {
@@ -36,9 +36,10 @@ class ProtobufAndroidPluginTest extends Specification {
         .build()
     when: "build is invoked"
     BuildResult result = buildAndroidProject(
-       mainProjectDir,
-       gradleVersion,
-       "testProjectAndroid:build"
+        mainProjectDir,
+        gradleVersion,
+        agpVersion,
+        "testProjectAndroid:build"
     )
 
     then: "it succeed"
@@ -69,6 +70,7 @@ class ProtobufAndroidPluginTest extends Specification {
     GradleRunner runner = getAndroidGradleRunner(
             mainProjectDir,
             gradleVersion,
+            agpVersion,
             "testProjectAndroid:assembleDebug",
             "-Dorg.gradle.unsafe.configuration-cache=true"
     )
@@ -94,6 +96,7 @@ class ProtobufAndroidPluginTest extends Specification {
     buildAndroidProject(
             mainProjectDir,
             gradleVersion,
+            agpVersion,
             "testProjectAndroid:clean",
             "-Dorg.gradle.unsafe.configuration-cache=true"
     )
@@ -127,6 +130,7 @@ class ProtobufAndroidPluginTest extends Specification {
     BuildResult result = buildAndroidProject(
             mainProjectDir,
             gradleVersion,
+            agpVersion,
             "testProjectAndroid:build"
     )
 
@@ -158,6 +162,7 @@ class ProtobufAndroidPluginTest extends Specification {
     BuildResult result = buildAndroidProject(
             mainProjectDir,
             gradleVersion,
+            agpVersion,
             "testProjectAndroid:assembleAndroidTest"
     )
 

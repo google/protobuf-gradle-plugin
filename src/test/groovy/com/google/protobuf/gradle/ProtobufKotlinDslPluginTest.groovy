@@ -14,8 +14,8 @@ import spock.lang.Unroll
  */
 @CompileDynamic
 class ProtobufKotlinDslPluginTest extends Specification {
-  private static final List<String> GRADLE_VERSIONS = ["5.6", "6.1.1", "6.5"]
-  private static final List<String> ANDROID_PLUGIN_VERSION = ["3.5.0", "4.0.0", "4.1.0"]
+  private static final List<String> GRADLE_VERSIONS = ["5.6", "6.1.1", "6.5", "7.4.2"]
+  private static final List<String> ANDROID_PLUGIN_VERSION = ["3.5.0", "4.0.0", "4.1.0", "7.2.1"]
 
   @Unroll
   void "testProjectKotlinDsl should be successfully executed (java-only project) [gradle #gradleVersion]"() {
@@ -61,9 +61,10 @@ class ProtobufKotlinDslPluginTest extends Specification {
 
     when: "build is invoked"
     BuildResult result = buildAndroidProject(
-            mainProjectDir,
-            gradleVersion,
-            "testProjectAndroidKotlinDsl:build"
+        mainProjectDir,
+        gradleVersion,
+        agpVersion,
+        "testProjectAndroidKotlinDsl:build"
     )
 
     then: "it succeed"
