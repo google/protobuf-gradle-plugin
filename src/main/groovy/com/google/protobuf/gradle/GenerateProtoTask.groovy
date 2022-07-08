@@ -46,7 +46,6 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.ProjectLayout
 import org.gradle.api.file.SourceDirectorySet
-import org.gradle.api.internal.file.FileResolver
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
@@ -107,7 +106,6 @@ public abstract class GenerateProtoTask extends DefaultTask {
   private ImmutableList<String> flavors
   private String buildType
   private boolean isTestVariant
-  private FileResolver fileResolver
   private final Provider<Boolean> isAndroidProject = providerFactory.provider { Utils.isAndroidProject(project) }
   private final Provider<Boolean> isTestProvider = providerFactory.provider {
     if (Utils.isAndroidProject(project)) {
@@ -289,11 +287,6 @@ public abstract class GenerateProtoTask extends DefaultTask {
     Preconditions.checkState(isAndroidProject.get(),
         'buildType should not be set in a Java project')
     this.buildType = buildType
-  }
-
-  void setFileResolver(FileResolver fileResolver) {
-    checkInitializing()
-    this.fileResolver = fileResolver
   }
 
   @Internal("Inputs tracked in getSourceFiles()")

@@ -42,13 +42,10 @@ import org.gradle.api.attributes.LibraryElements
 import org.gradle.api.attributes.Usage
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.SourceDirectorySet
-import org.gradle.api.internal.file.FileResolver
 import org.gradle.api.plugins.AppliedPlugin
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
 import org.gradle.util.GradleVersion
-
-import javax.inject.Inject
 
 /**
  * The main class for the protobuf plugin.
@@ -71,15 +68,9 @@ class ProtobufPlugin implements Plugin<Project> {
         'kotlin',
     ]
 
-    private final FileResolver fileResolver
     private Project project
     private ProtobufExtension protobufExtension
     private boolean wasApplied = false
-
-    @Inject
-    public ProtobufPlugin(FileResolver fileResolver) {
-      this.fileResolver = fileResolver
-    }
 
     void apply(final Project project) {
       if (GradleVersion.current() < GradleVersion.version("5.6")) {
@@ -346,7 +337,6 @@ class ProtobufPlugin implements Plugin<Project> {
       return project.tasks.create(generateProtoTaskName, GenerateProtoTask) {
         description = "Compiles Proto source for '${sourceSetOrVariantName}'"
         outputBaseDir = outDir
-        it.fileResolver = this.fileResolver
         sourceSets.each { sourceSet ->
           addSourceFiles(sourceSet.proto)
           SourceDirectorySet protoSrcDirSet = sourceSet.proto
