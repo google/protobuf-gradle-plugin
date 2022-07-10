@@ -36,8 +36,6 @@ import com.google.common.collect.ImmutableList
 import groovy.transform.CompileStatic
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
-import javax.annotation.Nullable
-import javax.inject.Inject
 import org.gradle.api.Action
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
@@ -68,6 +66,9 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskAction
+
+import javax.annotation.Nullable
+import javax.inject.Inject
 
 /**
  * The task that compiles proto files into Java files.

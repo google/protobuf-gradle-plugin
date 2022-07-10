@@ -2,35 +2,10 @@ package com.google.protobuf.gradle
 
 import com.android.build.gradle.api.AndroidSourceSet
 import org.gradle.api.NamedDomainObjectContainer
-import org.gradle.api.Project
 import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.plugins.ExtensionAware
 import org.gradle.api.tasks.SourceSet
-import org.gradle.kotlin.dsl.NamedDomainObjectContainerScope
-import org.gradle.kotlin.dsl.closureOf
 import org.gradle.kotlin.dsl.get
-import org.gradle.kotlin.dsl.invoke
-
-/**
- * Applies the supplied action to the project's instance of [ProtobufExtension].
- *
- * @since 0.9.0
- * @usage
- * ```
- * protobuf {
- *     ...
- *     generatedFilesBaseDir = files(...)
- * }
- * ```
- *
- * @receiver [Project] The project for which the plugin configuration will be applied
- * @param action A configuration lambda to apply on a receiver of type [ProtobufExtension]
- *
- * @return [Unit]
- */
-fun Project.protobuf(action: ProtobufExtension.() -> Unit) {
-    project.extensions.getByType(ProtobufExtension::class.java).apply(action)
-}
 
 /**
  * Applies the supplied action to the "proto" [SourceDirectorySet] extension on

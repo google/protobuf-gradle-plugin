@@ -1,7 +1,6 @@
 import com.android.build.gradle.api.BaseVariant
 import com.google.protobuf.gradle.id
 import com.google.protobuf.gradle.proto
-import com.google.protobuf.gradle.protobuf
 
 plugins {
   id("com.android.application")

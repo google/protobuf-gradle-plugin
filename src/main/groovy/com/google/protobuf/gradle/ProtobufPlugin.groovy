@@ -85,6 +85,8 @@ class ProtobufPlugin implements Plugin<Project> {
           "Gradle version is ${project.gradle.gradleVersion}. Minimum supported version is 5.6")
       }
 
+      ProtobufExtension protobufExtension = project.extensions.create("protobuf", ProtobufExtension, project)
+
       this.project = project
         // At least one of the prerequisite plugins must by applied before this plugin can be applied, so
         // we will use the PluginManager.withPlugin() callback mechanism to delay applying this plugin until
@@ -98,7 +100,7 @@ class ProtobufPlugin implements Plugin<Project> {
           } else {
             wasApplied = true
 
-            doApply()
+            doApply(protobufExtension)
           }
         }
 
@@ -119,10 +121,9 @@ class ProtobufPlugin implements Plugin<Project> {
       task.source genProtoTask.getOutputSourceDirectorySet().include("**/*.java", "**/*.kt")
     }
 
-    private void doApply() {
+    private void doApply(final ProtobufExtension protobufExtension) {
         // Provides the osdetector extension
         project.apply([plugin:com.google.gradle.osdetector.OsDetectorPlugin])
-        ProtobufExtension protobufExtension = project.extensions.create("protobuf", ProtobufExtension, project)
 
         addSourceSetExtensions()
         getSourceSets().all { sourceSet ->
