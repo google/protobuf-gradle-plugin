@@ -153,7 +153,7 @@ afterEvaluate {
   }
   test {
     doLast {
-      val genProtoTasks = project.protobuf.protobuf.generateProtoTasks
+      val genProtoTasks = project.protobuf.generateProtoTasks
 
       val genProtoTaskNames = setOf(
           "generateArmFreeappDebugAndroidTestProto",

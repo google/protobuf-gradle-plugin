@@ -79,7 +79,7 @@ tasks {
     "test"{
 
         doLast{
-            val generateProtoTasks = project.protobuf.protobuf.generateProtoTasks
+            val generateProtoTasks = project.protobuf.generateProtoTasks
 
             val generateProtoTaskNames = generateProtoTasks.all().map { it.name }.toSet()
             val generateProtoTaskNamesMain = generateProtoTasks.ofSourceSet("main").map { it.name }.toSet()
