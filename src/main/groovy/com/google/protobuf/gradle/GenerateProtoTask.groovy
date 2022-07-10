@@ -36,6 +36,9 @@ import com.google.common.collect.ImmutableList
 import groovy.transform.CompileStatic
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
+import javax.annotation.Nullable
+import javax.inject.Inject
+import org.gradle.api.Action
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.Named
@@ -65,10 +68,6 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskAction
-import org.gradle.util.ConfigureUtil
-
-import javax.annotation.Nullable
-import javax.inject.Inject
 
 /**
  * The task that compiles proto files into Java files.
@@ -463,9 +462,9 @@ public abstract class GenerateProtoTask extends DefaultTask {
    * Configures the protoc builtins in a closure, which will be manipulating a
    * NamedDomainObjectContainer<PluginOptions>.
    */
-  public void builtins(Closure configureClosure) {
+  public void builtins(Action<NamedDomainObjectContainer<PluginOptions>> configureAction) {
     checkCanConfig()
-    ConfigureUtil.configure(configureClosure, builtins)
+    configureAction.execute(this.builtins)
   }
 
   /**
@@ -481,9 +480,9 @@ public abstract class GenerateProtoTask extends DefaultTask {
    * Configures the protoc plugins in a closure, which will be maniuplating a
    * NamedDomainObjectContainer<PluginOptions>.
    */
-  public void plugins(Closure configureClosure) {
+  public void plugins(Action<NamedDomainObjectContainer<PluginOptions>> configureAction) {
     checkCanConfig()
-    ConfigureUtil.configure(configureClosure, plugins)
+    configureAction.execute(this.plugins)
   }
 
   /**

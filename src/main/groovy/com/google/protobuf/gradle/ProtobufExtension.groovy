@@ -41,6 +41,8 @@ import org.gradle.api.tasks.TaskCollection
  * Adds the protobuf {} block as a property of the project.
  */
 @CompileStatic
+// gradle require abstract modificator on extensions
+@SuppressWarnings(["AbstractClassWithoutAbstractMethod", "AbstractClassWithPublicConstructor"])
 abstract class ProtobufExtension {
   private final Project project
   private final GenerateProtoTaskCollection tasks
@@ -55,9 +57,7 @@ abstract class ProtobufExtension {
 
   public ProtobufExtension(final Project project) {
     this.project = project
-    this.tasks = Utils.isAndroidProject(project)
-        ? new AndroidGenerateProtoTaskCollection()
-        : new JavaGenerateProtoTaskCollection()
+    this.tasks = new GenerateProtoTaskCollection(project)
     this.tools = new ToolsLocator(project)
     this.taskConfigActions = []
     this.generatedFilesBaseDir = "${project.buildDir}/generated/source/proto"
@@ -131,21 +131,31 @@ abstract class ProtobufExtension {
   }
 
   public class GenerateProtoTaskCollection {
+    private final Project project
+
+    GenerateProtoTaskCollection(final Project project) {
+      this.project = project
+    }
+
     public TaskCollection<GenerateProtoTask> all() {
       return project.tasks.withType(GenerateProtoTask)
     }
-  }
 
-  public class AndroidGenerateProtoTaskCollection extends GenerateProtoTaskCollection {
+    public TaskCollection<GenerateProtoTask> ofSourceSet(String sourceSet) {
+      return all().matching { GenerateProtoTask task ->
+        !Utils.isAndroidProject(project) && task.sourceSet.name == sourceSet
+      }
+    }
+
     public TaskCollection<GenerateProtoTask> ofFlavor(String flavor) {
       return all().matching { GenerateProtoTask task ->
-        task.flavors.contains(flavor)
+        Utils.isAndroidProject(project) && task.flavors.contains(flavor)
       }
     }
 
     public TaskCollection<GenerateProtoTask> ofBuildType(String buildType) {
       return all().matching { GenerateProtoTask task ->
-        task.buildType == buildType
+        Utils.isAndroidProject(project) && task.buildType == buildType
       }
     }
 
@@ -153,27 +163,19 @@ abstract class ProtobufExtension {
     // Don't depend on AGP
     public TaskCollection<GenerateProtoTask> ofVariant(String variant) {
       return all().matching { GenerateProtoTask task ->
-        task.variant.name == variant
+        Utils.isAndroidProject(project) && task.variant.name == variant
       }
     }
 
     public TaskCollection<GenerateProtoTask> ofNonTest() {
       return all().matching { GenerateProtoTask task ->
-        !task.isTestVariant
+        Utils.isAndroidProject(project) && !task.isTestVariant
       }
     }
 
     public TaskCollection<GenerateProtoTask> ofTest() {
       return all().matching { GenerateProtoTask task ->
-        task.isTestVariant
-      }
-    }
-  }
-
-  public class JavaGenerateProtoTaskCollection extends GenerateProtoTaskCollection {
-    public TaskCollection<GenerateProtoTask> ofSourceSet(String sourceSet) {
-      return all().matching { GenerateProtoTask task ->
-        task.sourceSet.name == sourceSet
+        Utils.isAndroidProject(project) && task.isTestVariant
       }
     }
   }

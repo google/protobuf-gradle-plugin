@@ -94,18 +94,6 @@ fun AndroidSourceSet.proto(action: SourceDirectorySet.() -> Unit) {
         ?.apply(action)
 }
 
-fun GenerateProtoTask.builtins(action: NamedDomainObjectContainerScope<GenerateProtoTask.PluginOptions>.() -> Unit) {
-    builtins(closureOf<NamedDomainObjectContainer<GenerateProtoTask.PluginOptions>> {
-        this.invoke(action)
-    })
-}
-
-fun GenerateProtoTask.plugins(action: NamedDomainObjectContainerScope<GenerateProtoTask.PluginOptions>.() -> Unit) {
-    plugins(closureOf<NamedDomainObjectContainer<GenerateProtoTask.PluginOptions>> {
-        this.invoke(action)
-    })
-}
-
 /**
  * An extension for creating and configuring the elements of an instance of [NamedDomainObjectContainer].
  *
@@ -160,36 +148,3 @@ fun <T : Any> NamedDomainObjectContainer<T>.id(id: String, action: (T.() -> Unit
 fun <T : Any> NamedDomainObjectContainer<T>.remove(id: String) {
     remove(this[id])
 }
-
-/**
- * The method generatorProtoTasks applies the supplied closure to the
- * instance of [ProtobufExtension.GenerateProtoTaskCollection].
- *
- * Since [ProtobufExtension.JavaGenerateProtoTaskCollection] and [ProtobufExtension.AndroidGenerateProtoTaskCollection]
- * each have unique methods, and only one instance is allocated per project, we need a way to statically resolve the
- * available methods. This is a necessity since Kotlin does not have any dynamic method resolution capabilities.
- */
-
-fun ProtobufExtension.GenerateProtoTaskCollection.ofSourceSet(sourceSet: String): Collection<GenerateProtoTask> =
-    if (this is ProtobufExtension.JavaGenerateProtoTaskCollection)
-        this.ofSourceSet(sourceSet) else emptyList()
-
-fun ProtobufExtension.GenerateProtoTaskCollection.ofFlavor(flavor: String): Collection<GenerateProtoTask> =
-    if (this is ProtobufExtension.AndroidGenerateProtoTaskCollection)
-        this.ofFlavor(flavor) else emptyList()
-
-fun ProtobufExtension.GenerateProtoTaskCollection.ofBuildType(buildType: String): Collection<GenerateProtoTask> =
-    if (this is ProtobufExtension.AndroidGenerateProtoTaskCollection)
-        this.ofBuildType(buildType) else emptyList()
-
-fun ProtobufExtension.GenerateProtoTaskCollection.ofVariant(variant: String): Collection<GenerateProtoTask> =
-    if (this is ProtobufExtension.AndroidGenerateProtoTaskCollection)
-        this.ofVariant(variant) else emptyList()
-
-fun ProtobufExtension.GenerateProtoTaskCollection.ofNonTest(): Collection<GenerateProtoTask> =
-    if (this is ProtobufExtension.AndroidGenerateProtoTaskCollection)
-        this.ofNonTest() else emptyList()
-
-fun ProtobufExtension.GenerateProtoTaskCollection.ofTest(): Collection<GenerateProtoTask> =
-    if (this is ProtobufExtension.AndroidGenerateProtoTaskCollection)
-        this.ofTest() else emptyList()
