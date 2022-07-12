@@ -159,8 +159,7 @@ abstract class ProtobufExtension {
       }
     }
 
-    @TypeChecked(TypeCheckingMode.SKIP)
-    // Don't depend on AGP
+    @TypeChecked(TypeCheckingMode.SKIP) // Don't depend on AGP
     public TaskCollection<GenerateProtoTask> ofVariant(String variant) {
       return all().matching { GenerateProtoTask task ->
         Utils.isAndroidProject(project) && task.variant.name == variant

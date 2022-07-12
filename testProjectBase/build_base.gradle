@@ -76,11 +76,8 @@ def assertFileExists(boolean exists, String path) {
 }
 
 test.doLast {
-  assert [
-      'generateProto',
-      'generateGrpcProto',
-      'generateTestProto'
-  ] as Set == protobuf.generateProtoTasks.all().collect({ it.name }) as Set
+  assert ['generateProto', 'generateGrpcProto', 'generateTestProto'] as Set ==
+      protobuf.generateProtoTasks.all().collect({ it.name }) as Set
 
   assert ['generateProto'] as Set == protobuf.generateProtoTasks.ofSourceSet('main').collect({ it.name }) as Set
   assert [] as Set == protobuf.generateProtoTasks.ofTest().collect({ it.name }) as Set
