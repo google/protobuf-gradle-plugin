@@ -47,7 +47,7 @@ class TaskRegistrationTest extends Specification {
       |}
       |
       |sourceSets {
-      |  customSourceSet { }
+      |  internal { }
       |}
       |
       |$generateTaskReportTask
@@ -65,9 +65,9 @@ class TaskRegistrationTest extends Specification {
     assert report["extractTestProto"] == ProtobufExtract
     assert report["extractIncludeTestProto"] == ProtobufExtract
 
-    assert report["generateCustomProto"] == GenerateProtoTask
-    assert report["extractCustomProto"] == ProtobufExtract
-    assert report["extractIncludeCustomProto"] == ProtobufExtract
+    assert report["generateInternalProto"] == GenerateProtoTask
+    assert report["extractInternalProto"] == ProtobufExtract
+    assert report["extractIncludeInternalProto"] == ProtobufExtract
 
     where:
     gradleVersion << GRADLE_VERSIONS
