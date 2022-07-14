@@ -8,6 +8,17 @@ import org.gradle.testkit.runner.GradleRunner
 /**
  * Unit tests for task registration functionality
  */
+@SuppressWarnings([
+  "JUnitPublicNonTestMethod",
+  "ExplicitLinkedHashMapInstantiation",
+  "ClassForName",
+  "GStringExpressionWithinString",
+  "PrivateFieldCouldBeFinal",
+  "NoDef",
+  "VariableTypeRequired",
+  "MethodSize",
+  "NoDef",
+]) // TODO: do not suppress warnings
 @CompileDynamic
 class TaskRegistrationTest extends Specification {
   // Current supported version is Gradle 5+.
