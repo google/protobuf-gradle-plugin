@@ -18,7 +18,7 @@ import org.gradle.testkit.runner.GradleRunner
   "VariableTypeRequired",
   "MethodSize",
   "NoDef",
-]) // TODO: do not suppress warnings
+])// TODO: do not suppress warnings
 @CompileDynamic
 class TaskRegistrationTest extends Specification {
   // Current supported version is Gradle 5+.
@@ -222,3 +222,21 @@ class TaskRegistrationTest extends Specification {
     return result
   }
 }
+
+//
+// # Test registration notes
+//
+// ## jvm project
+// For each source set plugin registers 3 tasks:
+// - generate<SOURCE_SET_NAME>Proto       | GenerateProtoTask
+// - extract<SOURCE_SET_NAME>Proto        | ProtobufExtract
+// - extractInclude<SOURCE_SET_NAME>Proto | ProtobufExtract
+//
+// ## android project
+// For each variant plugin registers 2 tasks:
+// - generate<VARIANT_NAME>Proto          | GenerateProtoTask
+// - extractInclude<VARIANT_NAME>Proto    | ProtobufExtract
+//
+// For each source set plugin registers 1 tasks:
+// - extract<SOURCE_SET_NAME>Proto        | ProtobufExtract
+//
