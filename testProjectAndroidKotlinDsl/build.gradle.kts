@@ -1,14 +1,6 @@
 import com.android.build.gradle.api.BaseVariant
-import com.google.protobuf.gradle.generateProtoTasks
 import com.google.protobuf.gradle.id
-import com.google.protobuf.gradle.ofBuildType
-import com.google.protobuf.gradle.ofFlavor
-import com.google.protobuf.gradle.ofNonTest
-import com.google.protobuf.gradle.ofVariant
-import com.google.protobuf.gradle.plugins
 import com.google.protobuf.gradle.proto
-import com.google.protobuf.gradle.protobuf
-import com.google.protobuf.gradle.protoc
 
 plugins {
   id("com.android.application")
@@ -160,7 +152,7 @@ afterEvaluate {
   }
   test {
     doLast {
-      val genProtoTasks = project.protobuf.protobuf.generateProtoTasks
+      val genProtoTasks = project.protobuf.generateProtoTasks
 
       val genProtoTaskNames = setOf(
           "generateArmFreeappDebugAndroidTestProto",
