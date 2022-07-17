@@ -308,8 +308,15 @@ class ProtobufPlugin implements Plugin<Project> {
           }
       }
       postConfigure.add {
-        // This cannot be called once task execution has started.
+        // This cannot be called once task execution has start
         variant.registerJavaGeneratingTask(generateProtoTask, generateProtoTask.getOutputSourceDirectories())
+
+        // registerJavaGeneratingTask do nothing with kotlin tasks. It's works only with java.
+        Task kotlinCompileTask =  project.tasks.findByName("compile${variant.name.capitalize()}Kotlin")
+        if (kotlinCompileTask != null) {
+          kotlinCompileTask.dependsOn(generateProtoTask)
+          kotlinCompileTask.source(generateProtoTask.getOutputSourceDirectories())
+        }
       }
     }
 
@@ -442,28 +449,21 @@ class ProtobufPlugin implements Plugin<Project> {
       // The generated javalite sources have lint issues. This is fixed upstream but
       // there is still no release with the fix yet.
       //   https://github.com/google/protobuf/pull/2823
-      if (isAndroid) {
-        // variant.registerJavaGeneratingTask called earlier already registers the generated
-        // sources for normal variants, but unit test variants work differently and do not
-        // use registerJavaGeneratingTask. Let's call addJavaSourceFoldersToModel for all tasks
-        // to ensure all variants (including unit test variants) have sources registered.
-        project.tasks.withType(GenerateProtoTask).each { GenerateProtoTask generateProtoTask ->
-          generateProtoTask.variant.addJavaSourceFoldersToModel(generateProtoTask.getOutputSourceDirectories())
-        }
 
-        // TODO(zpencer): add gen sources from cross project GenerateProtoTasks
-        // This is an uncommon project set up but it is possible.
-        // We must avoid using private android APIs to find subprojects that the variant depends
-        // on, such as by walking through
-        //   variant.variantData.variantDependency.compileConfiguration.allDependencies
-        // Gradle.getTaskGraph().getDependencies() should allow us to walk the task graph,
-        // but unfortunately that API is @Incubating. We can revisit it when it becomes stable.
-        // https://docs.gradle.org/4.8/javadoc/org/gradle/api/execution/
-        // TaskExecutionGraph.html#getDependencies-org.gradle.api.Task-
+      // TODO(zpencer): add gen sources from cross project GenerateProtoTasks
+      // This is an uncommon project set up but it is possible.
+      // We must avoid using private android APIs to find subprojects that the variant depends
+      // on, such as by walking through
+      //   variant.variantData.variantDependency.compileConfiguration.allDependencies
+      // Gradle.getTaskGraph().getDependencies() should allow us to walk the task graph,
+      // but unfortunately that API is @Incubating. We can revisit it when it becomes stable.
+      // https://docs.gradle.org/4.8/javadoc/org/gradle/api/execution/
+      // TaskExecutionGraph.html#getDependencies-org.gradle.api.Task-
 
-        // TODO(zpencer): find a way to make android studio aware of the .proto files
-        // Simply adding the .proto dirs via addJavaSourceFoldersToModel does not seem to work.
-      } else {
+      // TODO(zpencer): find a way to make android studio aware of the .proto files
+      // Simply adding the .proto dirs via addJavaSourceFoldersToModel does not seem to work.
+
+      if (!isAndroid) {
         // Make the proto source dirs known to IDEs
         project.sourceSets.each { sourceSet ->
           SourceDirectorySet protoSrcDirSet = sourceSet.proto
