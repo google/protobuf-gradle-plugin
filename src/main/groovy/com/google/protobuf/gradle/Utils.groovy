@@ -31,14 +31,11 @@ package com.google.protobuf.gradle
 import com.google.common.base.Preconditions
 import groovy.transform.CompileStatic
 import org.apache.commons.lang.StringUtils
-import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.tasks.SourceSet
 import org.gradle.plugins.ide.idea.GenerateIdeaModule
 import org.gradle.plugins.ide.idea.model.IdeaModel
 import org.gradle.util.GUtil
-
-import java.util.regex.Matcher
 
 /**
  * Utility classes.
@@ -99,20 +96,6 @@ class Utils {
   }
 
   /**
-   * Returns positive/0/negative if current Gradle version is higher than/equal to/lower than the
-   * given target version.  Only major and minor versions are checked.  Patch version is ignored.
-   */
-  static int compareGradleVersion(Project project, String target) {
-    Matcher gv = parseVersionString(project.gradle.gradleVersion)
-    Matcher tv = parseVersionString(target)
-    int majorVersionDiff = gv.group(1).toInteger() - tv.group(1).toInteger()
-    if (majorVersionDiff != 0) {
-      return majorVersionDiff
-    }
-    return gv.group(2).toInteger() - tv.group(2).toInteger()
-  }
-
-  /**
    * Returns true if the source set is a test related source set.
    */
   static boolean isTest(String sourceSetOrVariantName) {
@@ -145,13 +128,5 @@ class Utils {
         }
       }
     }
-  }
-
-  private static Matcher parseVersionString(String version) {
-    Matcher matcher = version =~ "(\\d*)\\.(\\d*).*"
-    if (!matcher || !matcher.matches()) {
-      throw new GradleException("Failed to parse version \"${version}\"")
-    }
-    return matcher
   }
 }
