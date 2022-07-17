@@ -249,7 +249,17 @@ class ProtobufPlugin implements Plugin<Project> {
      * Creates Protobuf tasks for a sourceSet in a Java project.
      */
     private void addTasksForSourceSet(final SourceSet sourceSet) {
-      Task generateProtoTask = addGenerateProtoTask(sourceSet.name, [sourceSet])
+      GenerateProtoTask generateProtoTask = addGenerateProtoTask(sourceSet.name, [sourceSet])
+      sourceSet.java.srcDir("${generateProtoTask.getOutputBaseDir()}/java")
+      if (sourceSet.hasProperty("kotlin")) {
+        sourceSet.kotlin.srcDir("${generateProtoTask.getOutputBaseDir()}/kotlin")
+      }
+      protobufExtension.tools.plugins.all {
+        sourceSet.java.srcDir("${generateProtoTask.getOutputBaseDir()}/${it.name}")
+        if (sourceSet.hasProperty("kotlin")) {
+          sourceSet.kotlin.srcDir("${generateProtoTask.getOutputBaseDir()}/${it.name}")
+        }
+      }
       generateProtoTask.sourceSet = sourceSet
       generateProtoTask.doneInitializing()
       generateProtoTask.builtins {
@@ -278,7 +288,18 @@ class ProtobufPlugin implements Plugin<Project> {
      */
     private void addTasksForVariant(final Object variant, boolean isTestVariant, Collection<Closure> postConfigure) {
       // GenerateProto task, one per variant (compilation unit).
-      Task generateProtoTask = addGenerateProtoTask(variant.name, variant.sourceSets)
+      GenerateProtoTask generateProtoTask = addGenerateProtoTask(variant.name, variant.sourceSets)
+      Object sourceSet = project.android.sourceSets[Utils.variantNameToSourceSetName(variant.name)]
+      sourceSet.java.srcDir("${generateProtoTask.getOutputBaseDir()}/java")
+      if (sourceSet.hasProperty("kotlin")) {
+        sourceSet.kotlin.srcDir("${generateProtoTask.getOutputBaseDir()}/kotlin")
+      }
+      protobufExtension.tools.plugins.all {
+        sourceSet.java.srcDir("${generateProtoTask.getOutputBaseDir()}/${it.name}")
+        if (sourceSet.hasProperty("kotlin")) {
+          sourceSet.kotlin.srcDir("${generateProtoTask.getOutputBaseDir()}/${it.name}")
+        }
+      }
       generateProtoTask.setVariant(variant, isTestVariant)
       generateProtoTask.flavors = ImmutableList.copyOf(variant.productFlavors.collect { it.name } )
       if (variant.hasProperty('buildType')) {
