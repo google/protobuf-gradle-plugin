@@ -48,6 +48,7 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.util.PatternFilterable
 import org.gradle.api.tasks.util.PatternSet
+import org.gradle.util.GradleVersion
 
 import javax.inject.Inject
 
@@ -134,7 +135,7 @@ abstract class ProtobufExtract extends DefaultTask {
   }
 
   private CopyActionFacade instantiateCopyActionFacade() {
-    if (Utils.compareGradleVersion(project, "6.0") > 0) {
+    if (GradleVersion.current() >= GradleVersion.version("6.0")) {
       // Use object factory to instantiate as that will inject the necessary service.
       return objectFactory.newInstance(CopyActionFacade.FileSystemOperationsBased)
     }
@@ -142,7 +143,7 @@ abstract class ProtobufExtract extends DefaultTask {
   }
 
   private ArchiveActionFacade instantiateArchiveActionFacade() {
-    if (Utils.compareGradleVersion(project, "6.0") > 0) {
+    if (GradleVersion.current() >= GradleVersion.version("6.0")) {
       // Use object factory to instantiate as that will inject the necessary service.
       return objectFactory.newInstance(ArchiveActionFacade.ServiceBased)
     }

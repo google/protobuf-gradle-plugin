@@ -47,6 +47,7 @@ import org.gradle.api.internal.file.FileResolver
 import org.gradle.api.plugins.AppliedPlugin
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
+import org.gradle.util.GradleVersion
 
 import javax.inject.Inject
 
@@ -82,7 +83,7 @@ class ProtobufPlugin implements Plugin<Project> {
     }
 
     void apply(final Project project) {
-      if (Utils.compareGradleVersion(project, "5.6") < 0) {
+      if (GradleVersion.current() < GradleVersion.version("5.6")) {
         throw new GradleException(
           "Gradle version is ${project.gradle.gradleVersion}. Minimum supported version is 5.6")
       }
