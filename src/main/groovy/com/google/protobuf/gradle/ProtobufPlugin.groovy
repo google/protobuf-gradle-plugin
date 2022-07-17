@@ -66,11 +66,6 @@ class ProtobufPlugin implements Plugin<Project> {
             'android-library',
     ]
 
-    private static final List<String> SUPPORTED_LANGUAGES = [
-        'java',
-        'kotlin',
-    ]
-
     private final FileResolver fileResolver
     private Project project
     private ProtobufExtension protobufExtension
@@ -120,11 +115,6 @@ class ProtobufPlugin implements Plugin<Project> {
                 + ' The Java plugin or one of the Android plugins must be applied to the project first.')
           }
         }
-    }
-
-    private static void linkGenerateProtoTasksToTask(Task task, GenerateProtoTask genProtoTask) {
-      task.dependsOn(genProtoTask)
-      task.source genProtoTask.getOutputSourceDirectorySet().include("**/*.java", "**/*.kt")
     }
 
     private void doApply() {
@@ -249,7 +239,8 @@ class ProtobufPlugin implements Plugin<Project> {
      * Creates Protobuf tasks for a sourceSet in a Java project.
      */
     private void addTasksForSourceSet(final SourceSet sourceSet) {
-      Task generateProtoTask = addGenerateProtoTask(sourceSet.name, [sourceSet])
+      GenerateProtoTask generateProtoTask = addGenerateProtoTask(sourceSet.name, [sourceSet])
+      sourceSet.java.srcDirs(generateProtoTask)
       generateProtoTask.sourceSet = sourceSet
       generateProtoTask.doneInitializing()
       generateProtoTask.builtins {
@@ -267,10 +258,6 @@ class ProtobufPlugin implements Plugin<Project> {
         include '**/*.proto'
       }
       processResourcesTask.dependsOn(extractTask)
-
-      SUPPORTED_LANGUAGES.each { String lang ->
-        linkGenerateProtoTasksToTaskName(sourceSet.getCompileTaskName(lang), generateProtoTask)
-      }
     }
 
     /**
@@ -278,7 +265,7 @@ class ProtobufPlugin implements Plugin<Project> {
      */
     private void addTasksForVariant(final Object variant, boolean isTestVariant, Collection<Closure> postConfigure) {
       // GenerateProto task, one per variant (compilation unit).
-      Task generateProtoTask = addGenerateProtoTask(variant.name, variant.sourceSets)
+      GenerateProtoTask generateProtoTask = addGenerateProtoTask(variant.name, variant.sourceSets)
       generateProtoTask.setVariant(variant, isTestVariant)
       generateProtoTask.flavors = ImmutableList.copyOf(variant.productFlavors.collect { it.name } )
       if (variant.hasProperty('buildType')) {
@@ -320,21 +307,9 @@ class ProtobufPlugin implements Plugin<Project> {
               setupExtractProtosTask(generateProtoTask, it.name)
           }
       }
-      if (isTestVariant) {
-        // unit test variants do not implement registerJavaGeneratingTask
-        Task javaCompileTask = variant.javaCompileProvider.get()
-        if (javaCompileTask != null) {
-          linkGenerateProtoTasksToTask(javaCompileTask, generateProtoTask)
-        }
-      } else {
-        postConfigure.add {
-          // This cannot be called once task execution has started.
-          variant.registerJavaGeneratingTask(generateProtoTask, generateProtoTask.getOutputSourceDirectories())
-        }
-      }
       postConfigure.add {
-        linkGenerateProtoTasksToTaskName(
-            Utils.getKotlinAndroidCompileTaskName(project, variant.name), generateProtoTask)
+        // This cannot be called once task execution has started.
+        variant.registerJavaGeneratingTask(generateProtoTask, generateProtoTask.getOutputSourceDirectories())
       }
     }
 
@@ -348,7 +323,7 @@ class ProtobufPlugin implements Plugin<Project> {
      * compiled. For Java it's the sourceSet that sourceSetOrVariantName stands
      * for; for Android it's the collection of sourceSets that the variant includes.
      */
-    private Task addGenerateProtoTask(String sourceSetOrVariantName, Collection<Object> sourceSets) {
+    private GenerateProtoTask addGenerateProtoTask(String sourceSetOrVariantName, Collection<Object> sourceSets) {
       String generateProtoTaskName = 'generate' +
           Utils.getSourceSetSubstringForTaskNames(sourceSetOrVariantName) + 'Proto'
       Provider<String> outDir = project.providers.provider {
@@ -450,21 +425,6 @@ class ProtobufPlugin implements Plugin<Project> {
     private void linkExtractTaskToGenerateTask(ProtobufExtract extractTask, GenerateProtoTask generateTask) {
       generateTask.dependsOn(extractTask)
       generateTask.addIncludeDir(project.files(extractTask.destDir))
-    }
-
-    private void linkGenerateProtoTasksToTaskName(String compileTaskName, GenerateProtoTask genProtoTask) {
-      Task compileTask = project.tasks.findByName(compileTaskName)
-      if (compileTask != null) {
-        linkGenerateProtoTasksToTask(compileTask, genProtoTask)
-      } else {
-        // It is possible for a compile task to not exist yet. For example, if someone applied
-        // the proto plugin and then later applies the kotlin plugin.
-        project.tasks.configureEach { Task task ->
-          if (task.name == compileTaskName) {
-            linkGenerateProtoTasksToTask(task, genProtoTask)
-          }
-        }
-      }
     }
 
     private String getExtractedIncludeProtosDir(String sourceSetName) {

@@ -34,7 +34,6 @@ import static java.nio.charset.StandardCharsets.US_ASCII
 import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
 import groovy.transform.CompileStatic
-import groovy.transform.PackageScope
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.Action
@@ -45,7 +44,6 @@ import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.ProjectLayout
-import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.internal.file.FileResolver
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.model.ObjectFactory
@@ -60,13 +58,13 @@ import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
-import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.OutputDirectories
 
 import javax.annotation.Nullable
 import javax.inject.Inject
@@ -256,11 +254,6 @@ public abstract class GenerateProtoTask extends DefaultTask {
     checkInitializing()
     Preconditions.checkState(this.outputBaseDir == null, 'outputBaseDir is already set')
     this.outputBaseDir = outputBaseDir
-  }
-
-  @OutputDirectory
-  String getOutputBaseDir() {
-    return outputBaseDir.get()
   }
 
   void setSourceSet(SourceSet sourceSet) {
@@ -593,23 +586,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
     return "${outputBaseDir.get()}/${plugin.outputSubDir}"
   }
 
-  /**
-   * Returns a {@code SourceDirectorySet} representing the generated source
-   * directories.
-   */
-  @Internal
-  SourceDirectorySet getOutputSourceDirectorySet() {
-    String srcSetName = "generate-proto-" + name
-    SourceDirectorySet srcSet
-    srcSet = objectFactory.sourceDirectorySet(srcSetName, srcSetName)
-    srcSet.srcDirs providerFactory.provider {
-      getOutputSourceDirectories()
-    }
-    return srcSet
-  }
-
-  @Internal
-  @PackageScope
+  @OutputDirectories
   Collection<File> getOutputSourceDirectories() {
     Collection<File> srcDirs = []
     builtins.each { builtin ->
