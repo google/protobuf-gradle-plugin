@@ -115,8 +115,7 @@ class ProtobufPlugin implements Plugin<Project> {
       java.set(true)
       setupProtobufJavaTasks()
     }
-    project.plugins.withId("java", javaPluginHandler)
-    project.plugins.withId("java-library", javaPluginHandler)
+    project.plugins.withId("java-base", javaPluginHandler)
 
     project.afterEvaluate {
       if (!(java.get() || android.get())) {
