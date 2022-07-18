@@ -45,6 +45,7 @@ import org.gradle.api.attributes.Usage
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.internal.file.FileResolver
+import org.gradle.api.plugins.AppliedPlugin
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
@@ -57,14 +58,14 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 @CompileDynamic
 class ProtobufPlugin implements Plugin<Project> {
-  private final AtomicBoolean android = new AtomicBoolean(false)
-  private final AtomicBoolean kotlin = new AtomicBoolean(false)
-  private final AtomicBoolean java = new AtomicBoolean(false)
-
   private static final List<String> SUPPORTED_LANGUAGES = [
     'java',
     'kotlin',
   ]
+
+  private final AtomicBoolean android = new AtomicBoolean(false)
+  private final AtomicBoolean kotlin = new AtomicBoolean(false)
+  private final AtomicBoolean java = new AtomicBoolean(false)
 
   private Project project
   private final FileResolver fileResolver
@@ -87,58 +88,47 @@ class ProtobufPlugin implements Plugin<Project> {
     // Provides the osdetector extension
     project.pluginManager.apply(OsDetectorPlugin)
 
-    // Java projects will extract included protos from a 'compileProtoPath'
-    // configuration of each source set, while Android projects will
-    // extract included protos from {@code variant.compileConfiguration}
-    // of each variant.
-    Collection<Closure> postConfigure = []
-
-    Action<? super Plugin> kotlinPluginHandler = { plugin -> kotlin.set(true) }
-    project.plugins.withId("org.jetbrains.kotlin.android", kotlinPluginHandler)
+    Action<? super AppliedPlugin> kotlinPluginHandler = { plugin -> kotlin.set(true) }
+    project.pluginManager.withPlugin("org.jetbrains.kotlin.android", kotlinPluginHandler)
 
     // At least one of the prerequisite plugins must by applied before this plugin can be applied, so
     // we will use the PluginManager.withPlugin() callback mechanism to delay applying this plugin until
     // after that has been achieved. If project evaluation completes before one of the prerequisite plugins
     // has been applied then we will assume that none of prerequisite plugins were specified and we will
     // throw an Exception to alert the user of this configuration issue.
-    Action<? super Plugin> androidPluginHandler = { plugin ->
+    Action<? super AppliedPlugin> androidPluginHandler = { plugin ->
       android.set(true)
-      setupProtobufAndroidTasks(postConfigure)
+      setupProtobufAndroidTasks()
     }
-    project.plugins.withId("com.android.application", androidPluginHandler)
-    project.plugins.withId("com.android.library", androidPluginHandler)
-    project.plugins.withId("com.android.instantapp", androidPluginHandler)
-    project.plugins.withId("com.android.feature", androidPluginHandler)
-    project.plugins.withId("com.android.dynamic-feature", androidPluginHandler)
+    project.pluginManager.withPlugin("com.android.application", androidPluginHandler)
+    project.pluginManager.withPlugin("com.android.library", androidPluginHandler)
+    project.pluginManager.withPlugin("com.android.instantapp", androidPluginHandler)
+    project.pluginManager.withPlugin("com.android.feature", androidPluginHandler)
+    project.pluginManager.withPlugin("com.android.dynamic-feature", androidPluginHandler)
 
-    Action<? super Plugin> javaPluginHandler = { plugin ->
+    Action<? super AppliedPlugin> javaPluginHandler = { plugin ->
       java.set(true)
       setupProtobufJavaTasks()
     }
-    project.plugins.withId("java-base", javaPluginHandler)
+    project.pluginManager.withPlugin("java", javaPluginHandler)
+    project.pluginManager.withPlugin("java-library", javaPluginHandler)
 
     project.afterEvaluate {
       if (!(java.get() || android.get())) {
         throw new GradleException('The com.google.protobuf plugin could not be applied during project evaluation.'
           + ' The Java/Kotlin/Android plugin must be applied to the project.')
       }
-
-      this.extension.configureTasks()
-      // Disallow user configuration outside the config closures, because the operations just
-      // after the doneConfig() loop over the generated outputs and will be out-of-date if
-      // plugin output is added after this point.
-      this.extension.generateProtoTasks.all()*.doneConfig()
-      postConfigure.each { it.call() }
-      // protoc and codegen plugin configuration may change through the protobuf{}
-      // block. Only at this point the configuration has been finalized.
-      this.extension.tools.registerTaskDependencies(this.extension.generateProtoTasks.all())
-
-      // Register proto and generated sources with IDE
-      addSourcesToIde()
     }
   }
 
-  private void setupProtobufAndroidTasks(Collection<Closure> postConfigure) {
+  private static void linkGenerateProtoTasksToTask(Task task, GenerateProtoTask genProtoTask) {
+    task.dependsOn(genProtoTask)
+    task.source genProtoTask.getOutputSourceDirectorySet().include("**/*.java", "**/*.kt")
+  }
+
+  private void setupProtobufAndroidTasks() {
+    Collection<Closure> postConfigure = []
+
     project.android.sourceSets.all { sourceSet ->
       addSourceSetExtension(sourceSet)
       createProtobufConfiguration(sourceSet.name)
@@ -152,6 +142,8 @@ class ProtobufPlugin implements Plugin<Project> {
     project.android.testVariants.all { variant ->
       addTasksForVariant(variant, true, postConfigure)
     }
+
+    setupAfterEvaluate(postConfigure)
   }
 
   private void setupProtobufJavaTasks() {
@@ -167,12 +159,26 @@ class ProtobufPlugin implements Plugin<Project> {
       createCompileProtoPathConfiguration(sourceSet.name)
       addTasksForSourceSet(sourceSet)
     }
+
+    setupAfterEvaluate()
   }
 
-    private static void linkGenerateProtoTasksToTask(Task task, GenerateProtoTask genProtoTask) {
-      task.dependsOn(genProtoTask)
-      task.source genProtoTask.getOutputSourceDirectorySet().include("**/*.java", "**/*.kt")
+  private void setupAfterEvaluate(Collection<Closure> postConfigure = []) {
+    project.afterEvaluate {
+      this.extension.configureTasks()
+      // Disallow user configuration outside the config closures, because the operations just
+      // after the doneConfig() loop over the generated outputs and will be out-of-date if
+      // plugin output is added after this point.
+      this.extension.generateProtoTasks.all()*.doneConfig()
+      postConfigure.each { it.call() }
+      // protoc and codegen plugin configuration may change through the protobuf{}
+      // block. Only at this point the configuration has been finalized.
+      this.extension.tools.registerTaskDependencies(this.extension.generateProtoTasks.all())
+
+      // Register proto and generated sources with IDE
+      addSourcesToIde()
     }
+  }
 
     /**
      * Creates a 'protobuf' configuration for the given source set. The build author can
