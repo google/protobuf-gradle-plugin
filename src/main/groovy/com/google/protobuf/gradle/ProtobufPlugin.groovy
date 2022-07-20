@@ -125,7 +125,6 @@ class ProtobufPlugin implements Plugin<Project> {
 
     private static void linkGenerateProtoTasksToTask(Task task, GenerateProtoTask genProtoTask) {
       task.dependsOn(genProtoTask)
-      task.source genProtoTask.getOutputSourceDirectorySet().include("**/*.java", "**/*.kt")
     }
 
     private void doApply() {
@@ -250,7 +249,8 @@ class ProtobufPlugin implements Plugin<Project> {
      * Creates Protobuf tasks for a sourceSet in a Java project.
      */
     private void addTasksForSourceSet(final SourceSet sourceSet) {
-      Task generateProtoTask = addGenerateProtoTask(sourceSet.name, [sourceSet])
+      GenerateProtoTask generateProtoTask = addGenerateProtoTask(sourceSet.name, [sourceSet])
+      sourceSet.java.srcDirs(generateProtoTask.outputSourceDirectorySet)
       generateProtoTask.sourceSet = sourceSet
       generateProtoTask.doneInitializing()
       generateProtoTask.builtins {
@@ -279,7 +279,9 @@ class ProtobufPlugin implements Plugin<Project> {
      */
     private void addTasksForVariant(final Object variant, boolean isTestVariant, Collection<Closure> postConfigure) {
       // GenerateProto task, one per variant (compilation unit).
-      Task generateProtoTask = addGenerateProtoTask(variant.name, variant.sourceSets)
+      GenerateProtoTask generateProtoTask = addGenerateProtoTask(variant.name, variant.sourceSets)
+      variant.sourceSets[Utils.variantNameToSourceSetName(variant.name)].java
+        .srcDirs(generateProtoTask.outputSourceDirectorySet)
       generateProtoTask.setVariant(variant, isTestVariant)
       generateProtoTask.flavors = ImmutableList.copyOf(variant.productFlavors.collect { it.name } )
       if (variant.hasProperty('buildType')) {

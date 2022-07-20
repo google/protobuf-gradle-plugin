@@ -105,6 +105,28 @@ class Utils {
   }
 
   /**
+   * For each variant, agp creates a unique source set.
+   * The variant does not have a property to get a unique source set.
+   * For that reason, map the variant name to the source set name to find a unique source set.
+   *
+   * Patterns (variant -> sourceSet):
+   * <FLAVOUR><BUILD_TYPE> -> <FLAVOUR><BUILD_TYPE>
+   * <FLAVOUR><BUILD_TYPE>UnitTest -> test<FLAVOUR><BUILD_TYPE>
+   * <FLAVOUR><BUILD_TYPE>AndroidTest -> androidTest<FLAVOUR><BUILD_TYPE>
+   *
+   * @param variantName
+   * @return
+   */
+  public static String variantNameToSourceSetName(final String variantName) {
+    if (variantName.endsWith("UnitTest")) {
+      return "test${variantName.replace("UnitTest", "").capitalize()}"
+    } else if (variantName.endsWith("AndroidTest")) {
+      return "androidTest${variantName.replace("AndroidTest", "").capitalize()}"
+    }
+    return variantName
+  }
+
+  /**
    * Adds the file to the IDE plugin's set of sources / resources. If the directory does
    * not exist, it will be created before the IDE task is run.
    */
