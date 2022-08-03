@@ -29,15 +29,16 @@
  */
 package com.google.protobuf.gradle
 
-import com.google.common.base.Preconditions
 import groovy.transform.CompileStatic
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.api.logging.Logger
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -58,30 +59,18 @@ import javax.inject.Inject
 @CompileStatic
 abstract class ProtobufExtract extends DefaultTask {
 
-  /**
-   * The directory for the extracted files.
-   */
-  private File destDir
-  private Boolean isTest = null
-  private final ConfigurableFileCollection inputFiles = objectFactory.fileCollection()
   private final CopyActionFacade copyActionFacade = instantiateCopyActionFacade()
   private final ArchiveActionFacade archiveActionFacade = instantiateArchiveActionFacade()
   private final FileCollection filteredProtos = instantiateFilteredProtos()
 
-  public void setIsTest(boolean isTest) {
-    this.isTest = isTest
-  }
+  @OutputDirectory
+  public abstract DirectoryProperty getDestDir()
 
   @Input
-  public boolean getIsTest() {
-    Preconditions.checkNotNull(isTest)
-    return isTest
-  }
+  public abstract Property<Boolean> getIsTest()
 
   @Internal
-  public ConfigurableFileCollection getInputFiles() {
-    return inputFiles
-  }
+  public abstract ConfigurableFileCollection getInputFiles()
 
   /**
    * Inputs for this task containing only proto files, which is enough for up-to-date checks.
@@ -89,49 +78,73 @@ abstract class ProtobufExtract extends DefaultTask {
    */
   @InputFiles
   @PathSensitive(PathSensitivity.RELATIVE)
-  FileTree getFilteredProtosFromInputs() {
-    return filteredProtos.asFileTree.matching { PatternFilterable pattern -> pattern.include("**/*.proto") }
+  public FileTree getInputProtoFiles() {
+    return filteredProtos.asFileTree
+      .matching { PatternFilterable pattern -> pattern.include("**/*.proto") }
   }
-
-  @Internal
-  CopyActionFacade getCopyActionFacade() {
-    return copyActionFacade
-  }
-
-  @Internal
-  ArchiveActionFacade getArchiveActionFacade() {
-    return archiveActionFacade
-  }
-
-  @Inject
-  abstract ObjectFactory getObjectFactory()
-
-  @Inject
-  abstract ProviderFactory getProviderFactory()
 
   @TaskAction
-  void extract() {
-    destDir.mkdir()
-    FileCollection allProtoFiles = filteredProtos
+  public void extract() {
     copyActionFacade.copy { spec ->
       spec.includeEmptyDirs = false
-      spec.from(allProtoFiles)
-      spec.include('**/*.proto')
+      spec.from(inputProtoFiles)
       spec.into(destDir)
       // gradle 7+ requires a duplicate strategy to be explicitly defined
       spec.duplicatesStrategy = DuplicatesStrategy.INCLUDE
     }
   }
 
-  protected void setDestDir(File destDir) {
-    Preconditions.checkState(this.destDir == null, 'destDir already set')
-    this.destDir = destDir
-    outputs.dir destDir
-  }
+  @Inject
+  protected abstract ObjectFactory getObjectFactory()
 
-  @OutputDirectory
-  protected File getDestDir() {
-    return destDir
+  @Inject
+  protected abstract ProviderFactory getProviderFactory()
+
+  private FileCollection instantiateFilteredProtos() {
+    boolean warningLogged = false
+    ArchiveActionFacade archiveFacade = this.archiveActionFacade
+    Logger logger = this.logger
+    // Provider.map seems broken for excluded tasks. Add inputFiles with all contents excluded for
+    // the dependency it provides, but then provide the files we actually care about in our own
+    // provider. https://github.com/google/protobuf-gradle-plugin/issues/550
+    return objectFactory.fileCollection()
+      .from(inputFiles.filter { false })
+      .from(providerFactory.provider { unused ->
+        Set<File> files = inputFiles.files
+        PatternSet protoFilter = new PatternSet().include("**/*.proto")
+        Set<Object> protoInputs = [] as Set
+        for (File file : files) {
+          if (file.isDirectory()) {
+            protoInputs.add(file)
+          } else if (file.path.endsWith('.proto')) {
+            if (!warningLogged) {
+              warningLogged = true
+              logger.warn "proto file '${file.path}' directly specified in configuration. " +
+                "It's likely you specified files('path/to/foo.proto') or " +
+                "fileTree('path/to/directory') in protobuf or compile configuration. " +
+                "This makes you vulnerable to " +
+                "https://github.com/google/protobuf-gradle-plugin/issues/248. " +
+                "Please use files('path/to/directory') instead."
+            }
+            protoInputs.add(file)
+          } else if (file.path.endsWith('.jar') || file.path.endsWith('.zip')) {
+            protoInputs.add(archiveFacade.zipTree(file.path).matching(protoFilter))
+          } else if (file.path.endsWith('.aar')) {
+            FileCollection zipTree = archiveFacade.zipTree(file.path).filter { File it -> it.path.endsWith('.jar') }
+            zipTree.each { entry ->
+              protoInputs.add(archiveFacade.zipTree(entry).matching(protoFilter))
+            }
+          } else if (file.path.endsWith('.tar')
+            || file.path.endsWith('.tar.gz')
+            || file.path.endsWith('.tar.bz2')
+            || file.path.endsWith('.tgz')) {
+            protoInputs.add(archiveFacade.tarTree(file.path).matching(protoFilter))
+          } else {
+            logger.debug "Skipping unsupported file type (${file.path}); handles only jar, tar, tar.gz, tar.bz2 & tgz"
+          }
+        }
+        return protoInputs
+      })
   }
 
   private CopyActionFacade instantiateCopyActionFacade() {
@@ -148,52 +161,5 @@ abstract class ProtobufExtract extends DefaultTask {
       return objectFactory.newInstance(ArchiveActionFacade.ServiceBased)
     }
     return new ArchiveActionFacade.ProjectBased(project)
-  }
-
-  private FileCollection instantiateFilteredProtos() {
-    boolean warningLogged = false
-    ArchiveActionFacade archiveFacade = this.archiveActionFacade
-    Logger logger = this.logger
-    // Provider.map seems broken for excluded tasks. Add inputFiles with all contents excluded for
-    // the dependency it provides, but then provide the files we actually care about in our own
-    // provider. https://github.com/google/protobuf-gradle-plugin/issues/550
-    return objectFactory.fileCollection()
-        .from(inputFiles.filter { false })
-        .from(providerFactory.provider { unused ->
-      Set<File> files = inputFiles.files
-      PatternSet protoFilter = new PatternSet().include("**/*.proto")
-      Set<Object> protoInputs = [] as Set
-      for (File file : files) {
-        if (file.isDirectory()) {
-          protoInputs.add(file)
-        } else if (file.path.endsWith('.proto')) {
-          if (!warningLogged) {
-            warningLogged = true
-            logger.warn "proto file '${file.path}' directly specified in configuration. " +
-                    "It's likely you specified files('path/to/foo.proto') or " +
-                    "fileTree('path/to/directory') in protobuf or compile configuration. " +
-                    "This makes you vulnerable to " +
-                    "https://github.com/google/protobuf-gradle-plugin/issues/248. " +
-                    "Please use files('path/to/directory') instead."
-          }
-          protoInputs.add(file)
-        } else if (file.path.endsWith('.jar') || file.path.endsWith('.zip')) {
-          protoInputs.add(archiveFacade.zipTree(file.path).matching(protoFilter))
-        } else if (file.path.endsWith('.aar')) {
-          FileCollection zipTree = archiveFacade.zipTree(file.path).filter { File it -> it.path.endsWith('.jar') }
-          zipTree.each { entry ->
-            protoInputs.add(archiveFacade.zipTree(entry).matching(protoFilter))
-          }
-        } else if (file.path.endsWith('.tar')
-                || file.path.endsWith('.tar.gz')
-                || file.path.endsWith('.tar.bz2')
-                || file.path.endsWith('.tgz')) {
-          protoInputs.add(archiveFacade.tarTree(file.path).matching(protoFilter))
-        } else {
-          logger.debug "Skipping unsupported file type (${file.path}); handles only jar, tar, tar.gz, tar.bz2 & tgz"
-        }
-      }
-      return protoInputs
-    })
   }
 }
