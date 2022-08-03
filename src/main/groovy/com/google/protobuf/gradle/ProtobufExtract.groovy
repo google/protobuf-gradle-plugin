@@ -40,7 +40,6 @@ import org.gradle.api.logging.Logger
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.ProviderFactory
-import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
@@ -66,16 +65,16 @@ abstract class ProtobufExtract extends DefaultTask {
   @OutputDirectory
   public abstract DirectoryProperty getDestDir()
 
-  @Input
+  // Used to configure ide proto sources
+  @Internal
   public abstract Property<Boolean> getIsTest()
 
+  // Input tracked in getInputProtoFiles method
   @Internal
   public abstract ConfigurableFileCollection getInputFiles()
 
-  /**
-   * Inputs for this task containing only proto files, which is enough for up-to-date checks.
-   * Add inputs to inputFiles. Uses relative path sensitivity as directory layout changes impact output.
-   */
+  // Inputs for this task containing only proto files, which is enough for up-to-date checks.
+  // Add inputs to inputFiles. Uses relative path sensitivity as directory layout changes impact output.
   @InputFiles
   @PathSensitive(PathSensitivity.RELATIVE)
   public FileTree getInputProtoFiles() {
