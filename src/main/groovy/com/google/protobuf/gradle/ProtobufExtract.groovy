@@ -65,16 +65,22 @@ abstract class ProtobufExtract extends DefaultTask {
   @OutputDirectory
   public abstract DirectoryProperty getDestDir()
 
-  // Used to configure ide proto sources
+  /**
+   * Used to configure ide proto sources.
+   */
   @Internal
   public abstract Property<Boolean> getIsTest()
 
-  // Input tracked in getInputProtoFiles method
+  /**
+   * Input for this tasks containing all archive files to extract.
+   */
   @Internal
   public abstract ConfigurableFileCollection getInputFiles()
 
-  // Inputs for this task containing only proto files, which is enough for up-to-date checks.
-  // Add inputs to inputFiles. Uses relative path sensitivity as directory layout changes impact output.
+  /**
+   * Inputs for this task containing only proto files, which is enough for up-to-date checks.
+   * Add inputs to inputFiles. Uses relative path sensitivity as directory layout changes impact output.
+   */
   @InputFiles
   @PathSensitive(PathSensitivity.RELATIVE)
   public FileTree getInputProtoFiles() {
@@ -98,6 +104,22 @@ abstract class ProtobufExtract extends DefaultTask {
 
   @Inject
   protected abstract ProviderFactory getProviderFactory()
+
+  private CopyActionFacade instantiateCopyActionFacade() {
+    if (GradleVersion.current() >= GradleVersion.version("6.0")) {
+      // Use object factory to instantiate as that will inject the necessary service.
+      return objectFactory.newInstance(CopyActionFacade.FileSystemOperationsBased)
+    }
+    return new CopyActionFacade.ProjectBased(project)
+  }
+
+  private ArchiveActionFacade instantiateArchiveActionFacade() {
+    if (GradleVersion.current() >= GradleVersion.version("6.0")) {
+      // Use object factory to instantiate as that will inject the necessary service.
+      return objectFactory.newInstance(ArchiveActionFacade.ServiceBased)
+    }
+    return new ArchiveActionFacade.ProjectBased(project)
+  }
 
   private FileCollection instantiateFilteredProtos() {
     boolean warningLogged = false
@@ -146,19 +168,4 @@ abstract class ProtobufExtract extends DefaultTask {
       })
   }
 
-  private CopyActionFacade instantiateCopyActionFacade() {
-    if (GradleVersion.current() >= GradleVersion.version("6.0")) {
-      // Use object factory to instantiate as that will inject the necessary service.
-      return objectFactory.newInstance(CopyActionFacade.FileSystemOperationsBased)
-    }
-    return new CopyActionFacade.ProjectBased(project)
-  }
-
-  private ArchiveActionFacade instantiateArchiveActionFacade() {
-    if (GradleVersion.current() >= GradleVersion.version("6.0")) {
-      // Use object factory to instantiate as that will inject the necessary service.
-      return objectFactory.newInstance(ArchiveActionFacade.ServiceBased)
-    }
-    return new ArchiveActionFacade.ProjectBased(project)
-  }
 }
