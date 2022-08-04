@@ -356,13 +356,13 @@ class ProtobufPlugin implements Plugin<Project> {
     private Task setupExtractProtosTask(final GenerateProtoTask generateProtoTask, final String sourceSetName) {
       String extractProtosTaskName = 'extract' +
           Utils.getSourceSetSubstringForTaskNames(sourceSetName) + 'Proto'
-      Task task = project.tasks.findByName(extractProtosTaskName)
+      ProtobufExtract task = project.tasks.findByName(extractProtosTaskName)
       if (task == null) {
         task = project.tasks.create(extractProtosTaskName, ProtobufExtract) {
           description = "Extracts proto files/dependencies specified by 'protobuf' configuration"
-          destDir = getExtractedProtosDir(sourceSetName) as File
+          destDir.set(getExtractedProtosDir(sourceSetName) as File)
           inputFiles.from(project.configurations[Utils.getConfigName(sourceSetName, 'protobuf')])
-          isTest = Utils.isTest(sourceSetName)
+          isTest.set(Utils.isTest(sourceSetName))
         }
       }
 
@@ -481,7 +481,7 @@ class ProtobufPlugin implements Plugin<Project> {
         }
         // Make the extracted proto dirs known to IDEs
         project.tasks.withType(ProtobufExtract).each { ProtobufExtract extractProtoTask ->
-          Utils.addToIdeSources(project, extractProtoTask.isTest, extractProtoTask.destDir, true)
+          Utils.addToIdeSources(project, extractProtoTask.isTest.get(), extractProtoTask.destDir.get().asFile, true)
         }
         // Make the generated code dirs known to IDEs
         project.tasks.withType(GenerateProtoTask).each { GenerateProtoTask generateProtoTask ->
