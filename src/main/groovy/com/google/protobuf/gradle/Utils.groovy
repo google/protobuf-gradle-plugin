@@ -33,10 +33,6 @@ import groovy.transform.CompileStatic
 import org.apache.commons.lang.StringUtils
 import org.gradle.api.Project
 import org.gradle.api.tasks.SourceSet
-import org.gradle.plugins.ide.eclipse.model.Classpath
-import org.gradle.plugins.ide.eclipse.model.ClasspathEntry
-import org.gradle.plugins.ide.eclipse.model.EclipseModel
-import org.gradle.plugins.ide.eclipse.model.SourceFolder
 import org.gradle.plugins.ide.idea.GenerateIdeaModule
 import org.gradle.plugins.ide.idea.model.IdeaModel
 import org.gradle.util.GUtil
@@ -132,79 +128,5 @@ class Utils {
         }
       }
     }
-  }
-
-  /**
-   * Add the the folder of generated source to Eclipse .classpath file.
-   */
-  static void addToEclipseSources(Project project, boolean isTest, String sourceSetName, File f) {
-    project.plugins.withId("eclipse") {
-      File projectDir = project.getProjectDir()
-
-      EclipseModel model = project.getExtensions().findByType(EclipseModel)
-      model.classpath.file.whenMerged { Classpath cp ->
-        // buildship requires the folder exists on disk, otherwise
-        // it will be ignored when updating classpath file, see:
-        // https://github.com/eclipse/buildship/issues/1196
-        f.mkdirs()
-
-        String relativePath = projectDir.toURI().relativize(f.toURI()).getPath()
-        // remove trailing slash
-        if (relativePath.endsWith("/")) {
-          relativePath = relativePath[0..(relativePath.length() - 2)]
-        }
-        SourceFolder entry = new SourceFolder(relativePath, getOutputPath(cp, sourceSetName))
-        entry.entryAttributes.put("optional", "true")
-        entry.entryAttributes.put("ignore_optional_problems", "true")
-
-        // this attribute is optional, but it could be useful for IDEs to recognize that it is
-        // generated source folder from protobuf, thus providing some support for that.
-        // e.g. Hint user to run generate tasks if the folder is empty or does not exist.
-        entry.entryAttributes.put("protobuf_generated_source", "true")
-
-        // check if output is not null here because test source folder
-        // must have a separate output folder in Eclipse
-        if (entry.output != null && isTest) {
-          entry.entryAttributes.put("test", "true")
-        }
-        cp.entries.add(entry)
-      }
-    }
-  }
-
-  /**
-   * Get the output path according to the source set name, if no valid path can be
-   * found, <code>null</code> will return.
-   */
-  private static String getOutputPath(Classpath classpath, String sourceSetName) {
-    String path = "bin/" + sourceSetName
-    if (isValidOutput(classpath, path)) {
-      return path
-    }
-    // fallback to default output
-    return null
-  }
-
-  /**
-   * Check if the output path is valid or not.
-   * See: org.eclipse.jdt.internal.core.ClasspathEntry#validateClasspath()
-   */
-  private static boolean isValidOutput(Classpath classpath, String path) {
-    Set<String> outputs = []
-    for (ClasspathEntry cpe : classpath.getEntries()) {
-      if (cpe instanceof SourceFolder) {
-        outputs.add(((SourceFolder) cpe).getOutput())
-      }
-    }
-    for (String output : outputs) {
-      if (Objects.equals(output, path)) {
-        continue
-      }
-      // Eclipse does not allow nested output path
-      if (output.startsWith(path) || path.startsWith(output)) {
-        return false
-      }
-    }
-    return true
   }
 }

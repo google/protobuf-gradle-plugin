@@ -263,8 +263,16 @@ class ProtobufPlugin implements Plugin<Project> {
       }
 
       postConfigure.add {
-        boolean isTest = Utils.isTest(sourceSet.name)
+        project.plugins.withId("eclipse") {
+          // This is required because the intellij/eclipse plugin does not allow adding source directories
+          // that do not exist. The intellij/eclipse config files should be valid from the start.
+          generateProtoTask.get().getOutputSourceDirectories().each { File outputDir ->
+            outputDir.mkdirs()
+          }
+        }
+
         project.plugins.withId("idea") {
+          boolean isTest = Utils.isTest(sourceSet.name)
           protoSrcDirSet.srcDirs.each { File protoDir ->
             Utils.addToIdeSources(project, isTest, protoDir, false)
           }
@@ -272,11 +280,6 @@ class ProtobufPlugin implements Plugin<Project> {
           Utils.addToIdeSources(project, isTest, project.files(extractIncludeProtosTask).singleFile, true)
           generateProtoTask.get().getOutputSourceDirectories().each { File outputDir ->
             Utils.addToIdeSources(project, isTest, outputDir, true)
-          }
-        }
-        project.plugins.withId("eclipse") {
-          generateProtoTask.get().getOutputSourceDirectories().each { File outputDir ->
-            Utils.addToEclipseSources(project, isTest, sourceSet.name, outputDir)
           }
         }
       }
