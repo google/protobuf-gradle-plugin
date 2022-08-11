@@ -415,6 +415,46 @@ class ProtobufJavaPluginTest extends Specification {
   }
 
   @Unroll
+  void "testProject proto and generated output directories should be added to Eclipse [gradle #gradleVersion]"() {
+    given: "project from testProject"
+    File projectDir = ProtobufPluginTestHelper.projectBuilder('testEclipse')
+            .copyDirs('testProjectBase', 'testProject')
+            .build()
+
+    when: "eclipse is invoked"
+    BuildResult result = GradleRunner.create()
+            .withProjectDir(projectDir)
+            .withArguments('eclipse')
+            .withPluginClasspath()
+            .withGradleVersion(gradleVersion)
+            .build()
+
+    then: "it succeed"
+    result.task(":eclipse").outcome == TaskOutcome.SUCCESS
+    Node classpathFile = new XmlParser().parse(projectDir.toPath().resolve(".classpath").toFile())
+    Collection srcEntries = classpathFile.classpathentry.findAll {it.'@kind' == 'src'}
+    assert srcEntries.size() == 6
+
+    Set<String> sourceDir = [] as Set
+    srcEntries.each {
+        sourceDir.add(it.@path)
+    }
+
+    Set<String> expectedSourceDir = ImmutableSet.builder()
+            .add('src/main/java')
+            .add('src/test/java')
+            .add('build/generated/source/proto/grpc/java')
+            .add('build/generated/source/proto/grpc/grpc_output')
+            .add('build/generated/source/proto/main/java')
+            .add('build/generated/source/proto/test/java')
+            .build()
+    assert Objects.equals(expectedSourceDir, sourceDir)
+
+    where:
+    gradleVersion << GRADLE_VERSIONS
+  }
+
+  @Unroll
   void "test proto generation is not up-to-date on dependency changes [gradle #gradleVersion]"() {
     given: "project from testProject"
     File projectDir = ProtobufPluginTestHelper.projectBuilder('testProject')
