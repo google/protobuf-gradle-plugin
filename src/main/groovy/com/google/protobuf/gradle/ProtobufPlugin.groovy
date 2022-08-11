@@ -487,6 +487,8 @@ class ProtobufPlugin implements Plugin<Project> {
         project.tasks.withType(GenerateProtoTask).each { GenerateProtoTask generateProtoTask ->
           generateProtoTask.getOutputSourceDirectories().each { File outputDir ->
             Utils.addToIdeSources(project, generateProtoTask.isTest, outputDir, true)
+            Utils.addToEclipseSources(project, generateProtoTask.isTest,
+                    generateProtoTask.sourceSet.name, outputDir)
           }
         }
       }
