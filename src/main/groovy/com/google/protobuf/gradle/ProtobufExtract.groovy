@@ -38,7 +38,6 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.api.logging.Logger
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.provider.Property
 import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
@@ -64,12 +63,6 @@ abstract class ProtobufExtract extends DefaultTask {
 
   @OutputDirectory
   public abstract DirectoryProperty getDestDir()
-
-  /**
-   * Used to configure ide proto sources.
-   */
-  @Internal
-  public abstract Property<Boolean> getIsTest()
 
   /**
    * Input for this tasks containing all archive files to extract.
