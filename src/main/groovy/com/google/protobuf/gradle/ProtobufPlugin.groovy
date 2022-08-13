@@ -382,7 +382,6 @@ class ProtobufPlugin implements Plugin<Project> {
         it.description = "Extracts proto files/dependencies specified by 'protobuf' configuration"
         it.destDir.set(getExtractedProtosDir(sourceSetName) as File)
         it.inputFiles.from(protobufConfig)
-        it.isTest.set(Utils.isTest(sourceSetName))
       }
     }
 
@@ -431,7 +430,6 @@ class ProtobufPlugin implements Plugin<Project> {
           // configuration, not just 'testCompile'.
           it.inputFiles.from project.sourceSets[sourceSetOrVariantName].compileClasspath
         }
-        it.isTest = Utils.isTest(sourceSetOrVariantName)
       }
     }
 
