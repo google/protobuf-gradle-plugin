@@ -35,7 +35,6 @@ import org.gradle.api.Project
 import org.gradle.api.tasks.SourceSet
 import org.gradle.plugins.ide.idea.GenerateIdeaModule
 import org.gradle.plugins.ide.idea.model.IdeaModel
-import org.gradle.util.GUtil
 
 /**
  * Utility classes.
@@ -48,7 +47,7 @@ class Utils {
   static String getConfigName(String sourceSetName, String type) {
     // same as DefaultSourceSet.configurationNameOf
     String baseName = sourceSetName == SourceSet.MAIN_SOURCE_SET_NAME ?
-            '' : GUtil.toCamelCase(sourceSetName)
+            '' : sourceSetName.capitalize()
     return StringUtils.uncapitalize(baseName + StringUtils.capitalize(type))
   }
 
@@ -58,7 +57,7 @@ class Utils {
    */
   static String getSourceSetSubstringForTaskNames(String sourceSetName) {
     return sourceSetName == SourceSet.MAIN_SOURCE_SET_NAME ?
-        '' : GUtil.toCamelCase(sourceSetName)
+        '' : sourceSetName.capitalize()
   }
 
   private static final String ANDROID_BASE_PLUGIN_ID = "com.android.base"
@@ -92,7 +91,7 @@ class Utils {
     // Fortunately, the naming scheme is well defined:
     // https://kotlinlang.org/docs/reference/using-gradle.html#compiler-options
     Preconditions.checkState(isAndroidProject(project))
-    return "compile" + GUtil.toCamelCase(variantName) + "Kotlin"
+    return "compile" + variantName.capitalize() + "Kotlin"
   }
 
   /**
