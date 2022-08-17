@@ -42,13 +42,10 @@ import org.gradle.api.attributes.LibraryElements
 import org.gradle.api.attributes.Usage
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.SourceDirectorySet
-import org.gradle.api.internal.file.FileResolver
 import org.gradle.api.plugins.AppliedPlugin
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
 import org.gradle.util.GradleVersion
-
-import javax.inject.Inject
 
 /**
  * The main class for the protobuf plugin.
@@ -71,15 +68,9 @@ class ProtobufPlugin implements Plugin<Project> {
         'kotlin',
     ]
 
-    private final FileResolver fileResolver
     private Project project
     private ProtobufExtension protobufExtension
     private boolean wasApplied = false
-
-    @Inject
-    public ProtobufPlugin(FileResolver fileResolver) {
-      this.fileResolver = fileResolver
-    }
 
     void apply(final Project project) {
       if (GradleVersion.current() < GradleVersion.version("5.6")) {
@@ -340,7 +331,6 @@ class ProtobufPlugin implements Plugin<Project> {
       return project.tasks.create(generateProtoTaskName, GenerateProtoTask) {
         description = "Compiles Proto source for '${sourceSetOrVariantName}'"
         outputBaseDir = outDir
-        it.fileResolver = this.fileResolver
         sourceSets.each { sourceSet ->
           addSourceFiles(sourceSet.proto)
           SourceDirectorySet protoSrcDirSet = sourceSet.proto
@@ -360,13 +350,13 @@ class ProtobufPlugin implements Plugin<Project> {
     private Task setupExtractProtosTask(final GenerateProtoTask generateProtoTask, final String sourceSetName) {
       String extractProtosTaskName = 'extract' +
           Utils.getSourceSetSubstringForTaskNames(sourceSetName) + 'Proto'
-      Task task = project.tasks.findByName(extractProtosTaskName)
+      ProtobufExtract task = project.tasks.findByName(extractProtosTaskName)
       if (task == null) {
         task = project.tasks.create(extractProtosTaskName, ProtobufExtract) {
           description = "Extracts proto files/dependencies specified by 'protobuf' configuration"
-          destDir = getExtractedProtosDir(sourceSetName) as File
+          destDir.set(getExtractedProtosDir(sourceSetName) as File)
           inputFiles.from(project.configurations[Utils.getConfigName(sourceSetName, 'protobuf')])
-          isTest = Utils.isTest(sourceSetName)
+          isTest.set(Utils.isTest(sourceSetName))
         }
       }
 
@@ -484,7 +474,7 @@ class ProtobufPlugin implements Plugin<Project> {
         }
         // Make the extracted proto dirs known to IDEs
         project.tasks.withType(ProtobufExtract).each { ProtobufExtract extractProtoTask ->
-          Utils.addToIdeSources(project, extractProtoTask.isTest, extractProtoTask.destDir, true)
+          Utils.addToIdeSources(project, extractProtoTask.isTest.get(), extractProtoTask.destDir.get().asFile, true)
         }
         // Make the generated code dirs known to IDEs
         project.tasks.withType(GenerateProtoTask).each { GenerateProtoTask generateProtoTask ->

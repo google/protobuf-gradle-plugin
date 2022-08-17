@@ -29,17 +29,17 @@
  */
 package com.google.protobuf.gradle
 
-import com.google.common.base.Preconditions
 import groovy.transform.CompileStatic
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.api.logging.Logger
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.ProviderFactory
-import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
@@ -58,30 +58,24 @@ import javax.inject.Inject
 @CompileStatic
 abstract class ProtobufExtract extends DefaultTask {
 
-  /**
-   * The directory for the extracted files.
-   */
-  private File destDir
-  private Boolean isTest = null
-  private final ConfigurableFileCollection inputFiles = objectFactory.fileCollection()
   private final CopyActionFacade copyActionFacade = instantiateCopyActionFacade()
   private final ArchiveActionFacade archiveActionFacade = instantiateArchiveActionFacade()
   private final FileCollection filteredProtos = instantiateFilteredProtos()
 
-  public void setIsTest(boolean isTest) {
-    this.isTest = isTest
-  }
+  @OutputDirectory
+  public abstract DirectoryProperty getDestDir()
 
-  @Input
-  public boolean getIsTest() {
-    Preconditions.checkNotNull(isTest)
-    return isTest
-  }
-
+  /**
+   * Used to configure ide proto sources.
+   */
   @Internal
-  public ConfigurableFileCollection getInputFiles() {
-    return inputFiles
-  }
+  public abstract Property<Boolean> getIsTest()
+
+  /**
+   * Input for this tasks containing all archive files to extract.
+   */
+  @Internal
+  public abstract ConfigurableFileCollection getInputFiles()
 
   /**
    * Inputs for this task containing only proto files, which is enough for up-to-date checks.
@@ -89,49 +83,27 @@ abstract class ProtobufExtract extends DefaultTask {
    */
   @InputFiles
   @PathSensitive(PathSensitivity.RELATIVE)
-  FileTree getFilteredProtosFromInputs() {
-    return filteredProtos.asFileTree.matching { PatternFilterable pattern -> pattern.include("**/*.proto") }
+  public FileTree getInputProtoFiles() {
+    return filteredProtos.asFileTree
+      .matching { PatternFilterable pattern -> pattern.include("**/*.proto") }
   }
-
-  @Internal
-  CopyActionFacade getCopyActionFacade() {
-    return copyActionFacade
-  }
-
-  @Internal
-  ArchiveActionFacade getArchiveActionFacade() {
-    return archiveActionFacade
-  }
-
-  @Inject
-  abstract ObjectFactory getObjectFactory()
-
-  @Inject
-  abstract ProviderFactory getProviderFactory()
 
   @TaskAction
-  void extract() {
-    destDir.mkdir()
-    FileCollection allProtoFiles = filteredProtos
+  public void extract() {
     copyActionFacade.copy { spec ->
       spec.includeEmptyDirs = false
-      spec.from(allProtoFiles)
-      spec.include('**/*.proto')
+      spec.from(inputProtoFiles)
       spec.into(destDir)
       // gradle 7+ requires a duplicate strategy to be explicitly defined
       spec.duplicatesStrategy = DuplicatesStrategy.INCLUDE
     }
   }
 
-  protected void setDestDir(File destDir) {
-    Preconditions.checkState(this.destDir == null, 'destDir already set')
-    this.destDir = destDir
-  }
+  @Inject
+  protected abstract ObjectFactory getObjectFactory()
 
-  @OutputDirectory
-  protected File getDestDir() {
-    return destDir
-  }
+  @Inject
+  protected abstract ProviderFactory getProviderFactory()
 
   private CopyActionFacade instantiateCopyActionFacade() {
     if (GradleVersion.current() >= GradleVersion.version("6.0")) {
