@@ -9,9 +9,9 @@ repositories {
 }
 
 dependencies {
-  implementation 'com.google.protobuf:protobuf-java:3.0.0'
-  implementation 'io.grpc:grpc-stub:1.0.0-pre2'
-  implementation 'io.grpc:grpc-protobuf:1.0.0-pre2'
+  implementation 'com.google.protobuf:protobuf-java:3.6.1'
+  implementation 'io.grpc:grpc-stub:1.15.1'
+  implementation 'io.grpc:grpc-protobuf:1.15.1'
 
   if (JavaVersion.current().isJava9Compatible()) {
     // Workaround for @javax.annotation.Generated
@@ -33,14 +33,14 @@ dependencies {
 protobuf {
   protoc {
     // The artifact spec for the Protobuf Compiler
-    artifact = 'com.google.protobuf:protoc:3.0.0'
+    artifact = 'com.google.protobuf:protoc:3.6.1'
   }
   plugins {
     // Optional: an artifact spec for a protoc plugin, with "grpc" as
     // the identifier, which can be referred to in the "plugins"
     // container of the "generateProtoTasks" closure.
     grpc {
-      artifact = 'io.grpc:protoc-gen-grpc-java:1.0.0-pre2'
+      artifact = 'io.grpc:protoc-gen-grpc-java:1.15.1'
     }
   }
   generateProtoTasks {
