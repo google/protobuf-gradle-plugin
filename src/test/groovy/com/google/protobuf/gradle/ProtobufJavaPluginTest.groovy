@@ -437,7 +437,16 @@ class ProtobufJavaPluginTest extends Specification {
 
     Set<String> sourceDir = [] as Set
     srcEntries.each {
-        sourceDir.add(it.@path)
+      String path = it.@path
+      sourceDir.add(path)
+      if (path.startsWith("build/generated/source/proto")) {
+        if (path.contains("test")) {
+          // test source path has one more attribute: ["test"="true"]
+          assert it.attributes.attribute.size() == 6
+        } else {
+          assert it.attributes.attribute.size() == 5
+        }
+      }
     }
 
     Set<String> expectedSourceDir = ImmutableSet.builder()

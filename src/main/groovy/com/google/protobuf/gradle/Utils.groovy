@@ -156,6 +156,15 @@ class Utils {
         SourceFolder entry = new SourceFolder(relativePath, getOutputPath(cp, sourceSetName))
         entry.entryAttributes.put("optional", "true")
         entry.entryAttributes.put("ignore_optional_problems", "true")
+
+        entry.entryAttributes.put("gradle_scope", isTest ? "test" : "main")
+        entry.entryAttributes.put("gradle_used_by_scope", isTest ? "test" : "main,test")
+
+        // this attribute is optional, but it could be useful for IDEs to recognize that it is
+        // generated source folder from protobuf, thus providing some support for that.
+        // e.g. Hint user to run generate tasks if the folder is empty or does not exist.
+        entry.entryAttributes.put("protobuf_generated_source", "true")
+
         // check if output is not null here because test source folder
         // must have a separate output folder in Eclipse
         if (entry.output != null && isTest) {
