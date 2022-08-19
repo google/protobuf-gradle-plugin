@@ -30,7 +30,9 @@
 package com.google.protobuf.gradle
 
 import com.google.common.collect.ImmutableList
-import groovy.transform.CompileDynamic
+import groovy.transform.CompileStatic
+import groovy.transform.TypeChecked
+import groovy.transform.TypeCheckingMode
 import org.gradle.api.Action
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
@@ -40,17 +42,20 @@ import org.gradle.api.artifacts.Configuration
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.attributes.LibraryElements
 import org.gradle.api.attributes.Usage
+import org.gradle.api.file.CopySpec
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.plugins.AppliedPlugin
+import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
+import org.gradle.language.jvm.tasks.ProcessResources
 import org.gradle.util.GradleVersion
 
 /**
  * The main class for the protobuf plugin.
  */
-@CompileDynamic
+@CompileStatic
 class ProtobufPlugin implements Plugin<Project> {
     // any one of these plugins should be sufficient to proceed with applying this plugin
     private static final List<String> PREREQ_PLUGIN_OPTIONS = [
@@ -90,7 +95,7 @@ class ProtobufPlugin implements Plugin<Project> {
         // after that has been achieved. If project evaluation completes before one of the prerequisite plugins
         // has been applied then we will assume that none of prerequisite plugins were specified and we will
         // throw an Exception to alert the user of this configuration issue.
-        Action<? super AppliedPlugin> applyWithPrerequisitePlugin = { prerequisitePlugin ->
+        Action<? super AppliedPlugin> applyWithPrerequisitePlugin = { AppliedPlugin prerequisitePlugin ->
           if (wasApplied) {
             project.logger.info('The com.google.protobuf plugin was already applied to the project: ' + project.path
                 + ' and will not be applied again after plugin: ' + prerequisitePlugin.id)
@@ -113,10 +118,12 @@ class ProtobufPlugin implements Plugin<Project> {
         }
     }
 
+    @TypeChecked(TypeCheckingMode.SKIP)
     private static void linkGenerateProtoTasksToTask(Task task, GenerateProtoTask genProtoTask) {
       task.source genProtoTask.getOutputSourceDirectorySet().include("**/*.java", "**/*.kt")
     }
 
+    @TypeChecked(TypeCheckingMode.SKIP) // Don't depend on AGP
     private void doApply() {
         boolean isAndroid = Utils.isAndroidProject(project)
         // Java projects will extract included protos from a 'compileProtoPath'
@@ -170,10 +177,9 @@ class ProtobufPlugin implements Plugin<Project> {
     private void  createProtobufConfiguration(String sourceSetName) {
       String protobufConfigName = Utils.getConfigName(sourceSetName, 'protobuf')
       if (project.configurations.findByName(protobufConfigName) == null) {
-        project.configurations.create(protobufConfigName) {
-          visible = false
-          transitive = true
-          extendsFrom = []
+        project.configurations.create(protobufConfigName) { Configuration it ->
+          it.visible = false
+          it.transitive = true
         }
       }
     }
@@ -194,11 +200,11 @@ class ProtobufPlugin implements Plugin<Project> {
       Configuration implementationConfig =
               project.configurations.findByName(Utils.getConfigName(sourceSetName, 'implementation'))
       if (project.configurations.findByName(compileProtoConfigName) == null) {
-        project.configurations.create(compileProtoConfigName) {
-            visible = false
-            transitive = true
-            extendsFrom = [compileConfig, implementationConfig]
-            canBeConsumed = false
+        project.configurations.create(compileProtoConfigName) { Configuration it ->
+            it.visible = false
+            it.transitive = true
+            it.extendsFrom = [compileConfig, implementationConfig]
+            it.canBeConsumed = false
         }.getAttributes()
                 // Variant attributes are not inherited. Setting it too loosely can
                 // result in ambiguous variant selection errors.
@@ -222,6 +228,7 @@ class ProtobufPlugin implements Plugin<Project> {
      * Adds the proto extension to the SourceSet, e.g., it creates
      * sourceSets.main.proto and sourceSets.test.proto.
      */
+    @TypeChecked(TypeCheckingMode.SKIP) // Don't depend on AGP
     private void addSourceSetExtension(Object sourceSet) {
       String name = sourceSet.name
       SourceDirectorySet sds = project.objects.sourceDirectorySet(name, "${name} Proto source")
@@ -230,6 +237,7 @@ class ProtobufPlugin implements Plugin<Project> {
       sds.include("**/*.proto")
     }
 
+    @TypeChecked(TypeCheckingMode.SKIP) // Don't depend on AGP
     private Object getNonTestVariants() {
       return project.android.hasProperty('libraryVariants') ?
           project.android.libraryVariants : project.android.applicationVariants
@@ -239,22 +247,20 @@ class ProtobufPlugin implements Plugin<Project> {
      * Creates Protobuf tasks for a sourceSet in a Java project.
      */
     private void addTasksForSourceSet(final SourceSet sourceSet) {
-      Task generateProtoTask = addGenerateProtoTask(sourceSet.name, [sourceSet])
+      GenerateProtoTask generateProtoTask = addGenerateProtoTask(sourceSet.name, [sourceSet])
       generateProtoTask.sourceSet = sourceSet
       generateProtoTask.doneInitializing()
-      generateProtoTask.builtins {
-        java { }
-      }
+      generateProtoTask.builtins.maybeCreate("java")
 
       setupExtractProtosTask(generateProtoTask, sourceSet.name)
       setupExtractIncludeProtosTask(generateProtoTask, sourceSet.name)
 
       // Include source proto files in the compiled archive, so that proto files from
       // dependent projects can import them.
-      Task processResourcesTask =
-          project.tasks.getByName(sourceSet.getTaskName('process', 'resources'))
-      processResourcesTask.from(generateProtoTask.sourceDirs) {
-        include '**/*.proto'
+      ProcessResources processResourcesTask =
+          project.tasks.getByName(sourceSet.getTaskName('process', 'resources')) as ProcessResources
+      processResourcesTask.from(generateProtoTask.sourceDirs) { CopySpec it ->
+        it.include '**/*.proto'
       }
 
       SUPPORTED_LANGUAGES.each { String lang ->
@@ -265,9 +271,10 @@ class ProtobufPlugin implements Plugin<Project> {
     /**
      * Creates Protobuf tasks for a variant in an Android project.
      */
+    @TypeChecked(TypeCheckingMode.SKIP) // Don't depend on AGP
     private void addTasksForVariant(final Object variant, boolean isTestVariant, Collection<Closure> postConfigure) {
       // GenerateProto task, one per variant (compilation unit).
-      Task generateProtoTask = addGenerateProtoTask(variant.name, variant.sourceSets)
+      GenerateProtoTask generateProtoTask = addGenerateProtoTask(variant.name, variant.sourceSets)
       generateProtoTask.setVariant(variant, isTestVariant)
       generateProtoTask.flavors = ImmutableList.copyOf(variant.productFlavors.collect { it.name } )
       if (variant.hasProperty('buildType')) {
@@ -322,17 +329,18 @@ class ProtobufPlugin implements Plugin<Project> {
      * compiled. For Java it's the sourceSet that sourceSetOrVariantName stands
      * for; for Android it's the collection of sourceSets that the variant includes.
      */
-    private Task addGenerateProtoTask(String sourceSetOrVariantName, Collection<Object> sourceSets) {
+    @TypeChecked(TypeCheckingMode.SKIP) // Don't depend on AGP
+    private GenerateProtoTask addGenerateProtoTask(String sourceSetOrVariantName, Collection<?> sourceSets) {
       String generateProtoTaskName = 'generate' +
           Utils.getSourceSetSubstringForTaskNames(sourceSetOrVariantName) + 'Proto'
       Provider<String> outDir = project.providers.provider {
-        "${this.protobufExtension.generatedFilesBaseDir}/${sourceSetOrVariantName}"
+        "${this.protobufExtension.generatedFilesBaseDir}/${sourceSetOrVariantName}".toString()
       }
       return project.tasks.create(generateProtoTaskName, GenerateProtoTask) {
-        description = "Compiles Proto source for '${sourceSetOrVariantName}'"
-        outputBaseDir = outDir
+        it.description = "Compiles Proto source for '${sourceSetOrVariantName}'".toString()
+        it.outputBaseDir = outDir
         sourceSets.each { sourceSet ->
-          addSourceDirs(sourceSet.proto.sourceDirectories)
+          it.addSourceDirs(sourceSet.proto.sourceDirectories)
         }
       }
     }
@@ -348,13 +356,13 @@ class ProtobufPlugin implements Plugin<Project> {
     private Task setupExtractProtosTask(final GenerateProtoTask generateProtoTask, final String sourceSetName) {
       String extractProtosTaskName = 'extract' +
           Utils.getSourceSetSubstringForTaskNames(sourceSetName) + 'Proto'
-      ProtobufExtract task = project.tasks.findByName(extractProtosTaskName)
+      ProtobufExtract task = project.tasks.findByName(extractProtosTaskName) as ProtobufExtract
       if (task == null) {
         task = project.tasks.create(extractProtosTaskName, ProtobufExtract) {
-          description = "Extracts proto files/dependencies specified by 'protobuf' configuration"
-          destDir.set(getExtractedProtosDir(sourceSetName) as File)
-          inputFiles.from(project.configurations[Utils.getConfigName(sourceSetName, 'protobuf')])
-          isTest.set(Utils.isTest(sourceSetName))
+          it.description = "Extracts proto files/dependencies specified by 'protobuf' configuration"
+          it.destDir.set(getExtractedProtosDir(sourceSetName) as File)
+          it.inputFiles.from(project.configurations[Utils.getConfigName(sourceSetName, 'protobuf')])
+          it.isTest.set(Utils.isTest(sourceSetName))
         }
       }
 
@@ -369,6 +377,7 @@ class ProtobufPlugin implements Plugin<Project> {
      *
      * <p>This task is per-sourceSet for both Java and per variant for Android.
      */
+    @TypeChecked(TypeCheckingMode.SKIP) // Don't depend on AGP
     private void setupExtractIncludeProtosTask(
         GenerateProtoTask generateProtoTask,
         String sourceSetOrVariantName,
@@ -380,9 +389,9 @@ class ProtobufPlugin implements Plugin<Project> {
       Task task = project.tasks.findByName(extractIncludeProtosTaskName)
       if (task == null) {
         task = project.tasks.create(extractIncludeProtosTaskName, ProtobufExtract) {
-          description = "Extracts proto files from compile dependencies for includes"
-          destDir = getExtractedIncludeProtosDir(sourceSetOrVariantName) as File
-          inputFiles.from(compileClasspathConfiguration
+          it.description = "Extracts proto files from compile dependencies for includes"
+          it.destDir = getExtractedIncludeProtosDir(sourceSetOrVariantName) as File
+          it.inputFiles.from(compileClasspathConfiguration
             ?: project.configurations[Utils.getConfigName(sourceSetOrVariantName, 'compileProtoPath')])
 
           // TL; DR: Make protos in 'test' sourceSet able to import protos from the 'main'
@@ -396,17 +405,17 @@ class ProtobufPlugin implements Plugin<Project> {
             // ad-hoc solution that manually includes the source protos of 'main' and its
             // dependencies.
             if (Utils.isTest(sourceSetOrVariantName)) {
-              inputFiles.from project.android.sourceSets['main'].proto.sourceDirectories
-              inputFiles.from testedCompileClasspathConfiguration
+              it.inputFiles.from project.android.sourceSets['main'].proto.sourceDirectories
+              it.inputFiles.from testedCompileClasspathConfiguration
             }
           } else {
             // In Java projects, the compileClasspath of the 'test' sourceSet includes all the
             // 'resources' of the output of 'main', in which the source protos are placed.  This is
             // nicer than the ad-hoc solution that Android has, because it works for any extended
             // configuration, not just 'testCompile'.
-            inputFiles.from project.sourceSets[sourceSetOrVariantName].compileClasspath
+            it.inputFiles.from project.sourceSets[sourceSetOrVariantName].compileClasspath
           }
-          isTest = Utils.isTest(sourceSetOrVariantName)
+          it.isTest = Utils.isTest(sourceSetOrVariantName)
         }
       }
 
@@ -459,8 +468,8 @@ class ProtobufPlugin implements Plugin<Project> {
 
       if (!isAndroid) {
         // Make the proto source dirs known to IDEs
-        project.sourceSets.each { sourceSet ->
-          SourceDirectorySet protoSrcDirSet = sourceSet.proto
+        project.convention.getPlugin(JavaPluginConvention).sourceSets.each { sourceSet ->
+          SourceDirectorySet protoSrcDirSet = sourceSet.extensions.getByName('proto') as SourceDirectorySet
           protoSrcDirSet.srcDirs.each { File protoDir ->
             Utils.addToIdeSources(project, Utils.isTest(sourceSet.name), protoDir, false)
           }
