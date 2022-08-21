@@ -252,6 +252,8 @@ class ProtobufPlugin implements Plugin<Project> {
       generateProtoTask.doneInitializing()
       generateProtoTask.builtins.maybeCreate("java")
 
+      sourceSet.java.source(generateProtoTask.getOutputSourceDirectorySet())
+
       setupExtractProtosTask(generateProtoTask, sourceSet.name)
       setupExtractIncludeProtosTask(generateProtoTask, sourceSet.name)
 
@@ -261,10 +263,6 @@ class ProtobufPlugin implements Plugin<Project> {
           project.tasks.getByName(sourceSet.getTaskName('process', 'resources')) as ProcessResources
       processResourcesTask.from(generateProtoTask.sourceDirs) { CopySpec it ->
         it.include '**/*.proto'
-      }
-
-      SUPPORTED_LANGUAGES.each { String lang ->
-        linkGenerateProtoTasksToTaskName(sourceSet.getCompileTaskName(lang), generateProtoTask)
       }
     }
 
