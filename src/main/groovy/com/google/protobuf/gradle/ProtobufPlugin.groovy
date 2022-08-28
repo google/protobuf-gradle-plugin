@@ -68,11 +68,6 @@ class ProtobufPlugin implements Plugin<Project> {
             'android-library',
     ]
 
-    private static final List<String> SUPPORTED_LANGUAGES = [
-        'java',
-        'kotlin',
-    ]
-
     private Project project
     private ProtobufExtension protobufExtension
     private boolean wasApplied = false
