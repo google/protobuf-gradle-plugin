@@ -151,7 +151,7 @@ class Utils {
         String relativePath = projectDir.toURI().relativize(f.toURI()).getPath()
         // remove trailing slash
         if (relativePath.endsWith("/")) {
-          relativePath = relativePath[0..(relativePath.length() - 1)]
+          relativePath = relativePath[0..(relativePath.length() - 2)]
         }
         SourceFolder entry = new SourceFolder(relativePath, getOutputPath(cp, sourceSetName))
         entry.entryAttributes.put("optional", "true")
