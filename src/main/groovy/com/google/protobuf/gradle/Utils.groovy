@@ -151,7 +151,7 @@ class Utils {
         String relativePath = projectDir.toURI().relativize(f.toURI()).getPath()
         // remove trailing slash
         if (relativePath.endsWith("/")) {
-          relativePath = relativePath.substring(0, relativePath.length() - 1);
+          relativePath = relativePath[0..(relativePath.length() - 1)]
         }
         SourceFolder entry = new SourceFolder(relativePath, getOutputPath(cp, sourceSetName))
         entry.entryAttributes.put("optional", "true")
@@ -190,7 +190,7 @@ class Utils {
    * See: org.eclipse.jdt.internal.core.ClasspathEntry#validateClasspath()
    */
   private static boolean isValidOutput(Classpath classpath, String path) {
-    Set<String> outputs = new HashSet<>()
+    Set<String> outputs = []
     for (ClasspathEntry cpe : classpath.getEntries()) {
       if (cpe instanceof SourceFolder) {
         outputs.add(((SourceFolder) cpe).getOutput())
