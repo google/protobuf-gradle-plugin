@@ -442,9 +442,9 @@ class ProtobufJavaPluginTest extends Specification {
       if (path.startsWith("build/generated/source/proto")) {
         if (path.contains("test")) {
           // test source path has one more attribute: ["test"="true"]
-          assert it.attributes.attribute.size() == 6
+          assert it.attributes.attribute.size() == 4
         } else {
-          assert it.attributes.attribute.size() == 5
+          assert it.attributes.attribute.size() == 3
         }
       }
     }
