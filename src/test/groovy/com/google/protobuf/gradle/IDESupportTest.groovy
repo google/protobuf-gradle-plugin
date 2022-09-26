@@ -28,7 +28,6 @@
  */
 package com.google.protobuf.gradle
 
-import com.google.common.collect.ImmutableSet
 import groovy.transform.CompileDynamic
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
@@ -80,25 +79,25 @@ class IDESupportTest extends Specification {
       }
     }
 
-    Set<String> expectedSourceDir = ImmutableSet.builder()
-      .add('file://$MODULE_DIR$/src/main/java')
-      .add('file://$MODULE_DIR$/src/grpc/proto')
-      .add('file://$MODULE_DIR$/src/main/proto')
-      .add('file://$MODULE_DIR$/build/extracted-include-protos/grpc')
-      .add('file://$MODULE_DIR$/build/extracted-protos/main')
-      .add('file://$MODULE_DIR$/build/extracted-include-protos/main')
-      .add('file://$MODULE_DIR$/build/extracted-protos/grpc')
-      .add('file://$MODULE_DIR$/build/generated/source/proto/grpc/java')
-      .add('file://$MODULE_DIR$/build/generated/source/proto/grpc/grpc_output')
-      .add('file://$MODULE_DIR$/build/generated/source/proto/main/java')
-      .build()
-    Set<String> expectedTestSourceDir = ImmutableSet.builder()
-      .add('file://$MODULE_DIR$/src/test/java')
-      .add('file://$MODULE_DIR$/src/test/proto')
-      .add('file://$MODULE_DIR$/build/extracted-protos/test')
-      .add('file://$MODULE_DIR$/build/extracted-include-protos/test')
-      .add('file://$MODULE_DIR$/build/generated/source/proto/test/java')
-      .build()
+    Set<String> expectedSourceDir = [
+      'file://$MODULE_DIR$/src/main/java',
+      'file://$MODULE_DIR$/src/grpc/proto',
+      'file://$MODULE_DIR$/src/main/proto',
+      'file://$MODULE_DIR$/build/extracted-include-protos/grpc',
+      'file://$MODULE_DIR$/build/extracted-protos/main',
+      'file://$MODULE_DIR$/build/extracted-include-protos/main',
+      'file://$MODULE_DIR$/build/extracted-protos/grpc',
+      'file://$MODULE_DIR$/build/generated/source/proto/grpc/java',
+      'file://$MODULE_DIR$/build/generated/source/proto/grpc/grpc_output',
+      'file://$MODULE_DIR$/build/generated/source/proto/main/java',
+    ]
+    Set<String> expectedTestSourceDir = [
+      'file://$MODULE_DIR$/src/test/java',
+      'file://$MODULE_DIR$/src/test/proto',
+      'file://$MODULE_DIR$/build/extracted-protos/test',
+      'file://$MODULE_DIR$/build/extracted-include-protos/test',
+      'file://$MODULE_DIR$/build/generated/source/proto/test/java',
+    ]
     Set<String> expectedGeneratedDirs = [
       'file://$MODULE_DIR$/build/extracted-include-protos/grpc',
       'file://$MODULE_DIR$/build/extracted-protos/main',
@@ -154,14 +153,14 @@ class IDESupportTest extends Specification {
       }
     }
 
-    Set<String> expectedSourceDir = ImmutableSet.builder()
-      .add('src/main/java')
-      .add('src/test/java')
-      .add('build/generated/source/proto/grpc/java')
-      .add('build/generated/source/proto/grpc/grpc_output')
-      .add('build/generated/source/proto/main/java')
-      .add('build/generated/source/proto/test/java')
-      .build()
+    Set<String> expectedSourceDir = [
+      'src/main/java',
+      'src/test/java',
+      'build/generated/source/proto/grpc/java',
+      'build/generated/source/proto/grpc/grpc_output',
+      'build/generated/source/proto/main/java',
+      'build/generated/source/proto/test/java',
+    ]
     assert Objects.equals(expectedSourceDir, sourceDir)
 
     where:

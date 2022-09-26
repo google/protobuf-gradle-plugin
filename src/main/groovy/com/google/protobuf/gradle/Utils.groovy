@@ -28,7 +28,6 @@
  */
 package com.google.protobuf.gradle
 
-import com.google.common.base.Preconditions
 import groovy.transform.CompileStatic
 import org.gradle.api.Project
 import org.gradle.api.tasks.SourceSet
