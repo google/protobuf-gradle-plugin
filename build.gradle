@@ -56,7 +56,6 @@ configurations {
 dependencies {
   compileOnly "com.android.tools.build:gradle:4.1.0"
 
-  implementation 'com.google.guava:guava:27.0.1-jre'
   implementation 'com.google.gradle:osdetector-gradle-plugin:1.7.0'
 
   testImplementation 'junit:junit:4.12'
