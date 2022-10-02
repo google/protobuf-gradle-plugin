@@ -29,7 +29,6 @@
  */
 package com.google.protobuf.gradle
 
-import com.google.common.collect.ImmutableList
 import groovy.transform.CompileStatic
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
@@ -320,7 +319,7 @@ class ProtobufPlugin implements Plugin<Project> {
       Provider<GenerateProtoTask> generateProtoTask = addGenerateProtoTask(
           variant.name, sourceDirs, extractProtosDirs, extractIncludeProtosTask) {
         it.setVariant(variant, isTestVariant)
-        it.flavors = ImmutableList.copyOf(variant.productFlavors.collect { it.name } )
+        it.flavors = variant.productFlavors.collect { it.name }
         if (variant.hasProperty('buildType')) {
           it.buildType = variant.buildType.name
         }

@@ -31,8 +31,6 @@ package com.google.protobuf.gradle
 
 import static java.nio.charset.StandardCharsets.US_ASCII
 
-import com.google.common.base.Preconditions
-import com.google.common.collect.ImmutableList
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 import groovy.transform.TypeChecked
@@ -103,7 +101,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
   transient private SourceSet sourceSet
   @SuppressWarnings("UnnecessaryTransientModifier") // It is not necessary for task to implement Serializable
   transient private Object variant
-  private ImmutableList<String> flavors
+  private List<String> flavors
   private String buildType
   private boolean isTestVariant
   private final Provider<Boolean> isAndroidProject = providerFactory.provider { Utils.isAndroidProject(project) }
@@ -275,11 +273,11 @@ public abstract class GenerateProtoTask extends DefaultTask {
     this.isTestVariant = isTestVariant
   }
 
-  void setFlavors(ImmutableList<String> flavors) {
+  void setFlavors(List<String> flavors) {
     checkInitializing()
     Preconditions.checkState(isAndroidProject.get(),
         'flavors should not be set in a Java project')
-    this.flavors = flavors
+    this.flavors = Collections.unmodifiableList(new ArrayList<String>(flavors))
   }
 
   void setBuildType(String buildType) {
@@ -370,7 +368,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
   }
 
   @Internal("Not an actual input to the task, only used to find tasks belonging to a variant")
-  ImmutableList<String> getFlavors() {
+  List<String> getFlavors() {
     Preconditions.checkState(isAndroidProject.get(),
         'flavors should not be used in a Java project')
     Preconditions.checkNotNull(flavors, 'flavors is not set')
