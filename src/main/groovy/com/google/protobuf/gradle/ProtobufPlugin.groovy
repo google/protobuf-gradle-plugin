@@ -234,8 +234,12 @@ class ProtobufPlugin implements Plugin<Project> {
         Configuration compileProtoPath, Collection<Closure> postConfigure) {
       Provider<ProtobufExtract> extractProtosTask =
           setupExtractProtosTask(sourceSet.name, protobufConfig)
+      // In Java projects, the compileClasspath of the 'test' sourceSet includes all the
+      // 'resources' of the output of 'main', in which the source protos are placed.  This is
+      // nicer than the ad-hoc solution that Android has, because it works for any extended
+      // configuration, not just 'testCompile'.
       Provider<ProtobufExtract> extractIncludeProtosTask = setupExtractIncludeProtosTask(
-          sourceSet.name, false, compileProtoPath)
+          sourceSet.name, compileProtoPath, sourceSet.compileClasspath)
       Provider<GenerateProtoTask> generateProtoTask = addGenerateProtoTask(
           sourceSet.name, protoSrcDirSet.sourceDirectories, project.files(extractProtosTask),
           extractIncludeProtosTask) {
@@ -290,15 +294,23 @@ class ProtobufPlugin implements Plugin<Project> {
             it.attribute(artifactType, "jar")
         }
       }.files
-      FileCollection testClassPathConfig =
-          variant.hasProperty("testedVariant") ?
-            variant.testedVariant.compileConfiguration.incoming.artifactView {
+      FileCollection testClassPathConfig = project.objects.fileCollection()
+      if (Utils.isTest(variant.name)) {
+        // TODO(zhangkun83): Android sourceSet doesn't have compileClasspath. If it did, we
+        // haven't figured out a way to put source protos in 'resources'. For now we use an
+        // ad-hoc solution that manually includes the source protos of 'main' and its
+        // dependencies.
+        testClassPathConfig = project.android.sourceSets['main'].proto.sourceDirectories
+        if (variant.hasProperty("testedVariant")) {
+          testClassPathConfig += variant.testedVariant.compileConfiguration.incoming.artifactView {
                 attributes {
                     it.attribute(artifactType, "jar")
                 }
-            }.files : null
+              }.files
+        }
+      }
       Provider<ProtobufExtract> extractIncludeProtosTask =
-          setupExtractIncludeProtosTask(variant.name, true, classPathConfig, testClassPathConfig)
+          setupExtractIncludeProtosTask(variant.name, classPathConfig, testClassPathConfig)
 
       // GenerateProto task, one per variant (compilation unit).
       FileCollection sourceDirs = project.files(project.providers.provider {
@@ -417,40 +429,23 @@ class ProtobufPlugin implements Plugin<Project> {
      *
      * <p>This task is per-sourceSet for both Java and per variant for Android.
      */
-    @TypeChecked(TypeCheckingMode.SKIP) // Don't depend on AGP
     private Provider<ProtobufExtract> setupExtractIncludeProtosTask(
         String sourceSetOrVariantName,
-        boolean isAndroid,
         FileCollection compileClasspathConfiguration,
-        FileCollection testedCompileClasspathConfiguration = null) {
+        FileCollection testedCompileClasspathConfiguration) {
       String extractIncludeProtosTaskName = 'extractInclude' +
           Utils.getSourceSetSubstringForTaskNames(sourceSetOrVariantName) + 'Proto'
       return project.tasks.register(extractIncludeProtosTaskName, ProtobufExtract) {
         it.description = "Extracts proto files from compile dependencies for includes"
-        it.destDir = getExtractedIncludeProtosDir(sourceSetOrVariantName) as File
+        it.destDir.set(getExtractedIncludeProtosDir(sourceSetOrVariantName) as File)
         it.inputFiles.from(compileClasspathConfiguration)
 
         // TL; DR: Make protos in 'test' sourceSet able to import protos from the 'main'
         // sourceSet.  Sub-configurations, e.g., 'testCompile' that extends 'compile', don't
         // depend on the their super configurations. As a result, 'testCompile' doesn't depend on
         // 'compile' and it cannot get the proto files from 'main' sourceSet through the
-        // configuration. However,
-        if (isAndroid) {
-          // TODO(zhangkun83): Android sourceSet doesn't have compileClasspath. If it did, we
-          // haven't figured out a way to put source protos in 'resources'. For now we use an
-          // ad-hoc solution that manually includes the source protos of 'main' and its
-          // dependencies.
-          if (Utils.isTest(sourceSetOrVariantName)) {
-            it.inputFiles.from project.android.sourceSets['main'].proto.sourceDirectories
-            it.inputFiles.from testedCompileClasspathConfiguration
-          }
-        } else {
-          // In Java projects, the compileClasspath of the 'test' sourceSet includes all the
-          // 'resources' of the output of 'main', in which the source protos are placed.  This is
-          // nicer than the ad-hoc solution that Android has, because it works for any extended
-          // configuration, not just 'testCompile'.
-          it.inputFiles.from project.sourceSets[sourceSetOrVariantName].compileClasspath
-        }
+        // configuration.
+        it.inputFiles.from(testedCompileClasspathConfiguration)
       }
     }
 
