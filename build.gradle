@@ -56,7 +56,7 @@ configurations {
 dependencies {
   compileOnly "com.android.tools.build:gradle:4.1.0"
 
-  implementation 'com.google.gradle:osdetector-gradle-plugin:1.7.0'
+  implementation 'com.google.gradle:osdetector-gradle-plugin:1.7.1'
 
   testImplementation 'junit:junit:4.12'
   testImplementation('org.spockframework:spock-core:1.0-groovy-2.4') {
