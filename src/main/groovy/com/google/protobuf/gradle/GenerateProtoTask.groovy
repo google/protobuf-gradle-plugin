@@ -553,6 +553,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
    * directories.
    */
   @Internal
+  @Deprecated
   SourceDirectorySet getOutputSourceDirectorySet() {
     String srcSetName = "generate-proto-" + name
     SourceDirectorySet srcSet

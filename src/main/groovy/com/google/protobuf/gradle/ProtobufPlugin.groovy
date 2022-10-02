@@ -113,8 +113,8 @@ class ProtobufPlugin implements Plugin<Project> {
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)
-    private static void linkGenerateProtoTasksToTask(Task task, Provider<GenerateProtoTask> genProtoTask) {
-      task.source genProtoTask.get().getOutputSourceDirectorySet().include("**/*.java", "**/*.kt")
+    private static void linkGenerateProtoTasksToTask(Task task, SourceDirectorySet srcDirSet) {
+      task.source(srcDirSet)
     }
 
     @TypeChecked(TypeCheckingMode.SKIP) // Don't depend on AGP
@@ -251,7 +251,7 @@ class ProtobufPlugin implements Plugin<Project> {
         it.builtins.maybeCreate("java")
       }
 
-      sourceSet.java.source(generateProtoTask.get().getOutputSourceDirectorySet())
+      sourceSet.java.source(sourceDirectorySetForGenerateProtoTask(sourceSet.name, generateProtoTask))
 
       // Include source proto files in the compiled archive, so that proto files from
       // dependent projects can import them.
@@ -340,7 +340,8 @@ class ProtobufPlugin implements Plugin<Project> {
         variant.registerJavaGeneratingTask(
             generateProtoTask.get(), generateProtoTask.get().getOutputSourceDirectories())
         linkGenerateProtoTasksToTaskName(
-            Utils.getKotlinAndroidCompileTaskName(project, variant.name), generateProtoTask)
+            Utils.getKotlinAndroidCompileTaskName(project, variant.name),
+            sourceDirectorySetForGenerateProtoTask(variant.name, generateProtoTask))
       }
     }
 
@@ -373,6 +374,23 @@ class ProtobufPlugin implements Plugin<Project> {
         it.addIncludeDir(project.files(extractIncludeProtosTask))
         configureAction.execute(it)
       }
+    }
+
+    /**
+     * Generate a SourceDirectorySet for a GenerateProtoTask that includes just
+     * Java and Kotlin source files. Build dependencies are properly plumbed.
+     */
+    private SourceDirectorySet sourceDirectorySetForGenerateProtoTask(
+        String sourceSetName, Provider<GenerateProtoTask> generateProtoTask) {
+      String srcDirSetName = 'generate-proto-' + sourceSetName
+      SourceDirectorySet srcDirSet = project.objects.sourceDirectorySet(srcDirSetName, srcDirSetName)
+      srcDirSet.srcDirs project.objects.fileCollection()
+          .builtBy(generateProtoTask)
+          .from(project.providers.provider {
+            generateProtoTask.get().getOutputSourceDirectories()
+          })
+      srcDirSet.include("**/*.java", "**/*.kt")
+      return srcDirSet
     }
 
     /**
@@ -440,17 +458,17 @@ class ProtobufPlugin implements Plugin<Project> {
       }
     }
 
-    private void linkGenerateProtoTasksToTaskName(String compileTaskName, Provider<GenerateProtoTask> genProtoTask) {
+    private void linkGenerateProtoTasksToTaskName(String compileTaskName, SourceDirectorySet srcDirSet) {
       try {
         project.tasks.named(compileTaskName).configure { compileTask ->
-          linkGenerateProtoTasksToTask(compileTask, genProtoTask)
+          linkGenerateProtoTasksToTask(compileTask, srcDirSet)
         }
       } catch (UnknownDomainObjectException ignore) {
         // It is possible for a compile task to not exist yet. For example, if someone applied
         // the proto plugin and then later applies the kotlin plugin.
         project.tasks.configureEach { Task task ->
           if (task.name == compileTaskName) {
-            linkGenerateProtoTasksToTask(task, genProtoTask)
+            linkGenerateProtoTasksToTask(task, srcDirSet)
           }
         }
       }
