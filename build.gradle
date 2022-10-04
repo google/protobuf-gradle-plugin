@@ -154,6 +154,16 @@ if (!gradle.startParameter.taskNames.intersect(['publishPlugins'])) {
   }
 }
 
+gradlePlugin {
+  plugins {
+    protobufPlugin {
+      id = "com.google.protobuf"
+      implementationClass = "com.google.protobuf.gradle.ProtobufPlugin"
+      description = "The Protobuf plugin provides protobuf compilation to your project."
+    }
+  }
+}
+
 pluginBundle {
   website = 'https://github.com/google/protobuf-gradle-plugin'
   vcsUrl = 'https://github.com/google/protobuf-gradle-plugin'
@@ -185,8 +195,23 @@ tasks.named('compileKotlin') {
     compileKotlin.classpath += files(compileGroovy.destinationDirectory)
 }
 
-test {
+tasks.named('test') {
   testLogging {
     events = ["standard_out", "standard_error", "started", "passed", "failed", "skipped"]
   }
+
+  // Hack for gradle runner test classloader.
+  //
+  // GradleRunner.withPluginClasspath method loads a plugin under test to the classloader_1.
+  // When the test project is executed, it will load plugins to a project classloader_2.
+  // The classloader_1 doesn't known about classloader_2. When the plugin under test will use classes which
+  // was loaded to project with the classloader_2, ClassNotFoundException will be thrown.
+  //
+  // To fix this problem, don't use the withPluginClasspath method.
+  // Provide a plugin under test with the maven local repository.
+  systemProperty("protobufPluginVersion", version)
+  dependsOn(
+    "publishProtobufPluginPluginMarkerMavenPublicationToMavenLocal",
+    "publishPluginMavenPublicationToMavenLocal"
+  )
 }

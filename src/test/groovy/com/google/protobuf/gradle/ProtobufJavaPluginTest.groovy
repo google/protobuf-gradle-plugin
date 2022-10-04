@@ -60,15 +60,11 @@ class ProtobufJavaPluginTest extends Specification {
         .build()
 
     when: "build is invoked"
-    BuildResult result = GradleRunner.create()
-      .withProjectDir(projectDir)
-      .withArguments('build', '--stacktrace')
-      .withPluginClasspath()
-      .withGradleVersion(gradleVersion)
-      .forwardStdOutput(new OutputStreamWriter(System.out))
-      .forwardStdError(new OutputStreamWriter(System.err))
-      .withDebug(true)
-      .build()
+    BuildResult result = ProtobufPluginTestHelper.getGradleRunner(
+      projectDir,
+      gradleVersion,
+      "build"
+    ).build()
 
     then: "it succeed"
     result.task(":build").outcome == TaskOutcome.SUCCESS
@@ -88,16 +84,12 @@ class ProtobufJavaPluginTest extends Specification {
     new File(projectDir, "gradle.properties").write('org.gradle.unsafe.configuration-cache.max-problems=42')
 
     and:
-    GradleRunner runner = GradleRunner.create()
-      .withProjectDir(projectDir)
-      .withArguments(
-          'build', '--stacktrace',
-          '--configuration-cache'
-      )
-      .withPluginClasspath()
-      .withGradleVersion(gradleVersion)
-      .forwardStdOutput(new OutputStreamWriter(System.out))
-      .forwardStdError(new OutputStreamWriter(System.err))
+    GradleRunner runner = ProtobufPluginTestHelper.getGradleRunner(
+      projectDir,
+      gradleVersion,
+      "build",
+      "--configuration-cache"
+    )
 
     when: "build is invoked"
     BuildResult result = runner.build()
@@ -131,15 +123,11 @@ class ProtobufJavaPluginTest extends Specification {
             .build()
 
     when: "build is invoked"
-    BuildResult result = GradleRunner.create()
-            .withProjectDir(projectDir)
-            .withArguments('build', '--stacktrace')
-            .withPluginClasspath()
-            .withGradleVersion(gradleVersion)
-            .forwardStdOutput(new OutputStreamWriter(System.out))
-            .forwardStdError(new OutputStreamWriter(System.err))
-            .withDebug(true)
-            .build()
+    BuildResult result = ProtobufPluginTestHelper.getGradleRunner(
+      projectDir,
+      gradleVersion,
+      "build"
+    ).build()
 
     then: "it succeed"
     result.task(":build").outcome == TaskOutcome.SUCCESS
@@ -157,13 +145,11 @@ class ProtobufJavaPluginTest extends Specification {
         .build()
 
     when: "build is invoked"
-    BuildResult result = GradleRunner.create()
-      .withProjectDir(projectDir)
-      .withArguments('build', '--stacktrace')
-      .withPluginClasspath()
-      .withDebug(true)
-      .withGradleVersion(gradleVersion)
-      .build()
+    BuildResult result = ProtobufPluginTestHelper.getGradleRunner(
+      projectDir,
+      gradleVersion,
+      "build"
+    ).build()
 
     then: "it succeed"
     result.task(":build").outcome == TaskOutcome.SUCCESS
@@ -182,13 +168,11 @@ class ProtobufJavaPluginTest extends Specification {
         .build()
 
     when: "build is invoked"
-    BuildResult result = GradleRunner.create()
-      .withProjectDir(projectDir)
-      .withArguments('build')
-      .withPluginClasspath()
-      .withDebug(true)
-      .withGradleVersion(gradleVersion)
-      .build()
+    BuildResult result = ProtobufPluginTestHelper.getGradleRunner(
+      projectDir,
+      gradleVersion,
+      "build"
+    ).build()
 
     then: "it succeed"
     result.task(":build").outcome == TaskOutcome.SUCCESS
@@ -206,15 +190,11 @@ class ProtobufJavaPluginTest extends Specification {
         .build()
 
     when: "build is invoked"
-    BuildResult result = GradleRunner.create()
-      .withProjectDir(projectDir)
-      .withArguments('build', '--stacktrace')
-      .withPluginClasspath()
-      .withGradleVersion(gradleVersion)
-      .forwardStdOutput(new OutputStreamWriter(System.out))
-      .forwardStdError(new OutputStreamWriter(System.err))
-      .withDebug(true)
-      .build()
+    BuildResult result = ProtobufPluginTestHelper.getGradleRunner(
+      projectDir,
+      gradleVersion,
+      "build"
+    ).build()
 
     then: "it succeed"
     result.task(":build").outcome == TaskOutcome.SUCCESS
@@ -238,15 +218,11 @@ class ProtobufJavaPluginTest extends Specification {
         .build()
 
     when: "build is invoked"
-    BuildResult result = GradleRunner.create()
-      .withProjectDir(mainProjectDir)
-      .withArguments('testProjectDependent:build', '--stacktrace')
-      .withPluginClasspath()
-      .withGradleVersion(gradleVersion)
-      .forwardStdOutput(new OutputStreamWriter(System.out))
-      .forwardStdError(new OutputStreamWriter(System.err))
-      .withDebug(true)
-      .build()
+    BuildResult result = ProtobufPluginTestHelper.getGradleRunner(
+      mainProjectDir,
+      gradleVersion,
+      "testProjectDependent:build"
+    ).build()
 
     then: "it succeed"
     result.task(":testProjectDependent:build").outcome == TaskOutcome.SUCCESS
@@ -263,15 +239,11 @@ class ProtobufJavaPluginTest extends Specification {
             .build()
 
     when: "build is invoked"
-    BuildResult result = GradleRunner.create()
-            .withProjectDir(projectDir)
-            .withArguments('build', '--stacktrace')
-            .withPluginClasspath()
-            .withGradleVersion(gradleVersion)
-            .forwardStdOutput(new OutputStreamWriter(System.out))
-            .forwardStdError(new OutputStreamWriter(System.err))
-            .withDebug(true)
-            .build()
+    BuildResult result = ProtobufPluginTestHelper.getGradleRunner(
+      projectDir,
+      gradleVersion,
+      "build"
+    ).build()
 
     then: "it succeed"
     result.task(":build").outcome == TaskOutcome.SUCCESS
@@ -296,15 +268,11 @@ class ProtobufJavaPluginTest extends Specification {
             .build()
 
     when: "build is invoked"
-    BuildResult result = GradleRunner.create()
-            .withProjectDir(mainProjectDir)
-            .withArguments('testProjectDependentApp:build', '--stacktrace')
-            .withPluginClasspath()
-            .withGradleVersion(gradleVersion)
-            .forwardStdOutput(new OutputStreamWriter(System.out))
-            .forwardStdError(new OutputStreamWriter(System.err))
-            .withDebug(true)
-            .build()
+    BuildResult result = ProtobufPluginTestHelper.getGradleRunner(
+      mainProjectDir,
+      gradleVersion,
+      "testProjectDependentApp:build"
+    ).build()
 
     then: "it succeed"
     result.task(":testProjectDependentApp:build").outcome == TaskOutcome.SUCCESS
@@ -321,15 +289,11 @@ class ProtobufJavaPluginTest extends Specification {
         .build()
 
     when: "build is invoked"
-    BuildResult result = GradleRunner.create()
-      .withProjectDir(projectDir)
-      .withArguments('build', '--stacktrace')
-      .withPluginClasspath()
-      .withGradleVersion(gradleVersion)
-      .forwardStdOutput(new OutputStreamWriter(System.out))
-      .forwardStdError(new OutputStreamWriter(System.err))
-      .withDebug(true)
-      .build()
+    BuildResult result = ProtobufPluginTestHelper.getGradleRunner(
+      projectDir,
+      gradleVersion,
+      "build"
+    ).build()
 
     then: "it succeed"
     result.task(":build").outcome == TaskOutcome.SUCCESS
@@ -346,15 +310,11 @@ class ProtobufJavaPluginTest extends Specification {
             .build()
 
     when: "build is invoked"
-    BuildResult result = GradleRunner.create()
-            .withProjectDir(projectDir)
-            .withArguments('build', '--stacktrace')
-            .withPluginClasspath()
-            .withGradleVersion(gradleVersion)
-            .forwardStdOutput(new OutputStreamWriter(System.out))
-            .forwardStdError(new OutputStreamWriter(System.err))
-            .withDebug(true)
-            .build()
+    BuildResult result = ProtobufPluginTestHelper.getGradleRunner(
+      projectDir,
+      gradleVersion,
+      "build"
+    ).build()
 
     then: "it succeeds"
     result.task(":build").outcome == TaskOutcome.SUCCESS
@@ -367,15 +327,11 @@ class ProtobufJavaPluginTest extends Specification {
                   artifact = 'com.google.protobuf:protoc:3.0.2'
                 }
               }""")
-    result = GradleRunner.create()
-            .withProjectDir(projectDir)
-            .withArguments('build', '--stacktrace')
-            .withPluginClasspath()
-            .withGradleVersion(gradleVersion)
-            .forwardStdOutput(new OutputStreamWriter(System.out))
-            .forwardStdError(new OutputStreamWriter(System.err))
-            .withDebug(true)
-            .build()
+    result = ProtobufPluginTestHelper.getGradleRunner(
+      projectDir,
+      gradleVersion,
+      "build"
+    ).build()
 
     then: "generateProto is not UP_TO_DATE"
     result.task(":generateProto").outcome == TaskOutcome.SUCCESS
@@ -390,15 +346,11 @@ class ProtobufJavaPluginTest extends Specification {
                   }
                 }
               }""")
-    result = GradleRunner.create()
-            .withProjectDir(projectDir)
-            .withArguments('build', '--stacktrace')
-            .withPluginClasspath()
-            .withGradleVersion(gradleVersion)
-            .forwardStdOutput(new OutputStreamWriter(System.out))
-            .forwardStdError(new OutputStreamWriter(System.err))
-            .withDebug(true)
-            .build()
+    result = ProtobufPluginTestHelper.getGradleRunner(
+      projectDir,
+      gradleVersion,
+      "build"
+    ).build()
 
     then: "generateProto is not UP_TO_DATE"
     result.task(":generateGrpcProto").outcome == TaskOutcome.SUCCESS
@@ -430,15 +382,11 @@ class ProtobufJavaPluginTest extends Specification {
             path = "\$configurations.protoc.singleFile"
           }
         }""")
-    BuildResult result = GradleRunner.create()
-            .withProjectDir(projectDir)
-            .withArguments('build', '--stacktrace')
-            .withPluginClasspath()
-            .withGradleVersion(gradleVersion)
-            .forwardStdOutput(new OutputStreamWriter(System.out))
-            .forwardStdError(new OutputStreamWriter(System.err))
-            .withDebug(true)
-            .build()
+    BuildResult result = ProtobufPluginTestHelper.getGradleRunner(
+      projectDir,
+      gradleVersion,
+      "build"
+    ).build()
 
     then: "it succeeds"
     result.task(":generateProto").outcome == TaskOutcome.SUCCESS
@@ -446,15 +394,11 @@ class ProtobufJavaPluginTest extends Specification {
     when: "protoc path is changed and build runs again"
     buildGradleFile.text = buildGradleFile.text.replace("com.google.protobuf:protoc:3.0.0",
         "com.google.protobuf:protoc:3.0.2")
-    result = GradleRunner.create()
-            .withProjectDir(projectDir)
-            .withArguments('build', '--stacktrace')
-            .withPluginClasspath()
-            .withGradleVersion(gradleVersion)
-            .forwardStdOutput(new OutputStreamWriter(System.out))
-            .forwardStdError(new OutputStreamWriter(System.err))
-            .withDebug(true)
-            .build()
+    result = ProtobufPluginTestHelper.getGradleRunner(
+      projectDir,
+      gradleVersion,
+      "build"
+    ).build()
 
     then: "generateProto is not UP_TO_DATE"
     result.task(":generateProto").outcome == TaskOutcome.SUCCESS
@@ -471,30 +415,22 @@ class ProtobufJavaPluginTest extends Specification {
             .build()
 
     when: "build is invoked"
-    BuildResult result = GradleRunner.create()
-            .withProjectDir(projectDir)
-            .withArguments('build', '--stacktrace')
-            .withPluginClasspath()
-            .withGradleVersion(gradleVersion)
-            .forwardStdOutput(new OutputStreamWriter(System.out))
-            .forwardStdError(new OutputStreamWriter(System.err))
-            .withDebug(true)
-            .build()
+    BuildResult result = ProtobufPluginTestHelper.getGradleRunner(
+      projectDir,
+      gradleVersion,
+      "build"
+    ).build()
 
     then: "it succeed"
     result.task(":build").outcome == TaskOutcome.SUCCESS
 
     when: "Java class is added and build runs again"
     new File(projectDir, "src/main/java/Bar.java").write("public class Bar {}")
-    result = GradleRunner.create()
-            .withProjectDir(projectDir)
-            .withArguments('build', '--stacktrace')
-            .withPluginClasspath()
-            .withGradleVersion(gradleVersion)
-            .forwardStdOutput(new OutputStreamWriter(System.out))
-            .forwardStdError(new OutputStreamWriter(System.err))
-            .withDebug(true)
-            .build()
+    result = ProtobufPluginTestHelper.getGradleRunner(
+      projectDir,
+      gradleVersion,
+      "build"
+    ).build()
 
     then: "extract include test protos is up to date because it ignores classpath changes"
     result.task(":extractIncludeTestProto").outcome == TaskOutcome.UP_TO_DATE
@@ -503,15 +439,11 @@ class ProtobufJavaPluginTest extends Specification {
     new File(projectDir, "empty_proto.proto").write("syntax = \"proto3\";")
     new File(projectDir, "build.gradle")
             .append("\n dependencies { implementation files ('empty_proto.proto') } ")
-    result = GradleRunner.create()
-            .withProjectDir(projectDir)
-            .withArguments('build', '--stacktrace')
-            .withPluginClasspath()
-            .withGradleVersion(gradleVersion)
-            .forwardStdOutput(new OutputStreamWriter(System.out))
-            .forwardStdError(new OutputStreamWriter(System.err))
-            .withDebug(true)
-            .build()
+    result = ProtobufPluginTestHelper.getGradleRunner(
+      projectDir,
+      gradleVersion,
+      "build"
+    ).build()
 
     then: "extract include protos is not up to date"
     result.task(":extractIncludeProto").outcome == TaskOutcome.SUCCESS

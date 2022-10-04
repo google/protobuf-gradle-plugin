@@ -1,8 +1,5 @@
 package com.google.protobuf.gradle
 
-import static com.google.protobuf.gradle.ProtobufPluginTestHelper.buildAndroidProject
-import static com.google.protobuf.gradle.ProtobufPluginTestHelper.getAndroidGradleRunner
-
 import groovy.transform.CompileDynamic
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
@@ -35,12 +32,12 @@ class ProtobufAndroidPluginTest extends Specification {
         .withAndroidPlugin(agpVersion)
         .build()
     when: "build is invoked"
-    BuildResult result = buildAndroidProject(
+    BuildResult result = ProtobufPluginTestHelper.getAndroidGradleRunner(
         mainProjectDir,
         gradleVersion,
         agpVersion,
         "testProjectAndroid:build"
-    )
+    ).build()
 
     then: "it succeed"
     result.task(":testProjectAndroid:build").outcome == TaskOutcome.SUCCESS
@@ -67,7 +64,7 @@ class ProtobufAndroidPluginTest extends Specification {
             .withAndroidPlugin(agpVersion)
             .build()
     and:
-    GradleRunner runner = getAndroidGradleRunner(
+    GradleRunner runner = ProtobufPluginTestHelper.getAndroidGradleRunner(
             mainProjectDir,
             gradleVersion,
             agpVersion,
@@ -93,13 +90,13 @@ class ProtobufAndroidPluginTest extends Specification {
     result.task(":testProjectAndroid:assembleDebug").outcome == TaskOutcome.UP_TO_DATE
 
     when: "clean is invoked, before a build"
-    buildAndroidProject(
+    ProtobufPluginTestHelper.getAndroidGradleRunner(
             mainProjectDir,
             gradleVersion,
             agpVersion,
             "testProjectAndroid:clean",
             "-Dorg.gradle.unsafe.configuration-cache=true"
-    )
+    ).build()
     result = runner.build()
 
     then: "it succeed"
@@ -127,12 +124,12 @@ class ProtobufAndroidPluginTest extends Specification {
             .withAndroidPlugin(agpVersion)
             .build()
     when: "build is invoked"
-    BuildResult result = buildAndroidProject(
+    BuildResult result = ProtobufPluginTestHelper.getAndroidGradleRunner(
             mainProjectDir,
             gradleVersion,
             agpVersion,
             "testProjectAndroid:build"
-    )
+    ).build()
 
     then: "it succeed"
     result.task(":testProjectAndroid:build").outcome == TaskOutcome.SUCCESS
@@ -159,12 +156,12 @@ class ProtobufAndroidPluginTest extends Specification {
             .withAndroidPlugin(agpVersion)
             .build()
     when: "build is invoked"
-    BuildResult result = buildAndroidProject(
+    BuildResult result = ProtobufPluginTestHelper.getAndroidGradleRunner(
             mainProjectDir,
             gradleVersion,
             agpVersion,
             "testProjectAndroid:assembleAndroidTest"
-    )
+    ).build()
 
     then: "it succeed"
     result.task(":testProjectAndroid:assembleAndroidTest").outcome == TaskOutcome.SUCCESS
