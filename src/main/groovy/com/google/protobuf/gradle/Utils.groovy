@@ -33,12 +33,15 @@ import org.gradle.api.Project
 import org.gradle.api.tasks.SourceSet
 import org.gradle.plugins.ide.idea.GenerateIdeaModule
 import org.gradle.plugins.ide.idea.model.IdeaModel
+import org.gradle.util.GradleVersion
 
 /**
  * Utility classes.
  */
 @CompileStatic
 class Utils {
+  private static GradleVersion GRADLE_7_4 = GradleVersion.version("7.4")
+
   /**
    * Returns the conventional name of a configuration for a sourceSet
    */
@@ -108,7 +111,11 @@ class Utils {
     project.plugins.withId("idea") {
       IdeaModel model = project.getExtensions().findByType(IdeaModel)
       if (isTest) {
-        model.module.testSourceDirs += f
+        if (GradleVersion.current() >= GRADLE_7_4) {
+          model.module.invokeMethod("getTestSources", null).invokeMethod("from", f) // TODO call directly after updating Gradle wrapper to 7.4+
+        } else {
+          model.module.testSourceDirs += f
+        }
       } else {
         model.module.sourceDirs += f
       }
