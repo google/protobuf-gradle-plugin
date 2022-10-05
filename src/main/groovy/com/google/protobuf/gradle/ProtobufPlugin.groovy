@@ -36,6 +36,8 @@ import org.gradle.api.Action
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.Task
+import org.gradle.api.UnknownDomainObjectException
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.attributes.LibraryElements
@@ -108,6 +110,11 @@ class ProtobufPlugin implements Plugin<Project> {
                 + ' The Java plugin or one of the Android plugins must be applied to the project first.')
           }
         }
+    }
+
+    @TypeChecked(TypeCheckingMode.SKIP)
+    private static void linkGenerateProtoTasksToTask(Task task, SourceDirectorySet srcDirSet) {
+      task.source(srcDirSet)
     }
 
     @TypeChecked(TypeCheckingMode.SKIP) // Don't depend on AGP
@@ -332,12 +339,9 @@ class ProtobufPlugin implements Plugin<Project> {
         // This cannot be called once task execution has started.
         variant.registerJavaGeneratingTask(
             generateProtoTask.get(), generateProtoTask.get().getOutputSourceDirectories())
-        project.plugins.withId("org.jetbrains.kotlin.android") {
-          String kotlinTaskName = Utils.getKotlinAndroidCompileTaskName(project, variant.name)
-          project.tasks.named(kotlinTaskName).configure { task ->
-            task.source(sourceDirectorySetForGenerateProtoTask(variant.name, generateProtoTask))
-          }
-        }
+        linkGenerateProtoTasksToTaskName(
+            Utils.getKotlinAndroidCompileTaskName(project, variant.name),
+            sourceDirectorySetForGenerateProtoTask(variant.name, generateProtoTask))
       }
     }
 
@@ -450,6 +454,22 @@ class ProtobufPlugin implements Plugin<Project> {
           // nicer than the ad-hoc solution that Android has, because it works for any extended
           // configuration, not just 'testCompile'.
           it.inputFiles.from project.sourceSets[sourceSetOrVariantName].compileClasspath
+        }
+      }
+    }
+
+    private void linkGenerateProtoTasksToTaskName(String compileTaskName, SourceDirectorySet srcDirSet) {
+      try {
+        project.tasks.named(compileTaskName).configure { compileTask ->
+          linkGenerateProtoTasksToTask(compileTask, srcDirSet)
+        }
+      } catch (UnknownDomainObjectException ignore) {
+        // It is possible for a compile task to not exist yet. For example, if someone applied
+        // the proto plugin and then later applies the kotlin plugin.
+        project.tasks.configureEach { Task task ->
+          if (task.name == compileTaskName) {
+            linkGenerateProtoTasksToTask(task, srcDirSet)
+          }
         }
       }
     }
