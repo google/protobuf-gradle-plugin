@@ -41,7 +41,7 @@ import org.gradle.util.GradleVersion
  */
 @CompileStatic
 class Utils {
-  private static GradleVersion GRADLE_7_4 = GradleVersion.version("7.4")
+  private static final GradleVersion GRADLE_7_4 = GradleVersion.version("7.4")
 
   /**
    * Returns the conventional name of a configuration for a sourceSet
