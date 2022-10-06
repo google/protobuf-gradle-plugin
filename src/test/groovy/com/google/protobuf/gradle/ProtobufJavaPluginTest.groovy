@@ -2,6 +2,7 @@ package com.google.protobuf.gradle
 
 import groovy.transform.CompileDynamic
 import org.gradle.api.Project
+import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
@@ -17,6 +18,48 @@ class ProtobufJavaPluginTest extends Specification {
   // Current supported version is Gradle 5+.
   private static final List<String> GRADLE_VERSIONS = ["5.6", "6.0", "6.7.1", "7.4.2"]
   private static final List<String> KOTLIN_VERSIONS = ["1.3.20", "1.3.31", "1.3.40"]
+
+  void "test protobuf plugin adds corresponding sourceSet dirs to project"() {
+    given: "a basic project with java and com.google.protobuf"
+    Project project = setupBasicProject()
+    project.protobuf.generateProtoTasks {
+      all().configureEach { task ->
+        task.builtins {
+          python { }
+          kotlin { }
+        }
+      }
+    }
+
+    when: "project evaluated"
+    project.evaluate()
+
+    then: "source sets added"
+    SourceSetContainer sourceSets = project.sourceSets
+
+    assert sourceSets.size() == 2
+    assert Objects.equals(
+      sourceSets.main.allSource.srcDirs,
+      [
+        project.file("src/main/resources"),
+        project.file("src/main/java"),
+        project.file("build/generated/source/proto/main/java"),
+        project.file("build/generated/source/proto/main/python"),
+        project.file("build/generated/source/proto/main/kotlin"),
+      ] as Set<File>
+    )
+
+    assert Objects.equals(
+      sourceSets.test.allSource.srcDirs,
+      [
+        project.file("src/test/resources"),
+        project.file("src/test/java"),
+        project.file("build/generated/source/proto/test/java"),
+        project.file("build/generated/source/proto/test/python"),
+        project.file("build/generated/source/proto/test/kotlin"),
+      ] as Set<File>
+    )
+  }
 
   void "testApplying java and com.google.protobuf adds corresponding task to project"() {
     given: "a basic project with java and com.google.protobuf"
