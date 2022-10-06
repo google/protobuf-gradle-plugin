@@ -2,8 +2,6 @@
 // See: ProtobufPluginTestHelper.groovy
 plugins {
   id 'java'
-  id 'idea'
-  id 'eclipse'
   id 'com.google.protobuf'
 }
 apply from: 'build_base.gradle'

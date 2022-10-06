@@ -517,13 +517,11 @@ Settings -> Build, Execution, Deployment
   -> Delegate IDE build/run actions to gradle.
 ```
 
-This plugin integrates with the ``idea`` plugin and automatically
+This plugin integrates with the IntelliJ IDEA, automatically
 registers the proto files and generated Java code as sources.
 
 
 ```gradle
-apply plugin: 'idea'
-
 protobuf {
     ...
     generatedFilesBaseDir = "$projectDir/gen"
@@ -531,15 +529,6 @@ protobuf {
 
 clean {
     delete protobuf.generatedFilesBaseDir
-}
-
-idea {
-    module {
-        // proto files and generated Java files are automatically added as
-        // source dirs.
-        // If you have additional sources, add them here:
-        sourceDirs += file("/path/to/other/sources");
-    }
 }
 ```
 

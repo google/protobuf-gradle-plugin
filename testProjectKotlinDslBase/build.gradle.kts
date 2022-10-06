@@ -1,10 +1,7 @@
 import com.google.protobuf.gradle.*
-import org.gradle.api.internal.HasConvention
-import org.gradle.kotlin.dsl.provider.gradleKotlinDslOf
 
 plugins {
     java
-    idea
     id("com.google.protobuf")
 }
 
