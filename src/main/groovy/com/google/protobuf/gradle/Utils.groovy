@@ -30,15 +30,19 @@ package com.google.protobuf.gradle
 
 import groovy.transform.CompileStatic
 import org.gradle.api.Project
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.tasks.SourceSet
 import org.gradle.plugins.ide.idea.GenerateIdeaModule
 import org.gradle.plugins.ide.idea.model.IdeaModel
+import org.gradle.util.GradleVersion
 
 /**
  * Utility classes.
  */
 @CompileStatic
 class Utils {
+  private static final GradleVersion GRADLE_7_4 = GradleVersion.version("7.4")
+
   /**
    * Returns the conventional name of a configuration for a sourceSet
    */
@@ -108,7 +112,12 @@ class Utils {
     project.plugins.withId("idea") {
       IdeaModel model = project.getExtensions().findByType(IdeaModel)
       if (isTest) {
-        model.module.testSourceDirs += f
+        if (GradleVersion.current() >= GRADLE_7_4) {
+          // TODO call directly after updating Gradle wrapper to 7.4+
+          ((ConfigurableFileCollection) model.module.invokeMethod("getTestSources", null)).from(f)
+        } else {
+          model.module.testSourceDirs += f
+        }
       } else {
         model.module.sourceDirs += f
       }
