@@ -27,7 +27,7 @@ jobs:
     needs: build
     strategy:
       matrix:
-        tests: [ProtobufJavaPluginTest, ProtobufKotlinDslCopySpecTest, ProtobufKotlinDslPluginTest, ProtobufAndroidPluginTest, ProtobufAndroidPluginKotlinTest, AndroidProjectDetectionTest, IDESupportTest]
+        tests: [ProtobufJavaPluginTest, ProtobufKotlinDslCopySpecTest, ProtobufKotlinDslPluginTest, ProtobufAndroidPluginTest, ProtobufAndroidPluginKotlinTest, AndroidProjectDetectionTest]
       fail-fast: false
     runs-on: ubuntu-latest
     timeout-minutes: 30
