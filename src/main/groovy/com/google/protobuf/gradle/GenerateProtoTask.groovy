@@ -589,11 +589,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
 
     // Sort to ensure generated descriptors have a canonical representation
     // to avoid triggering unnecessary rebuilds downstream
-    List<File> protoFiles = sourceDirs.asFileTree
-       // quick fix for https://github.com/google/protobuf-gradle-plugin/issues/620
-      .filter { File it -> it.name.endsWith(".proto") }
-      .files
-      .sort()
+    List<File> protoFiles = sourceDirs.asFileTree.files.sort()
 
     [builtins, plugins]*.forEach { PluginOptions plugin ->
       String outputPath = getOutputDir(plugin)
@@ -608,7 +604,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
 
     // The source directory designated from sourceSet may not actually exist on disk.
     // "include" it only when it exists, so that Gradle and protoc won't complain.
-    List<String> dirs = (sourceDirs + includeDirs).filter { File it -> it.exists() }*.path
+    List<String> dirs = includeDirs.filter { File it -> it.exists() }*.path
         .collect { "-I${it}".toString() }
     logger.debug "ProtobufCompile using directories ${dirs}"
     logger.debug "ProtobufCompile using files ${protoFiles}"
