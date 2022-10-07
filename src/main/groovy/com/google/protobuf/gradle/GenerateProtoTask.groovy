@@ -589,7 +589,11 @@ public abstract class GenerateProtoTask extends DefaultTask {
 
     // Sort to ensure generated descriptors have a canonical representation
     // to avoid triggering unnecessary rebuilds downstream
-    List<File> protoFiles = sourceDirs.asFileTree.files.sort()
+    List<File> protoFiles = sourceDirs.asFileTree
+       // quick fix for https://github.com/google/protobuf-gradle-plugin/issues/620
+      .filter { File it -> it.name.endsWith(".proto") }
+      .files
+      .sort()
 
     [builtins, plugins]*.forEach { PluginOptions plugin ->
       String outputPath = getOutputDir(plugin)

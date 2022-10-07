@@ -6,6 +6,7 @@ import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
+import spock.lang.Ignore
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -35,6 +36,8 @@ class ProtobufJavaPluginTest extends Specification {
     assert project.tasks.extractTestProto instanceof ProtobufExtract
   }
 
+  // Do not forget add android test
+  @Ignore("enable in 0.10.0, good fix contains breaking api change, more info #621")
   void "test generate proto task sources should include only *.proto files"() {
     given: "a project with readme file in proto source directory"
     Project project = setupBasicProject()
