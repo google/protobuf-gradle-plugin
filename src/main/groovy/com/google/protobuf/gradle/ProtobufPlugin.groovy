@@ -381,9 +381,10 @@ class ProtobufPlugin implements Plugin<Project> {
       return project.tasks.register(generateProtoTaskName, GenerateProtoTask) {
         it.description = "Compiles Proto source for '${sourceSetOrVariantName}'".toString()
         it.outputBaseDir = outDir
-        it.addSourceDirs(protoSourceSet.asFileTree)
+        it.addSourceDirs(protoSourceSet)
         it.addIncludeDir(protoSourceSet.sourceDirectories)
         it.addSourceDirs(extractProtosDirs)
+        it.addIncludeDir(extractProtosDirs)
         it.addIncludeDir(project.files(extractIncludeProtosTask))
         configureAction.execute(it)
       }
