@@ -321,7 +321,7 @@ class ProtobufPlugin implements Plugin<Project> {
 
       // GenerateProto task, one per variant (compilation unit).
       SourceDirectorySet sourceDirs = project.objects.sourceDirectorySet(variant.name, "AllSourceSets")
-      variant.sourceDirs.forEach { sourceDirs.source(it.proto) }
+      variant.sourceSets.forEach { sourceDirs.source(it.proto) }
       FileCollection extractProtosDirs = project.files(project.providers.provider {
         variant.sourceSets.collect {
           project.files(project.tasks.named(getExtractProtosTaskName(it.name)))
