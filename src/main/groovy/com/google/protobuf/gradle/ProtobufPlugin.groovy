@@ -248,7 +248,7 @@ class ProtobufPlugin implements Plugin<Project> {
       Provider<ProtobufExtract> extractIncludeProtosTask = setupExtractIncludeProtosTask(
           sourceSet.name, compileProtoPath, sourceSet.compileClasspath)
       Provider<GenerateProtoTask> generateProtoTask = addGenerateProtoTask(
-          sourceSet.name, protoSrcDirSet.sourceDirectories, project.files(extractProtosTask),
+          sourceSet.name, protoSrcDirSet, project.files(extractProtosTask),
           extractIncludeProtosTask) {
         it.sourceSet = sourceSet
         it.doneInitializing()
@@ -320,9 +320,8 @@ class ProtobufPlugin implements Plugin<Project> {
           setupExtractIncludeProtosTask(variant.name, classPathConfig, testClassPathConfig)
 
       // GenerateProto task, one per variant (compilation unit).
-      FileCollection sourceDirs = project.files(project.providers.provider {
-          variant.sourceSets.collect { it.proto.sourceDirectories }
-      })
+      SourceDirectorySet sourceDirs = project.objects.sourceDirectorySet(variant.name, "AllSourceSets")
+      variant.sourceSets.forEach { sourceDirs.source(it.proto) }
       FileCollection extractProtosDirs = project.files(project.providers.provider {
         variant.sourceSets.collect {
           project.files(project.tasks.named(getExtractProtosTaskName(it.name)))
@@ -367,9 +366,10 @@ class ProtobufPlugin implements Plugin<Project> {
      * compiled. For Java it's the sourceSet that sourceSetOrVariantName stands
      * for; for Android it's the collection of sourceSets that the variant includes.
      */
+    @SuppressWarnings(["UnnecessaryObjectReferences"]) // suppress a lot of it.doLogic in task registration block
     private Provider<GenerateProtoTask> addGenerateProtoTask(
         String sourceSetOrVariantName,
-        FileCollection sourceDirs,
+        SourceDirectorySet protoSourceSet,
         FileCollection extractProtosDirs,
         Provider<ProtobufExtract> extractIncludeProtosTask,
         Action<GenerateProtoTask> configureAction) {
@@ -381,8 +381,10 @@ class ProtobufPlugin implements Plugin<Project> {
       return project.tasks.register(generateProtoTaskName, GenerateProtoTask) {
         it.description = "Compiles Proto source for '${sourceSetOrVariantName}'".toString()
         it.outputBaseDir = outDir
-        it.addSourceDirs(sourceDirs)
+        it.addSourceDirs(protoSourceSet)
+        it.addIncludeDir(protoSourceSet.sourceDirectories)
         it.addSourceDirs(extractProtosDirs)
+        it.addIncludeDir(extractProtosDirs)
         it.addIncludeDir(project.files(extractIncludeProtosTask))
         configureAction.execute(it)
       }

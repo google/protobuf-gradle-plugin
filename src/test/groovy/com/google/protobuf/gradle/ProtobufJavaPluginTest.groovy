@@ -35,6 +35,23 @@ class ProtobufJavaPluginTest extends Specification {
     assert project.tasks.extractTestProto instanceof ProtobufExtract
   }
 
+  void "test generate proto task sources should include only *.proto files"() {
+    given: "a project with readme file in proto source directory"
+    Project project = setupBasicProject()
+    project.file("src/main/proto").mkdirs()
+    project.file("src/main/proto/messages.proto") << "syntax = \"proto3\";"
+    project.file("src/main/proto/README.md") << "Hello World"
+
+    when: "project evaluated"
+    project.evaluate()
+
+    then: "it contains only *.proto files"
+    assert Objects.equals(
+      project.tasks.generateProto.sourceDirs.asFileTree.files,
+      [project.file("src/main/proto/messages.proto")] as Set<File>
+    )
+  }
+
   void "testCustom sourceSet should get its own GenerateProtoTask"() {
     given: "a basic project with java and com.google.protobuf"
     Project project = setupBasicProject()
