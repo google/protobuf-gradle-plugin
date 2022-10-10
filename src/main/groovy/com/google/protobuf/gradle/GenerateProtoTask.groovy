@@ -604,7 +604,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
 
     // The source directory designated from sourceSet may not actually exist on disk.
     // "include" it only when it exists, so that Gradle and protoc won't complain.
-    List<String> dirs = (sourceDirs + includeDirs).filter { File it -> it.exists() }*.path
+    List<String> dirs = includeDirs.filter { File it -> it.exists() }*.path
         .collect { "-I${it}".toString() }
     logger.debug "ProtobufCompile using directories ${dirs}"
     logger.debug "ProtobufCompile using files ${protoFiles}"
