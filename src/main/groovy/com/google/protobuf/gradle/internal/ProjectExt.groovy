@@ -49,20 +49,20 @@ class ProjectExt {
     project.logger.debug("$project has '$android'")
 
     if (android instanceof AppExtension) {
-      android.getApplicationVariants().all(action)
+      (android as AppExtension).getApplicationVariants().all(action)
     }
 
     if (android instanceof LibraryExtension) {
-      android.getLibraryVariants().all(action)
+      (android as LibraryExtension).getLibraryVariants().all(action)
     }
 
     if (android instanceof TestExtension) {
-      android.getApplicationVariants().all(action)
+      (android as TestExtension).getApplicationVariants().all(action)
     }
 
     if (android instanceof TestedExtension) {
-      android.getTestVariants().all(action)
-      android.getUnitTestVariants().all(action)
+      (android as TestedExtension).getTestVariants().all(action)
+      (android as TestedExtension).getUnitTestVariants().all(action)
     }
   }
 }
