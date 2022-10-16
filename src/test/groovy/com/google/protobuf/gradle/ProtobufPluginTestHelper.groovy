@@ -34,17 +34,9 @@ final class ProtobufPluginTestHelper {
     List<String> args = arguments.toList()
     args.add("--stacktrace")
 
-    return getGradleRunner(projectDir, gradleVersion, args)
-  }
-
-  static GradleRunner getGradleRunner(
-    File projectDir,
-    String gradleVersion,
-    List<String> arguments
-  ) {
     return GradleRunner.create()
       .withProjectDir(projectDir)
-      .withArguments(arguments)
+      .withArguments(args)
       .withGradleVersion(gradleVersion)
       .forwardStdOutput(new OutputStreamWriter(System.out))
       .forwardStdError(new OutputStreamWriter(System.err))
@@ -76,7 +68,13 @@ final class ProtobufPluginTestHelper {
     //
     // Set memory limit for all gradle build, not only for dexing
     args.add("-Dorg.gradle.jvmargs=-Xmx1g")
-    return getGradleRunner(projectDir, gradleVersion, args)
+
+    return GradleRunner.create()
+      .withProjectDir(projectDir)
+      .withArguments(args)
+      .withGradleVersion(gradleVersion)
+      .forwardStdOutput(new OutputStreamWriter(System.out))
+      .forwardStdError(new OutputStreamWriter(System.err))
   }
 
   /**

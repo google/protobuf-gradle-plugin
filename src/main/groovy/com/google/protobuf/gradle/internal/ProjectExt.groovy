@@ -33,11 +33,7 @@ import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.TestExtension
 import com.android.build.gradle.TestedExtension
-import com.android.build.gradle.api.ApplicationVariant
 import com.android.build.gradle.api.BaseVariant
-import com.android.build.gradle.api.LibraryVariant
-import com.android.build.gradle.api.TestVariant
-import com.android.build.gradle.api.UnitTestVariant
 import groovy.transform.CompileStatic
 import org.gradle.api.Action
 import org.gradle.api.Project
@@ -48,25 +44,25 @@ class ProjectExt {
   }
 
   @SuppressWarnings(["CouldBeSwitchStatement"]) // `if` is better than fallthrough `switch`
-  static void forEachVariant(final Project project, final Action<BaseVariant> action) {
+  static void forEachVariant(final Project project, final Action<? extends BaseVariant> action) {
     BaseExtension android = project.extensions.getByName("android") as BaseExtension
     project.logger.debug("$project has '$android'")
 
     if (android instanceof AppExtension) {
-      (android as AppExtension).getApplicationVariants().all(action as Action<ApplicationVariant>)
+      android.getApplicationVariants().all(action)
     }
 
     if (android instanceof LibraryExtension) {
-      (android as LibraryExtension).getLibraryVariants().all(action as Action<LibraryVariant>)
+      android.getLibraryVariants().all(action)
     }
 
     if (android instanceof TestExtension) {
-      (android as TestExtension).getApplicationVariants().all(action as Action<ApplicationVariant>)
+      android.getApplicationVariants().all(action)
     }
 
     if (android instanceof TestedExtension) {
-      (android as TestedExtension).getTestVariants().all(action as Action<TestVariant>)
-      (android as TestedExtension).getUnitTestVariants().all(action as Action<UnitTestVariant>)
+      android.getTestVariants().all(action)
+      android.getUnitTestVariants().all(action)
     }
   }
 }
