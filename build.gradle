@@ -97,6 +97,8 @@ tasks.withType(GenerateModuleMetadata) {
   enabled = false
 }
 
+File testRepoUrl = layout.buildDirectory.dir('testRepo').get().asFile
+
 publishing {
   publications {
     pluginMaven(MavenPublication) {
@@ -131,6 +133,10 @@ publishing {
   }
 
   repositories {
+    maven {
+      url = testRepoUrl
+      name = "test"
+    }
     maven {
       String releaseUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
       String snapshotUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
@@ -210,8 +216,9 @@ tasks.named('test') {
   // To fix this problem, don't use the withPluginClasspath method.
   // Provide a plugin under test with the maven local repository.
   systemProperty("protobufPluginVersion", version)
+  systemProperty("testRepoUrl", testRepoUrl.absolutePath)
   dependsOn(
-    "publishProtobufPluginPluginMarkerMavenPublicationToMavenLocal",
-    "publishPluginMavenPublicationToMavenLocal"
+    "publishProtobufPluginPluginMarkerMavenPublicationToTestRepository",
+    "publishPluginMavenPublicationToTestRepository"
   )
 }

@@ -129,7 +129,9 @@ final class ProtobufPluginTestHelper {
       settingsFile << """
       |pluginManagement {
       |  repositories {
-      |    mavenLocal()
+      |    maven {
+      |      url "${System.getProperty("testRepoUrl", "unknown")}"
+      |    }
       |    google()
       |    gradlePluginPortal()
       |  }
