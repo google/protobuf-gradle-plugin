@@ -2,7 +2,6 @@ package com.google.protobuf.gradle
 
 import groovy.transform.CompileDynamic
 import org.apache.commons.io.FileUtils
-import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 
 /**
@@ -27,24 +26,29 @@ final class ProtobufPluginTestHelper {
     }
   }
 
-  static BuildResult buildAndroidProject(
-      File mainProjectDir,
-      String gradleVersion,
-      String agpVersion,
-      String fullPathTask,
-      String... arguments
+  static GradleRunner getGradleRunner(
+    File projectDir,
+    String gradleVersion,
+    String... arguments
   ) {
-    return getAndroidGradleRunner(mainProjectDir, gradleVersion, agpVersion, fullPathTask, arguments).build()
+    List<String> args = arguments.toList()
+    args.add("--stacktrace")
+
+    return GradleRunner.create()
+      .withProjectDir(projectDir)
+      .withArguments(args)
+      .withGradleVersion(gradleVersion)
+      .forwardStdOutput(new OutputStreamWriter(System.out))
+      .forwardStdError(new OutputStreamWriter(System.err))
   }
 
   static GradleRunner getAndroidGradleRunner(
-      File mainProjectDir,
+      File projectDir,
       String gradleVersion,
       String agpVersion,
-      String fullPathTask,
       String... arguments
   ) {
-    File localBuildCache = new File(mainProjectDir, ".buildCache")
+    File localBuildCache = new File(projectDir, ".buildCache")
     if (localBuildCache.exists()) {
       localBuildCache.deleteDir()
     }
@@ -57,7 +61,6 @@ final class ProtobufPluginTestHelper {
       args.add("-Pandroid.buildCacheDir=$localBuildCache".toString())
     }
 
-    args.add(fullPathTask)
     args.add("--stacktrace")
     // DSL element 'dexOptions' is obsolete and should be removed.
     // It will be removed in version 8.0 of the Android Gradle plugin.
@@ -65,16 +68,13 @@ final class ProtobufPluginTestHelper {
     //
     // Set memory limit for all gradle build, not only for dexing
     args.add("-Dorg.gradle.jvmargs=-Xmx1g")
+
     return GradleRunner.create()
-       .withProjectDir(mainProjectDir)
-       .withArguments(args)
-       .withPluginClasspath()
-       .withGradleVersion(gradleVersion)
-       .forwardStdOutput(new OutputStreamWriter(System.out))
-       .forwardStdError(new OutputStreamWriter(System.err))
-    // Enabling debug causes the test to fail with Android plugin version 3.3.0+.
-    // See https://docs.gradle.org/current/javadoc/org/gradle/testkit/runner/GradleRunner.html#isDebug--
-    // .withDebug(true)
+      .withProjectDir(projectDir)
+      .withArguments(args)
+      .withGradleVersion(gradleVersion)
+      .forwardStdOutput(new OutputStreamWriter(System.out))
+      .forwardStdError(new OutputStreamWriter(System.err))
   }
 
   /**
@@ -124,10 +124,27 @@ final class ProtobufPluginTestHelper {
         FileUtils.copyDirectory(new File(System.getProperty("user.dir"), it), projectDir)
       }
 
-      if (subProjects) {
-        File settingsFile = new File(projectDir, 'settings.gradle')
-        settingsFile.createNewFile()
+      File settingsFile = new File(projectDir.path, "settings.gradle")
+      settingsFile.createNewFile()
+      settingsFile << """
+      |pluginManagement {
+      |  repositories {
+      |    maven {
+      |      url "${System.getProperty("testRepoUrl", "unknown")}"
+      |    }
+      |    google()
+      |    gradlePluginPortal()
+      |  }
+      |
+      |  plugins {
+      |    id "com.google.protobuf" version "${System.getProperty("protobufPluginVersion", "unknown")}"
+      |  }
+      |}
+      |
+      |rootProject.name = "$testProjectName"
+      """.stripMargin()
 
+      if (subProjects) {
         subProjects.each {
           File subProjectDir = new File(projectDir.path, it.name)
           FileUtils.copyDirectory(it, subProjectDir)

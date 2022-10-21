@@ -29,6 +29,10 @@
  */
 package com.google.protobuf.gradle
 
+import com.android.build.gradle.api.BaseVariant
+import com.android.build.gradle.api.TestVariant
+import com.android.build.gradle.api.UnitTestVariant
+import com.google.protobuf.gradle.internal.ProjectExt
 import groovy.transform.CompileStatic
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
@@ -131,14 +135,12 @@ class ProtobufPlugin implements Plugin<Project> {
             Configuration protobufConfig = createProtobufConfiguration(sourceSet.name)
             setupExtractProtosTask(sourceSet.name, protobufConfig)
           }
-          getNonTestVariants().configureEach { variant ->
-            addTasksForVariant(variant, false, postConfigure)
-          }
-          project.android.unitTestVariants.configureEach { variant ->
-            addTasksForVariant(variant, true, postConfigure)
-          }
-          project.android.testVariants.configureEach { variant ->
-            addTasksForVariant(variant, true, postConfigure)
+          ProjectExt.forEachVariant(this.project) { BaseVariant variant ->
+            addTasksForVariant(
+              variant,
+              variant instanceof TestVariant || variant instanceof UnitTestVariant,
+              postConfigure
+            )
           }
         } else {
           project.sourceSets.configureEach { sourceSet ->
@@ -225,12 +227,6 @@ class ProtobufPlugin implements Plugin<Project> {
       sds.srcDir("src/${name}/proto")
       sds.include("**/*.proto")
       return sds
-    }
-
-    @TypeChecked(TypeCheckingMode.SKIP) // Don't depend on AGP
-    private Object getNonTestVariants() {
-      return project.android.hasProperty('libraryVariants') ?
-          project.android.libraryVariants : project.android.applicationVariants
     }
 
     /**

@@ -46,7 +46,7 @@ class IDESupportTest extends Specification {
   @Unroll
   void "testProject proto and generated output directories should be added to intellij [gradle #gradleVersion]"() {
     given: "project from testProject"
-    File projectDir = ProtobufPluginTestHelper.projectBuilder('testIdea')
+    File projectDir = ProtobufPluginTestHelper.projectBuilder('testProject')
       .copyDirs('testProjectBase', 'testProject')
       .build()
 

@@ -1,7 +1,5 @@
 package com.google.protobuf.gradle
 
-import static com.google.protobuf.gradle.ProtobufPluginTestHelper.buildAndroidProject
-
 import groovy.transform.CompileDynamic
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
@@ -60,12 +58,12 @@ class ProtobufKotlinDslPluginTest extends Specification {
             .build()
 
     when: "build is invoked"
-    BuildResult result = buildAndroidProject(
+    BuildResult result = ProtobufPluginTestHelper.getAndroidGradleRunner(
         mainProjectDir,
         gradleVersion,
         agpVersion,
         "testProjectAndroidKotlinDsl:build"
-    )
+    ).build()
 
     then: "it succeed"
     result.task(":testProjectAndroidKotlinDsl:build").outcome == TaskOutcome.SUCCESS

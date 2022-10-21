@@ -1,7 +1,5 @@
 package com.google.protobuf.gradle
 
-import static com.google.protobuf.gradle.ProtobufPluginTestHelper.buildAndroidProject
-
 import groovy.transform.CompileDynamic
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
@@ -38,12 +36,12 @@ class AndroidProjectDetectionTest extends Specification {
     appendUtilIsAndroidProjectCheckTask(new File(mainProjectDir, "build.gradle"), true)
 
     when: "checkForAndroidPlugin task evaluates Utils.isAndroidProject"
-    BuildResult result = buildAndroidProject(
+    BuildResult result = ProtobufPluginTestHelper.getAndroidGradleRunner(
         mainProjectDir,
         gradleVersion,
         agpVersion,
         "checkForAndroidPlugin"
-    )
+    ).build()
 
     then: "Utils.isAndroidProject evaluation matched assertion in task checkForAndroidPlugin"
     assert result.task(":checkForAndroidPlugin").outcome == TaskOutcome.SUCCESS
@@ -63,6 +61,7 @@ class AndroidProjectDetectionTest extends Specification {
        .copyDirs('testProjectLite')
        .build()
     appendUtilIsAndroidProjectCheckTask(new File(subProjectStaging, "build.gradle"), false)
+
     File mainProjectDir = ProtobufPluginTestHelper.projectBuilder("rootModuleAndroidProject")
        .copyDirs('testProjectAndroid', 'testProjectAndroidBare')
        .copySubProjects(subProjectStaging)
@@ -71,12 +70,12 @@ class AndroidProjectDetectionTest extends Specification {
     appendUtilIsAndroidProjectCheckTask(new File(mainProjectDir, "build.gradle"), true)
 
     when: "checkForAndroidPlugin task evaluates Utils.isAndroidProject"
-    BuildResult result = buildAndroidProject(
+    BuildResult result = ProtobufPluginTestHelper.getAndroidGradleRunner(
        mainProjectDir,
        gradleVersion,
        agpVersion,
        "checkForAndroidPlugin"
-    )
+    ).build()
 
     then: "Utils.isAndroidProject evaluation matched assertion in task checkForAndroidPlugin"
     assert result.task(":checkForAndroidPlugin").outcome == TaskOutcome.SUCCESS

@@ -2,7 +2,6 @@ package com.google.protobuf.gradle
 
 import groovy.transform.CompileDynamic
 import org.gradle.testkit.runner.BuildResult
-import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import spock.lang.Specification
 import spock.lang.Unroll
@@ -22,14 +21,12 @@ class ProtobufKotlinDslCopySpecTest extends Specification {
             .build()
 
     when: "build is invoked"
-    BuildResult result = GradleRunner.create()
-            .withProjectDir(projectDir)
-            .withArguments('test', 'build', '--stacktrace')
-            .withPluginClasspath()
-            .withGradleVersion(gradleVersion)
-            .forwardStdOutput(new OutputStreamWriter(System.out))
-            .forwardStdError(new OutputStreamWriter(System.err))
-            .build()
+    BuildResult result = ProtobufPluginTestHelper.getGradleRunner(
+      projectDir,
+      gradleVersion,
+      "test",
+      "build"
+    ).build()
 
     then: "it succeed"
 
