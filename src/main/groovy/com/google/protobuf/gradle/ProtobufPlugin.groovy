@@ -108,11 +108,11 @@ class ProtobufPlugin implements Plugin<Project> {
         if (isAndroid) {
           this.project.pluginManager.apply(ProtobufAndroidPlugin)
         } else {
-          project.extensions.getByType(SourceSetContainer).configureEach { sourceSet ->
+          project.extensions.getByType(SourceSetContainer).configureEach { SourceSet sourceSet ->
             SourceDirectorySet protoSrcDirSet = addSourceSetExtension(sourceSet)
             Configuration protobufConfig = createProtobufConfiguration(sourceSet.name)
             Configuration compileProtoPath = createCompileProtoPathConfiguration(sourceSet.name)
-            addTasksForSourceSet(sourceSet, protoSrcDirSet, protobufConfig, compileProtoPath, postConfigure)
+            this.addTasksForSourceSet(sourceSet, protoSrcDirSet, protobufConfig, compileProtoPath, postConfigure)
           }
         }
         project.afterEvaluate {
@@ -197,8 +197,12 @@ class ProtobufPlugin implements Plugin<Project> {
      * Creates Protobuf tasks for a sourceSet in a Java project.
      */
     private void addTasksForSourceSet(
-        final SourceSet sourceSet, SourceDirectorySet protoSrcDirSet, Configuration protobufConfig,
-        Configuration compileProtoPath, Collection<Closure> postConfigure) {
+        final SourceSet sourceSet,
+        final SourceDirectorySet protoSrcDirSet,
+        final Configuration protobufConfig,
+        final Configuration compileProtoPath,
+        final Collection<Closure> postConfigure
+    ) {
       Provider<ProtobufExtract> extractProtosTask =
           setupExtractProtosTask(sourceSet.name, protobufConfig)
       // In Java projects, the compileClasspath of the 'test' sourceSet includes all the

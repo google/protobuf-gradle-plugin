@@ -34,6 +34,8 @@ import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.TestVariant
 import com.android.build.gradle.api.UnitTestVariant
+import com.android.builder.model.ProductFlavor
+import com.android.builder.model.SourceProvider
 import com.google.gradle.osdetector.OsDetectorPlugin
 import com.google.protobuf.gradle.internal.ProjectExt
 import groovy.transform.CompileStatic
@@ -44,12 +46,17 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.UnknownDomainObjectException
+import org.gradle.api.artifacts.ArtifactView
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.attributes.Attribute
+import org.gradle.api.attributes.AttributeContainer
+import org.gradle.api.file.CopySpec
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.SourceDirectorySet
+import org.gradle.api.internal.plugins.DslObject
 import org.gradle.api.plugins.ExtensionAware
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.AbstractCopyTask
 import org.gradle.api.tasks.SourceTask
 
 import java.util.concurrent.atomic.AtomicBoolean
@@ -73,7 +80,8 @@ class ProtobufAndroidPlugin implements Plugin<Project> {
   private ProtobufExtension protobufExtension
   private final AtomicBoolean wasApplied = new AtomicBoolean(false)
 
-  @SuppressWarnings(["SpaceAroundOperator"]) // suppress a elvis operator formatting
+  @SuppressWarnings(["SpaceAroundOperator"])
+  // suppress a ternary operator formatting
   void apply(final Project project) {
     ProjectExt.checkMinimalGradleVersion(project)
 
@@ -157,10 +165,10 @@ class ProtobufAndroidPlugin implements Plugin<Project> {
    * Adds the proto extension to the SourceSet, e.g., it creates
    * sourceSets.main.proto and sourceSets.test.proto.
    */
-  private SourceDirectorySet addSourceSetExtension(Object sourceSet) {
+  private SourceDirectorySet addSourceSetExtension(AndroidSourceSet sourceSet) {
     String name = sourceSet.name
     SourceDirectorySet sds = project.objects.sourceDirectorySet(name, "${name} Proto source")
-    sourceSet.extensions.add('proto', sds)
+    new DslObject(sourceSet).extensions.add('proto', sds)
     sds.srcDir("src/${name}/proto")
     sds.include("**/*.proto")
     return sds
@@ -175,11 +183,12 @@ class ProtobufAndroidPlugin implements Plugin<Project> {
     // ExtractIncludeProto task, one per variant (compilation unit).
     // Proto definitions from an AAR dependencies are in its JAR resources.
     Attribute artifactType = Attribute.of("artifactType", String)
-    FileCollection classPathConfig = variant.compileConfiguration.incoming.artifactView {
-      attributes {
-        it.attribute(artifactType, "jar")
-      }
-    }.files
+    FileCollection classPathConfig = variant.compileConfiguration.incoming
+      .artifactView { ArtifactView.ViewConfiguration conf ->
+        conf.attributes { AttributeContainer attrs ->
+          attrs.attribute(artifactType, "jar")
+        }
+      }.files
     FileCollection testClassPathConfig = project.objects.fileCollection()
     if (variant instanceof TestVariant || variant instanceof UnitTestVariant) {
       // TODO(zhangkun83): Android sourceSet doesn't have compileClasspath. If it did, we
@@ -188,39 +197,47 @@ class ProtobufAndroidPlugin implements Plugin<Project> {
       // dependencies.
       testClassPathConfig = ((androidExtension.sourceSets.getByName("main") as ExtensionAware)
         .extensions.getByName("proto") as SourceDirectorySet).sourceDirectories
-      testClassPathConfig += (variant["testedVariant"] as BaseVariant).compileConfiguration.incoming.artifactView {
-        attributes {
-          it.attribute(artifactType, "jar")
-        }
-      }.files
+      testClassPathConfig += (variant["testedVariant"] as BaseVariant).compileConfiguration.incoming
+        .artifactView { ArtifactView.ViewConfiguration conf ->
+          conf.attributes { AttributeContainer attrs ->
+            attrs.attribute(artifactType, "jar")
+          }
+        }.files
     }
     Provider<ProtobufExtract> extractIncludeProtosTask =
       setupExtractIncludeProtosTask(variant.name, classPathConfig, testClassPathConfig)
 
     // GenerateProto task, one per variant (compilation unit).
     SourceDirectorySet sourceDirs = project.objects.sourceDirectorySet(variant.name, "AllSourceSets")
-    variant.sourceSets.forEach { sourceDirs.source(it.proto) }
+    variant.sourceSets.forEach { SourceProvider provider ->
+      sourceDirs.source(((provider as ExtensionAware).extensions.getByName("proto") as SourceDirectorySet))
+    }
     FileCollection extractProtosDirs = project.files(project.providers.provider {
       variant.sourceSets.collect {
         project.files(project.tasks.named(getExtractProtosTaskName(it.name)))
       }
     })
     Provider<GenerateProtoTask> generateProtoTask = addGenerateProtoTask(
-      variant.name, sourceDirs, extractProtosDirs, extractIncludeProtosTask) {
-      it.setVariant(variant, isTestVariant)
-      it.flavors = variant.productFlavors.collect { it.name }
+      variant.name,
+      sourceDirs,
+      extractProtosDirs,
+      extractIncludeProtosTask
+    ) { GenerateProtoTask task ->
+      // temporary hack for do not depend agp inside of GenerateProtoTask
+      task.setVariant(variant, variant instanceof TestVariant || variant instanceof UnitTestVariant)
+      task.flavors = variant.productFlavors.collect { ProductFlavor flavour -> flavour.name }
       if (variant.hasProperty('buildType')) {
-        it.buildType = variant.buildType.name
+        task.buildType = variant.buildType.name
       }
-      it.doneInitializing()
+      task.doneInitializing()
     }
 
     if (androidExtension instanceof LibraryExtension) {
       // Include source proto files in the compiled archive, so that proto files from
       // dependent projects can import them.
-      variant.getProcessJavaResourcesProvider().configure {
-        it.from(generateProtoTask.get().sourceDirs) {
-          include '**/*.proto'
+      variant.getProcessJavaResourcesProvider().configure { AbstractCopyTask task ->
+        task.from(generateProtoTask.get().sourceDirs) { CopySpec spec ->
+          spec.include('**/*.proto')
         }
       }
     }
@@ -245,7 +262,8 @@ class ProtobufAndroidPlugin implements Plugin<Project> {
    * compiled. For Java it's the sourceSet that sourceSetOrVariantName stands
    * for; for Android it's the collection of sourceSets that the variant includes.
    */
-  @SuppressWarnings(["UnnecessaryObjectReferences"]) // suppress a lot of it.doLogic in task registration block
+  @SuppressWarnings(["UnnecessaryObjectReferences"])
+  // suppress a lot of it.doLogic in task registration block
   private Provider<GenerateProtoTask> addGenerateProtoTask(
     String sourceSetOrVariantName,
     SourceDirectorySet protoSourceSet,
@@ -337,14 +355,14 @@ class ProtobufAndroidPlugin implements Plugin<Project> {
   private void linkGenerateProtoTasksToTaskName(String compileTaskName, SourceDirectorySet srcDirSet) {
     try {
       project.tasks.named(compileTaskName).configure { compileTask ->
-        linkGenerateProtoTasksToTask(compileTask, srcDirSet)
+        linkGenerateProtoTasksToTask(compileTask as SourceTask, srcDirSet)
       }
     } catch (UnknownDomainObjectException ignore) {
       // It is possible for a compile task to not exist yet. For example, if someone applied
       // the proto plugin and then later applies the kotlin plugin.
       project.tasks.configureEach { Task task ->
         if (task.name == compileTaskName) {
-          linkGenerateProtoTasksToTask(task, srcDirSet)
+          linkGenerateProtoTasksToTask(task as SourceTask, srcDirSet)
         }
       }
     }
