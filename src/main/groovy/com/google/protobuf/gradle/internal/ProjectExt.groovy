@@ -36,14 +36,17 @@ import com.android.build.gradle.TestedExtension
 import com.android.build.gradle.api.BaseVariant
 import groovy.transform.CompileStatic
 import org.gradle.api.Action
+import org.gradle.api.GradleException
 import org.gradle.api.Project
+import org.gradle.util.GradleVersion
 
 @CompileStatic
 class ProjectExt {
   private ProjectExt() {
   }
 
-  @SuppressWarnings(["CouldBeSwitchStatement"]) // `if` is better than fallthrough `switch`
+  @SuppressWarnings(["CouldBeSwitchStatement"])
+  // `if` is better than fallthrough `switch`
   static void forEachVariant(final Project project, final Action<? extends BaseVariant> action) {
     BaseExtension android = project.extensions.getByName("android") as BaseExtension
     project.logger.debug("$project has '$android'")
@@ -63,6 +66,12 @@ class ProjectExt {
     if (android instanceof TestedExtension) {
       (android as TestedExtension).getTestVariants().all(action)
       (android as TestedExtension).getUnitTestVariants().all(action)
+    }
+  }
+
+  static void checkMinimalGradleVersion(final Project project) {
+    if (GradleVersion.current() < GradleVersion.version("5.6")) {
+      throw new GradleException("Gradle version is ${project.gradle.gradleVersion}. Minimum supported version is 5.6")
     }
   }
 }

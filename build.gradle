@@ -167,6 +167,10 @@ gradlePlugin {
       implementationClass = "com.google.protobuf.gradle.ProtobufPlugin"
       description = "The Protobuf plugin provides protobuf compilation to your project."
     }
+    protobufAndroidPlugin {
+      id = "com.google.protobuf.android"
+      implementationClass = "com.google.protobuf.gradle.ProtobufAndroidPlugin"
+    }
   }
 }
 
