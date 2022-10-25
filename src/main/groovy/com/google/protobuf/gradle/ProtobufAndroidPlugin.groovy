@@ -37,9 +37,11 @@ import com.android.build.gradle.api.UnitTestVariant
 import com.android.builder.model.ProductFlavor
 import com.android.builder.model.SourceProvider
 import com.google.gradle.osdetector.OsDetectorPlugin
+import com.google.protobuf.gradle.internal.AndroidSourceSetFacade
 import com.google.protobuf.gradle.internal.ProjectExt
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
+import org.apache.tools.ant.types.resources.selectors.And
 import org.gradle.api.Action
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
@@ -53,7 +55,6 @@ import org.gradle.api.attributes.AttributeContainer
 import org.gradle.api.file.CopySpec
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.SourceDirectorySet
-import org.gradle.api.internal.plugins.DslObject
 import org.gradle.api.plugins.ExtensionAware
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.AbstractCopyTask
@@ -124,16 +125,14 @@ class ProtobufAndroidPlugin implements Plugin<Project> {
     // of each variant.
     Collection<Closure> postConfigure = []
     BaseExtension androidExtension = project.extensions.getByType(BaseExtension)
-    androidExtension.sourceSets.configureEach { AndroidSourceSet sourceSet ->
-      addSourceSetExtension(sourceSet)
-      Configuration protobufConfig = createProtobufConfiguration(sourceSet.name)
-      setupExtractProtosTask(sourceSet.name, protobufConfig)
+    androidExtension.sourceSets.configureEach { Object sourceSet ->
+      AndroidSourceSetFacade sourceSetFacade = ProjectExt.createAndroidSourceSetFacade(sourceSet)
+      addSourceSetExtension(sourceSetFacade)
+      Configuration protobufConfig = createProtobufConfiguration(sourceSetFacade.name)
+      setupExtractProtosTask(sourceSetFacade.name, protobufConfig)
     }
     ProjectExt.forEachVariant(this.project) { BaseVariant variant ->
-      addTasksForVariant(
-        variant,
-        postConfigure
-      )
+      addTasksForVariant(variant, postConfigure)
     }
     project.afterEvaluate {
       this.protobufExtension.configureTasks()
@@ -165,10 +164,10 @@ class ProtobufAndroidPlugin implements Plugin<Project> {
    * Adds the proto extension to the SourceSet, e.g., it creates
    * sourceSets.main.proto and sourceSets.test.proto.
    */
-  private SourceDirectorySet addSourceSetExtension(AndroidSourceSet sourceSet) {
+  private SourceDirectorySet addSourceSetExtension(AndroidSourceSetFacade sourceSet) {
     String name = sourceSet.name
     SourceDirectorySet sds = project.objects.sourceDirectorySet(name, "${name} Proto source")
-    (sourceSet as ExtensionAware).extensions.add('proto', sds)
+    sourceSet.extensions.add('proto', sds)
     sds.srcDir("src/${name}/proto")
     sds.include("**/*.proto")
     return sds

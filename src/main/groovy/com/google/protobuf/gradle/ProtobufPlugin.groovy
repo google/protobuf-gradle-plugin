@@ -99,22 +99,22 @@ class ProtobufPlugin implements Plugin<Project> {
     }
 
     private void doApply() {
-        boolean isAndroid = Utils.isAndroidProject(project)
+      if (Utils.isAndroidProject(project)) {
+        this.project.pluginManager.apply(ProtobufAndroidPlugin)
+      } else {
         // Java projects will extract included protos from a 'compileProtoPath'
         // configuration of each source set, while Android projects will
         // extract included protos from {@code variant.compileConfiguration}
         // of each variant.
         Collection<Closure> postConfigure = []
-        if (isAndroid) {
-          this.project.pluginManager.apply(ProtobufAndroidPlugin)
-        } else {
-          project.extensions.getByType(SourceSetContainer).configureEach { SourceSet sourceSet ->
-            SourceDirectorySet protoSrcDirSet = addSourceSetExtension(sourceSet)
-            Configuration protobufConfig = createProtobufConfiguration(sourceSet.name)
-            Configuration compileProtoPath = createCompileProtoPathConfiguration(sourceSet.name)
-            this.addTasksForSourceSet(sourceSet, protoSrcDirSet, protobufConfig, compileProtoPath, postConfigure)
-          }
+
+        project.extensions.getByType(SourceSetContainer).configureEach { SourceSet sourceSet ->
+          SourceDirectorySet protoSrcDirSet = addSourceSetExtension(sourceSet)
+          Configuration protobufConfig = createProtobufConfiguration(sourceSet.name)
+          Configuration compileProtoPath = createCompileProtoPathConfiguration(sourceSet.name)
+          this.addTasksForSourceSet(sourceSet, protoSrcDirSet, protobufConfig, compileProtoPath, postConfigure)
         }
+
         project.afterEvaluate {
           this.protobufExtension.configureTasks()
           // Disallow user configuration outside the config closures, because the operations just
@@ -126,6 +126,7 @@ class ProtobufPlugin implements Plugin<Project> {
           // block. Only at this point the configuration has been finalized.
           this.protobufExtension.tools.resolve(project)
         }
+      }
     }
 
     /**
