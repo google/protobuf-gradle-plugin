@@ -168,7 +168,7 @@ class ProtobufAndroidPlugin implements Plugin<Project> {
   private SourceDirectorySet addSourceSetExtension(AndroidSourceSet sourceSet) {
     String name = sourceSet.name
     SourceDirectorySet sds = project.objects.sourceDirectorySet(name, "${name} Proto source")
-    new DslObject(sourceSet).extensions.add('proto', sds)
+    (sourceSet as ExtensionAware).extensions.add('proto', sds)
     sds.srcDir("src/${name}/proto")
     sds.include("**/*.proto")
     return sds
