@@ -1,54 +1,33 @@
 package com.google.protobuf.gradle.internal
 
-import groovy.transform.CompileStatic
+import groovy.transform.CompileDynamic
 import com.android.build.api.dsl.AndroidSourceSet
 import com.android.build.gradle.api.AndroidSourceSet as DeprecatedAndroidSourceSet
 import org.gradle.api.plugins.ExtensionAware
 import org.gradle.api.plugins.ExtensionContainer
 
-@CompileStatic
-interface AndroidSourceSetFacade {
+@CompileDynamic
+class AndroidSourceSetFacade {
+  private final Object sourceSet
 
-  String getName()
-
-  ExtensionContainer getExtensions()
-
-  @CompileStatic
-  class Default implements AndroidSourceSetFacade {
-    private final AndroidSourceSet sourceSet
-
-    Default(AndroidSourceSet sourceSet) {
-      this.sourceSet = sourceSet
+  AndroidSourceSetFacade(Object sourceSet) {
+    this.sourceSet = sourceSet
+    if (sourceSet instanceof DeprecatedAndroidSourceSet) {
+      return
     }
-
-    @Override
-    String getName() {
-      return sourceSet.name
+    if (sourceSet instanceof AndroidSourceSet) {
+      return
     }
-
-    @Override
-    ExtensionContainer getExtensions() {
-      return (sourceSet as ExtensionAware).extensions
-    }
+    throw new IllegalArgumentException("source set should be 'com.android.build.api.dsl.AndroidSourceSet' " +
+      "or 'com.android.build.gradle.api.AndroidSourceSet', but '${sourceSet.class.packageName}' was present")
   }
 
-  @CompileStatic
-  class Deprecated implements AndroidSourceSetFacade {
-    private final DeprecatedAndroidSourceSet sourceSet
+  String getName() {
+    return this.sourceSet.name
+  }
 
-    Deprecated(DeprecatedAndroidSourceSet sourceSet) {
-      this.sourceSet = sourceSet
-    }
-
-    @Override
-    String getName() {
-      return sourceSet.name
-    }
-
-    @Override
-    ExtensionContainer getExtensions() {
-      return (sourceSet as ExtensionAware).extensions
-    }
+  ExtensionContainer getExtensions() {
+    return (this.sourceSet as ExtensionAware).extensions
   }
 
 }

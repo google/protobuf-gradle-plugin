@@ -39,16 +39,13 @@ import org.gradle.api.Action
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.util.GradleVersion
-import com.android.build.api.dsl.AndroidSourceSet
-import com.android.build.gradle.api.AndroidSourceSet as DeprecatedAndroidSourceSet
 
 @CompileStatic
 class ProjectExt {
   private ProjectExt() {
   }
 
-  @SuppressWarnings(["CouldBeSwitchStatement"])
-  // `if` is better than fallthrough `switch`
+  @SuppressWarnings(["CouldBeSwitchStatement"]) // `if` is better than fallthrough `switch`
   static void forEachVariant(final Project project, final Action<? extends BaseVariant> action) {
     BaseExtension android = project.extensions.getByName("android") as BaseExtension
     project.logger.debug("$project has '$android'")
@@ -75,16 +72,5 @@ class ProjectExt {
     if (GradleVersion.current() < GradleVersion.version("5.6")) {
       throw new GradleException("Gradle version is ${project.gradle.gradleVersion}. Minimum supported version is 5.6")
     }
-  }
-
-  static AndroidSourceSetFacade createAndroidSourceSetFacade(Object sourceSet) {
-    if (sourceSet instanceof DeprecatedAndroidSourceSet) {
-      return new AndroidSourceSetFacade.Deprecated(sourceSet)
-    }
-    if (sourceSet instanceof AndroidSourceSet) {
-      return new AndroidSourceSetFacade.Default(sourceSet)
-    }
-    throw new IllegalArgumentException("source set should be 'com.android.build.api.dsl.AndroidSourceSet' " +
-      "or 'com.android.build.gradle.api.AndroidSourceSet', but '${sourceSet.class.packageName}' was present")
   }
 }

@@ -79,8 +79,7 @@ class ProtobufAndroidPlugin implements Plugin<Project> {
   private ProtobufExtension protobufExtension
   private final AtomicBoolean wasApplied = new AtomicBoolean(false)
 
-  @SuppressWarnings(["SpaceAroundOperator"])
-  // suppress a ternary operator formatting
+  @SuppressWarnings(["SpaceAroundOperator"]) // suppress a ternary operator formatting
   void apply(final Project project) {
     ProjectExt.checkMinimalGradleVersion(project)
 
@@ -124,7 +123,7 @@ class ProtobufAndroidPlugin implements Plugin<Project> {
     Collection<Closure> postConfigure = []
     BaseExtension androidExtension = project.extensions.getByType(BaseExtension)
     androidExtension.sourceSets.configureEach { Object sourceSet ->
-      AndroidSourceSetFacade sourceSetFacade = ProjectExt.createAndroidSourceSetFacade(sourceSet)
+      AndroidSourceSetFacade sourceSetFacade = new AndroidSourceSetFacade(sourceSet)
       addSourceSetExtension(sourceSetFacade)
       Configuration protobufConfig = createProtobufConfiguration(sourceSetFacade.name)
       setupExtractProtosTask(sourceSetFacade.name, protobufConfig)
@@ -259,8 +258,7 @@ class ProtobufAndroidPlugin implements Plugin<Project> {
    * compiled. For Java it's the sourceSet that sourceSetOrVariantName stands
    * for; for Android it's the collection of sourceSets that the variant includes.
    */
-  @SuppressWarnings(["UnnecessaryObjectReferences"])
-  // suppress a lot of it.doLogic in task registration block
+  @SuppressWarnings(["UnnecessaryObjectReferences"]) // suppress a lot of it.doLogic in task registration block
   private Provider<GenerateProtoTask> addGenerateProtoTask(
     String sourceSetOrVariantName,
     SourceDirectorySet protoSourceSet,
