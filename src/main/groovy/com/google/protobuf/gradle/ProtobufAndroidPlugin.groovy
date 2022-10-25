@@ -28,7 +28,6 @@
  */
 package com.google.protobuf.gradle
 
-import com.android.build.api.dsl.AndroidSourceSet
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.api.BaseVariant
@@ -41,7 +40,6 @@ import com.google.protobuf.gradle.internal.AndroidSourceSetFacade
 import com.google.protobuf.gradle.internal.ProjectExt
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
-import org.apache.tools.ant.types.resources.selectors.And
 import org.gradle.api.Action
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
