@@ -18,7 +18,7 @@ class AndroidSourceSetFacade {
     if (sourceSet instanceof AndroidSourceSet) {
       return
     }
-    throw new IllegalArgumentException("source set should be 'com.android.build.api.dsl.AndroidSourceSet' " +
+    throw new IllegalArgumentException("sourceSet param should be 'com.android.build.api.dsl.AndroidSourceSet' " +
       "or 'com.android.build.gradle.api.AndroidSourceSet', but '${sourceSet.class.packageName}' was present")
   }
 

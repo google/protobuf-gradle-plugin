@@ -53,8 +53,15 @@ import org.gradle.language.jvm.tasks.ProcessResources
 @CompileStatic
 class ProtobufPlugin implements Plugin<Project> {
     // any one of these plugins should be sufficient to proceed with applying this plugin
-    private static final List<String> PREREQ_PLUGIN_OPTIONS = ['java', 'java-library'] +
-      ProtobufAndroidPlugin.PREREQ_PLUGIN_OPTIONS
+    private static final List<String> PREREQ_PLUGIN_OPTIONS = [
+      'java',
+      'java-library',
+      'com.android.application',
+      'com.android.library',
+      'com.android.instantapp',
+      'com.android.feature',
+      'com.android.dynamic-feature',
+    ]
 
     private Project project
     private ProtobufExtension protobufExtension
