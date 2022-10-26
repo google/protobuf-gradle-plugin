@@ -28,12 +28,15 @@
  */
 package com.google.protobuf.gradle
 
+import com.google.protobuf.gradle.internal.DefaultProtoSourceSet
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.Action
+import org.gradle.api.NamedDomainObjectCollection
 import org.gradle.api.NamedDomainObjectContainer
+import org.gradle.api.NamedDomainObjectSet
 import org.gradle.api.Project
 import org.gradle.api.tasks.TaskCollection
 
@@ -48,6 +51,7 @@ abstract class ProtobufExtension {
   private final GenerateProtoTaskCollection tasks
   private final ToolsLocator tools
   private final ArrayList<Action<GenerateProtoTaskCollection>> taskConfigActions
+  private final NamedDomainObjectContainer<ProtoSourceSet> sourceSets
 
   /**
    * The base directory of generated files. The default is
@@ -61,6 +65,13 @@ abstract class ProtobufExtension {
     this.tools = new ToolsLocator(project)
     this.taskConfigActions = []
     this.generatedFilesBaseDir = "${project.buildDir}/generated/source/proto"
+    this.sourceSets = project.objects.domainObjectContainer(ProtoSourceSet) { String name ->
+      return new DefaultProtoSourceSet(name, name.capitalize(), project.objects) as ProtoSourceSet
+    }
+  }
+
+  NamedDomainObjectContainer<ProtoSourceSet> getSourceSets() {
+    return this.sourceSets
   }
 
   @PackageScope
@@ -159,7 +170,8 @@ abstract class ProtobufExtension {
       }
     }
 
-    @TypeChecked(TypeCheckingMode.SKIP) // Don't depend on AGP
+    @TypeChecked(TypeCheckingMode.SKIP)
+    // Don't depend on AGP
     public TaskCollection<GenerateProtoTask> ofVariant(String variant) {
       return all().matching { GenerateProtoTask task ->
         Utils.isAndroidProject(project) && task.variant.name == variant

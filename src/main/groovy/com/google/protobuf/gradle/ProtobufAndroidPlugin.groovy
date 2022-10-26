@@ -37,7 +37,6 @@ import com.android.builder.model.ProductFlavor
 import com.android.builder.model.SourceProvider
 import com.google.gradle.osdetector.OsDetectorPlugin
 import com.google.protobuf.gradle.internal.AndroidSourceSetFacade
-import com.google.protobuf.gradle.internal.DefaultProtoSourceSet
 import com.google.protobuf.gradle.internal.ProjectExt
 import groovy.transform.CompileStatic
 import org.gradle.api.Action
@@ -105,7 +104,14 @@ class ProtobufAndroidPlugin implements Plugin<Project> {
 
   private void doApply() {
     configureSourceSetDefaults()
+    configureConfigurationDefaults()
     configureTaskDefaults()
+  }
+
+  private void configureConfigurationDefaults() {
+    this.protobufExtension.sourceSets.all { ProtoSourceSet protoSourceSet ->
+      createProtoSourceConfiguration(protoSourceSet)
+    }
   }
 
   private void configureSourceSetDefaults() {
@@ -113,16 +119,20 @@ class ProtobufAndroidPlugin implements Plugin<Project> {
     android.sourceSets.configureEach { Object sourceSet ->
       AndroidSourceSetFacade sourceSetFacade = new AndroidSourceSetFacade(sourceSet)
 
-      ProtoSourceSet protoSourceSet = new DefaultProtoSourceSet("groovy", sourceSetFacade.name, project.objects)
+      ProtoSourceSet protoSourceSet = this.protobufExtension.sourceSets.create(sourceSetFacade.name)
       protoSourceSet.proto.include("src/${sourceSetFacade.name}/proto")
       sourceSetFacade.extensions.add("proto", protoSourceSet.proto)
-
-      Configuration protoSourceConf = createProtoSourceConfiguration(protoSourceSet)
-      setupExtractProtosTask(sourceSetFacade.name, protoSourceConf)
     }
   }
 
   private void configureTaskDefaults() {
+    this.protobufExtension.sourceSets.all { ProtoSourceSet protoSourceSet ->
+      setupExtractProtosTask(
+        protoSourceSet.name,
+        project.configurations.getByName(protoSourceSet.getConfigurationNameOf("protobuf"))
+      )
+    }
+
     // Java projects will extract included protos from a 'compileProtoPath'
     // configuration of each source set, while Android projects will
     // extract included protos from {@code variant.compileConfiguration}
