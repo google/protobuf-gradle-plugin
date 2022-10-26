@@ -10,4 +10,10 @@ interface ProtoSourceSet {
   SourceDirectorySet getProto()
 
   String getConfigurationNameOf(String configurationName)
+
+  String getProtobufConfigurationName()
+
+  String getExtractProtosTaskName()
+
+  String getExtractedProtosDir()
 }

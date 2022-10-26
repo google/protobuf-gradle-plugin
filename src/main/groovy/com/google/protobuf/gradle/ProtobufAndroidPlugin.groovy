@@ -35,7 +35,6 @@ import com.android.build.gradle.api.TestVariant
 import com.android.build.gradle.api.UnitTestVariant
 import com.android.builder.model.ProductFlavor
 import com.android.builder.model.SourceProvider
-import com.google.gradle.osdetector.OsDetectorPlugin
 import com.google.protobuf.gradle.internal.AndroidSourceSetFacade
 import com.google.protobuf.gradle.internal.ProjectExt
 import groovy.transform.CompileStatic
@@ -46,7 +45,6 @@ import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.UnknownDomainObjectException
 import org.gradle.api.artifacts.ArtifactView
-import org.gradle.api.artifacts.Configuration
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.attributes.AttributeContainer
 import org.gradle.api.file.CopySpec
@@ -72,14 +70,8 @@ class ProtobufAndroidPlugin implements Plugin<Project> {
   @SuppressWarnings(["SpaceAroundOperator"])
   // suppress a ternary operator formatting
   void apply(final Project project) {
-    ProjectExt.checkMinimalGradleVersion(project)
-
     this.project = project
-    this.protobufExtension = project.extensions.findByType(ProtobufExtension) == null
-      ? project.extensions.create("protobuf", ProtobufExtension, project)
-      : project.extensions.getByType(ProtobufExtension)
-
-    project.pluginManager.apply(OsDetectorPlugin)
+    this.protobufExtension = project.extensions.getByType(ProtobufExtension)
 
     Action<? super Plugin<Project>> androidPluginHandler = { plugin ->
       project.logger.debug("$plugin was applied to $project")
@@ -108,12 +100,6 @@ class ProtobufAndroidPlugin implements Plugin<Project> {
     configureTaskDefaults()
   }
 
-  private void configureConfigurationDefaults() {
-    this.protobufExtension.sourceSets.all { ProtoSourceSet protoSourceSet ->
-      createProtoSourceConfiguration(protoSourceSet)
-    }
-  }
-
   private void configureSourceSetDefaults() {
     BaseExtension android = project.extensions.getByType(BaseExtension)
     android.sourceSets.configureEach { Object sourceSet ->
@@ -125,12 +111,13 @@ class ProtobufAndroidPlugin implements Plugin<Project> {
     }
   }
 
+  private void configureConfigurationDefaults() {
+    this.protobufExtension.sourceSets.all { ProtoSourceSet protoSourceSet ->
+    }
+  }
+
   private void configureTaskDefaults() {
     this.protobufExtension.sourceSets.all { ProtoSourceSet protoSourceSet ->
-      setupExtractProtosTask(
-        protoSourceSet.name,
-        project.configurations.getByName(protoSourceSet.getConfigurationNameOf("protobuf"))
-      )
     }
 
     // Java projects will extract included protos from a 'compileProtoPath'
@@ -177,19 +164,6 @@ class ProtobufAndroidPlugin implements Plugin<Project> {
       // block. Only at this point the configuration has been finalized.
       this.protobufExtension.tools.resolve(project)
     }
-  }
-
-  /**
-   * Creates a 'protobuf' configuration for the given source set. The build author can
-   * configure dependencies for it. The extract-protos task of each source set will
-   * extract protobuf files from dependencies in this configuration. Extracted dependencies
-   * will passed to proto compiler as sources.
-   */
-  private Configuration createProtoSourceConfiguration(ProtoSourceSet protoSourceSet) {
-    Configuration protobufConf = project.configurations.create(protoSourceSet.getConfigurationNameOf("protobuf"))
-    protobufConf.visible = false
-    protobufConf.transitive = true
-    return protobufConf
   }
 
   /**
@@ -256,25 +230,6 @@ class ProtobufAndroidPlugin implements Plugin<Project> {
       })
     srcDirSet.include("**/*.java", "**/*.kt")
     return srcDirSet
-  }
-
-  /**
-   * Sets up a task to extract protos from protobuf dependencies. They are
-   * treated as sources and will be compiled.
-   *
-   * <p>This task is per-sourceSet, for both Java and Android. In Android a
-   * variant may have multiple sourceSets, each of these sourceSets will have
-   * its own extraction task.
-   */
-  private Provider<ProtobufExtract> setupExtractProtosTask(
-    final String sourceSetName,
-    final Configuration protobufConfig
-  ) {
-    return project.tasks.register(getExtractProtosTaskName(sourceSetName), ProtobufExtract) {
-      it.description = "Extracts proto files/dependencies specified by 'protobuf' configuration"
-      it.destDir.set(getExtractedProtosDir(sourceSetName) as File)
-      it.inputFiles.from(protobufConfig)
-    }
   }
 
   private String getExtractProtosTaskName(String sourceSetName) {
@@ -350,9 +305,5 @@ class ProtobufAndroidPlugin implements Plugin<Project> {
 
   private String getExtractedIncludeProtosDir(String sourceSetName) {
     return "${project.buildDir}/extracted-include-protos/${sourceSetName}"
-  }
-
-  private String getExtractedProtosDir(String sourceSetName) {
-    return "${project.buildDir}/extracted-protos/${sourceSetName}"
   }
 }

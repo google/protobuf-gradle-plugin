@@ -29,7 +29,6 @@
  */
 package com.google.protobuf.gradle
 
-import com.google.protobuf.gradle.internal.ProjectExt
 import groovy.transform.CompileStatic
 import org.gradle.api.Action
 import org.gradle.api.GradleException
@@ -47,107 +46,96 @@ import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.language.jvm.tasks.ProcessResources
 
+import java.util.concurrent.atomic.AtomicBoolean
+
 /**
  * The main class for the protobuf plugin.
  */
 @CompileStatic
 class ProtobufPlugin implements Plugin<Project> {
-    // any one of these plugins should be sufficient to proceed with applying this plugin
-    private static final List<String> PREREQ_PLUGIN_OPTIONS = [
-      'java',
-      'java-library',
-      'com.android.application',
-      'com.android.library',
-      'com.android.instantapp',
-      'com.android.feature',
-      'com.android.dynamic-feature',
-    ]
+  // any one of these plugins should be sufficient to proceed with applying this plugin
+  private static final List<String> PREREQ_PLUGIN_OPTIONS = [
+    'java',
+    'java-library',
+    'com.android.application',
+    'com.android.library',
+    'com.android.instantapp',
+    'com.android.feature',
+    'com.android.dynamic-feature',
+  ]
 
-    private Project project
-    private ProtobufExtension protobufExtension
-    private boolean wasApplied = false
+  private Project project
+  private ProtobufExtension protobufExtension
+  private final AtomicBoolean wasApplied = new AtomicBoolean(false)
 
-    void apply(final Project project) {
-      ProjectExt.checkMinimalGradleVersion(project)
+  void apply(final Project project) {
+    project.pluginManager.apply(ProtobufConventionPlugin)
 
-      this.protobufExtension = project.extensions.create("protobuf", ProtobufExtension, project)
+    this.project = project
+    this.protobufExtension = project.extensions.getByType(ProtobufExtension)
 
-      this.project = project
-
-      // Provides the osdetector extension
-      project.apply([plugin:com.google.gradle.osdetector.OsDetectorPlugin])
-
-        // At least one of the prerequisite plugins must by applied before this plugin can be applied, so
-        // we will use the PluginManager.withPlugin() callback mechanism to delay applying this plugin until
-        // after that has been achieved. If project evaluation completes before one of the prerequisite plugins
-        // has been applied then we will assume that none of prerequisite plugins were specified and we will
-        // throw an Exception to alert the user of this configuration issue.
-        Action<? super AppliedPlugin> applyWithPrerequisitePlugin = { AppliedPlugin prerequisitePlugin ->
-          if (wasApplied) {
-            project.logger.info('The com.google.protobuf plugin was already applied to the project: ' + project.path
-                + ' and will not be applied again after plugin: ' + prerequisitePlugin.id)
-          } else {
-            wasApplied = true
-
-            doApply()
-          }
-        }
-
-        PREREQ_PLUGIN_OPTIONS.each { pluginName ->
-          project.pluginManager.withPlugin(pluginName, applyWithPrerequisitePlugin)
-        }
-
-        project.afterEvaluate {
-          if (!wasApplied) {
-            throw new GradleException('The com.google.protobuf plugin could not be applied during project evaluation.'
-                + ' The Java plugin or one of the Android plugins must be applied to the project first.')
-          }
-        }
+    // At least one of the prerequisite plugins must by applied before this plugin can be applied, so
+    // we will use the PluginManager.withPlugin() callback mechanism to delay applying this plugin until
+    // after that has been achieved. If project evaluation completes before one of the prerequisite plugins
+    // has been applied then we will assume that none of prerequisite plugins were specified and we will
+    // throw an Exception to alert the user of this configuration issue.
+    Action<? super AppliedPlugin> applyWithPrerequisitePlugin = { AppliedPlugin prerequisitePlugin ->
+      if (wasApplied.getAndSet(true)) {
+        project.logger.info('The com.google.protobuf plugin was already applied to the project: ' + project.path
+          + ' and will not be applied again after plugin: ' + prerequisitePlugin.id)
+      } else {
+        doApply()
+      }
     }
+
+    PREREQ_PLUGIN_OPTIONS.each { pluginName ->
+      project.pluginManager.withPlugin(pluginName, applyWithPrerequisitePlugin)
+    }
+
+    project.afterEvaluate {
+      if (!wasApplied) {
+        throw new GradleException('The com.google.protobuf plugin could not be applied during project evaluation.'
+          + ' The Java plugin or one of the Android plugins must be applied to the project first.')
+      }
+    }
+  }
 
     private void doApply() {
       if (Utils.isAndroidProject(project)) {
         this.project.pluginManager.apply(ProtobufAndroidPlugin)
       } else {
-        // Java projects will extract included protos from a 'compileProtoPath'
-        // configuration of each source set, while Android projects will
-        // extract included protos from {@code variant.compileConfiguration}
-        // of each variant.
-        Collection<Closure> postConfigure = []
-
-        project.extensions.getByType(SourceSetContainer).configureEach { SourceSet sourceSet ->
-          SourceDirectorySet protoSrcDirSet = addSourceSetExtension(sourceSet)
-          Configuration protobufConfig = createProtobufConfiguration(sourceSet.name)
-          Configuration compileProtoPath = createCompileProtoPathConfiguration(sourceSet.name)
-          this.addTasksForSourceSet(sourceSet, protoSrcDirSet, protobufConfig, compileProtoPath, postConfigure)
-        }
-
-        project.afterEvaluate {
-          this.protobufExtension.configureTasks()
-          // Disallow user configuration outside the config closures, because the operations just
-          // after the doneConfig() loop over the generated outputs and will be out-of-date if
-          // plugin output is added after this point.
-          this.protobufExtension.generateProtoTasks.all().configureEach { it.doneConfig() }
-          postConfigure.each { it.call() }
-          // protoc and codegen plugin configuration may change through the protobuf{}
-          // block. Only at this point the configuration has been finalized.
-          this.protobufExtension.tools.resolve(project)
-        }
+        doJvmApply()
       }
     }
 
-    /**
-     * Creates a 'protobuf' configuration for the given source set. The build author can
-     * configure dependencies for it. The extract-protos task of each source set will
-     * extract protobuf files from dependencies in this configuration.
-     */
-    private Configuration createProtobufConfiguration(String sourceSetName) {
-      String protobufConfigName = Utils.getConfigName(sourceSetName, 'protobuf')
-      return project.configurations.create(protobufConfigName) { Configuration it ->
-        it.visible = false
-        it.transitive = true
-      }
+  private void doJvmApply() {
+    // Java projects will extract included protos from a 'compileProtoPath'
+    // configuration of each source set, while Android projects will
+    // extract included protos from {@code variant.compileConfiguration}
+    // of each variant.
+    Collection<Closure> postConfigure = []
+
+    project.extensions.getByType(SourceSetContainer).configureEach { SourceSet sourceSet ->
+      ProtoSourceSet protoSourceSet = this.protobufExtension.sourceSets.create(sourceSet.name)
+      protoSourceSet.proto.include("src/${sourceSet.name}/proto")
+      sourceSet.extensions.add("proto", protoSourceSet.proto)
+
+      Configuration compileProtoPath = createCompileProtoPathConfiguration(sourceSet.name)
+      this.addTasksForSourceSet(sourceSet, protoSourceSet, compileProtoPath, postConfigure)
     }
+
+    project.afterEvaluate {
+      this.protobufExtension.configureTasks()
+      // Disallow user configuration outside the config closures, because the operations just
+      // after the doneConfig() loop over the generated outputs and will be out-of-date if
+      // plugin output is added after this point.
+      this.protobufExtension.generateProtoTasks.all().configureEach { it.doneConfig() }
+      postConfigure.each { it.call() }
+      // protoc and codegen plugin configuration may change through the protobuf{}
+      // block. Only at this point the configuration has been finalized.
+      this.protobufExtension.tools.resolve(project)
+    }
+  }
 
     /**
      * Creates an internal 'compileProtoPath' configuration for the given source set that extends
@@ -189,42 +177,32 @@ class ProtobufPlugin implements Plugin<Project> {
     }
 
     /**
-     * Adds the proto extension to the SourceSet, e.g., it creates
-     * sourceSets.main.proto and sourceSets.test.proto.
-     */
-    private SourceDirectorySet addSourceSetExtension(SourceSet sourceSet) {
-      String name = sourceSet.name
-      SourceDirectorySet sds = project.objects.sourceDirectorySet(name, "${name} Proto source")
-      sourceSet.extensions.add('proto', sds)
-      sds.srcDir("src/${name}/proto")
-      sds.include("**/*.proto")
-      return sds
-    }
-
-    /**
      * Creates Protobuf tasks for a sourceSet in a Java project.
      */
     private void addTasksForSourceSet(
         final SourceSet sourceSet,
-        final SourceDirectorySet protoSrcDirSet,
-        final Configuration protobufConfig,
+        final ProtoSourceSet protoSourceSet,
         final Configuration compileProtoPath,
         final Collection<Closure> postConfigure
     ) {
-      Provider<ProtobufExtract> extractProtosTask =
-          setupExtractProtosTask(sourceSet.name, protobufConfig)
       // In Java projects, the compileClasspath of the 'test' sourceSet includes all the
       // 'resources' of the output of 'main', in which the source protos are placed.  This is
       // nicer than the ad-hoc solution that Android has, because it works for any extended
       // configuration, not just 'testCompile'.
       Provider<ProtobufExtract> extractIncludeProtosTask = setupExtractIncludeProtosTask(
-          sourceSet.name, compileProtoPath, sourceSet.compileClasspath)
+        sourceSet.name,
+        compileProtoPath,
+        sourceSet.compileClasspath
+      )
       Provider<GenerateProtoTask> generateProtoTask = addGenerateProtoTask(
-          sourceSet.name, protoSrcDirSet, project.files(extractProtosTask),
-          extractIncludeProtosTask) {
-        it.sourceSet = sourceSet
-        it.doneInitializing()
-        it.builtins.maybeCreate("java")
+        sourceSet.name,
+        protoSourceSet.proto,
+        project.files(project.tasks.named(protoSourceSet.extractProtosTaskName)),
+        extractIncludeProtosTask
+      ) { GenerateProtoTask task ->
+        task.sourceSet = sourceSet
+        task.doneInitializing()
+        task.builtins.maybeCreate("java")
       }
 
       sourceSet.java.source(sourceDirectorySetForGenerateProtoTask(sourceSet.name, generateProtoTask))
@@ -248,10 +226,15 @@ class ProtobufPlugin implements Plugin<Project> {
 
         project.plugins.withId("idea") {
           boolean isTest = Utils.isTest(sourceSet.name)
-          protoSrcDirSet.srcDirs.each { File protoDir ->
+          protoSourceSet.proto.srcDirs.each { File protoDir ->
             Utils.addToIdeSources(project, isTest, protoDir, false)
           }
-          Utils.addToIdeSources(project, isTest, project.files(extractProtosTask).singleFile, true)
+          Utils.addToIdeSources(
+            project,
+            isTest,
+            project.files(project.tasks.named(protoSourceSet.extractProtosTaskName)).singleFile,
+            true
+          )
           Utils.addToIdeSources(project, isTest, project.files(extractIncludeProtosTask).singleFile, true)
           generateProtoTask.get().getOutputSourceDirectories().each { File outputDir ->
             Utils.addToIdeSources(project, isTest, outputDir, true)
@@ -312,27 +295,6 @@ class ProtobufPlugin implements Plugin<Project> {
     }
 
     /**
-     * Sets up a task to extract protos from protobuf dependencies. They are
-     * treated as sources and will be compiled.
-     *
-     * <p>This task is per-sourceSet, for both Java and Android. In Android a
-     * variant may have multiple sourceSets, each of these sourceSets will have
-     * its own extraction task.
-     */
-    private Provider<ProtobufExtract> setupExtractProtosTask(
-        final String sourceSetName, Configuration protobufConfig) {
-      return project.tasks.register(getExtractProtosTaskName(sourceSetName), ProtobufExtract) {
-        it.description = "Extracts proto files/dependencies specified by 'protobuf' configuration"
-        it.destDir.set(getExtractedProtosDir(sourceSetName) as File)
-        it.inputFiles.from(protobufConfig)
-      }
-    }
-
-    private String getExtractProtosTaskName(String sourceSetName) {
-      return 'extract' + Utils.getSourceSetSubstringForTaskNames(sourceSetName) + 'Proto'
-    }
-
-    /**
      * Sets up a task to extract protos from compile dependencies of a sourceSet, Those are needed
      * for imports in proto files, but they won't be compiled since they have already been compiled
      * in their own projects or artifacts.
@@ -359,11 +321,7 @@ class ProtobufPlugin implements Plugin<Project> {
       }
     }
 
-    private String getExtractedIncludeProtosDir(String sourceSetName) {
-      return "${project.buildDir}/extracted-include-protos/${sourceSetName}"
-    }
-
-    private String getExtractedProtosDir(String sourceSetName) {
-      return "${project.buildDir}/extracted-protos/${sourceSetName}"
-    }
+  private String getExtractedIncludeProtosDir(String sourceSetName) {
+    return "${project.buildDir}/extracted-include-protos/${sourceSetName}"
+  }
 }

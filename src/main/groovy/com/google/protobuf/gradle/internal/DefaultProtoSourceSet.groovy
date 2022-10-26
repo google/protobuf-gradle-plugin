@@ -1,6 +1,7 @@
 package com.google.protobuf.gradle.internal
 
 import com.google.protobuf.gradle.ProtoSourceSet
+import com.google.protobuf.gradle.Utils
 import groovy.transform.CompileStatic
 import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.model.ObjectFactory
@@ -35,5 +36,20 @@ class DefaultProtoSourceSet implements ProtoSourceSet {
     return this.name == SourceSet.MAIN_SOURCE_SET_NAME
       ? configurationName
       : "${this.name}${configurationName.capitalize()}"
+  }
+
+  @Override
+  String getProtobufConfigurationName() {
+    return this.getConfigurationNameOf("protobuf")
+  }
+
+  @Override
+  String getExtractProtosTaskName() {
+    return "extract${Utils.getSourceSetSubstringForTaskNames(this.name)}Proto"
+  }
+
+  @Override
+  String getExtractedProtosDir() {
+    return "build/extracted-protos/${this.name}"
   }
 }
