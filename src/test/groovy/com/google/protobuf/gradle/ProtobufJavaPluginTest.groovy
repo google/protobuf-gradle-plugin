@@ -92,6 +92,29 @@ class ProtobufJavaPluginTest extends Specification {
   }
 
   @Unroll
+  void "generateTestProto should not execute :compileJava task (java-only project) [gradle #gradleVersion]"() {
+    given: "project from testProject"
+    File projectDir = ProtobufPluginTestHelper.projectBuilder('testProject')
+      .copyDirs('testProjectBase', 'testProject')
+      .build()
+
+    when: "build is invoked"
+    BuildResult result = ProtobufPluginTestHelper.getGradleRunner(
+      projectDir,
+      gradleVersion,
+      "generateTestProto"
+    ).build()
+
+    then: "it succeed"
+    result.task(":generateTestProto").outcome == TaskOutcome.SUCCESS
+    assert !result.output.contains("Task :classes")
+    assert !result.output.contains("Task :compileJava")
+
+    where:
+    gradleVersion << GRADLE_VERSIONS
+  }
+
+  @Unroll
   void "testProject should be successfully executed (configuration cache) [gradle #gradleVersion]"() {
     given: "project from testProject"
     File projectDir = ProtobufPluginTestHelper.projectBuilder('testProject')
