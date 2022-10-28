@@ -92,7 +92,7 @@ class ProtobufJavaPluginTest extends Specification {
   }
 
   @Unroll
-  void "generateTestProto should not execute :compileJava task (java-only project) [gradle #gradleVersion]"() {
+  void "test generateTestProto should not execute :compileJava task (java-only project) [gradle #gradleVersion]"() {
     given: "project from testProject"
     File projectDir = ProtobufPluginTestHelper.projectBuilder('testProject')
       .copyDirs('testProjectBase', 'testProject')
