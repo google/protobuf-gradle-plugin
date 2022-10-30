@@ -276,8 +276,9 @@ class ProtobufPlugin implements Plugin<Project> {
             // depend on the their super configurations. As a result, 'testCompile' doesn't depend on
             // 'compile' and it cannot get the proto files from 'main' sourceSet through the
             // configuration.
-            ProtoSourceSet testProtoSourceSet = protobufExtension.sourceSets.getByName(SourceSet.TEST_SOURCE_SET_NAME)
-            task.addIncludeDir(testProtoSourceSet.proto.sourceDirectories)
+            ProtoSourceSet mainProtoSourceSet = protobufExtension.sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME)
+            task.addIncludeDir(mainProtoSourceSet.proto.sourceDirectories)
+            task.addIncludeDir(mainProtoSourceSet.includeProtoDirs.sourceDirectories)
           }
 
           task.sourceSet = sourceSet
