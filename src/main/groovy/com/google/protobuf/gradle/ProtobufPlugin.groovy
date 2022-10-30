@@ -253,13 +253,6 @@ class ProtobufPlugin implements Plugin<Project> {
           task.description = "Extracts proto files from compile dependencies for includes"
           task.destDir.set(project.file("${project.buildDir}/extracted-include-protos/${protoSourceSet.name}"))
           task.inputFiles.from(compileProtoPathConf)
-
-          // TL; DR: Make protos in 'test' sourceSet able to import protos from the 'main'
-          // sourceSet.  Sub-configurations, e.g., 'testCompile' that extends 'compile', don't
-          // depend on the their super configurations. As a result, 'testCompile' doesn't depend on
-          // 'compile' and it cannot get the proto files from 'main' sourceSet through the
-          // configuration.
-          task.inputFiles.from(sourceSet.compileClasspath)
         } as Action<ProtobufExtract>)
         protoSourceSet.includeProtoDirs.srcDir(extractIncludeProtosTask)
 
@@ -276,6 +269,17 @@ class ProtobufPlugin implements Plugin<Project> {
           task.addSourceDirs(protoSourceSet.proto)
           task.addIncludeDir(protoSourceSet.proto.sourceDirectories)
           task.addIncludeDir(protoSourceSet.includeProtoDirs.sourceDirectories)
+
+          if (Utils.isTest(protoSourceSet.name)) {
+            // TL; DR: Make protos in 'test' sourceSet able to import protos from the 'main'
+            // sourceSet.  Sub-configurations, e.g., 'testCompile' that extends 'compile', don't
+            // depend on the their super configurations. As a result, 'testCompile' doesn't depend on
+            // 'compile' and it cannot get the proto files from 'main' sourceSet through the
+            // configuration.
+            ProtoSourceSet testProtoSourceSet = protobufExtension.sourceSets.getByName(SourceSet.TEST_SOURCE_SET_NAME)
+            task.addIncludeDir(testProtoSourceSet.proto.sourceDirectories)
+          }
+
           task.sourceSet = sourceSet
           task.doneInitializing()
           task.builtins.maybeCreate("java")
@@ -293,7 +297,7 @@ class ProtobufPlugin implements Plugin<Project> {
         // Include source proto files in the compiled archive, so that proto files from
         // dependent projects can import them.
         project.tasks.named(sourceSet.getTaskName('process', 'resources'), ProcessResources) { ProcessResources task ->
-          task.from(generateProtoTask.get().sourceDirs) { CopySpec cs ->
+          task.from(protoSourceSet.proto) { CopySpec cs ->
             cs.include '**/*.proto'
           }
         }
