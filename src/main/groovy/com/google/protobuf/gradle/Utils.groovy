@@ -46,10 +46,18 @@ class Utils {
   /**
    * Returns the conventional name of a configuration for a sourceSet
    */
-  static String getConfigName(String sourceSetName, String type) {
+  static String getConfigurationName(String sourceSetOrVariantName, String type) {
     // same as DefaultSourceSet.configurationNameOf
-    return sourceSetName == SourceSet.MAIN_SOURCE_SET_NAME
-        ? type : sourceSetName + type.capitalize()
+    return sourceSetOrVariantName == SourceSet.MAIN_SOURCE_SET_NAME
+        ? type : sourceSetOrVariantName + type.capitalize()
+  }
+
+  /**
+   * @returns task name according to the scheme: ${action}${sourceSetName}${target}
+   */
+  static String getTaskName(String sourceSetOrVariantName, String action, String target) {
+    String collapsedSourceSetOrVariantName = sourceSetOrVariantName == SourceSet.MAIN_SOURCE_SET_NAME ? "" : this.name
+    return "${action}${collapsedSourceSetOrVariantName.capitalize()}${target.capitalize()}"
   }
 
   /**

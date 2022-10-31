@@ -16,7 +16,12 @@ interface ProtoSourceSet {
   String getConfigurationName(String configurationName)
 
   String getProtobufConfigurationName()
+
   String getCompileProtoPathConfigurationName()
+
+  String getCompileOnlyConfigurationName()
+
+  String getImplementationConfigurationName()
 
   /**
    * @returns task name according to the scheme: ${action}${sourceSetName}${target}

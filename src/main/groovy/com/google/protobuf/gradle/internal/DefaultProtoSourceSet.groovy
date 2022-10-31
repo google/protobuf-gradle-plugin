@@ -60,6 +60,16 @@ class DefaultProtoSourceSet implements ProtoSourceSet {
   }
 
   @Override
+  String getCompileOnlyConfigurationName() {
+    return this.getConfigurationName("compileOnly")
+  }
+
+  @Override
+  String getImplementationConfigurationName() {
+    return this.getConfigurationName("implementation")
+  }
+
+  @Override
   String getTaskName(@Nullable String action, @Nullable String target) {
     String sourceSetName = this.name == SourceSet.MAIN_SOURCE_SET_NAME ? "" : this.name
     return "${action}${sourceSetName.capitalize()}${target.capitalize()}"

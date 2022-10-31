@@ -44,25 +44,25 @@ class ProjectExt {
   }
 
   @SuppressWarnings(["CouldBeSwitchStatement"]) // `if` is better than fallthrough `switch`
-  static void forEachVariant(final Project project, final Action<? extends BaseVariant> action) {
+  static void configureEachVariant(final Project project, final Action<? extends BaseVariant> action) {
     BaseExtension android = project.extensions.getByName("android") as BaseExtension
     project.logger.debug("$project has '$android'")
 
     if (android instanceof AppExtension) {
-      (android as AppExtension).getApplicationVariants().all(action)
+      (android as AppExtension).getApplicationVariants().configureEach(action)
     }
 
     if (android instanceof LibraryExtension) {
-      (android as LibraryExtension).getLibraryVariants().all(action)
+      (android as LibraryExtension).getLibraryVariants().configureEach(action)
     }
 
     if (android instanceof TestExtension) {
-      (android as TestExtension).getApplicationVariants().all(action)
+      (android as TestExtension).getApplicationVariants().configureEach(action)
     }
 
     if (android instanceof TestedExtension) {
-      (android as TestedExtension).getTestVariants().all(action)
-      (android as TestedExtension).getUnitTestVariants().all(action)
+      (android as TestedExtension).getTestVariants().configureEach(action)
+      (android as TestedExtension).getUnitTestVariants().configureEach(action)
     }
   }
 }
