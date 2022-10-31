@@ -50,8 +50,33 @@ class DefaultProtoSourceSet implements ProtoSourceSet {
   }
 
   @Override
+  String getProtobufConfigurationName() {
+    return this.getConfigurationName("protobuf")
+  }
+
+  @Override
+  String getCompileProtoPathConfigurationName() {
+    return this.getConfigurationName("compileProtoPath")
+  }
+
+  @Override
   String getTaskName(@Nullable String action, @Nullable String target) {
     String sourceSetName = this.name == SourceSet.MAIN_SOURCE_SET_NAME ? "" : this.name
     return "${action}${sourceSetName.capitalize()}${target.capitalize()}"
+  }
+
+  @Override
+  String getExtractProtoTaskName() {
+    return this.getTaskName("extract", "proto")
+  }
+
+  @Override
+  String getExtractIncludeProtoTaskName() {
+    return this.getTaskName("extractInclude", "proto")
+  }
+
+  @Override
+  String getGenerateProtoTaskName() {
+    return this.getTaskName("generate", "proto")
   }
 }
