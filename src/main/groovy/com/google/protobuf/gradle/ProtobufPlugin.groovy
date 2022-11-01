@@ -341,7 +341,7 @@ class ProtobufPlugin implements Plugin<Project> {
       if (Utils.isTest(variant.name)) {
         ProtoSourceSet protoSourceSet = protobufExtension.sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME)
 
-        variantProtoSourceSet.proto.source(protoSourceSet.proto)
+        variantProtoSourceSet.includeProtoDirs.source(protoSourceSet.proto)
         variantProtoSourceSet.includeProtoDirs.source(protoSourceSet.includeProtoDirs)
       }
 
