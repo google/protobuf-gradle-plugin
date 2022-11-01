@@ -56,7 +56,7 @@ class DefaultProtoSourceSet implements ProtoSourceSet {
 
   @Override
   String getCompileProtoPathConfigurationName() {
-    return this.getConfigurationName("compileProtoPath")
+    return "_${this.getConfigurationName("compileProtoPath")}"
   }
 
   @Override

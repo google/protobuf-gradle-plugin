@@ -62,7 +62,7 @@ class ProtobufKotlinDslPluginTest extends Specification {
         mainProjectDir,
         gradleVersion,
         agpVersion,
-        "testProjectAndroidKotlinDsl:build"
+        "testProjectAndroidKotlinDsl:build", //"--scan"
     ).build()
 
     then: "it succeed"
