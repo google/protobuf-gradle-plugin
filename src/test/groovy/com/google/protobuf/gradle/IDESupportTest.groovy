@@ -92,11 +92,14 @@ class IDESupportTest extends Specification {
       'file://$MODULE_DIR$/build/generated/source/proto/main/java',
     ]
     Set<String> expectedTestSourceDir = [
+      'file://$MODULE_DIR$/build/extracted-include-protos/main',
+      'file://$MODULE_DIR$/build/extracted-include-protos/test',
+      'file://$MODULE_DIR$/build/extracted-protos/main',
+      'file://$MODULE_DIR$/build/extracted-protos/test',
+      'file://$MODULE_DIR$/build/generated/source/proto/test/java',
+      'file://$MODULE_DIR$/src/main/proto',
       'file://$MODULE_DIR$/src/test/java',
       'file://$MODULE_DIR$/src/test/proto',
-      'file://$MODULE_DIR$/build/extracted-protos/test',
-      'file://$MODULE_DIR$/build/extracted-include-protos/test',
-      'file://$MODULE_DIR$/build/generated/source/proto/test/java',
     ]
     Set<String> expectedGeneratedDirs = [
       'file://$MODULE_DIR$/build/extracted-include-protos/grpc',
@@ -110,6 +113,8 @@ class IDESupportTest extends Specification {
       'file://$MODULE_DIR$/build/extracted-include-protos/test',
       'file://$MODULE_DIR$/build/generated/source/proto/test/java',
     ]
+    println result.output
+
     assert Objects.equals(expectedSourceDir, sourceDir)
     assert Objects.equals(expectedTestSourceDir, testSourceDir)
     Objects.equals(expectedGeneratedDirs, generatedDirs)

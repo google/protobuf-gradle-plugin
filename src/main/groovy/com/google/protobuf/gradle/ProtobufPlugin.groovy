@@ -326,13 +326,13 @@ class ProtobufPlugin implements Plugin<Project> {
       project.plugins.withId("idea") {
         boolean isTest = Utils.isTest(sourceSet.name)
         protoSourceSet.proto.srcDirs.each { File protoDir ->
-          Utils.addToIdeSources(project, isTest, protoDir, protoDir.path.contains("extracted-protos"))
+          Utils.addToIdeSources(project, isTest, protoDir, protoDir.absolutePath.replace(project.rootDir.absolutePath, "").contains("build"))
         }
         protoSourceSet.includeProtoDirs.srcDirs.each { File protoDir ->
-          Utils.addToIdeSources(project, isTest, protoDir, true)
+          Utils.addToIdeSources(project, isTest, protoDir, protoDir.absolutePath.replace(project.rootDir.absolutePath, "").contains("build"))
         }
         protoSourceSet.output.srcDirs.each { File outputDir ->
-          Utils.addToIdeSources(project, isTest, outputDir, true)
+          Utils.addToIdeSources(project, isTest, outputDir, outputDir.absolutePath.replace(project.rootDir.absolutePath, "").contains("build"))
         }
       }
     }
