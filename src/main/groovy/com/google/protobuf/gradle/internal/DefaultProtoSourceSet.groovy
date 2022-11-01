@@ -22,6 +22,18 @@ class DefaultProtoSourceSet implements ProtoSourceSet {
   }
 
   @Override
+  void includesFrom(ProtoSourceSet protoSourceSet) {
+    this.includeProtoDirs.source(protoSourceSet.proto)
+    this.includeProtoDirs.source(protoSourceSet.includeProtoDirs)
+  }
+
+  @Override
+  void extendsFrom(ProtoSourceSet protoSourceSet) {
+    this.proto.source(protoSourceSet.proto)
+    this.includeProtoDirs.source(protoSourceSet.includeProtoDirs)
+  }
+
+  @Override
   String getName() {
     return this.name
   }

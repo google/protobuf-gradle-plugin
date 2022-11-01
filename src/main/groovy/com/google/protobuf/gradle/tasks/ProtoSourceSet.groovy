@@ -33,4 +33,8 @@ interface ProtoSourceSet {
   String getExtractIncludeProtoTaskName()
 
   String getGenerateProtoTaskName()
+
+  void includesFrom(ProtoSourceSet protoSourceSet)
+
+  void extendsFrom(ProtoSourceSet protoSourceSet)
 }
