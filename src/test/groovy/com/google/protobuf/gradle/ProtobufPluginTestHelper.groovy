@@ -143,12 +143,12 @@ final class ProtobufPluginTestHelper {
       |
       |rootProject.name = "$testProjectName"
       |
-      |// gradleEnterprise {
-      |//     buildScan {
-      |//         termsOfServiceUrl = "https://gradle.com/terms-of-service"
-      |//         termsOfServiceAgree = "yes"
-      |//     }
-      |// }
+      |//gradleEnterprise {
+      |//    buildScan {
+      |//        termsOfServiceUrl = "https://gradle.com/terms-of-service"
+      |//        termsOfServiceAgree = "yes"
+      |//    }
+      |//}
       """.stripMargin()
 
       if (subProjects) {
