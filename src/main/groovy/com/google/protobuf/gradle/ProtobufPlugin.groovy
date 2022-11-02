@@ -53,12 +53,14 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.ArtifactView
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.artifacts.type.ArtifactTypeDefinition
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.attributes.AttributeContainer
 import org.gradle.api.attributes.LibraryElements
 import org.gradle.api.attributes.Usage
 import org.gradle.api.file.CopySpec
 import org.gradle.api.file.FileCollection
+import org.gradle.api.internal.artifacts.ArtifactAttributes
 import org.gradle.api.plugins.AppliedPlugin
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
@@ -176,7 +178,12 @@ class ProtobufPlugin implements Plugin<Project> {
       Configuration compileProtoPathConf = createCompileProtoPathConfiguration(protoSourceSet)
       TaskProvider<ProtobufExtract> extractIncludeProtosTask = registerExtractProtosTask(
         protoSourceSet.getExtractIncludeProtoTaskName(),
-        project.providers.provider { compileProtoPathConf as FileCollection },
+        project.providers.provider { compileProtoPathConf.incoming.artifactView { ArtifactView.ViewConfiguration viewConf ->
+          viewConf.attributes.attribute(
+            ArtifactAttributes.ARTIFACT_FORMAT,
+            ArtifactTypeDefinition.JAR_TYPE
+          )
+        }.files },
         project.file("${project.buildDir}/extracted-include-protos/${protoSourceSet.name}")
       )
       protoSourceSet.includeProtoDirs.srcDir(extractIncludeProtosTask)
@@ -397,8 +404,8 @@ class ProtobufPlugin implements Plugin<Project> {
 
           compileProtoPathConf.incoming.artifactView { ArtifactView.ViewConfiguration viewConf ->
             viewConf.attributes.attribute(
-              Attribute.of("artifactType", String),
-              "jar"
+              ArtifactAttributes.ARTIFACT_FORMAT,
+              ArtifactTypeDefinition.JAR_TYPE
             )
           }.files
         },
