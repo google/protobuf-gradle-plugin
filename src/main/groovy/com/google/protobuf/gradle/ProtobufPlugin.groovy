@@ -52,6 +52,8 @@ import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.plugins.AppliedPlugin
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
+import org.gradle.api.tasks.SourceSetContainer
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.language.jvm.tasks.ProcessResources
 import org.gradle.util.GradleVersion
 
@@ -237,12 +239,22 @@ class ProtobufPlugin implements Plugin<Project> {
         Configuration compileProtoPath, Collection<Closure> postConfigure) {
       Provider<ProtobufExtract> extractProtosTask =
           setupExtractProtosTask(sourceSet.name, protobufConfig)
-      // In Java projects, the compileClasspath of the 'test' sourceSet includes all the
-      // 'resources' of the output of 'main', in which the source protos are placed.  This is
-      // nicer than the ad-hoc solution that Android has, because it works for any extended
-      // configuration, not just 'testCompile'.
+
+      // Pass include proto files from main to test.
+      // Process resource task contains all source proto files from a proto source set.
+      FileCollection testClassPathConfig = project.objects.fileCollection()
+      if (Utils.isTest(sourceSet.name)) {
+        TaskProvider<ProcessResources> mainProcessResources = project.tasks.named(
+          project.extensions.getByType(SourceSetContainer)
+            .getByName(SourceSet.MAIN_SOURCE_SET_NAME)
+            .processResourcesTaskName,
+          ProcessResources
+        )
+        testClassPathConfig.from(mainProcessResources)
+      }
+
       Provider<ProtobufExtract> extractIncludeProtosTask = setupExtractIncludeProtosTask(
-          sourceSet.name, compileProtoPath, sourceSet.compileClasspath)
+          sourceSet.name, compileProtoPath, testClassPathConfig)
       Provider<GenerateProtoTask> generateProtoTask = addGenerateProtoTask(
           sourceSet.name, protoSrcDirSet, project.files(extractProtosTask),
           extractIncludeProtosTask) {
