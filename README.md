@@ -18,30 +18,33 @@ For more information about the Protobuf Compiler, please refer to
 
 ## Latest Version
 The latest version is ``0.9.2``. It requires at least __Gradle 5.6__ and __Java 8__.
-It is available on Maven Central. To add dependency to it:
+To use it with Groovy DSL:
 ```gradle
-buildscript {
+plugins {
+  id "com.google.protobuf" version "0.9.2"
+}
+```
+
+## Development Version
+
+To try out the head version, you can download the source and build it
+with ``./gradlew publishToMavenLocal -x test`` (we skip tests here because they
+require Android SDK), then in `settings.gradle`:
+
+```gradle
+pluginManagement {
   repositories {
     gradlePluginPortal()
-  }
-  dependencies {
-    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.9.2'
+    mavenLocal()
   }
 }
 ```
 
-To try out the head version, you can download the source and build it
-with ``./gradlew publishToMavenLocal -x test`` (we skip tests here because they
-require Android SDK), then:
+And in `build.gradle`:
 
 ```gradle
-buildscript {
-  repositories {
-    mavenLocal()
-  }
-  dependencies {
-    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.10.0-SNAPSHOT'
-  }
+plugins {
+  id "com.google.protobuf" version "0.10.0-SNAPSHOT"
 }
 ```
 
@@ -61,30 +64,6 @@ individual projects.
 
 ## Adding the plugin to your project
 This plugin must work with either the Java plugin or the Android plugin.
-
-
-### Using the `apply` method
-The Java plugin or the Android plugin must be applied before the Protobuf plugin:
-
-```gradle
-apply plugin: 'java'
-apply plugin: 'com.google.protobuf'
-```
-
-```gradle
-apply plugin: 'com.android.application'  // or 'com.android.library'
-apply plugin: 'com.google.protobuf'
-```
-
-### Using the Gradle plugin DSL
-The order of the plugins doesn't matter:
-
-```gradle
-plugins {
-  id "com.google.protobuf" version "0.9.2"
-  id "java"
-}
-```
 
 
 ## Configuring Protobuf compilation
@@ -240,7 +219,7 @@ protobuf {
   ...
   generateProtoTasks {
     // all() returns the collection of all protoc tasks
-    all().each { task ->
+    all().configureEach { task ->
       // Here you can configure the task
     }
 
@@ -316,7 +295,7 @@ task.plugins {
 ```gradle
 protobuf {
   generateProtoTasks {
-    all().each { task ->
+    all().configureEach { task ->
       task.builtins {
         // Generates Python code
         python { }
@@ -363,7 +342,7 @@ protobuf {
     }
   }
   generateProtoTasks {
-    all().each { task ->
+    all().configureEach { task ->
       task.builtins {
         // In most cases you don't need the full Java output
         // if you use the lite output.
@@ -391,7 +370,7 @@ protobuf {
     artifact = 'com.google.protobuf:protoc:3.8.0'
   }
   generateProtoTasks {
-    all().each { task ->
+    all().configureEach { task ->
       task.builtins {
         java {
           option "lite"
