@@ -1,38 +1,16 @@
-buildscript {
-    repositories {
-        maven { url "https://plugins.gradle.org/m2/" } // Mirrors jcenter() and mavenCentral()
-    }
-
-    dependencies {
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.6'
-        classpath "com.gradle.publish:plugin-publish-plugin:0.11.0"
-        classpath "com.github.ben-manes:gradle-versions-plugin:0.12.0"
-    }
-}
-
 plugins {
+    id 'codenarc'
+    id 'idea'
+    id 'eclipse'
+    id 'groovy'
+    id 'maven'
+    id 'maven-publish'
+    id 'signing'
+
+    id "com.github.ben-manes.versions" version "0.12.0"
+    id "com.gradle.plugin-publish" version "0.11.0"
     id "org.gradle.kotlin.kotlin-dsl" version "1.4.9"
 }
-
-println """\
-Welcome to Gradle $gradle.gradleVersion - http://www.gradle.org
-Gradle home is set to: $gradle.gradleHomeDir
-Gradle user directory is set to: $gradle.gradleUserHomeDir
-
-Base directory: $projectDir
-Running script ${relativePath(buildFile)}
-"""
-
-apply plugin: 'codenarc'
-apply plugin: 'idea'
-apply plugin: 'eclipse'
-apply plugin: 'groovy'
-apply plugin: 'maven'
-apply plugin: 'maven-publish'
-apply plugin: 'signing'
-apply plugin: 'com.jfrog.bintray'
-apply plugin: 'com.gradle.plugin-publish'
-apply plugin: 'com.github.ben-manes.versions'
 
 group = 'com.google.protobuf'
 version = '0.10.0-SNAPSHOT'
@@ -66,29 +44,24 @@ dependencies {
   testImplementation 'commons-io:commons-io:2.5'
 }
 
-test.inputs.files fileTree("$projectDir/testProject")
-test.inputs.files fileTree("$projectDir/testProjectLite")
-test.inputs.files fileTree("$projectDir/testProjectCustomProtoDir")
-test.inputs.files fileTree("$projectDir/testProjectDependent")
-test.inputs.files fileTree("$projectDir/testProjectAndroid")
-
-task sourcesJar(type: Jar, dependsOn:classes) {
-     classifier = 'sources'
-     from sourceSets.main.allSource
+java {
+    withJavadocJar()
+    withSourcesJar()
 }
 
-task groovydocJar(type: Jar, dependsOn:groovydoc) {
-     classifier = 'groovydoc'
-     from groovydoc.destinationDir
-}
-
-task javadocJar(type: Jar, dependsOn:javadoc) {
-     classifier = 'javadoc'
-     from javadoc.destinationDir
+tasks.register('groovydocJar', Jar) {
+    dependsOn groovydoc
+    classifier = 'groovydoc'
+    from groovydoc.destinationDir
 }
 
 codenarc {
     toolVersion = "1.4"
+    if (System.env.CI == 'true') {
+      // Normally html output is more user friendly,
+      // but we want a console printable file for CI logs
+      reportFormat = 'text'
+    }
 }
 
 sourceCompatibility = JavaVersion.VERSION_1_8
@@ -103,9 +76,7 @@ File testRepoUrl = layout.buildDirectory.dir('testRepo').get().asFile
 publishing {
   publications {
     pluginMaven(MavenPublication) {
-      artifact sourcesJar
       artifact groovydocJar
-      artifact javadocJar
 
       pom {
         name = project.name
@@ -185,12 +156,6 @@ pluginBundle {
   }
 }
 
-if (System.env.CI == 'true') {
-  // Normally html output is more user friendly,
-  // but we want a console printable file for CI logs
-  project.codenarc.reportFormat = 'text'
-}
-
 // Required in order to support building a mixed kotlin/groovy project. With out this,
 // we would get a cyclic dependency error, since both compileKotlin and compileGroovy
 // depend on compileJava.
@@ -203,6 +168,26 @@ tasks.named('compileKotlin') {
 }
 
 tasks.named('test') {
+  inputs.files fileTree("$projectDir/testProject")
+  inputs.files fileTree("$projectDir/testProjectAndroid")
+  inputs.files fileTree("$projectDir/testProjectAndroidBare")
+  inputs.files fileTree("$projectDir/testProjectAndroidBase")
+  inputs.files fileTree("$projectDir/testProjectAndroidDependentBase")
+  inputs.files fileTree("$projectDir/testProjectAndroidKotlin")
+  inputs.files fileTree("$projectDir/testProjectAndroidKotlinDsl")
+  inputs.files fileTree("$projectDir/testProjectAndroidLibrary")
+  inputs.files fileTree("$projectDir/testProjectBase")
+  inputs.files fileTree("$projectDir/testProjectBuildTimeProto")
+  inputs.files fileTree("$projectDir/testProjectCustomProtoDir")
+  inputs.files fileTree("$projectDir/testProjectDependent")
+  inputs.files fileTree("$projectDir/testProjectDependentApp")
+  inputs.files fileTree("$projectDir/testProjectJavaAndKotlin")
+  inputs.files fileTree("$projectDir/testProjectJavaLibrary")
+  inputs.files fileTree("$projectDir/testProjectKotlin")
+  inputs.files fileTree("$projectDir/testProjectKotlinDslBase")
+  inputs.files fileTree("$projectDir/testProjectKotlinDslCopySpec")
+  inputs.files fileTree("$projectDir/testProjectLite")
+
   testLogging {
     events = ["standard_out", "standard_error", "started", "passed", "failed", "skipped"]
   }
