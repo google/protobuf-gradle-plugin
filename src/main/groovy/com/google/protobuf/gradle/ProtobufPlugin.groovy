@@ -158,7 +158,7 @@ class ProtobufPlugin implements Plugin<Project> {
 
       // Sets up a task to extract protos from protobuf dependencies.
       // They are treated as sources and will be compiled.
-      Configuration protobufConf = createProtobufConfiguration(protoSourceSet)
+      Configuration protobufConf = createProtobufConf(protoSourceSet)
       TaskProvider<ProtobufExtract> extractProtosTask = registerExtractProtosTask(
         protoSourceSet.getExtractProtoTaskName(),
         protoSourceSet.name,
@@ -224,8 +224,8 @@ class ProtobufPlugin implements Plugin<Project> {
    * configure dependencies for it. The extract-protos task of each source set will
    * extract protobuf files from dependencies in this configuration.
    */
-  private Configuration createProtobufConfiguration(ProtoSourceSet protoSourceSet) {
-    String confName = protoSourceSet.getProtobufConfigurationName()
+  private Configuration createProtobufConf(ProtoSourceSet protoSourceSet) {
+    String confName = protoSourceSet.getProtobufConfName()
     Configuration conf = project.configurations.create(confName)
 
     conf.visible = false
@@ -244,7 +244,7 @@ class ProtobufPlugin implements Plugin<Project> {
   // <p> For Java projects only.
   // <p> This works around 'java-library' plugin not exposing resources to consumers for compilation.
   private Configuration createCompileProtoPathConf(ProtoSourceSet protoSourceSet) {
-    String confName = protoSourceSet.getCompileProtoPathConfigurationName()
+    String confName = protoSourceSet.getCompileProtoPathConfName()
     Configuration conf = project.configurations.create(confName)
 
     conf.visible = false
@@ -256,9 +256,9 @@ class ProtobufPlugin implements Plugin<Project> {
   }
 
   private void configureProtoPathConfExtendsFromJvm(Configuration conf, ProtoSourceSet protoSourceSet) {
-    String compileOnlyConfName = protoSourceSet.getCompileOnlyConfigurationName()
+    String compileOnlyConfName = protoSourceSet.getCompileOnlyConfName()
     Configuration compileOnlyConf = project.configurations.getByName(compileOnlyConfName)
-    String implementationConfName = protoSourceSet.getImplementationConfigurationName()
+    String implementationConfName = protoSourceSet.getImplementationConfName()
     Configuration implementationConf = project.configurations.getByName(implementationConfName)
     conf.extendsFrom(compileOnlyConf, implementationConf)
   }
@@ -376,7 +376,7 @@ class ProtobufPlugin implements Plugin<Project> {
 
       // Sets up a task to extract protos from protobuf dependencies.
       // They are treated as sources and will be compiled.
-      Configuration protobufConf = createProtobufConfiguration(protoSourceSet)
+      Configuration protobufConf = createProtobufConf(protoSourceSet)
       TaskProvider<ProtobufExtract> extractProtosTask = registerExtractProtosTask(
         protoSourceSet.getExtractProtoTaskName(),
         protoSourceSet.name,
@@ -443,11 +443,11 @@ class ProtobufPlugin implements Plugin<Project> {
     sourceSets.each { SourceProvider sourceProvider ->
       ProtoSourceSet protoSourceSet = protobufExtension.sourceSets.getByName(sourceProvider.name)
 
-      String compileOnlyConfigurationName = protoSourceSet.getCompileOnlyConfigurationName()
-      Configuration compileOnlyConfiguration = project.configurations.getByName(compileOnlyConfigurationName)
-      String implementationConfigurationName = protoSourceSet.getImplementationConfigurationName()
-      Configuration implementationConfiguration = project.configurations.getByName(implementationConfigurationName)
-      conf.extendsFrom(compileOnlyConfiguration, implementationConfiguration)
+      String compileOnlyConfName = protoSourceSet.getCompileOnlyConfName()
+      Configuration compileOnlyConf = project.configurations.getByName(compileOnlyConfName)
+      String implementationConfName = protoSourceSet.getImplementationConfName()
+      Configuration implementationConf = project.configurations.getByName(implementationConfName)
+      conf.extendsFrom(compileOnlyConf, implementationConf)
     }
   }
 

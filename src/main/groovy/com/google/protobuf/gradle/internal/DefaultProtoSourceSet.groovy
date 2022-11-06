@@ -83,30 +83,30 @@ class DefaultProtoSourceSet implements ProtoSourceSet {
 
   @Override
   @SuppressWarnings(["SpaceAroundOperator"])
-  String getConfigurationName(String configurationName) {
+  String getConfName(String configurationName) {
     return this.name == SourceSet.MAIN_SOURCE_SET_NAME
       ? configurationName
       : "${this.name}${configurationName.capitalize()}"
   }
 
   @Override
-  String getProtobufConfigurationName() {
-    return this.getConfigurationName("protobuf")
+  String getProtobufConfName() {
+    return this.getConfName("protobuf")
   }
 
   @Override
-  String getCompileProtoPathConfigurationName() {
-    return "_${this.getConfigurationName("compileProtoPath")}"
+  String getCompileProtoPathConfName() {
+    return "_${this.getConfName("compileProtoPath")}"
   }
 
   @Override
-  String getCompileOnlyConfigurationName() {
-    return this.getConfigurationName("compileOnly")
+  String getCompileOnlyConfName() {
+    return this.getConfName("compileOnly")
   }
 
   @Override
-  String getImplementationConfigurationName() {
-    return this.getConfigurationName("implementation")
+  String getImplementationConfName() {
+    return this.getConfName("implementation")
   }
 
   @Override

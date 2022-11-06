@@ -41,15 +41,15 @@ interface ProtoSourceSet {
 
   SourceDirectorySet getOutput()
 
-  String getConfigurationName(String configurationName)
+  String getConfName(String configurationName)
 
-  String getProtobufConfigurationName()
+  String getProtobufConfName()
 
-  String getCompileProtoPathConfigurationName()
+  String getCompileProtoPathConfName()
 
-  String getCompileOnlyConfigurationName()
+  String getCompileOnlyConfName()
 
-  String getImplementationConfigurationName()
+  String getImplementationConfName()
 
   /**
    * @returns task name according to the scheme: ${action}${sourceSetName}${target}
