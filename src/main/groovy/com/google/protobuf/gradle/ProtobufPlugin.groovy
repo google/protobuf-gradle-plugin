@@ -386,38 +386,38 @@ class ProtobufPlugin implements Plugin<Project> {
       protoSourceSet.proto.srcDir(extractProtosTask)
     }
 
-    NamedDomainObjectContainer<ProtoSourceSet> variantMergedSourceSets =
+    NamedDomainObjectContainer<ProtoSourceSet> mergedSourceSets =
       project.objects.domainObjectContainer(ProtoSourceSet) { String name ->
         new DefaultProtoSourceSet(name, project.objects) as ProtoSourceSet
       }
     ProjectExt.allVariant(project) { BaseVariant variant ->
-      ProtoSourceSet variantProtoSourceSet = variantMergedSourceSets.create(variant.name)
+      ProtoSourceSet mergedProtoSourceSet = mergedSourceSets.create(variant.name)
       variant.sourceSets.each { SourceProvider sourceProvider ->
-        variantProtoSourceSet.extendsFrom(protobufExtension.sourceSets.getByName(sourceProvider.name))
+        mergedProtoSourceSet.extendsFrom(protobufExtension.sourceSets.getByName(sourceProvider.name))
       }
 
       TaskProvider<ProtobufExtract> extractIncludeProtosTask = registerExtractProtosTask(
-        variantProtoSourceSet.getExtractIncludeProtoTaskName(),
-        variantProtoSourceSet.name,
+        mergedProtoSourceSet.getExtractIncludeProtoTaskName(),
+        mergedProtoSourceSet.name,
         project.providers.provider {
-          Configuration conf = createCompileProtoPathConf(variantProtoSourceSet)
+          Configuration conf = createCompileProtoPathConf(mergedProtoSourceSet)
           configureProtoPathConfExtendsFromAndroid(conf, variant.sourceSets)
           configureCompileProtoPathConfAttrsAndroid(conf, variant)
           return getIncomingJarFromConf(conf)
         },
-        project.file("${project.buildDir}/extracted-include-protos/${variantProtoSourceSet.name}")
+        project.file("${project.buildDir}/extracted-include-protos/${mergedProtoSourceSet.name}")
       )
-      variantProtoSourceSet.includeProtoDirs.srcDir(extractIncludeProtosTask)
+      mergedProtoSourceSet.includeProtoDirs.srcDir(extractIncludeProtosTask)
 
-      TaskProvider<GenerateProtoTask> generateProtoTask = registerGenerateProtoTask(variantProtoSourceSet)
-      variantProtoSourceSet.output
+      TaskProvider<GenerateProtoTask> generateProtoTask = registerGenerateProtoTask(mergedProtoSourceSet)
+      mergedProtoSourceSet.output
         .srcDir(generateProtoTask.map { GenerateProtoTask task -> task.outputSourceDirectories })
 
       BaseVariant testedVariant = AndroidVariantExt.getTestVariant(variant)
       if (testedVariant != null) {
         postConfigure.add {
-          variantProtoSourceSet.includesFrom(protobufExtension.sourceSets.getByName("main"))
-          variantProtoSourceSet.includesFrom(variantMergedSourceSets.getByName(testedVariant.name))
+          mergedProtoSourceSet.includesFrom(protobufExtension.sourceSets.getByName("main"))
+          mergedProtoSourceSet.includesFrom(mergedSourceSets.getByName(testedVariant.name))
         }
       }
 
@@ -430,11 +430,11 @@ class ProtobufPlugin implements Plugin<Project> {
 
       // Include source proto files in the compiled archive, so that proto files from
       // dependent projects can import them.
-      addProtoSourcesToAar(variant, variantProtoSourceSet)
+      addProtoSourcesToAar(variant, mergedProtoSourceSet)
 
       postConfigure.add {
         variant.registerJavaGeneratingTask(generateProtoTask.get(), generateProtoTask.get().outputSourceDirectories)
-        configureAndroidKotlinCompileTasks(variant, variantProtoSourceSet)
+        configureAndroidKotlinCompileTasks(variant, mergedProtoSourceSet)
       }
     }
   }
