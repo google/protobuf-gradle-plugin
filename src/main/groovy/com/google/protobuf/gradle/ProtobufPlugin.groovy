@@ -177,7 +177,7 @@ class ProtobufPlugin implements Plugin<Project> {
       Configuration compileProtoPathConf = createCompileProtoPathConfiguration(protoSourceSet)
       TaskProvider<ProtobufExtract> extractIncludeProtosTask = registerExtractProtosTask(
         protoSourceSet.getExtractIncludeProtoTaskName(),
-        project.providers.provider { compileProtoPathConf },
+        project.providers.provider { compileProtoPathConf as FileCollection },
         project.file("${project.buildDir}/extracted-include-protos/${protoSourceSet.name}")
       )
       protoSourceSet.includeProtoDirs.srcDir(extractIncludeProtosTask)
