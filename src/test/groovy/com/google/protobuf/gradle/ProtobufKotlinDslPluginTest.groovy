@@ -2,7 +2,6 @@ package com.google.protobuf.gradle
 
 import groovy.transform.CompileDynamic
 import org.gradle.testkit.runner.BuildResult
-import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import spock.lang.Specification
 import spock.lang.Unroll
@@ -23,17 +22,11 @@ class ProtobufKotlinDslPluginTest extends Specification {
         .build()
 
     when: "build is invoked"
-    BuildResult result = GradleRunner.create()
-      .withProjectDir(projectDir)
-      .withArguments('build', '--stacktrace')
-      .withPluginClasspath()
-      .withGradleVersion(gradleVersion)
-      .forwardStdOutput(new OutputStreamWriter(System.out))
-      .forwardStdError(new OutputStreamWriter(System.err))
-    // Enabling debug causes the test to fail.
-    // https://github.com/gradle/gradle/issues/6862
-    //.withDebug(true)
-      .build()
+    BuildResult result = ProtobufPluginTestHelper.getGradleRunner(
+      projectDir,
+      gradleVersion,
+      "build"
+    ).build()
 
     then: "it succeed"
     result.task(":build").outcome == TaskOutcome.SUCCESS

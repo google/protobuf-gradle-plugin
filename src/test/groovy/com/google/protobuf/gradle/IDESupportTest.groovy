@@ -30,7 +30,6 @@ package com.google.protobuf.gradle
 
 import groovy.transform.CompileDynamic
 import org.gradle.testkit.runner.BuildResult
-import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import spock.lang.Specification
 import spock.lang.Unroll
@@ -51,12 +50,11 @@ class IDESupportTest extends Specification {
       .build()
 
     when: "idea is invoked"
-    BuildResult result = GradleRunner.create()
-      .withProjectDir(projectDir)
-      .withArguments('idea')
-      .withPluginClasspath()
-      .withGradleVersion(gradleVersion)
-      .build()
+    BuildResult result = ProtobufPluginTestHelper.getGradleRunner(
+      projectDir,
+      gradleVersion,
+      "idea"
+    ).build()
 
     then: "it succeed"
     result.task(":idea").outcome == TaskOutcome.SUCCESS
@@ -130,12 +128,11 @@ class IDESupportTest extends Specification {
       .build()
 
     when: "eclipse is invoked"
-    BuildResult result = GradleRunner.create()
-      .withProjectDir(projectDir)
-      .withArguments('eclipse')
-      .withPluginClasspath()
-      .withGradleVersion(gradleVersion)
-      .build()
+    BuildResult result = ProtobufPluginTestHelper.getGradleRunner(
+      projectDir,
+      gradleVersion,
+      "eclipse"
+    ).build()
 
     then: "it succeed"
     result.task(":eclipse").outcome == TaskOutcome.SUCCESS
