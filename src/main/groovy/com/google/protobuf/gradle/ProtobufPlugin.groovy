@@ -30,21 +30,16 @@
 package com.google.protobuf.gradle
 
 import com.android.build.gradle.BaseExtension
-import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.api.BaseVariant
-import com.android.build.gradle.api.TestVariant
-import com.android.build.gradle.api.UnitTestVariant
 import com.android.builder.model.ProductFlavor
 import com.android.builder.model.SourceProvider
 import com.google.gradle.osdetector.OsDetectorPlugin
 import com.google.protobuf.gradle.internal.AndroidSourceSetFacade
+import com.google.protobuf.gradle.internal.AndroidVariantExt
 import com.google.protobuf.gradle.internal.DefaultProtoSourceSet
 import com.google.protobuf.gradle.internal.ProjectExt
 import com.google.protobuf.gradle.tasks.ProtoSourceSet
-import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
-import groovy.transform.TypeChecked
-import groovy.transform.TypeCheckingMode
 import org.gradle.api.Action
 import org.gradle.api.GradleException
 import org.gradle.api.NamedDomainObjectContainer
@@ -67,7 +62,6 @@ import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.SourceTask
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.language.jvm.tasks.ProcessResources
-import org.gradle.util.GradleVersion
 
 /**
  * The main class for the protobuf plugin.
@@ -89,11 +83,8 @@ class ProtobufPlugin implements Plugin<Project> {
   private ProtobufExtension protobufExtension
   private boolean wasApplied = false
 
-  void apply(final Project project) {
-    if (GradleVersion.current() < GradleVersion.version("5.6")) {
-      throw new GradleException(
-        "Gradle version is ${project.gradle.gradleVersion}. Minimum supported version is 5.6")
-    }
+  void apply(Project project) {
+    ProjectExt.checkMinimalGradleVersion(project)
 
     this.project = project
     this.protobufExtension = project.extensions.create("protobuf", ProtobufExtension, project)
@@ -129,10 +120,9 @@ class ProtobufPlugin implements Plugin<Project> {
     }
   }
 
-  @TypeChecked(TypeCheckingMode.SKIP)
-  // Don't depend on AGP
   private void doApply() {
     Collection<Closure> postConfigure = []
+
     if (Utils.isAndroidProject(project)) {
       doAndroidApply(postConfigure)
     } else {
@@ -140,15 +130,21 @@ class ProtobufPlugin implements Plugin<Project> {
     }
 
     project.afterEvaluate {
+      // Execute configuration actions registered by generateProtoTasks {} block
+      this.protobufExtension.configureTasks()
+
+      // Execute deferred actions.
+      // For example, kotlin-android plugin configuration
+      postConfigure.each { it.call() }
+
       // Disallow user configuration outside the config closures, because the operations just
       // after the doneConfig() loop over the generated outputs and will be out-of-date if
       // plugin output is added after this point.
-      this.protobufExtension.configureTasks()
-      postConfigure.each { it.call() }
       this.protobufExtension.generateProtoTasks.all().configureEach { it.doneConfig() }
+
       // protoc and codegen plugin configuration may change through the protobuf{}
       // block. Only at this point the configuration has been finalized.
-      project.protobuf.tools.resolve(project)
+      this.protobufExtension.tools.resolve(project)
     }
   }
 
@@ -165,6 +161,7 @@ class ProtobufPlugin implements Plugin<Project> {
       Configuration protobufConf = createProtobufConfiguration(protoSourceSet)
       TaskProvider<ProtobufExtract> extractProtosTask = registerExtractProtosTask(
         protoSourceSet.getExtractProtoTaskName(),
+        protoSourceSet.name,
         project.providers.provider { protobufConf as FileCollection },
         project.file("${project.buildDir}/extracted-protos/${protoSourceSet.name}")
       )
@@ -174,10 +171,15 @@ class ProtobufPlugin implements Plugin<Project> {
       // 'resources' of the output of 'main', in which the source protos are placed.  This is
       // nicer than the ad-hoc solution that Android has, because it works for any extended
       // configuration, not just 'testCompile'.
-      Configuration compileProtoPathConf = createCompileProtoPathConfiguration(protoSourceSet)
       TaskProvider<ProtobufExtract> extractIncludeProtosTask = registerExtractProtosTask(
         protoSourceSet.getExtractIncludeProtoTaskName(),
-        project.providers.provider { compileProtoPathConf as FileCollection },
+        protoSourceSet.name,
+        project.providers.provider {
+          Configuration conf = createCompileProtoPathConf(protoSourceSet)
+          configureProtoPathConfExtendsFromJvm(conf, protoSourceSet)
+          configureCompileProtoPathConfAttrsJvm(conf)
+          return conf as FileCollection
+        },
         project.file("${project.buildDir}/extracted-include-protos/${protoSourceSet.name}")
       )
       protoSourceSet.includeProtoDirs.srcDir(extractIncludeProtosTask)
@@ -223,11 +225,15 @@ class ProtobufPlugin implements Plugin<Project> {
    * extract protobuf files from dependencies in this configuration.
    */
   private Configuration createProtobufConfiguration(ProtoSourceSet protoSourceSet) {
-    String protobufConfName = protoSourceSet.getProtobufConfigurationName()
-    Configuration protobufConf = project.configurations.create(protobufConfName)
-    protobufConf.visible = false
-    protobufConf.transitive = true
-    return protobufConf
+    String confName = protoSourceSet.getProtobufConfigurationName()
+    Configuration conf = project.configurations.create(confName)
+
+    conf.visible = false
+    conf.transitive = true
+    conf.canBeConsumed = false
+    conf.canBeResolved = true
+
+    return conf
   }
 
   // Creates an internal 'compileProtoPath' configuration for the given source set that extends
@@ -237,28 +243,33 @@ class ProtobufPlugin implements Plugin<Project> {
   //
   // <p> For Java projects only.
   // <p> This works around 'java-library' plugin not exposing resources to consumers for compilation.
-  private Configuration createCompileProtoPathConfiguration(ProtoSourceSet protoSourceSet) {
-    String compileProtoPathConfName = protoSourceSet.getCompileProtoPathConfigurationName()
-    Configuration compileProtoPathConf = project.configurations.create(compileProtoPathConfName)
-    compileProtoPathConf.visible = false
-    compileProtoPathConf.transitive = true
-    compileProtoPathConf.canBeConsumed = false
-    compileProtoPathConf.canBeResolved = true
+  private Configuration createCompileProtoPathConf(ProtoSourceSet protoSourceSet) {
+    String confName = protoSourceSet.getCompileProtoPathConfigurationName()
+    Configuration conf = project.configurations.create(confName)
 
-    String compileOnlyConfigurationName = protoSourceSet.getCompileOnlyConfigurationName()
-    Configuration compileOnlyConfiguration = project.configurations.getByName(compileOnlyConfigurationName)
-    String implementationConfigurationName = protoSourceSet.getImplementationConfigurationName()
-    Configuration implementationConfiguration = project.configurations.getByName(implementationConfigurationName)
-    compileProtoPathConf.extendsFrom = [compileOnlyConfiguration, implementationConfiguration]
+    conf.visible = false
+    conf.transitive = true
+    conf.canBeConsumed = false
+    conf.canBeResolved = true
 
-    AttributeContainer compileProtoPathConfAttrs = compileProtoPathConf.attributes
+    return conf
+  }
 
+  private void configureProtoPathConfExtendsFromJvm(Configuration conf, ProtoSourceSet protoSourceSet) {
+    String compileOnlyConfName = protoSourceSet.getCompileOnlyConfigurationName()
+    Configuration compileOnlyConf = project.configurations.getByName(compileOnlyConfName)
+    String implementationConfName = protoSourceSet.getImplementationConfigurationName()
+    Configuration implementationConf = project.configurations.getByName(implementationConfName)
+    conf.extendsFrom(compileOnlyConf, implementationConf)
+  }
+
+  private void configureCompileProtoPathConfAttrsJvm(Configuration conf) {
     // Variant attributes are not inherited. Setting it too loosely can
     // result in ambiguous variant selection errors.
     // CompileProtoPath only need proto files from dependency's resources.
     // LibraryElement "resources" is compatible with "jar" (if a "resources" variant is
     // not found, the "jar" variant will be used).
-    compileProtoPathConfAttrs.attribute(
+    conf.attributes.attribute(
       LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE,
       project.getObjects().named(LibraryElements, LibraryElements.RESOURCES)
     )
@@ -267,22 +278,21 @@ class ProtobufPlugin implements Plugin<Project> {
     // can result in ambiguous variant selection if the producer provides multiple
     // variants with different usage attribute.
     // Preserve the usage attribute from CompileOnly and Implementation.
-    compileProtoPathConfAttrs.attribute(
+    conf.attributes.attribute(
       Usage.USAGE_ATTRIBUTE,
       project.getObjects().named(Usage, Usage.JAVA_RUNTIME)
     )
-
-    return compileProtoPathConf
   }
 
   private TaskProvider<ProtobufExtract> registerExtractProtosTask(
     String taskName,
+    String sourceName,
     Provider<FileCollection> extractFrom,
     File outputDir
   ) {
     return project.tasks.register(taskName, ProtobufExtract) { ProtobufExtract task ->
       FileCollection conf = extractFrom.get()
-      task.description = "Extracts proto files/dependencies specified from '${conf}' configuration"
+      task.description = "Extracts proto files/dependencies specified by '$sourceName' source"
       task.destDir.set(outputDir)
       task.inputFiles.from(conf)
     }
@@ -356,8 +366,6 @@ class ProtobufPlugin implements Plugin<Project> {
 
   // Android projects will extract included protos from {@code variant.compileConfiguration}
   // of each variant.
-  @CompileDynamic
-  @SuppressWarnings(["MethodSize"]) // TODO: do smaller method
   private void doAndroidApply(Collection<Closure> postConfigure) {
     BaseExtension androidExtension = project.extensions.getByType(BaseExtension)
 
@@ -371,7 +379,8 @@ class ProtobufPlugin implements Plugin<Project> {
       Configuration protobufConf = createProtobufConfiguration(protoSourceSet)
       TaskProvider<ProtobufExtract> extractProtosTask = registerExtractProtosTask(
         protoSourceSet.getExtractProtoTaskName(),
-        project.providers.provider { protobufConf },
+        protoSourceSet.name,
+        project.providers.provider { protobufConf as FileCollection },
         project.file("${project.buildDir}/extracted-protos/${protoSourceSet.name}")
       )
       protoSourceSet.proto.srcDir(extractProtosTask)
@@ -389,37 +398,12 @@ class ProtobufPlugin implements Plugin<Project> {
 
       TaskProvider<ProtobufExtract> extractIncludeProtosTask = registerExtractProtosTask(
         variantProtoSourceSet.getExtractIncludeProtoTaskName(),
+        variantProtoSourceSet.name,
         project.providers.provider {
-          String compileProtoPathConfName = variantProtoSourceSet.getCompileProtoPathConfigurationName()
-          Configuration compileProtoPathConf = project.configurations.create(compileProtoPathConfName)
-          compileProtoPathConf.visible = false
-          compileProtoPathConf.transitive = true
-          compileProtoPathConf.canBeConsumed = false
-          compileProtoPathConf.canBeResolved = true
-
-          variant.sourceSets.each { SourceProvider sourceProvider ->
-            ProtoSourceSet protoSourceSet = protobufExtension.sourceSets.getByName(sourceProvider.name)
-
-            String compileOnlyConfigurationName = protoSourceSet.getCompileOnlyConfigurationName()
-            Configuration compileOnlyConfiguration = project.configurations.getByName(compileOnlyConfigurationName)
-            String implementationConfigurationName = protoSourceSet.getImplementationConfigurationName()
-            Configuration implementationConfiguration =
-              project.configurations.getByName(implementationConfigurationName)
-            compileProtoPathConf.extendsFrom(compileOnlyConfiguration, implementationConfiguration)
-          }
-
-          AttributeContainer compileProtoPathConfAttrs = compileProtoPathConf.attributes
-          variant.compileConfiguration.attributes.keySet().each { Attribute<Object> attr ->
-            Object attrValue = variant.compileConfiguration.attributes.getAttribute(attr)
-            compileProtoPathConfAttrs.attribute(attr, attrValue)
-          }
-
-          compileProtoPathConf.incoming.artifactView { ArtifactView.ViewConfiguration viewConf ->
-            viewConf.attributes.attribute(
-              ArtifactAttributes.ARTIFACT_FORMAT,
-              ArtifactTypeDefinition.JAR_TYPE
-            )
-          }.files
+          Configuration conf = createCompileProtoPathConf(variantProtoSourceSet)
+          configureProtoPathConfExtendsFromAndroid(conf, variant.sourceSets)
+          configureCompileProtoPathConfAttrsAndroid(conf, variant)
+          return getIncomingJarFromConf(conf)
         },
         project.file("${project.buildDir}/extracted-include-protos/${variantProtoSourceSet.name}")
       )
@@ -429,16 +413,11 @@ class ProtobufPlugin implements Plugin<Project> {
       variantProtoSourceSet.output
         .srcDir(generateProtoTask.map { GenerateProtoTask task -> task.outputSourceDirectories })
 
-      if (variant instanceof TestVariant) {
+      BaseVariant testedVariant = AndroidVariantExt.getTestVariant(variant)
+      if (testedVariant != null) {
         postConfigure.add {
           variantProtoSourceSet.includesFrom(protobufExtension.sourceSets.getByName("main"))
-          variantProtoSourceSet.includesFrom(variantMergedSourceSets.getByName(variant.testedVariant.name))
-        }
-      }
-      if (variant instanceof UnitTestVariant) {
-        postConfigure.add {
-          variantProtoSourceSet.includesFrom(protobufExtension.sourceSets.getByName("main"))
-          variantProtoSourceSet.includesFrom(variantMergedSourceSets.getByName(variant.testedVariant.name))
+          variantProtoSourceSet.includesFrom(variantMergedSourceSets.getByName(testedVariant.name))
         }
       }
 
@@ -449,26 +428,60 @@ class ProtobufPlugin implements Plugin<Project> {
         task.doneInitializing()
       } as Action<GenerateProtoTask>)
 
-      if (androidExtension instanceof LibraryExtension) {
-        // Include source proto files in the compiled archive, so that proto files from
-        // dependent projects can import them.
-        variant.getProcessJavaResourcesProvider().configure {
-          it.from(variantProtoSourceSet.proto) {
-            include '**/*.proto'
-          }
-        }
-      }
+      // Include source proto files in the compiled archive, so that proto files from
+      // dependent projects can import them.
+      addProtoSourcesToAar(variant, variantProtoSourceSet)
 
       postConfigure.add {
         variant.registerJavaGeneratingTask(generateProtoTask.get(), generateProtoTask.get().outputSourceDirectories)
+        configureAndroidKotlinCompileTasks(variant, variantProtoSourceSet)
+      }
+    }
+  }
 
-        project.plugins.withId("org.jetbrains.kotlin.android") {
-          project.afterEvaluate {
-            String compileKotlinTaskName = Utils.getKotlinAndroidCompileTaskName(project, variant.name)
-            project.tasks.named(compileKotlinTaskName, SourceTask) { SourceTask task ->
-              task.source(variantProtoSourceSet.output)
-            }
-          }
+  private void configureProtoPathConfExtendsFromAndroid(Configuration conf, Collection<SourceProvider> sourceSets) {
+    sourceSets.each { SourceProvider sourceProvider ->
+      ProtoSourceSet protoSourceSet = protobufExtension.sourceSets.getByName(sourceProvider.name)
+
+      String compileOnlyConfigurationName = protoSourceSet.getCompileOnlyConfigurationName()
+      Configuration compileOnlyConfiguration = project.configurations.getByName(compileOnlyConfigurationName)
+      String implementationConfigurationName = protoSourceSet.getImplementationConfigurationName()
+      Configuration implementationConfiguration = project.configurations.getByName(implementationConfigurationName)
+      conf.extendsFrom(compileOnlyConfiguration, implementationConfiguration)
+    }
+  }
+
+  private void configureCompileProtoPathConfAttrsAndroid(Configuration conf, BaseVariant variant) {
+    AttributeContainer confAttrs = conf.attributes
+    variant.compileConfiguration.attributes.keySet().each { Attribute<Object> attr ->
+      Object attrValue = variant.compileConfiguration.attributes.getAttribute(attr)
+      confAttrs.attribute(attr, attrValue)
+    }
+  }
+
+  private FileCollection getIncomingJarFromConf(Configuration conf) {
+    return conf.incoming.artifactView { ArtifactView.ViewConfiguration viewConf ->
+      viewConf.attributes.attribute(
+        ArtifactAttributes.ARTIFACT_FORMAT,
+        ArtifactTypeDefinition.JAR_TYPE
+      )
+    }.files
+  }
+
+  private void addProtoSourcesToAar(BaseVariant variant, ProtoSourceSet protoSourceSet) {
+    variant.getProcessJavaResourcesProvider().configure { ProcessResources task ->
+      task.from(protoSourceSet.proto) { CopySpec cs ->
+        cs.include('**/*.proto')
+      }
+    }
+  }
+
+  private void configureAndroidKotlinCompileTasks(BaseVariant variant, ProtoSourceSet protoSourceSet) {
+    project.plugins.withId("org.jetbrains.kotlin.android") {
+      project.afterEvaluate {
+        String compileKotlinTaskName = Utils.getKotlinAndroidCompileTaskName(project, variant.name)
+        project.tasks.named(compileKotlinTaskName, SourceTask) { SourceTask task ->
+          task.source(protoSourceSet.output)
         }
       }
     }
