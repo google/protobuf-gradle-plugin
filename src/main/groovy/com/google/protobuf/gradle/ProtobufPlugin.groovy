@@ -35,7 +35,7 @@ import com.android.builder.model.ProductFlavor
 import com.android.builder.model.SourceProvider
 import com.google.gradle.osdetector.OsDetectorPlugin
 import com.google.protobuf.gradle.internal.AndroidSourceSetFacade
-import com.google.protobuf.gradle.internal.AndroidVariantExt
+import com.google.protobuf.gradle.internal.AndroidExt
 import com.google.protobuf.gradle.internal.DefaultProtoSourceSet
 import com.google.protobuf.gradle.internal.ProjectExt
 import com.google.protobuf.gradle.tasks.ProtoSourceSet
@@ -48,8 +48,6 @@ import org.gradle.api.Project
 import org.gradle.api.artifacts.ArtifactView
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.type.ArtifactTypeDefinition
-import org.gradle.api.attributes.Attribute
-import org.gradle.api.attributes.AttributeContainer
 import org.gradle.api.attributes.LibraryElements
 import org.gradle.api.attributes.Usage
 import org.gradle.api.file.CopySpec
@@ -59,7 +57,6 @@ import org.gradle.api.plugins.AppliedPlugin
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
-import org.gradle.api.tasks.SourceTask
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.language.jvm.tasks.ProcessResources
 
@@ -401,8 +398,8 @@ class ProtobufPlugin implements Plugin<Project> {
         mergedProtoSourceSet.name,
         project.providers.provider {
           Configuration conf = createCompileProtoPathConf(mergedProtoSourceSet)
-          configureProtoPathConfExtendsFromAndroid(conf, variant.sourceSets)
-          configureCompileProtoPathConfAttrsAndroid(conf, variant)
+          AndroidExt.configureProtoPathConfExtendsFrom(project, protobufExtension, conf, variant.sourceSets)
+          AndroidExt.configureCompileProtoPathConfAttrs(conf, variant)
           return getIncomingJarFromConf(conf)
         },
         project.file("${project.buildDir}/extracted-include-protos/${mergedProtoSourceSet.name}")
@@ -413,7 +410,7 @@ class ProtobufPlugin implements Plugin<Project> {
       mergedProtoSourceSet.output
         .srcDir(generateProtoTask.map { GenerateProtoTask task -> task.outputSourceDirectories })
 
-      BaseVariant testedVariant = AndroidVariantExt.getTestVariant(variant)
+      BaseVariant testedVariant = AndroidExt.getTestVariant(variant)
       if (testedVariant != null) {
         postConfigure.add {
           mergedProtoSourceSet.includesFrom(protobufExtension.sourceSets.getByName("main"))
@@ -430,32 +427,12 @@ class ProtobufPlugin implements Plugin<Project> {
 
       // Include source proto files in the compiled archive, so that proto files from
       // dependent projects can import them.
-      addProtoSourcesToAar(variant, mergedProtoSourceSet)
+      AndroidExt.addProtoSourcesToAar(variant, mergedProtoSourceSet)
 
       postConfigure.add {
         variant.registerJavaGeneratingTask(generateProtoTask.get(), generateProtoTask.get().outputSourceDirectories)
-        configureAndroidKotlinCompileTasks(variant, mergedProtoSourceSet)
+        AndroidExt.configureAndroidKotlinCompileTasks(project, variant, mergedProtoSourceSet)
       }
-    }
-  }
-
-  private void configureProtoPathConfExtendsFromAndroid(Configuration conf, Collection<SourceProvider> sourceSets) {
-    sourceSets.each { SourceProvider sourceProvider ->
-      ProtoSourceSet protoSourceSet = protobufExtension.sourceSets.getByName(sourceProvider.name)
-
-      String compileOnlyConfName = protoSourceSet.getCompileOnlyConfName()
-      Configuration compileOnlyConf = project.configurations.getByName(compileOnlyConfName)
-      String implementationConfName = protoSourceSet.getImplementationConfName()
-      Configuration implementationConf = project.configurations.getByName(implementationConfName)
-      conf.extendsFrom(compileOnlyConf, implementationConf)
-    }
-  }
-
-  private void configureCompileProtoPathConfAttrsAndroid(Configuration conf, BaseVariant variant) {
-    AttributeContainer confAttrs = conf.attributes
-    variant.compileConfiguration.attributes.keySet().each { Attribute<Object> attr ->
-      Object attrValue = variant.compileConfiguration.attributes.getAttribute(attr)
-      confAttrs.attribute(attr, attrValue)
     }
   }
 
@@ -466,25 +443,6 @@ class ProtobufPlugin implements Plugin<Project> {
         ArtifactTypeDefinition.JAR_TYPE
       )
     }.files
-  }
-
-  private void addProtoSourcesToAar(BaseVariant variant, ProtoSourceSet protoSourceSet) {
-    variant.getProcessJavaResourcesProvider().configure { ProcessResources task ->
-      task.from(protoSourceSet.proto) { CopySpec cs ->
-        cs.include('**/*.proto')
-      }
-    }
-  }
-
-  private void configureAndroidKotlinCompileTasks(BaseVariant variant, ProtoSourceSet protoSourceSet) {
-    project.plugins.withId("org.jetbrains.kotlin.android") {
-      project.afterEvaluate {
-        String compileKotlinTaskName = Utils.getKotlinAndroidCompileTaskName(project, variant.name)
-        project.tasks.named(compileKotlinTaskName, SourceTask) { SourceTask task ->
-          task.source(protoSourceSet.output)
-        }
-      }
-    }
   }
 
   /**
