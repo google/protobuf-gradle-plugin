@@ -113,7 +113,6 @@ class IDESupportTest extends Specification {
       'file://$MODULE_DIR$/build/extracted-include-protos/test',
       'file://$MODULE_DIR$/build/generated/source/proto/test/java',
     ]
-    println result.output
 
     assert Objects.equals(expectedSourceDir, sourceDir)
     assert Objects.equals(expectedTestSourceDir, testSourceDir)

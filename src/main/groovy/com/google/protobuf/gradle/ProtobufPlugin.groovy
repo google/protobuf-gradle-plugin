@@ -29,7 +29,6 @@
  */
 package com.google.protobuf.gradle
 
-import com.android.build.api.artifact.ArtifactType
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.api.BaseVariant
@@ -328,13 +327,28 @@ class ProtobufPlugin implements Plugin<Project> {
       project.plugins.withId("idea") {
         boolean isTest = Utils.isTest(sourceSet.name)
         protoSourceSet.proto.srcDirs.each { File protoDir ->
-          Utils.addToIdeSources(project, isTest, protoDir, protoDir.absolutePath.replace(project.rootDir.absolutePath, "").contains("build"))
+          Utils.addToIdeSources(
+            project,
+            isTest,
+            protoDir,
+            protoDir.absolutePath.replace(project.rootDir.absolutePath, "").contains("build")
+          )
         }
         protoSourceSet.includeProtoDirs.srcDirs.each { File protoDir ->
-          Utils.addToIdeSources(project, isTest, protoDir, protoDir.absolutePath.replace(project.rootDir.absolutePath, "").contains("build"))
+          Utils.addToIdeSources(
+            project,
+            isTest,
+            protoDir,
+            protoDir.absolutePath.replace(project.rootDir.absolutePath, "").contains("build")
+          )
         }
         protoSourceSet.output.srcDirs.each { File outputDir ->
-          Utils.addToIdeSources(project, isTest, outputDir, outputDir.absolutePath.replace(project.rootDir.absolutePath, "").contains("build"))
+          Utils.addToIdeSources(
+            project,
+            isTest,
+            outputDir,
+            outputDir.absolutePath.replace(project.rootDir.absolutePath, "").contains("build")
+          )
         }
       }
     }
@@ -343,6 +357,7 @@ class ProtobufPlugin implements Plugin<Project> {
   // Android projects will extract included protos from {@code variant.compileConfiguration}
   // of each variant.
   @CompileDynamic
+  @SuppressWarnings(["MethodSize"]) // TODO: do smaller method
   private void doAndroidApply(Collection<Closure> postConfigure) {
     BaseExtension androidExtension = project.extensions.getByType(BaseExtension)
 
@@ -362,9 +377,10 @@ class ProtobufPlugin implements Plugin<Project> {
       protoSourceSet.proto.srcDir(extractProtosTask)
     }
 
-    NamedDomainObjectContainer<ProtoSourceSet> variantMergedSourceSets = project.objects.domainObjectContainer(ProtoSourceSet) { String name ->
-      new DefaultProtoSourceSet(name, project.objects) as ProtoSourceSet
-    }
+    NamedDomainObjectContainer<ProtoSourceSet> variantMergedSourceSets =
+      project.objects.domainObjectContainer(ProtoSourceSet) { String name ->
+        new DefaultProtoSourceSet(name, project.objects) as ProtoSourceSet
+      }
     ProjectExt.allVariant(project) { BaseVariant variant ->
       ProtoSourceSet variantProtoSourceSet = variantMergedSourceSets.create(variant.name)
       variant.sourceSets.each { SourceProvider sourceProvider ->
@@ -387,7 +403,8 @@ class ProtobufPlugin implements Plugin<Project> {
             String compileOnlyConfigurationName = protoSourceSet.getCompileOnlyConfigurationName()
             Configuration compileOnlyConfiguration = project.configurations.getByName(compileOnlyConfigurationName)
             String implementationConfigurationName = protoSourceSet.getImplementationConfigurationName()
-            Configuration implementationConfiguration = project.configurations.getByName(implementationConfigurationName)
+            Configuration implementationConfiguration =
+              project.configurations.getByName(implementationConfigurationName)
             compileProtoPathConf.extendsFrom(compileOnlyConfiguration, implementationConfiguration)
           }
 
@@ -409,7 +426,8 @@ class ProtobufPlugin implements Plugin<Project> {
       variantProtoSourceSet.includeProtoDirs.srcDir(extractIncludeProtosTask)
 
       TaskProvider<GenerateProtoTask> generateProtoTask = registerGenerateProtoTask(variantProtoSourceSet)
-      variantProtoSourceSet.output.srcDir(generateProtoTask.map { GenerateProtoTask task -> task.outputSourceDirectories })
+      variantProtoSourceSet.output
+        .srcDir(generateProtoTask.map { GenerateProtoTask task -> task.outputSourceDirectories })
 
       if (variant instanceof TestVariant) {
         postConfigure.add {

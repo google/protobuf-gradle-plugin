@@ -688,10 +688,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
   private State state = State.INIT
 
   private void checkInitializing() {
-    Preconditions.checkState(
-      state == State.INIT,
-      "Should not be called after initilization has finished. state=$state"
-    )
+    Preconditions.checkState(state == State.INIT, 'Should not be called after initilization has finished')
   }
 
   private void checkCanConfig() {
