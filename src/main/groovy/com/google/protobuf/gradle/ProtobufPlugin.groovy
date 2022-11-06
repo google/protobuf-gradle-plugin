@@ -178,12 +178,7 @@ class ProtobufPlugin implements Plugin<Project> {
       Configuration compileProtoPathConf = createCompileProtoPathConfiguration(protoSourceSet)
       TaskProvider<ProtobufExtract> extractIncludeProtosTask = registerExtractProtosTask(
         protoSourceSet.getExtractIncludeProtoTaskName(),
-        project.providers.provider { compileProtoPathConf.incoming.artifactView { ArtifactView.ViewConfiguration viewConf ->
-          viewConf.attributes.attribute(
-            ArtifactAttributes.ARTIFACT_FORMAT,
-            ArtifactTypeDefinition.JAR_TYPE
-          )
-        }.files },
+        project.providers.provider { compileProtoPathConf },
         project.file("${project.buildDir}/extracted-include-protos/${protoSourceSet.name}")
       )
       protoSourceSet.includeProtoDirs.srcDir(extractIncludeProtosTask)
