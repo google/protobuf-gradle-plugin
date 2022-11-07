@@ -381,6 +381,7 @@ class ProtobufPlugin implements Plugin<Project> {
         FileCollection extractProtosDirs,
         Provider<ProtobufExtract> extractIncludeProtosTask,
         Action<GenerateProtoTask> configureAction) {
+      ProtobufExtension protobufExtension = this.protobufExtension;
       String generateProtoTaskName = 'generate' +
           Utils.getSourceSetSubstringForTaskNames(sourceSetOrVariantName) + 'Proto'
       return project.tasks.register(generateProtoTaskName, GenerateProtoTask) {
