@@ -75,6 +75,7 @@ abstract class ProtobufExtension {
     return generatedFilesBaseDir
   }
 
+  @Deprecated
   void setGeneratedFilesBaseDir(String generatedFilesBaseDir) {
     this.generatedFilesBaseDir = generatedFilesBaseDir
   }
