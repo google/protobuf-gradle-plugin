@@ -381,14 +381,15 @@ class ProtobufPlugin implements Plugin<Project> {
         FileCollection extractProtosDirs,
         Provider<ProtobufExtract> extractIncludeProtosTask,
         Action<GenerateProtoTask> configureAction) {
-      ProtobufExtension protobufExtension = this.protobufExtension;
       String generateProtoTaskName = 'generate' +
           Utils.getSourceSetSubstringForTaskNames(sourceSetOrVariantName) + 'Proto'
+      String defaultGeneratedFilesBaseDir = protobufExtension.defaultGeneratedFilesBaseDir
+      Provider<String> generatedFilesBaseDirProvider = protobufExtension.generatedFilesBaseDirProvider
       return project.tasks.register(generateProtoTaskName, GenerateProtoTask) {
         CopyActionFacade copyActionFacade = CopyActionFacade.Loader.create(it.project, it.objectFactory)
         it.description = "Compiles Proto source for '${sourceSetOrVariantName}'".toString()
         it.outputBaseDir = project.providers.provider {
-          "${protobufExtension.defaultGeneratedFilesBaseDir}/${sourceSetOrVariantName}".toString()
+          "${defaultGeneratedFilesBaseDir}/${sourceSetOrVariantName}".toString()
         }
         it.addSourceDirs(protoSourceSet)
         it.addIncludeDir(protoSourceSet.sourceDirectories)
@@ -396,14 +397,15 @@ class ProtobufPlugin implements Plugin<Project> {
         it.addIncludeDir(extractProtosDirs)
         it.addIncludeDir(project.files(extractIncludeProtosTask))
         it.doLast { task ->
-          if (!protobufExtension.isGeneratedFilesBaseDirChanged()) {
+          String generatedFilesBaseDir = generatedFilesBaseDirProvider.get()
+          if (generatedFilesBaseDir == defaultGeneratedFilesBaseDir) {
             return
           }
           // Purposefully don't wire this up to outputs, as it can be mixed with other files.
           copyActionFacade.copy { CopySpec spec ->
             spec.includeEmptyDirs = false
             spec.from(it.outputBaseDir)
-            spec.into("${protobufExtension.generatedFilesBaseDir}/${sourceSetOrVariantName}")
+            spec.into("${generatedFilesBaseDir}/${sourceSetOrVariantName}")
           }
         }
         configureAction.execute(it)

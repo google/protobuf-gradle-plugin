@@ -35,7 +35,11 @@ import groovy.transform.TypeCheckingMode
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
+import org.gradle.api.provider.Provider
+import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.tasks.TaskCollection
+import java.util.concurrent.atomic.AtomicReference
+import javax.inject.Inject
 
 /**
  * Adds the protobuf {} block as a property of the project.
@@ -53,7 +57,7 @@ abstract class ProtobufExtension {
    * The base directory of generated files. The default is
    * "${project.buildDir}/generated/source/proto".
    */
-  private String generatedFilesBaseDir
+  private final AtomicReference<String> generatedFilesBaseDir = new AtomicReference<String>()
   @PackageScope
   final String defaultGeneratedFilesBaseDir
 
@@ -62,9 +66,12 @@ abstract class ProtobufExtension {
     this.tasks = new GenerateProtoTaskCollection(project)
     this.tools = new ToolsLocator(project)
     this.taskConfigActions = []
-    this.generatedFilesBaseDir = "${project.buildDir}/generated/source/proto"
-    this.defaultGeneratedFilesBaseDir = generatedFilesBaseDir
+    this.defaultGeneratedFilesBaseDir = "${project.buildDir}/generated/source/proto"
+    this.generatedFilesBaseDir.set(defaultGeneratedFilesBaseDir)
   }
+
+  @Inject
+  protected abstract ProviderFactory getProviderFactory()
 
   @PackageScope
   ToolsLocator getTools() {
@@ -72,12 +79,12 @@ abstract class ProtobufExtension {
   }
 
   String getGeneratedFilesBaseDir() {
-    return generatedFilesBaseDir
+    return generatedFilesBaseDir.get()
   }
 
   @Deprecated
   void setGeneratedFilesBaseDir(String generatedFilesBaseDir) {
-    this.generatedFilesBaseDir = generatedFilesBaseDir
+    this.generatedFilesBaseDir.set(generatedFilesBaseDir)
   }
 
   @PackageScope
@@ -88,8 +95,10 @@ abstract class ProtobufExtension {
   }
 
   @PackageScope
-  boolean isGeneratedFilesBaseDirChanged() {
-    return generatedFilesBaseDir != defaultGeneratedFilesBaseDir
+  Provider<String> getGeneratedFilesBaseDirProvider() {
+    // Avoid any reference to `project` for compatibility with configuration cache
+    AtomicReference<String> generatedFilesBaseDir = this.generatedFilesBaseDir
+    return providerFactory.provider { generatedFilesBaseDir.get() }
   }
 
   //===========================================================================
