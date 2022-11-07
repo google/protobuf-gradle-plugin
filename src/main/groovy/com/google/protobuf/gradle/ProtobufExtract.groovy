@@ -57,7 +57,7 @@ import javax.inject.Inject
 @CompileStatic
 abstract class ProtobufExtract extends DefaultTask {
 
-  private final CopyActionFacade copyActionFacade = instantiateCopyActionFacade()
+  private final CopyActionFacade copyActionFacade = CopyActionFacade.Loader.create(project, objectFactory)
   private final ArchiveActionFacade archiveActionFacade = instantiateArchiveActionFacade()
   private final FileCollection filteredProtos = instantiateFilteredProtos()
 
@@ -97,14 +97,6 @@ abstract class ProtobufExtract extends DefaultTask {
 
   @Inject
   protected abstract ProviderFactory getProviderFactory()
-
-  private CopyActionFacade instantiateCopyActionFacade() {
-    if (GradleVersion.current() >= GradleVersion.version("6.0")) {
-      // Use object factory to instantiate as that will inject the necessary service.
-      return objectFactory.newInstance(CopyActionFacade.FileSystemOperationsBased)
-    }
-    return new CopyActionFacade.ProjectBased(project)
-  }
 
   private ArchiveActionFacade instantiateArchiveActionFacade() {
     if (GradleVersion.current() >= GradleVersion.version("6.0")) {

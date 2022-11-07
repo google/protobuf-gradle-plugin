@@ -384,6 +384,7 @@ class ProtobufPlugin implements Plugin<Project> {
       String generateProtoTaskName = 'generate' +
           Utils.getSourceSetSubstringForTaskNames(sourceSetOrVariantName) + 'Proto'
       return project.tasks.register(generateProtoTaskName, GenerateProtoTask) {
+        CopyActionFacade copyActionFacade = CopyActionFacade.Loader.create(it.project, it.objectFactory)
         it.description = "Compiles Proto source for '${sourceSetOrVariantName}'".toString()
         it.outputBaseDir = project.providers.provider {
           "${protobufExtension.defaultGeneratedFilesBaseDir}/${sourceSetOrVariantName}".toString()
@@ -398,7 +399,7 @@ class ProtobufPlugin implements Plugin<Project> {
             return
           }
           // Purposefully don't wire this up to outputs, as it can be mixed with other files.
-          project.copy { CopySpec spec ->
+          copyActionFacade.copy { CopySpec spec ->
             spec.includeEmptyDirs = false
             spec.from(it.outputBaseDir)
             spec.into("${protobufExtension.generatedFilesBaseDir}/${sourceSetOrVariantName}")

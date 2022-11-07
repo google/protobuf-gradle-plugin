@@ -33,8 +33,11 @@ import groovy.transform.CompileStatic;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.file.CopySpec;
+import org.gradle.api.file.DeleteSpec;
 import org.gradle.api.file.FileSystemOperations;
+import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.tasks.WorkResult;
+import org.gradle.util.GradleVersion;
 
 import javax.inject.Inject;
 
@@ -46,6 +49,18 @@ import javax.inject.Inject;
 @CompileStatic
 interface CopyActionFacade {
     WorkResult copy(Action<? super CopySpec> var1);
+    WorkResult delete(Action<? super DeleteSpec> action);
+
+    @CompileStatic
+    final class Loader {
+        public static CopyActionFacade create(Project project, ObjectFactory objectFactory) {
+            if (GradleVersion.current().compareTo(GradleVersion.version("6.0")) >= 0) {
+                // Use object factory to instantiate as that will inject the necessary service.
+                return objectFactory.newInstance(CopyActionFacade.FileSystemOperationsBased.class);
+            }
+            return new CopyActionFacade.ProjectBased(project);
+        }
+    }
 
     @CompileStatic
     class ProjectBased implements CopyActionFacade {
@@ -59,6 +74,11 @@ interface CopyActionFacade {
         public WorkResult copy(Action<? super CopySpec> action) {
             return project.copy(action);
         }
+
+        @Override
+        public WorkResult delete(Action<? super DeleteSpec> action) {
+            return project.delete(action);
+        }
     }
 
     @CompileStatic
@@ -69,6 +89,11 @@ interface CopyActionFacade {
         @Override
         public WorkResult copy(Action<? super CopySpec> action) {
             return getFileSystemOperations().copy(action);
+        }
+
+        @Override
+        public WorkResult delete(Action<? super DeleteSpec> action) {
+            return getFileSystemOperations().delete(action);
         }
     }
 }
