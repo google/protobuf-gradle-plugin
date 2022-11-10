@@ -44,8 +44,6 @@ import org.gradle.api.GradleException
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.Task
-import org.gradle.api.UnknownDomainObjectException
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.type.ArtifactTypeDefinition
 import org.gradle.api.attributes.LibraryElements
@@ -57,6 +55,7 @@ import org.gradle.api.internal.artifacts.ArtifactAttributes
 import org.gradle.api.plugins.AppliedPlugin
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
+import org.gradle.api.tasks.SourceTask
 import org.gradle.language.jvm.tasks.ProcessResources
 import org.gradle.util.GradleVersion
 
@@ -121,11 +120,6 @@ class ProtobufPlugin implements Plugin<Project> {
         }
     }
 
-    @TypeChecked(TypeCheckingMode.SKIP)
-    private static void linkGenerateProtoTasksToTask(Task task, SourceDirectorySet srcDirSet) {
-      task.source(srcDirSet)
-    }
-
     @TypeChecked(TypeCheckingMode.SKIP) // Don't depend on AGP
     private void doApply() {
         boolean isAndroid = Utils.isAndroidProject(project)
@@ -135,18 +129,19 @@ class ProtobufPlugin implements Plugin<Project> {
         // of each variant.
         Collection<Closure> postConfigure = []
         if (isAndroid) {
-          NamedDomainObjectContainer<ProtoSourceSet> variantMergedSourceSets =
-            project.objects.domainObjectContainer(ProtoSourceSet) { String name ->
-              new DefaultProtoSourceSet(name, project.objects) as ProtoSourceSet
-            }
           project.android.sourceSets.configureEach { sourceSet ->
             ProtoSourceSet protoSourceSet = protobufExtension.sourceSets.create(sourceSet.name)
             addSourceSetExtension(sourceSet, protoSourceSet)
             Configuration protobufConfig = createProtobufConfiguration(protoSourceSet)
             setupExtractProtosTask(protoSourceSet, protobufConfig)
           }
+
+          NamedDomainObjectContainer<ProtoSourceSet> variantSourceSets =
+            project.objects.domainObjectContainer(ProtoSourceSet) { String name ->
+              new DefaultProtoSourceSet(name, project.objects) as ProtoSourceSet
+            }
           ProjectExt.forEachVariant(this.project) { BaseVariant variant ->
-            addTasksForVariant(variant, variantMergedSourceSets, postConfigure)
+            addTasksForVariant(variant, variantSourceSets, postConfigure)
           }
         } else {
           project.sourceSets.configureEach { sourceSet ->
@@ -298,11 +293,11 @@ class ProtobufPlugin implements Plugin<Project> {
     @TypeChecked(TypeCheckingMode.SKIP) // Don't depend on AGP
     private void addTasksForVariant(
       Object variant,
-      NamedDomainObjectContainer<ProtoSourceSet> variantMergedSourceSets,
+      NamedDomainObjectContainer<ProtoSourceSet> variantSourceSets,
       Collection<Closure> postConfigure
     ) {
       Boolean isTestVariant = Utils.isTest(variant.name)
-      ProtoSourceSet variantSourceSet = variantMergedSourceSets.create(variant.name)
+      ProtoSourceSet variantSourceSet = variantSourceSets.create(variant.name)
 
       // ExtractIncludeProto task, one per variant (compilation unit).
       // Proto definitions from an AAR dependencies are in its JAR resources.
@@ -318,7 +313,7 @@ class ProtobufPlugin implements Plugin<Project> {
       if (variant instanceof TestVariant || variant instanceof UnitTestVariant) {
         postConfigure.add {
           variantSourceSet.includesFrom(protobufExtension.sourceSets.getByName("main"))
-          variantSourceSet.includesFrom(variantMergedSourceSets.getByName(variant.testedVariant.name))
+          variantSourceSet.includesFrom(variantSourceSets.getByName(variant.testedVariant.name))
         }
       }
 
@@ -351,9 +346,15 @@ class ProtobufPlugin implements Plugin<Project> {
         // This cannot be called once task execution has started.
         variant.registerJavaGeneratingTask(
             generateProtoTask.get(), generateProtoTask.get().getOutputSourceDirectories())
-        linkGenerateProtoTasksToTaskName(
-            Utils.getKotlinAndroidCompileTaskName(project, variant.name),
-            sourceDirectorySetForGenerateProtoTask(variant.name, generateProtoTask))
+
+        project.plugins.withId("org.jetbrains.kotlin.android") {
+          project.afterEvaluate {
+            String compileKotlinTaskName = Utils.getKotlinAndroidCompileTaskName(project, variant.name)
+            project.tasks.named(compileKotlinTaskName, SourceTask) { SourceTask task ->
+              task.source(variantSourceSet.output)
+            }
+          }
+        }
       }
     }
 
@@ -386,23 +387,6 @@ class ProtobufPlugin implements Plugin<Project> {
       }
       protoSourceSet.output.from(task.map { GenerateProtoTask it -> it.outputSourceDirectories })
       return task
-    }
-
-    /**
-     * Generate a SourceDirectorySet for a GenerateProtoTask that includes just
-     * Java and Kotlin source files. Build dependencies are properly plumbed.
-     */
-    private SourceDirectorySet sourceDirectorySetForGenerateProtoTask(
-        String sourceSetName, Provider<GenerateProtoTask> generateProtoTask) {
-      String srcDirSetName = 'generate-proto-' + sourceSetName
-      SourceDirectorySet srcDirSet = project.objects.sourceDirectorySet(srcDirSetName, srcDirSetName)
-      srcDirSet.srcDirs project.objects.fileCollection()
-          .builtBy(generateProtoTask)
-          .from(project.providers.provider {
-            generateProtoTask.get().getOutputSourceDirectories()
-          })
-      srcDirSet.include("**/*.java", "**/*.kt")
-      return srcDirSet
     }
 
     /**
@@ -451,22 +435,6 @@ class ProtobufPlugin implements Plugin<Project> {
       }
       protoSourceSet.includeProtoDirs.from(task)
       return task
-    }
-
-    private void linkGenerateProtoTasksToTaskName(String compileTaskName, SourceDirectorySet srcDirSet) {
-      try {
-        project.tasks.named(compileTaskName).configure { compileTask ->
-          linkGenerateProtoTasksToTask(compileTask, srcDirSet)
-        }
-      } catch (UnknownDomainObjectException ignore) {
-        // It is possible for a compile task to not exist yet. For example, if someone applied
-        // the proto plugin and then later applies the kotlin plugin.
-        project.tasks.configureEach { Task task ->
-          if (task.name == compileTaskName) {
-            linkGenerateProtoTasksToTask(task, srcDirSet)
-          }
-        }
-      }
     }
 
     private String getExtractedIncludeProtosDir(String sourceSetName) {
