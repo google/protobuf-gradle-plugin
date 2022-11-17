@@ -296,7 +296,7 @@ class ProtobufPlugin implements Plugin<Project> {
       NamedDomainObjectContainer<ProtoSourceSet> variantSourceSets,
       Collection<Closure> postConfigure
     ) {
-      Boolean isTestVariant = Utils.isTest(variant.name)
+      Boolean isTestVariant = variant instanceof TestVariant || variant instanceof UnitTestVariant
       ProtoSourceSet variantSourceSet = variantSourceSets.create(variant.name)
 
       // ExtractIncludeProto task, one per variant (compilation unit).

@@ -1,6 +1,5 @@
 /*
- * Original work copyright (c) 2015, Alex Antonov. All rights reserved.
- * Modified work copyright (c) 2015, Google Inc. All rights reserved.
+ * Copyright (c) 2022, Google Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
