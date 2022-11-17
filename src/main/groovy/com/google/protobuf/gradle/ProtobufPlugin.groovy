@@ -32,28 +32,30 @@ package com.google.protobuf.gradle
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.TestVariant
 import com.android.build.gradle.api.UnitTestVariant
+import com.android.builder.model.SourceProvider
+import com.google.protobuf.gradle.internal.DefaultProtoSourceSet
 import com.google.protobuf.gradle.internal.ProjectExt
+import com.google.protobuf.gradle.tasks.ProtoSourceSet
 import groovy.transform.CompileStatic
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.Action
 import org.gradle.api.GradleException
+import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.Task
-import org.gradle.api.UnknownDomainObjectException
 import org.gradle.api.artifacts.Configuration
-import org.gradle.api.attributes.Attribute
+import org.gradle.api.artifacts.type.ArtifactTypeDefinition
 import org.gradle.api.attributes.LibraryElements
 import org.gradle.api.attributes.Usage
 import org.gradle.api.file.CopySpec
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.SourceDirectorySet
+import org.gradle.api.internal.artifacts.ArtifactAttributes
 import org.gradle.api.plugins.AppliedPlugin
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
-import org.gradle.api.tasks.SourceSetContainer
-import org.gradle.api.tasks.TaskProvider
+import org.gradle.api.tasks.SourceTask
 import org.gradle.language.jvm.tasks.ProcessResources
 import org.gradle.util.GradleVersion
 
@@ -118,11 +120,6 @@ class ProtobufPlugin implements Plugin<Project> {
         }
     }
 
-    @TypeChecked(TypeCheckingMode.SKIP)
-    private static void linkGenerateProtoTasksToTask(Task task, SourceDirectorySet srcDirSet) {
-      task.source(srcDirSet)
-    }
-
     @TypeChecked(TypeCheckingMode.SKIP) // Don't depend on AGP
     private void doApply() {
         boolean isAndroid = Utils.isAndroidProject(project)
@@ -133,23 +130,26 @@ class ProtobufPlugin implements Plugin<Project> {
         Collection<Closure> postConfigure = []
         if (isAndroid) {
           project.android.sourceSets.configureEach { sourceSet ->
-            addSourceSetExtension(sourceSet)
-            Configuration protobufConfig = createProtobufConfiguration(sourceSet.name)
-            setupExtractProtosTask(sourceSet.name, protobufConfig)
+            ProtoSourceSet protoSourceSet = protobufExtension.sourceSets.create(sourceSet.name)
+            addSourceSetExtension(sourceSet, protoSourceSet)
+            Configuration protobufConfig = createProtobufConfiguration(protoSourceSet)
+            setupExtractProtosTask(protoSourceSet, protobufConfig)
           }
+
+          NamedDomainObjectContainer<ProtoSourceSet> variantSourceSets =
+            project.objects.domainObjectContainer(ProtoSourceSet) { String name ->
+              new DefaultProtoSourceSet(name, project.objects) as ProtoSourceSet
+            }
           ProjectExt.forEachVariant(this.project) { BaseVariant variant ->
-            addTasksForVariant(
-              variant,
-              variant instanceof TestVariant || variant instanceof UnitTestVariant,
-              postConfigure
-            )
+            addTasksForVariant(variant, variantSourceSets, postConfigure)
           }
         } else {
           project.sourceSets.configureEach { sourceSet ->
-            SourceDirectorySet protoSrcDirSet = addSourceSetExtension(sourceSet)
-            Configuration protobufConfig = createProtobufConfiguration(sourceSet.name)
-            Configuration compileProtoPath = createCompileProtoPathConfiguration(sourceSet.name)
-            addTasksForSourceSet(sourceSet, protoSrcDirSet, protobufConfig, compileProtoPath, postConfigure)
+            ProtoSourceSet protoSourceSet = protobufExtension.sourceSets.create(sourceSet.name)
+            addSourceSetExtension(sourceSet, protoSourceSet)
+            Configuration protobufConfig = createProtobufConfiguration(protoSourceSet)
+            Configuration compileProtoPath = createCompileProtoPathConfiguration(protoSourceSet)
+            addTasksForSourceSet(sourceSet, protoSourceSet, protobufConfig, compileProtoPath, postConfigure)
           }
         }
         project.afterEvaluate {
@@ -170,8 +170,8 @@ class ProtobufPlugin implements Plugin<Project> {
      * configure dependencies for it. The extract-protos task of each source set will
      * extract protobuf files from dependencies in this configuration.
      */
-    private Configuration createProtobufConfiguration(String sourceSetName) {
-      String protobufConfigName = Utils.getConfigName(sourceSetName, 'protobuf')
+    private Configuration createProtobufConfiguration(ProtoSourceSet protoSourceSet) {
+      String protobufConfigName = Utils.getConfigName(protoSourceSet.name, 'protobuf')
       return project.configurations.create(protobufConfigName) { Configuration it ->
         it.visible = false
         it.transitive = true
@@ -187,12 +187,12 @@ class ProtobufPlugin implements Plugin<Project> {
      * <p> For Java projects only.
      * <p> This works around 'java-library' plugin not exposing resources to consumers for compilation.
      */
-    private Configuration createCompileProtoPathConfiguration(String sourceSetName) {
-      String compileProtoConfigName = Utils.getConfigName(sourceSetName, 'compileProtoPath')
+    private Configuration createCompileProtoPathConfiguration(ProtoSourceSet protoSourceSet) {
+      String compileProtoConfigName = Utils.getConfigName(protoSourceSet.name, 'compileProtoPath')
       Configuration compileConfig =
-              project.configurations.getByName(Utils.getConfigName(sourceSetName, 'compileOnly'))
+              project.configurations.getByName(Utils.getConfigName(protoSourceSet.name, 'compileOnly'))
       Configuration implementationConfig =
-              project.configurations.getByName(Utils.getConfigName(sourceSetName, 'implementation'))
+              project.configurations.getByName(Utils.getConfigName(protoSourceSet.name, 'implementation'))
       return project.configurations.create(compileProtoConfigName) { Configuration it ->
           it.visible = false
           it.transitive = true
@@ -222,9 +222,9 @@ class ProtobufPlugin implements Plugin<Project> {
      * sourceSets.main.proto and sourceSets.test.proto.
      */
     @TypeChecked(TypeCheckingMode.SKIP) // Don't depend on AGP
-    private SourceDirectorySet addSourceSetExtension(Object sourceSet) {
+    private SourceDirectorySet addSourceSetExtension(Object sourceSet, ProtoSourceSet protoSourceSet) {
       String name = sourceSet.name
-      SourceDirectorySet sds = project.objects.sourceDirectorySet(name, "${name} Proto source")
+      SourceDirectorySet sds = protoSourceSet.proto
       sourceSet.extensions.add('proto', sds)
       sds.srcDir("src/${name}/proto")
       sds.include("**/*.proto")
@@ -235,40 +235,31 @@ class ProtobufPlugin implements Plugin<Project> {
      * Creates Protobuf tasks for a sourceSet in a Java project.
      */
     private void addTasksForSourceSet(
-        final SourceSet sourceSet, SourceDirectorySet protoSrcDirSet, Configuration protobufConfig,
+        SourceSet sourceSet, ProtoSourceSet protoSourceSet, Configuration protobufConfig,
         Configuration compileProtoPath, Collection<Closure> postConfigure) {
-      Provider<ProtobufExtract> extractProtosTask =
-          setupExtractProtosTask(sourceSet.name, protobufConfig)
-
-      // Pass include proto files from main to test.
-      // Process resource task contains all source proto files from a proto source set.
-      FileCollection testClassPathConfig = project.objects.fileCollection()
-      if (Utils.isTest(sourceSet.name)) {
-        TaskProvider<ProcessResources> mainProcessResources = project.tasks.named(
-          project.extensions.getByType(SourceSetContainer)
-            .getByName(SourceSet.MAIN_SOURCE_SET_NAME)
-            .processResourcesTaskName,
-          ProcessResources
-        )
-        testClassPathConfig.from(mainProcessResources)
-      }
+      Provider<ProtobufExtract> extractProtosTask = setupExtractProtosTask(protoSourceSet, protobufConfig)
 
       Provider<ProtobufExtract> extractIncludeProtosTask = setupExtractIncludeProtosTask(
-          sourceSet.name, compileProtoPath, testClassPathConfig)
-      Provider<GenerateProtoTask> generateProtoTask = addGenerateProtoTask(
-          sourceSet.name, protoSrcDirSet, project.files(extractProtosTask),
-          extractIncludeProtosTask) {
+        protoSourceSet, compileProtoPath)
+
+      // Make protos in 'test' sourceSet able to import protos from the 'main' sourceSet.
+      // Pass include proto files from main to test.
+      if (Utils.isTest(sourceSet.name)) {
+        protoSourceSet.includesFrom(protobufExtension.sourceSets.getByName("main"))
+      }
+
+      Provider<GenerateProtoTask> generateProtoTask = addGenerateProtoTask(protoSourceSet) {
         it.sourceSet = sourceSet
         it.doneInitializing()
         it.builtins.maybeCreate("java")
       }
 
-      sourceSet.java.source(sourceDirectorySetForGenerateProtoTask(sourceSet.name, generateProtoTask))
+      sourceSet.java.srcDirs(protoSourceSet.output)
 
       // Include source proto files in the compiled archive, so that proto files from
       // dependent projects can import them.
       project.tasks.named(sourceSet.getTaskName('process', 'resources'), ProcessResources).configure {
-        it.from(generateProtoTask.get().sourceDirs) { CopySpec cs ->
+        it.from(protoSourceSet.proto) { CopySpec cs ->
           cs.include '**/*.proto'
         }
       }
@@ -284,7 +275,7 @@ class ProtobufPlugin implements Plugin<Project> {
 
         project.plugins.withId("idea") {
           boolean isTest = Utils.isTest(sourceSet.name)
-          protoSrcDirSet.srcDirs.each { File protoDir ->
+          protoSourceSet.proto.srcDirs.each { File protoDir ->
             Utils.addToIdeSources(project, isTest, protoDir, false)
           }
           Utils.addToIdeSources(project, isTest, project.files(extractProtosTask).singleFile, true)
@@ -300,43 +291,40 @@ class ProtobufPlugin implements Plugin<Project> {
      * Creates Protobuf tasks for a variant in an Android project.
      */
     @TypeChecked(TypeCheckingMode.SKIP) // Don't depend on AGP
-    private void addTasksForVariant(final Object variant, boolean isTestVariant, Collection<Closure> postConfigure) {
+    private void addTasksForVariant(
+      Object variant,
+      NamedDomainObjectContainer<ProtoSourceSet> variantSourceSets,
+      Collection<Closure> postConfigure
+    ) {
+      Boolean isTestVariant = variant instanceof TestVariant || variant instanceof UnitTestVariant
+      ProtoSourceSet variantSourceSet = variantSourceSets.create(variant.name)
+
       // ExtractIncludeProto task, one per variant (compilation unit).
       // Proto definitions from an AAR dependencies are in its JAR resources.
-      Attribute artifactType = Attribute.of("artifactType", String)
       FileCollection classPathConfig = variant.compileConfiguration.incoming.artifactView {
-        attributes {
-            it.attribute(artifactType, "jar")
-        }
+        attributes.attribute(
+          ArtifactAttributes.ARTIFACT_FORMAT,
+          ArtifactTypeDefinition.JAR_TYPE
+        )
       }.files
-      FileCollection testClassPathConfig = project.objects.fileCollection()
-      if (Utils.isTest(variant.name)) {
-        // TODO(zhangkun83): Android sourceSet doesn't have compileClasspath. If it did, we
-        // haven't figured out a way to put source protos in 'resources'. For now we use an
-        // ad-hoc solution that manually includes the source protos of 'main' and its
-        // dependencies.
-        testClassPathConfig = project.android.sourceSets['main'].proto.sourceDirectories
-        if (variant.hasProperty("testedVariant")) {
-          testClassPathConfig += variant.testedVariant.compileConfiguration.incoming.artifactView {
-                attributes {
-                    it.attribute(artifactType, "jar")
-                }
-              }.files
+
+      // Make protos in 'test' variant able to import protos from the 'main' variant.
+      // Pass include proto files from main to test.
+      if (variant instanceof TestVariant || variant instanceof UnitTestVariant) {
+        postConfigure.add {
+          variantSourceSet.includesFrom(protobufExtension.sourceSets.getByName("main"))
+          variantSourceSet.includesFrom(variantSourceSets.getByName(variant.testedVariant.name))
         }
       }
-      Provider<ProtobufExtract> extractIncludeProtosTask =
-          setupExtractIncludeProtosTask(variant.name, classPathConfig, testClassPathConfig)
+
+      setupExtractIncludeProtosTask(variantSourceSet, classPathConfig)
 
       // GenerateProto task, one per variant (compilation unit).
-      SourceDirectorySet sourceDirs = project.objects.sourceDirectorySet(variant.name, "AllSourceSets")
-      variant.sourceSets.forEach { sourceDirs.source(it.proto) }
-      FileCollection extractProtosDirs = project.files(project.providers.provider {
-        variant.sourceSets.collect {
-          project.files(project.tasks.named(getExtractProtosTaskName(it.name)))
-        }
-      })
-      Provider<GenerateProtoTask> generateProtoTask = addGenerateProtoTask(
-          variant.name, sourceDirs, extractProtosDirs, extractIncludeProtosTask) {
+      variant.sourceSets.each { SourceProvider sourceProvider ->
+        variantSourceSet.extendsFrom(protobufExtension.sourceSets.getByName(sourceProvider.name))
+      }
+
+      Provider<GenerateProtoTask> generateProtoTask = addGenerateProtoTask(variantSourceSet) {
         it.setVariant(variant, isTestVariant)
         it.flavors = variant.productFlavors.collect { it.name }
         if (variant.hasProperty('buildType')) {
@@ -349,18 +337,24 @@ class ProtobufPlugin implements Plugin<Project> {
           // Include source proto files in the compiled archive, so that proto files from
           // dependent projects can import them.
           variant.getProcessJavaResourcesProvider().configure {
-            it.from(generateProtoTask.get().sourceDirs) {
+            it.from(variantSourceSet.proto) {
               include '**/*.proto'
             }
           }
       }
       postConfigure.add {
         // This cannot be called once task execution has started.
-        variant.registerJavaGeneratingTask(
-            generateProtoTask.get(), generateProtoTask.get().getOutputSourceDirectories())
-        linkGenerateProtoTasksToTaskName(
-            Utils.getKotlinAndroidCompileTaskName(project, variant.name),
-            sourceDirectorySetForGenerateProtoTask(variant.name, generateProtoTask))
+        variant.registerJavaGeneratingTask(generateProtoTask.get(), generateProtoTask.get().outputSourceDirectories)
+
+        project.plugins.withId("org.jetbrains.kotlin.android") {
+          project.afterEvaluate {
+            String compileKotlinTaskName = Utils.getKotlinAndroidCompileTaskName(project, variant.name)
+            project.tasks.named(compileKotlinTaskName, SourceTask) { SourceTask task ->
+              task.dependsOn(generateProtoTask)
+              task.source(generateProtoTask.get().outputSourceDirectories)
+            }
+          }
+        }
       }
     }
 
@@ -374,45 +368,25 @@ class ProtobufPlugin implements Plugin<Project> {
      * compiled. For Java it's the sourceSet that sourceSetOrVariantName stands
      * for; for Android it's the collection of sourceSets that the variant includes.
      */
-    @SuppressWarnings(["UnnecessaryObjectReferences"]) // suppress a lot of it.doLogic in task registration block
     private Provider<GenerateProtoTask> addGenerateProtoTask(
-        String sourceSetOrVariantName,
-        SourceDirectorySet protoSourceSet,
-        FileCollection extractProtosDirs,
-        Provider<ProtobufExtract> extractIncludeProtosTask,
-        Action<GenerateProtoTask> configureAction) {
-      String generateProtoTaskName = 'generate' +
-          Utils.getSourceSetSubstringForTaskNames(sourceSetOrVariantName) + 'Proto'
+        ProtoSourceSet protoSourceSet,
+        Action<GenerateProtoTask> configureAction
+    ) {
+      String sourceSetName = protoSourceSet.name
+      String taskName = 'generate' + Utils.getSourceSetSubstringForTaskNames(sourceSetName) + 'Proto'
       Provider<String> outDir = project.providers.provider {
-        "${this.protobufExtension.generatedFilesBaseDir}/${sourceSetOrVariantName}".toString()
+        "${this.protobufExtension.generatedFilesBaseDir}/${sourceSetName}".toString()
       }
-      return project.tasks.register(generateProtoTaskName, GenerateProtoTask) {
-        it.description = "Compiles Proto source for '${sourceSetOrVariantName}'".toString()
+      Provider<GenerateProtoTask> task = project.tasks.register(taskName, GenerateProtoTask) {
+        it.description = "Compiles Proto source for '${sourceSetName}'".toString()
         it.outputBaseDir = outDir
-        it.addSourceDirs(protoSourceSet)
-        it.addIncludeDir(protoSourceSet.sourceDirectories)
-        it.addSourceDirs(extractProtosDirs)
-        it.addIncludeDir(extractProtosDirs)
-        it.addIncludeDir(project.files(extractIncludeProtosTask))
+        it.addSourceDirs(protoSourceSet.proto)
+        it.addIncludeDir(protoSourceSet.proto.sourceDirectories)
+        it.addIncludeDir(protoSourceSet.includeProtoDirs)
         configureAction.execute(it)
       }
-    }
-
-    /**
-     * Generate a SourceDirectorySet for a GenerateProtoTask that includes just
-     * Java and Kotlin source files. Build dependencies are properly plumbed.
-     */
-    private SourceDirectorySet sourceDirectorySetForGenerateProtoTask(
-        String sourceSetName, Provider<GenerateProtoTask> generateProtoTask) {
-      String srcDirSetName = 'generate-proto-' + sourceSetName
-      SourceDirectorySet srcDirSet = project.objects.sourceDirectorySet(srcDirSetName, srcDirSetName)
-      srcDirSet.srcDirs project.objects.fileCollection()
-          .builtBy(generateProtoTask)
-          .from(project.providers.provider {
-            generateProtoTask.get().getOutputSourceDirectories()
-          })
-      srcDirSet.include("**/*.java", "**/*.kt")
-      return srcDirSet
+      protoSourceSet.output.from(task.map { GenerateProtoTask it -> it.outputSourceDirectories })
+      return task
     }
 
     /**
@@ -424,12 +398,18 @@ class ProtobufPlugin implements Plugin<Project> {
      * its own extraction task.
      */
     private Provider<ProtobufExtract> setupExtractProtosTask(
-        final String sourceSetName, Configuration protobufConfig) {
-      return project.tasks.register(getExtractProtosTaskName(sourceSetName), ProtobufExtract) {
+      ProtoSourceSet protoSourceSet,
+      Configuration protobufConfig
+    ) {
+      String sourceSetName = protoSourceSet.name
+      String taskName = getExtractProtosTaskName(sourceSetName)
+      Provider<ProtobufExtract> task = project.tasks.register(taskName, ProtobufExtract) {
         it.description = "Extracts proto files/dependencies specified by 'protobuf' configuration"
         it.destDir.set(getExtractedProtosDir(sourceSetName) as File)
         it.inputFiles.from(protobufConfig)
       }
+      protoSourceSet.proto.srcDir(task)
+      return task
     }
 
     private String getExtractProtosTaskName(String sourceSetName) {
@@ -444,39 +424,17 @@ class ProtobufPlugin implements Plugin<Project> {
      * <p>This task is per-sourceSet for both Java and per variant for Android.
      */
     private Provider<ProtobufExtract> setupExtractIncludeProtosTask(
-        String sourceSetOrVariantName,
-        FileCollection compileClasspathConfiguration,
-        FileCollection testedCompileClasspathConfiguration) {
-      String extractIncludeProtosTaskName = 'extractInclude' +
-          Utils.getSourceSetSubstringForTaskNames(sourceSetOrVariantName) + 'Proto'
-      return project.tasks.register(extractIncludeProtosTaskName, ProtobufExtract) {
+        ProtoSourceSet protoSourceSet,
+        FileCollection archives
+    ) {
+      String taskName = 'extractInclude' + Utils.getSourceSetSubstringForTaskNames(protoSourceSet.name) + 'Proto'
+      Provider<ProtobufExtract> task = project.tasks.register(taskName, ProtobufExtract) {
         it.description = "Extracts proto files from compile dependencies for includes"
-        it.destDir.set(getExtractedIncludeProtosDir(sourceSetOrVariantName) as File)
-        it.inputFiles.from(compileClasspathConfiguration)
-
-        // TL; DR: Make protos in 'test' sourceSet able to import protos from the 'main'
-        // sourceSet.  Sub-configurations, e.g., 'testCompile' that extends 'compile', don't
-        // depend on the their super configurations. As a result, 'testCompile' doesn't depend on
-        // 'compile' and it cannot get the proto files from 'main' sourceSet through the
-        // configuration.
-        it.inputFiles.from(testedCompileClasspathConfiguration)
+        it.destDir.set(getExtractedIncludeProtosDir(protoSourceSet.name) as File)
+        it.inputFiles.from(archives)
       }
-    }
-
-    private void linkGenerateProtoTasksToTaskName(String compileTaskName, SourceDirectorySet srcDirSet) {
-      try {
-        project.tasks.named(compileTaskName).configure { compileTask ->
-          linkGenerateProtoTasksToTask(compileTask, srcDirSet)
-        }
-      } catch (UnknownDomainObjectException ignore) {
-        // It is possible for a compile task to not exist yet. For example, if someone applied
-        // the proto plugin and then later applies the kotlin plugin.
-        project.tasks.configureEach { Task task ->
-          if (task.name == compileTaskName) {
-            linkGenerateProtoTasksToTask(task, srcDirSet)
-          }
-        }
-      }
+      protoSourceSet.includeProtoDirs.from(task)
+      return task
     }
 
     private String getExtractedIncludeProtosDir(String sourceSetName) {
