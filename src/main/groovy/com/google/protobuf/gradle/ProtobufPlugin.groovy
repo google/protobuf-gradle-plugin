@@ -344,14 +344,14 @@ class ProtobufPlugin implements Plugin<Project> {
       }
       postConfigure.add {
         // This cannot be called once task execution has started.
-        variant.registerJavaGeneratingTask(
-            generateProtoTask.get(), generateProtoTask.get().getOutputSourceDirectories())
+        variant.registerJavaGeneratingTask(generateProtoTask.get(), generateProtoTask.get().outputSourceDirectories)
 
         project.plugins.withId("org.jetbrains.kotlin.android") {
           project.afterEvaluate {
             String compileKotlinTaskName = Utils.getKotlinAndroidCompileTaskName(project, variant.name)
             project.tasks.named(compileKotlinTaskName, SourceTask) { SourceTask task ->
-              task.source(variantSourceSet.output)
+              task.dependsOn(generateProtoTask)
+              task.source(generateProtoTask.get().outputSourceDirectories)
             }
           }
         }
