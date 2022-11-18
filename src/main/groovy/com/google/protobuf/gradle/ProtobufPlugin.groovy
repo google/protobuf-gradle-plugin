@@ -138,7 +138,7 @@ class ProtobufPlugin implements Plugin<Project> {
 
           NamedDomainObjectContainer<ProtoSourceSet> variantSourceSets =
             project.objects.domainObjectContainer(ProtoSourceSet) { String name ->
-              new DefaultProtoSourceSet(name, project.objects) as ProtoSourceSet
+              new DefaultProtoSourceSet(name, project.objects)
             }
           ProjectExt.forEachVariant(this.project) { BaseVariant variant ->
             addTasksForVariant(variant, variantSourceSets, postConfigure)

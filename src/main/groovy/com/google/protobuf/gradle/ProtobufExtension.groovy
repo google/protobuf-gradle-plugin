@@ -65,7 +65,7 @@ abstract class ProtobufExtension {
     this.taskConfigActions = []
     this.generatedFilesBaseDir = "${project.buildDir}/generated/source/proto"
     this.sourceSets = project.objects.domainObjectContainer(ProtoSourceSet) { String name ->
-      new DefaultProtoSourceSet(name, project.objects) as ProtoSourceSet
+      new DefaultProtoSourceSet(name, project.objects)
     }
   }
 
