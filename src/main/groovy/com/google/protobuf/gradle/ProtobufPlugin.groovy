@@ -29,12 +29,14 @@
  */
 package com.google.protobuf.gradle
 
+import com.android.build.api.variant.AndroidComponentsExtension
+import com.android.build.api.variant.Variant
+import com.android.build.api.variant.VariantSelector
 import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.TestVariant
 import com.android.build.gradle.api.UnitTestVariant
 import com.android.builder.model.SourceProvider
 import com.google.protobuf.gradle.internal.DefaultProtoSourceSet
-import com.google.protobuf.gradle.internal.ProjectExt
 import com.google.protobuf.gradle.tasks.ProtoSourceSet
 import groovy.transform.CompileStatic
 import groovy.transform.TypeChecked
@@ -136,13 +138,15 @@ class ProtobufPlugin implements Plugin<Project> {
             setupExtractProtosTask(protoSourceSet, protobufConfig)
           }
 
+          AndroidComponentsExtension androidComponents = this.project.extensions.getByType(AndroidComponentsExtension)
           NamedDomainObjectContainer<ProtoSourceSet> variantSourceSets =
             project.objects.domainObjectContainer(ProtoSourceSet) { String name ->
               new DefaultProtoSourceSet(name, project.objects)
             }
-          ProjectExt.forEachVariant(this.project) { BaseVariant variant ->
-            addTasksForVariant(variant, variantSourceSets, postConfigure)
-          }
+          androidComponents.onVariants(androidComponents.selector().all(), { Variant variant ->
+            println
+//            addTasksForVariant(variant, variantSourceSets, postConfigure)
+          } as Action<Variant>)
         } else {
           project.sourceSets.configureEach { sourceSet ->
             ProtoSourceSet protoSourceSet = protobufExtension.sourceSets.create(sourceSet.name)
@@ -343,8 +347,19 @@ class ProtobufPlugin implements Plugin<Project> {
           }
       }
       postConfigure.add {
-        // This cannot be called once task execution has started.
-        variant.registerJavaGeneratingTask(generateProtoTask.get(), generateProtoTask.get().outputSourceDirectories)
+        if (true) {
+          variant.sources.java
+            .addGeneratedSourceDirectory(
+              generateProtoTask,
+              project.objects.directoryProperty()
+                .set(project.layout.dir(generateProtoTask.map { GenerateProtoTask task ->
+                  project.file(task.outputBaseDir)
+                }))
+            )
+        } else {
+          // This cannot be called once task execution has started.
+          variant.registerJavaGeneratingTask(generateProtoTask.get(), generateProtoTask.get().outputSourceDirectories)
+        }
 
         project.plugins.withId("org.jetbrains.kotlin.android") {
           project.afterEvaluate {
