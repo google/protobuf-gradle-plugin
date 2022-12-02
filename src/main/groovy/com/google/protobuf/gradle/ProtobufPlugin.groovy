@@ -34,14 +34,13 @@ import com.android.build.gradle.api.TestVariant
 import com.android.build.gradle.api.UnitTestVariant
 import com.android.builder.model.SourceProvider
 import com.google.protobuf.gradle.internal.ProjectExt
-import com.google.protobuf.gradle.internal.ProtoSourceSetObjectFactory
 import com.google.protobuf.gradle.tasks.ProtoSourceSet
+import com.google.protobuf.gradle.tasks.ProtoVariant
 import groovy.transform.CompileStatic
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.Action
 import org.gradle.api.GradleException
-import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
@@ -55,6 +54,7 @@ import org.gradle.api.internal.artifacts.ArtifactAttributes
 import org.gradle.api.plugins.AppliedPlugin
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
+import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.SourceTask
 import org.gradle.language.jvm.tasks.ProcessResources
 import org.gradle.util.GradleVersion
@@ -129,37 +129,42 @@ class ProtobufPlugin implements Plugin<Project> {
         // of each variant.
         Collection<Closure> postConfigure = []
         if (isAndroid) {
-          project.android.sourceSets.configureEach { sourceSet ->
+          project.android.sourceSets.all { sourceSet ->
             ProtoSourceSet protoSourceSet = protobufExtension.sourceSets.create(sourceSet.name)
             addSourceSetExtension(sourceSet, protoSourceSet)
             Configuration protobufConfig = createProtobufConfiguration(protoSourceSet)
             setupExtractProtosTask(protoSourceSet, protobufConfig)
           }
 
-          NamedDomainObjectContainer<ProtoSourceSet> variantSourceSets = project.objects
-            .domainObjectContainer(ProtoSourceSet, new ProtoSourceSetObjectFactory(project.objects))
           ProjectExt.forEachVariant(this.project) { BaseVariant variant ->
-            addTasksForVariant(variant, variantSourceSets, postConfigure)
+            ProtoVariant protoVariant = protobufExtension.variants.create(variant.name)
+            protoVariant.variant = variant.name
+            protoVariant.isTest = variant instanceof TestVariant || variant instanceof UnitTestVariant
+            protoVariant.flavors = variant.productFlavors.collect { it.name }
+            if (variant.hasProperty('buildType')) protoVariant.buildType = variant.buildType.name
+
+            addTasksForVariant(variant, protoVariant, postConfigure)
           }
         } else {
-          project.sourceSets.configureEach { sourceSet ->
-            ProtoSourceSet protoSourceSet = protobufExtension.sourceSets.create(sourceSet.name)
-            addSourceSetExtension(sourceSet, protoSourceSet)
-            Configuration protobufConfig = createProtobufConfiguration(protoSourceSet)
-            Configuration compileProtoPath = createCompileProtoPathConfiguration(protoSourceSet)
-            addTasksForSourceSet(sourceSet, protoSourceSet, protobufConfig, compileProtoPath, postConfigure)
+          SourceSetContainer sourceSets = project.extensions.getByType(SourceSetContainer)
+          sourceSets.all { SourceSet sourceSet ->
+            ProtoVariant protoVariant = protobufExtension.variants.create(sourceSet.name)
+            protoVariant.sourceSet = sourceSet.name
+            protoVariant.isTest = sourceSet.name == SourceSet.TEST_SOURCE_SET_NAME
+            protoVariant.generateProtoTaskSpec.builtins.create("java")
+
+            addSourceSetExtension(sourceSet, protoVariant.sources)
+            Configuration protobufConfig = createProtobufConfiguration(protoVariant.sources)
+            Configuration compileProtoPath = createCompileProtoPathConfiguration(protoVariant.sources)
+            addTasksForSourceSet(sourceSet, protoVariant, protobufConfig, compileProtoPath, postConfigure)
           }
         }
         project.afterEvaluate {
-          this.protobufExtension.configureTasks()
-          // Disallow user configuration outside the config closures, because the operations just
-          // after the doneConfig() loop over the generated outputs and will be out-of-date if
-          // plugin output is added after this point.
-          this.protobufExtension.generateProtoTasks.all().configureEach { it.doneConfig() }
           postConfigure.each { it.call() }
+
           // protoc and codegen plugin configuration may change through the protobuf{}
           // block. Only at this point the configuration has been finalized.
-          project.protobuf.tools.resolve(project)
+          protobufExtension.tools.resolve(project)
         }
     }
 
@@ -233,8 +238,13 @@ class ProtobufPlugin implements Plugin<Project> {
      * Creates Protobuf tasks for a sourceSet in a Java project.
      */
     private void addTasksForSourceSet(
-        SourceSet sourceSet, ProtoSourceSet protoSourceSet, Configuration protobufConfig,
-        Configuration compileProtoPath, Collection<Closure> postConfigure) {
+        SourceSet sourceSet,
+        ProtoVariant protoVariant,
+        Configuration protobufConfig,
+        Configuration compileProtoPath,
+        Collection<Closure> postConfigure
+    ) {
+      ProtoSourceSet protoSourceSet = protoVariant.sources
       Provider<ProtobufExtract> extractProtosTask = setupExtractProtosTask(protoSourceSet, protobufConfig)
 
       Provider<ProtobufExtract> extractIncludeProtosTask = setupExtractIncludeProtosTask(
@@ -246,11 +256,7 @@ class ProtobufPlugin implements Plugin<Project> {
         protoSourceSet.includesFrom(protobufExtension.sourceSets.getByName("main"))
       }
 
-      Provider<GenerateProtoTask> generateProtoTask = addGenerateProtoTask(protoSourceSet) {
-        it.sourceSet = sourceSet
-        it.doneInitializing()
-        it.builtins.maybeCreate("java")
-      }
+      Provider<GenerateProtoTask> generateProtoTask = addGenerateProtoTask(protoVariant)
 
       sourceSet.java.srcDirs(protoSourceSet.output)
 
@@ -262,27 +268,27 @@ class ProtobufPlugin implements Plugin<Project> {
         }
       }
 
-      postConfigure.add {
-        project.plugins.withId("eclipse") {
-          // This is required because the intellij/eclipse plugin does not allow adding source directories
-          // that do not exist. The intellij/eclipse config files should be valid from the start.
-          generateProtoTask.get().getOutputSourceDirectories().each { File outputDir ->
-            outputDir.mkdirs()
-          }
-        }
-
-        project.plugins.withId("idea") {
-          boolean isTest = Utils.isTest(sourceSet.name)
-          protoSourceSet.proto.srcDirs.each { File protoDir ->
-            Utils.addToIdeSources(project, isTest, protoDir, false)
-          }
-          Utils.addToIdeSources(project, isTest, project.files(extractProtosTask).singleFile, true)
-          Utils.addToIdeSources(project, isTest, project.files(extractIncludeProtosTask).singleFile, true)
-          generateProtoTask.get().getOutputSourceDirectories().each { File outputDir ->
-            Utils.addToIdeSources(project, isTest, outputDir, true)
-          }
-        }
-      }
+      // postConfigure.add {
+      //   project.plugins.withId("eclipse") {
+      //     // This is required because the intellij/eclipse plugin does not allow adding source directories
+      //     // that do not exist. The intellij/eclipse config files should be valid from the start.
+      //     generateProtoTask.get().getOutputSourceDirectories().each { File outputDir ->
+      //       outputDir.mkdirs()
+      //     }
+      //   }
+      //
+      //   project.plugins.withId("idea") {
+      //     boolean isTest = Utils.isTest(sourceSet.name)
+      //     protoSourceSet.proto.srcDirs.each { File protoDir ->
+      //       Utils.addToIdeSources(project, isTest, protoDir, false)
+      //     }
+      //     Utils.addToIdeSources(project, isTest, project.files(extractProtosTask).singleFile, true)
+      //     Utils.addToIdeSources(project, isTest, project.files(extractIncludeProtosTask).singleFile, true)
+      //     generateProtoTask.get().getOutputSourceDirectories().each { File outputDir ->
+      //       Utils.addToIdeSources(project, isTest, outputDir, true)
+      //     }
+      //   }
+      // }
     }
 
     /**
@@ -291,11 +297,10 @@ class ProtobufPlugin implements Plugin<Project> {
     @TypeChecked(TypeCheckingMode.SKIP) // Don't depend on AGP
     private void addTasksForVariant(
       Object variant,
-      NamedDomainObjectContainer<ProtoSourceSet> variantSourceSets,
+      ProtoVariant protoVariant,
       Collection<Closure> postConfigure
     ) {
-      Boolean isTestVariant = variant instanceof TestVariant || variant instanceof UnitTestVariant
-      ProtoSourceSet variantSourceSet = variantSourceSets.create(variant.name)
+      ProtoSourceSet variantSourceSet = protoVariant.sources
 
       // ExtractIncludeProto task, one per variant (compilation unit).
       // Proto definitions from an AAR dependencies are in its JAR resources.
@@ -311,7 +316,7 @@ class ProtobufPlugin implements Plugin<Project> {
       if (variant instanceof TestVariant || variant instanceof UnitTestVariant) {
         postConfigure.add {
           variantSourceSet.includesFrom(protobufExtension.sourceSets.getByName("main"))
-          variantSourceSet.includesFrom(variantSourceSets.getByName(variant.testedVariant.name))
+          variantSourceSet.includesFrom(protobufExtension.variants.getByName(variant.testedVariant.name).sources)
         }
       }
 
@@ -322,14 +327,7 @@ class ProtobufPlugin implements Plugin<Project> {
         variantSourceSet.extendsFrom(protobufExtension.sourceSets.getByName(sourceProvider.name))
       }
 
-      Provider<GenerateProtoTask> generateProtoTask = addGenerateProtoTask(variantSourceSet) {
-        it.setVariant(variant, isTestVariant)
-        it.flavors = variant.productFlavors.collect { it.name }
-        if (variant.hasProperty('buildType')) {
-          it.buildType = variant.buildType.name
-        }
-        it.doneInitializing()
-      }
+      Provider<GenerateProtoTask> generateProtoTask = addGenerateProtoTask(protoVariant)
 
       if (project.android.hasProperty('libraryVariants')) {
           // Include source proto files in the compiled archive, so that proto files from
@@ -340,20 +338,20 @@ class ProtobufPlugin implements Plugin<Project> {
             }
           }
       }
-      postConfigure.add {
-        // This cannot be called once task execution has started.
-        variant.registerJavaGeneratingTask(generateProtoTask.get(), generateProtoTask.get().outputSourceDirectories)
-
-        project.plugins.withId("org.jetbrains.kotlin.android") {
-          project.afterEvaluate {
-            String compileKotlinTaskName = Utils.getKotlinAndroidCompileTaskName(project, variant.name)
-            project.tasks.named(compileKotlinTaskName, SourceTask) { SourceTask task ->
-              task.dependsOn(generateProtoTask)
-              task.source(generateProtoTask.get().outputSourceDirectories)
-            }
-          }
-        }
-      }
+      //postConfigure.add {
+      //  // This cannot be called once task execution has started.
+      //  variant.registerJavaGeneratingTask(generateProtoTask.get(), generateProtoTask.get().outputSourceDirectories)
+      //
+      //  project.plugins.withId("org.jetbrains.kotlin.android") {
+      //    project.afterEvaluate {
+      //      String compileKotlinTaskName = Utils.getKotlinAndroidCompileTaskName(project, variant.name)
+      //      project.tasks.named(compileKotlinTaskName, SourceTask) { SourceTask task ->
+      //        task.dependsOn(generateProtoTask)
+      //        task.source(generateProtoTask.get().outputSourceDirectories)
+      //      }
+      //    }
+      //  }
+      //}
     }
 
     /**
@@ -366,24 +364,18 @@ class ProtobufPlugin implements Plugin<Project> {
      * compiled. For Java it's the sourceSet that sourceSetOrVariantName stands
      * for; for Android it's the collection of sourceSets that the variant includes.
      */
-    private Provider<GenerateProtoTask> addGenerateProtoTask(
-        ProtoSourceSet protoSourceSet,
-        Action<GenerateProtoTask> configureAction
-    ) {
-      String sourceSetName = protoSourceSet.name
-      String taskName = 'generate' + Utils.getSourceSetSubstringForTaskNames(sourceSetName) + 'Proto'
-      Provider<String> outDir = project.providers.provider {
-        "${this.protobufExtension.generatedFilesBaseDir}/${sourceSetName}".toString()
-      }
+    private Provider<GenerateProtoTask> addGenerateProtoTask(ProtoVariant protoVariant) {
+      ProtoSourceSet protoSourceSet = protoVariant.sources
+
+      String taskName = "generate${Utils.getSourceSetSubstringForTaskNames(protoVariant.name)}" + 'Proto'
       Provider<GenerateProtoTask> task = project.tasks.register(taskName, GenerateProtoTask) {
-        it.description = "Compiles Proto source for '${sourceSetName}'".toString()
-        it.outputBaseDir = outDir
+        it.description = "Compiles Proto source for '${protoVariant.name}'".toString()
+        it.spec.set(protoVariant.generateProtoTaskSpec)
         it.addSourceDirs(protoSourceSet.proto)
         it.addIncludeDir(protoSourceSet.proto.sourceDirectories)
         it.addIncludeDir(protoSourceSet.includeProtoDirs)
-        configureAction.execute(it)
       }
-      protoSourceSet.output.from(task.map { GenerateProtoTask it -> it.outputSourceDirectories })
+      // protoSourceSet.output.from(task.map { GenerateProtoTask it -> it.outputSourceDirectories })
       return task
     }
 

@@ -26,23 +26,59 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.google.protobuf.gradle.internal
+package com.google.protobuf.gradle.api
 
-import com.google.protobuf.gradle.tasks.ProtoVariant
 import groovy.transform.CompileStatic
-import org.gradle.api.NamedDomainObjectFactory
-import org.gradle.api.model.ObjectFactory
+import org.gradle.api.Named
+import org.gradle.api.NamedDomainObjectContainer
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Nested
+import org.gradle.api.tasks.OutputFile
 
 @CompileStatic
-class ProtoVariantObjectFactory implements NamedDomainObjectFactory<ProtoVariant> {
-  private final ObjectFactory objects
+interface GenerateProtoTaskSpec {
+  @Input
+  Property<String> getOutputSubDir()
 
-  ProtoVariantObjectFactory(ObjectFactory objects) {
-    this.objects = objects
+  @Nested
+  DescriptorSetSpec getDescriptorSet()
+
+  @Nested
+  NamedDomainObjectContainer<PluginSpec> getPlugins()
+
+  @Nested
+  NamedDomainObjectContainer<PluginSpec> getBuiltins()
+
+  @CompileStatic
+  interface PluginSpec extends Named {
+    @Input
+    String getName()
+
+    @Internal
+    PluginSpec option(String option)
+
+    @Input
+    List<String> getOptions()
+
+    @Input
+    Property<String> getOutputSubDir()
   }
 
-  @Override
-  ProtoVariant create(String name) {
-    return new DefaultProtoVariant(name, objects)
+  @CompileStatic
+  interface DescriptorSetSpec {
+    @Input
+    Property<Boolean> getEnabled()
+
+    @OutputFile
+    RegularFileProperty getOutputFile()
+
+    @Input
+    Property<Boolean> getIncludeSourceInfo()
+
+    @Input
+    Property<Boolean> getIncludeImports()
   }
 }

@@ -28,24 +28,26 @@
  */
 package com.google.protobuf.gradle.tasks
 
-import org.gradle.api.NamedDomainObjectContainer
-import org.gradle.api.file.DirectoryProperty
+import com.google.protobuf.gradle.api.GenerateProtoTaskSpec
+import groovy.transform.CompileStatic
 
-/**
- * ProtoVariant is a object that contains all information required to generate sources from proto files.
- * It contains:
- * - proto files directories
- * - applied plugins to protoc
- * - output directory for generated code
- */
+@CompileStatic
 interface ProtoVariant {
   String getName()
 
+  GenerateProtoTaskSpec getGenerateProtoTaskSpec()
+
   ProtoSourceSet getSources()
 
-  DirectoryProperty getOutputDir()
+  String getSourceSet()
+  void setSourceSet(String name)
 
-  NamedDomainObjectContainer<Object> getPlugins()
+  boolean getIsTest()
+  void setIsTest(boolean isTest)
 
-  NamedDomainObjectContainer<Object> getBuiltins()
+  String getBuildType()
+  void setBuiltType(String name)
+
+  List<String> getFlavors()
+  void setFlavors(List<String> flavours)
 }

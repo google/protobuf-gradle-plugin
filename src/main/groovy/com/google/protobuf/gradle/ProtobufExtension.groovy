@@ -28,45 +28,44 @@
  */
 package com.google.protobuf.gradle
 
+import com.google.protobuf.gradle.api.ProtoVariantSelector
 import com.google.protobuf.gradle.internal.ProtoSourceSetObjectFactory
 import com.google.protobuf.gradle.internal.ProtoVariantObjectFactory
+import com.google.protobuf.gradle.api.GenerateProtoTaskSpec
+import com.google.protobuf.gradle.internal.DefaultProtoVariantSelector
 import com.google.protobuf.gradle.tasks.ProtoSourceSet
 import com.google.protobuf.gradle.tasks.ProtoVariant
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
-import groovy.transform.TypeChecked
-import groovy.transform.TypeCheckingMode
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
-import org.gradle.api.tasks.TaskCollection
+import org.gradle.api.file.DirectoryProperty
+
+import javax.inject.Inject
 
 /**
  * Adds the protobuf {} block as a property of the project.
  */
-@CompileStatic
-// gradle require abstract modificator on extensions
+@CompileStatic // gradle require abstract modificator on extensions
 @SuppressWarnings(["AbstractClassWithoutAbstractMethod", "AbstractClassWithPublicConstructor"])
 abstract class ProtobufExtension {
   private final Project project
-  private final GenerateProtoTaskCollection tasks
   private final ToolsLocator tools
-  private final ArrayList<Action<GenerateProtoTaskCollection>> taskConfigActions
   private final NamedDomainObjectContainer<ProtoSourceSet> sourceSets
   private final NamedDomainObjectContainer<ProtoVariant> variants
 
   /**
-   * The base directory of generated files. The default is
-   * "${project.buildDir}/generated/source/proto".
+   * The base directory of generated files.
+   * The default is: "${project.buildDir}/generated/source/proto".
    */
-  private String generatedFilesBaseDir
+  @Inject
+  abstract DirectoryProperty getOutputBaseDir()
 
   public ProtobufExtension(final Project project) {
     this.project = project
-    this.tasks = new GenerateProtoTaskCollection(project)
     this.tools = new ToolsLocator(project)
-    this.taskConfigActions = []
-    this.generatedFilesBaseDir = "${project.buildDir}/generated/source/proto"
+    this.outputBaseDir.convention(project.layout.buildDirectory.dir("generated/source/proto"))
     this.sourceSets = project.objects
       .domainObjectContainer(ProtoSourceSet, new ProtoSourceSetObjectFactory(project.objects))
     this.variants = project.objects
@@ -86,21 +85,6 @@ abstract class ProtobufExtension {
   @PackageScope
   ToolsLocator getTools() {
     return tools
-  }
-
-  String getGeneratedFilesBaseDir() {
-    return generatedFilesBaseDir
-  }
-
-  void setGeneratedFilesBaseDir(String generatedFilesBaseDir) {
-    this.generatedFilesBaseDir = generatedFilesBaseDir
-  }
-
-  @PackageScope
-  void configureTasks() {
-    this.taskConfigActions.each { action ->
-      action.execute(tasks)
-    }
   }
 
   //===========================================================================
@@ -123,78 +107,17 @@ abstract class ProtobufExtension {
     configureAction.execute(tools.plugins)
   }
 
-  /**
-   * Configures the generateProto tasks in the given closure.
-   *
-   * <p>The closure will be manipulating a JavaGenerateProtoTaskCollection or
-   * an AndroidGenerateProtoTaskCollection depending on whether the project is
-   * Java or Android.
-   *
-   * <p>You should only change the generateProto tasks in this closure. Do not
-   * change the task in your own afterEvaluate closure, as the change may not
-   * be picked up correctly by the wired javaCompile task.
-   */
-  public void generateProtoTasks(Action<GenerateProtoTaskCollection> configureAction) {
-    taskConfigActions.add(configureAction)
+  ProtoVariantSelector variantSelector() {
+    return new DefaultProtoVariantSelector()
   }
 
-  /**
-   * Returns the collection of generateProto tasks. Note the tasks are
-   * available only after project evaluation.
-   *
-   * <p>Do not try to change the tasks other than in the closure provided
-   * to {@link #generateProtoTasks(Closure)}. The reason is explained
-   * in the comments for the linked method.
-   */
-  public GenerateProtoTaskCollection getGenerateProtoTasks() {
-    return tasks
-  }
-
-  public class GenerateProtoTaskCollection {
-    private final Project project
-
-    GenerateProtoTaskCollection(final Project project) {
-      this.project = project
-    }
-
-    public TaskCollection<GenerateProtoTask> all() {
-      return project.tasks.withType(GenerateProtoTask)
-    }
-
-    public TaskCollection<GenerateProtoTask> ofSourceSet(String sourceSet) {
-      return all().matching { GenerateProtoTask task ->
-        !Utils.isAndroidProject(project) && task.sourceSet.name == sourceSet
-      }
-    }
-
-    public TaskCollection<GenerateProtoTask> ofFlavor(String flavor) {
-      return all().matching { GenerateProtoTask task ->
-        Utils.isAndroidProject(project) && task.flavors.contains(flavor)
-      }
-    }
-
-    public TaskCollection<GenerateProtoTask> ofBuildType(String buildType) {
-      return all().matching { GenerateProtoTask task ->
-        Utils.isAndroidProject(project) && task.buildType == buildType
-      }
-    }
-
-    @TypeChecked(TypeCheckingMode.SKIP) // Don't depend on AGP
-    public TaskCollection<GenerateProtoTask> ofVariant(String variant) {
-      return all().matching { GenerateProtoTask task ->
-        Utils.isAndroidProject(project) && task.variant.name == variant
-      }
-    }
-
-    public TaskCollection<GenerateProtoTask> ofNonTest() {
-      return all().matching { GenerateProtoTask task ->
-        Utils.isAndroidProject(project) && !task.isTestVariant
-      }
-    }
-
-    public TaskCollection<GenerateProtoTask> ofTest() {
-      return all().matching { GenerateProtoTask task ->
-        Utils.isAndroidProject(project) && task.isTestVariant
+  void variants(
+    ProtoVariantSelector selector = variantSelector(),
+    Action<GenerateProtoTaskSpec> configureAction
+  ) {
+    this.variants.all { ProtoVariant variant ->
+      if ((selector as DefaultProtoVariantSelector).select(variant)) {
+        configureAction.execute(variant.generateProtoTaskSpec)
       }
     }
   }
