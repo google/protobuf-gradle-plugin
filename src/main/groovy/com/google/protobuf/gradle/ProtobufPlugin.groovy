@@ -33,8 +33,8 @@ import com.android.build.gradle.api.BaseVariant
 import com.android.build.gradle.api.TestVariant
 import com.android.build.gradle.api.UnitTestVariant
 import com.android.builder.model.SourceProvider
-import com.google.protobuf.gradle.internal.DefaultProtoSourceSet
 import com.google.protobuf.gradle.internal.ProjectExt
+import com.google.protobuf.gradle.internal.ProtoSourceSetObjectFactory
 import com.google.protobuf.gradle.tasks.ProtoSourceSet
 import groovy.transform.CompileStatic
 import groovy.transform.TypeChecked
@@ -136,10 +136,8 @@ class ProtobufPlugin implements Plugin<Project> {
             setupExtractProtosTask(protoSourceSet, protobufConfig)
           }
 
-          NamedDomainObjectContainer<ProtoSourceSet> variantSourceSets =
-            project.objects.domainObjectContainer(ProtoSourceSet) { String name ->
-              new DefaultProtoSourceSet(name, project.objects)
-            }
+          NamedDomainObjectContainer<ProtoSourceSet> variantSourceSets = project.objects
+            .domainObjectContainer(ProtoSourceSet, new ProtoSourceSetObjectFactory(project.objects))
           ProjectExt.forEachVariant(this.project) { BaseVariant variant ->
             addTasksForVariant(variant, variantSourceSets, postConfigure)
           }

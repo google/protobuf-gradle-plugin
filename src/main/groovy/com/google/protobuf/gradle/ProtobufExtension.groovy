@@ -28,8 +28,10 @@
  */
 package com.google.protobuf.gradle
 
-import com.google.protobuf.gradle.internal.DefaultProtoSourceSet
+import com.google.protobuf.gradle.internal.ProtoSourceSetObjectFactory
+import com.google.protobuf.gradle.internal.ProtoVariantObjectFactory
 import com.google.protobuf.gradle.tasks.ProtoSourceSet
+import com.google.protobuf.gradle.tasks.ProtoVariant
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 import groovy.transform.TypeChecked
@@ -51,6 +53,7 @@ abstract class ProtobufExtension {
   private final ToolsLocator tools
   private final ArrayList<Action<GenerateProtoTaskCollection>> taskConfigActions
   private final NamedDomainObjectContainer<ProtoSourceSet> sourceSets
+  private final NamedDomainObjectContainer<ProtoVariant> variants
 
   /**
    * The base directory of generated files. The default is
@@ -64,14 +67,20 @@ abstract class ProtobufExtension {
     this.tools = new ToolsLocator(project)
     this.taskConfigActions = []
     this.generatedFilesBaseDir = "${project.buildDir}/generated/source/proto"
-    this.sourceSets = project.objects.domainObjectContainer(ProtoSourceSet) { String name ->
-      new DefaultProtoSourceSet(name, project.objects)
-    }
+    this.sourceSets = project.objects
+      .domainObjectContainer(ProtoSourceSet, new ProtoSourceSetObjectFactory(project.objects))
+    this.variants = project.objects
+      .domainObjectContainer(ProtoVariant, new ProtoVariantObjectFactory(project.objects))
   }
 
   @PackageScope
   NamedDomainObjectContainer<ProtoSourceSet> getSourceSets() {
     return this.sourceSets
+  }
+
+  @PackageScope
+  NamedDomainObjectContainer<ProtoVariant> getVariants() {
+    return this.variants
   }
 
   @PackageScope
