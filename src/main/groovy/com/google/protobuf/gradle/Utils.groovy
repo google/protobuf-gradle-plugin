@@ -31,7 +31,6 @@ package com.google.protobuf.gradle
 import groovy.transform.CompileStatic
 import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.tasks.SourceSet
 import org.gradle.plugins.ide.idea.GenerateIdeaModule
 import org.gradle.plugins.ide.idea.model.IdeaModel
 import org.gradle.util.GradleVersion
@@ -42,24 +41,6 @@ import org.gradle.util.GradleVersion
 @CompileStatic
 class Utils {
   private static final GradleVersion GRADLE_7_4 = GradleVersion.version("7.4")
-
-  /**
-   * Returns the conventional name of a configuration for a sourceSet
-   */
-  static String getConfigName(String sourceSetName, String type) {
-    // same as DefaultSourceSet.configurationNameOf
-    return sourceSetName == SourceSet.MAIN_SOURCE_SET_NAME
-        ? type : sourceSetName + type.capitalize()
-  }
-
-  /**
-   * Returns the conventional substring that represents the sourceSet in task names,
-   * e.g., "generate<sourceSetSubstring>Proto"
-   */
-  static String getSourceSetSubstringForTaskNames(String sourceSetName) {
-    return sourceSetName == SourceSet.MAIN_SOURCE_SET_NAME ?
-        '' : sourceSetName.capitalize()
-  }
 
   private static final String ANDROID_BASE_PLUGIN_ID = "com.android.base"
   private static final List<String> ANDROID_PLUGIN_IDS = [

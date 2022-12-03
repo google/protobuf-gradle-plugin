@@ -33,6 +33,9 @@ import groovy.transform.CompileStatic
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.tasks.SourceSet
+
+import javax.annotation.Nullable
 
 @CompileStatic
 class DefaultProtoSourceSet implements ProtoSourceSet {
@@ -78,5 +81,54 @@ class DefaultProtoSourceSet implements ProtoSourceSet {
   void extendsFrom(ProtoSourceSet protoSourceSet) {
     this.proto.source(protoSourceSet.proto)
     this.includeProtoDirs.from(protoSourceSet.includeProtoDirs)
+  }
+
+  @Override
+  @SuppressWarnings(["SpaceAroundOperator"]) // better ternary operator formatting
+  String getConfName(String configurationName) {
+    return this.name == SourceSet.MAIN_SOURCE_SET_NAME
+      ? configurationName
+      : "${this.name}${configurationName.capitalize()}"
+  }
+
+  @Override
+  String getProtobufConfName() {
+    return this.getConfName("protobuf")
+  }
+
+  @Override
+  String getCompileProtoPathConfName() {
+    return "_${this.getConfName("compileProtoPath")}"
+  }
+
+  @Override
+  String getCompileOnlyConfName() {
+    return this.getConfName("compileOnly")
+  }
+
+  @Override
+  String getImplementationConfName() {
+    return this.getConfName("implementation")
+  }
+
+  @Override
+  String getTaskName(@Nullable String action, @Nullable String target) {
+    String sourceSetName = this.name == SourceSet.MAIN_SOURCE_SET_NAME ? "" : this.name
+    return "${action}${sourceSetName.capitalize()}${target.capitalize()}"
+  }
+
+  @Override
+  String getExtractProtoTaskName() {
+    return this.getTaskName("extract", "proto")
+  }
+
+  @Override
+  String getExtractIncludeProtoTaskName() {
+    return this.getTaskName("extractInclude", "proto")
+  }
+
+  @Override
+  String getGenerateProtoTaskName() {
+    return this.getTaskName("generate", "proto")
   }
 }

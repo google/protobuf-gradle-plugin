@@ -45,4 +45,25 @@ interface ProtoSourceSet {
   void includesFrom(ProtoSourceSet protoSourceSet)
 
   void extendsFrom(ProtoSourceSet protoSourceSet)
+
+  String getConfName(String configurationName)
+
+  String getProtobufConfName()
+
+  String getCompileProtoPathConfName()
+
+  String getCompileOnlyConfName()
+
+  String getImplementationConfName()
+
+  /**
+   * @returns task name according to the scheme: ${action}${sourceSetName}${target}
+   */
+  String getTaskName(String action, String target)
+
+  String getExtractProtoTaskName()
+
+  String getExtractIncludeProtoTaskName()
+
+  String getGenerateProtoTaskName()
 }
