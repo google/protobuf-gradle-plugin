@@ -276,7 +276,7 @@ Each code generation task has two collections:
 #### Configure what to generate
 
 Code generation is done by protoc builtins and plugins.  Each
-builtin/plugin generate a certain type of code.  To add or configure a
+builtin/plugin generates a certain type of code.  To add or configure a
 builtin/plugin on a task, list its name followed by a braces block.
 Put options in the braces if wanted.  For example:
 
