@@ -28,6 +28,8 @@
  */
 package com.google.protobuf.gradle
 
+import com.google.protobuf.gradle.internal.DefaultProtoSourceSet
+import com.google.protobuf.gradle.tasks.ProtoSourceSet
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 import groovy.transform.TypeChecked
@@ -49,6 +51,7 @@ abstract class ProtobufExtension {
   private final GenerateProtoTaskCollection tasks
   private final ToolsLocator tools
   private final ArrayList<Action<GenerateProtoTaskCollection>> taskConfigActions
+  private final NamedDomainObjectContainer<ProtoSourceSet> sourceSets
 
   @PackageScope
   final String defaultGeneratedFilesBaseDir
@@ -60,6 +63,14 @@ abstract class ProtobufExtension {
     this.taskConfigActions = []
     this.defaultGeneratedFilesBaseDir = "${project.buildDir}/generated/source/proto"
     this.generatedFilesBaseDirProperty.convention(defaultGeneratedFilesBaseDir)
+    this.sourceSets = project.objects.domainObjectContainer(ProtoSourceSet) { String name ->
+      new DefaultProtoSourceSet(name, project.objects)
+    }
+  }
+
+  @PackageScope
+  NamedDomainObjectContainer<ProtoSourceSet> getSourceSets() {
+    return this.sourceSets
   }
 
   @PackageScope
