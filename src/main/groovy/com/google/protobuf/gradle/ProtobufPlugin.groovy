@@ -384,7 +384,7 @@ class ProtobufPlugin implements Plugin<Project> {
       String generateProtoTaskName = 'generate' +
           Utils.getSourceSetSubstringForTaskNames(sourceSetOrVariantName) + 'Proto'
       String defaultGeneratedFilesBaseDir = protobufExtension.defaultGeneratedFilesBaseDir
-      Provider<String> generatedFilesBaseDirProvider = protobufExtension.generatedFilesBaseDirProvider
+      Provider<String> generatedFilesBaseDirProvider = protobufExtension.generatedFilesBaseDirProperty
       return project.tasks.register(generateProtoTaskName, GenerateProtoTask) {
         CopyActionFacade copyActionFacade = CopyActionFacade.Loader.create(it.project, it.objectFactory)
         it.description = "Compiles Proto source for '${sourceSetOrVariantName}'".toString()

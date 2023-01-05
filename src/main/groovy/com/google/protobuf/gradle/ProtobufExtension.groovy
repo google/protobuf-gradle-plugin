@@ -35,11 +35,8 @@ import groovy.transform.TypeCheckingMode
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
-import org.gradle.api.provider.Provider
-import org.gradle.api.provider.ProviderFactory
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.TaskCollection
-import java.util.concurrent.atomic.AtomicReference
-import javax.inject.Inject
 
 /**
  * Adds the protobuf {} block as a property of the project.
@@ -53,11 +50,6 @@ abstract class ProtobufExtension {
   private final ToolsLocator tools
   private final ArrayList<Action<GenerateProtoTaskCollection>> taskConfigActions
 
-  /**
-   * The base directory of generated files. The default is
-   * "${project.buildDir}/generated/source/proto".
-   */
-  private final AtomicReference<String> generatedFilesBaseDir = new AtomicReference<String>()
   @PackageScope
   final String defaultGeneratedFilesBaseDir
 
@@ -67,11 +59,8 @@ abstract class ProtobufExtension {
     this.tools = new ToolsLocator(project)
     this.taskConfigActions = []
     this.defaultGeneratedFilesBaseDir = "${project.buildDir}/generated/source/proto"
-    this.generatedFilesBaseDir.set(defaultGeneratedFilesBaseDir)
+    this.generatedFilesBaseDirProperty.convention(defaultGeneratedFilesBaseDir)
   }
-
-  @Inject
-  protected abstract ProviderFactory getProviderFactory()
 
   @PackageScope
   ToolsLocator getTools() {
@@ -79,26 +68,26 @@ abstract class ProtobufExtension {
   }
 
   String getGeneratedFilesBaseDir() {
-    return generatedFilesBaseDir.get()
+    return generatedFilesBaseDirProperty.get()
   }
 
   @Deprecated
   void setGeneratedFilesBaseDir(String generatedFilesBaseDir) {
-    this.generatedFilesBaseDir.set(generatedFilesBaseDir)
+    generatedFilesBaseDirProperty.set(generatedFilesBaseDir)
   }
+
+  /**
+   * The base directory of generated files. The default is
+   * "${project.buildDir}/generated/source/proto".
+   */
+  @PackageScope
+  abstract Property<String> getGeneratedFilesBaseDirProperty()
 
   @PackageScope
   void configureTasks() {
     this.taskConfigActions.each { action ->
       action.execute(tasks)
     }
-  }
-
-  @PackageScope
-  Provider<String> getGeneratedFilesBaseDirProvider() {
-    // Avoid any reference to `project` for compatibility with configuration cache
-    AtomicReference<String> generatedFilesBaseDir = this.generatedFilesBaseDir
-    return providerFactory.provider { generatedFilesBaseDir.get() }
   }
 
   //===========================================================================
