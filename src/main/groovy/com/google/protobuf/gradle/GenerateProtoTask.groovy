@@ -81,6 +81,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
   static final int CMD_ARGUMENT_EXTRA_LENGTH = 3
   private static final String JAR_SUFFIX = ".jar"
 
+  private final CopyActionFacade copyActionFacade = CopyActionFacade.Loader.create(project, objectFactory)
   // include dirs are passed to the '-I' option of protoc.  They contain protos
   // that may be "imported" from the source protos, but will not be compiled.
   private final ConfigurableFileCollection includeDirs = objectFactory.fileCollection()
@@ -587,6 +588,9 @@ public abstract class GenerateProtoTask extends DefaultTask {
   void compile() {
     Preconditions.checkState(state == State.FINALIZED, 'doneConfig() has not been called')
 
+    copyActionFacade.delete { spec ->
+      spec.delete(outputBaseDir)
+    }
     // Sort to ensure generated descriptors have a canonical representation
     // to avoid triggering unnecessary rebuilds downstream
     List<File> protoFiles = sourceDirs.asFileTree.files.sort()

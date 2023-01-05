@@ -82,9 +82,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <ruleset-ref path='rulesets/unnecessary.xml'>
     <exclude name="UnnecessaryCollectCall"/>
     <exclude name="UnnecessaryGetter"/>
+
     <exclude name="UnnecessaryGString"/>
     <exclude name="UnnecessarySetter"/>
     <exclude name="UnnecessaryPublicModifier"/>
     <exclude name="UnnecessaryReturnKeyword"/>
+
+    <!-- Poor suggestion when using static typing -->
+    <exclude name="UnnecessaryObjectReferences"/>
   </ruleset-ref>
 </ruleset>

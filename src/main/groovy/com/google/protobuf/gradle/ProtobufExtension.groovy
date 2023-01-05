@@ -37,6 +37,7 @@ import groovy.transform.TypeCheckingMode
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.TaskCollection
 
 /**
@@ -52,18 +53,16 @@ abstract class ProtobufExtension {
   private final ArrayList<Action<GenerateProtoTaskCollection>> taskConfigActions
   private final NamedDomainObjectContainer<ProtoSourceSet> sourceSets
 
-  /**
-   * The base directory of generated files. The default is
-   * "${project.buildDir}/generated/source/proto".
-   */
-  private String generatedFilesBaseDir
+  @PackageScope
+  final String defaultGeneratedFilesBaseDir
 
   public ProtobufExtension(final Project project) {
     this.project = project
     this.tasks = new GenerateProtoTaskCollection(project)
     this.tools = new ToolsLocator(project)
     this.taskConfigActions = []
-    this.generatedFilesBaseDir = "${project.buildDir}/generated/source/proto"
+    this.defaultGeneratedFilesBaseDir = "${project.buildDir}/generated/source/proto"
+    this.generatedFilesBaseDirProperty.convention(defaultGeneratedFilesBaseDir)
     this.sourceSets = project.objects.domainObjectContainer(ProtoSourceSet) { String name ->
       new DefaultProtoSourceSet(name, project.objects)
     }
@@ -80,12 +79,20 @@ abstract class ProtobufExtension {
   }
 
   String getGeneratedFilesBaseDir() {
-    return generatedFilesBaseDir
+    return generatedFilesBaseDirProperty.get()
   }
 
+  @Deprecated
   void setGeneratedFilesBaseDir(String generatedFilesBaseDir) {
-    this.generatedFilesBaseDir = generatedFilesBaseDir
+    generatedFilesBaseDirProperty.set(generatedFilesBaseDir)
   }
+
+  /**
+   * The base directory of generated files. The default is
+   * "${project.buildDir}/generated/source/proto".
+   */
+  @PackageScope
+  abstract Property<String> getGeneratedFilesBaseDirProperty()
 
   @PackageScope
   void configureTasks() {
