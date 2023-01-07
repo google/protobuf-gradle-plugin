@@ -76,7 +76,8 @@ public abstract class GenerateProtoTask extends DefaultTask {
   // Windows CreateProcess has command line limit of 32768:
   // https://msdn.microsoft.com/en-us/library/windows/desktop/ms682425(v=vs.85).aspx
   static final int WINDOWS_CMD_LENGTH_LIMIT = 32760
-  // Most OSs impose some kind of command length limit. Rather than account for all cases, pick a reasonable default of 64K.
+  // Most OSs impose some kind of command length limit.
+  // Rather than account for all cases, pick a reasonable default of 64K.
   static final int DEFAULT_CMD_LENGTH_LIMIT = 65536
   // Extra command line length when added an additional argument on Windows.
   // Two quotes and a space.
