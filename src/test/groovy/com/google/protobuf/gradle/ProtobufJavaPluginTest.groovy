@@ -560,8 +560,8 @@ class ProtobufJavaPluginTest extends Specification {
 
     int limit = GenerateProtoTask.getCmdLengthLimit(os)
 
-    then: "it returns maximum integer value"
-    limit == Integer.MAX_VALUE
+    then: "it returns default limit"
+    limit == GenerateProtoTask.DEFAULT_CMD_LENGTH_LIMIT
   }
 
   private Project setupBasicProject() {
