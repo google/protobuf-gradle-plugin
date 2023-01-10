@@ -55,7 +55,7 @@ configurations {
 
 dependencies {
   compileOnly "com.android.tools.build:gradle:4.1.0"
-  compileOnly "org.jetbrains.kotlin.android:org.jetbrains.kotlin.android.gradle.plugin:1.7.20"
+  compileOnly "org.jetbrains.kotlin.android:org.jetbrains.kotlin.android.gradle.plugin:1.7.22"
 
   implementation 'com.google.gradle:osdetector-gradle-plugin:1.7.1'
 
