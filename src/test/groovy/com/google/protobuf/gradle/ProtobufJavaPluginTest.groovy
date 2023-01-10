@@ -15,8 +15,8 @@ import spock.lang.Unroll
 @CompileDynamic
 class ProtobufJavaPluginTest extends Specification {
   // Current supported version is Gradle 5+.
-  private static final List<String> GRADLE_VERSIONS = ["5.6", "6.0", "6.7.1", "7.4.2"]
-  private static final List<String> KOTLIN_VERSIONS = ["1.3.20", "1.3.31", "1.3.40"]
+  private static final List<String> GRADLE_VERSIONS = ["5.6", "6.0", "6.7.1", "7.4.2", "7.6"]
+  private static final List<String> KOTLIN_VERSIONS = ["1.3.72", "1.4.32", "1.5.32", "1.6.21", "1.7.21"]
 
   void "testApplying java and com.google.protobuf adds corresponding task to project"() {
     given: "a basic project with java and com.google.protobuf"
@@ -196,7 +196,8 @@ class ProtobufJavaPluginTest extends Specification {
     ProtobufPluginTestHelper.verifyProjectDir(projectDir)
 
     where:
-    [gradleVersion, kotlinVersion] << [GRADLE_VERSIONS, KOTLIN_VERSIONS].combinations()
+    gradleVersion << GRADLE_VERSIONS
+    kotlinVersion << KOTLIN_VERSIONS
   }
 
   @Unroll
@@ -219,7 +220,8 @@ class ProtobufJavaPluginTest extends Specification {
     ProtobufPluginTestHelper.verifyProjectDir(projectDir)
 
     where:
-    [gradleVersion, kotlinVersion] << [GRADLE_VERSIONS, KOTLIN_VERSIONS].combinations()
+    gradleVersion << GRADLE_VERSIONS
+    kotlinVersion << KOTLIN_VERSIONS
   }
 
   @Unroll

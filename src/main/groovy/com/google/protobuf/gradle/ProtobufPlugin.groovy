@@ -55,9 +55,9 @@ import org.gradle.api.internal.artifacts.ArtifactAttributes
 import org.gradle.api.plugins.AppliedPlugin
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
-import org.gradle.api.tasks.SourceTask
 import org.gradle.language.jvm.tasks.ProcessResources
 import org.gradle.util.GradleVersion
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 /**
  * The main class for the protobuf plugin.
@@ -349,7 +349,7 @@ class ProtobufPlugin implements Plugin<Project> {
         project.plugins.withId("org.jetbrains.kotlin.android") {
           project.afterEvaluate {
             String compileKotlinTaskName = Utils.getKotlinAndroidCompileTaskName(project, variant.name)
-            project.tasks.named(compileKotlinTaskName, SourceTask) { SourceTask task ->
+            project.tasks.named(compileKotlinTaskName, KotlinCompile) { KotlinCompile task ->
               task.dependsOn(generateProtoTask)
               task.source(generateProtoTask.get().outputSourceDirectories)
             }
