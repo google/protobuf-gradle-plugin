@@ -38,6 +38,7 @@ final class ProtobufPluginTestHelper {
       .withProjectDir(projectDir)
       .withArguments(args)
       .withGradleVersion(gradleVersion)
+      .withEnvironment(System.getenv()) // Enable forking
       .forwardStdOutput(new OutputStreamWriter(System.out))
       .forwardStdError(new OutputStreamWriter(System.err))
   }
