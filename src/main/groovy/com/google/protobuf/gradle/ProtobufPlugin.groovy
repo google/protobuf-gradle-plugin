@@ -55,7 +55,6 @@ import org.gradle.api.internal.artifacts.ArtifactAttributes
 import org.gradle.api.plugins.AppliedPlugin
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
-import org.gradle.api.tasks.SourceTask
 import org.gradle.language.jvm.tasks.ProcessResources
 import org.gradle.util.GradleVersion
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
