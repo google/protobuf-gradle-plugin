@@ -18,7 +18,7 @@ version = '0.10.0-SNAPSHOT'
 ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
 
 repositories {
-    maven { url "https://plugins.gradle.org/m2/" }
+    gradlePluginPortal()
     google()
 }
 
