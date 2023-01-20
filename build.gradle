@@ -41,11 +41,7 @@ ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
 
 repositories {
     maven { url "https://plugins.gradle.org/m2/" }
-    maven { url "https://repo.gradle.org/gradle/libs-releases-local/" }
     google()
-    // Needed for resolving 'kotlinx-metadata-jvm'
-    // A transitive dependency of gradle Kotlin DSL
-    maven { url "https://kotlin.bintray.com/kotlinx/" }
 }
 
 configurations {
