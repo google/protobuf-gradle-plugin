@@ -389,7 +389,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
   }
 
   @Deprecated // temporary method for refactoring
-  void spec(Closure<GenerateProtoTaskSpec> closure) {
+  void spec(@DelegatesTo(GenerateProtoTaskSpec) Closure<GenerateProtoTaskSpec> closure) {
     ConfigureUtil.configure(closure, this.spec.get())
   }
 
