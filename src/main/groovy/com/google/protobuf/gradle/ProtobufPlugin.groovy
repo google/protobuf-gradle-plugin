@@ -36,6 +36,7 @@ import com.android.builder.model.SourceProvider
 import com.google.protobuf.gradle.internal.DefaultProtoSourceSet
 import com.google.protobuf.gradle.internal.ProjectExt
 import com.google.protobuf.gradle.tasks.ProtoSourceSet
+import com.google.protobuf.gradle.tasks.ProtoVariant
 import groovy.transform.CompileStatic
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
@@ -153,11 +154,6 @@ class ProtobufPlugin implements Plugin<Project> {
           }
         }
         project.afterEvaluate {
-          this.protobufExtension.configureTasks()
-          // Disallow user configuration outside the config closures, because the operations just
-          // after the doneConfig() loop over the generated outputs and will be out-of-date if
-          // plugin output is added after this point.
-          this.protobufExtension.generateProtoTasks.all().configureEach { it.doneConfig() }
           postConfigure.each { it.call() }
           // protoc and codegen plugin configuration may change through the protobuf{}
           // block. Only at this point the configuration has been finalized.
@@ -237,6 +233,7 @@ class ProtobufPlugin implements Plugin<Project> {
     private void addTasksForSourceSet(
         SourceSet sourceSet, ProtoSourceSet protoSourceSet, Configuration protobufConfig,
         Configuration compileProtoPath, Collection<Closure> postConfigure) {
+      ProtoVariant protoVariant = protobufExtension.variants.create(sourceSet.name)
       Provider<ProtobufExtract> extractProtosTask = setupExtractProtosTask(protoSourceSet, protobufConfig)
 
       Provider<ProtobufExtract> extractIncludeProtosTask = setupExtractIncludeProtosTask(
@@ -248,10 +245,11 @@ class ProtobufPlugin implements Plugin<Project> {
         protoSourceSet.includesFrom(protobufExtension.sourceSets.getByName("main"))
       }
 
+      protoVariant.sourceSet = sourceSet.name
+      protoVariant.isTest = Utils.isTest(sourceSet.name)
+      protoVariant.generateProtoTaskSpec.builtins.maybeCreate("java")
       Provider<GenerateProtoTask> generateProtoTask = addGenerateProtoTask(protoSourceSet) {
-        it.sourceSet = sourceSet
-        it.doneInitializing()
-        it.spec.get().builtins.maybeCreate("java")
+        it.spec.set(protoVariant.generateProtoTaskSpec)
       }
 
       sourceSet.java.srcDirs(protoSourceSet.output)
@@ -296,6 +294,7 @@ class ProtobufPlugin implements Plugin<Project> {
       NamedDomainObjectContainer<ProtoSourceSet> variantSourceSets,
       Collection<Closure> postConfigure
     ) {
+      ProtoVariant protoVariant = protobufExtension.variants.create(variant.name)
       Boolean isTestVariant = variant instanceof TestVariant || variant instanceof UnitTestVariant
       ProtoSourceSet variantSourceSet = variantSourceSets.create(variant.name)
 
@@ -310,7 +309,7 @@ class ProtobufPlugin implements Plugin<Project> {
 
       // Make protos in 'test' variant able to import protos from the 'main' variant.
       // Pass include proto files from main to test.
-      if (variant instanceof TestVariant || variant instanceof UnitTestVariant) {
+      if (isTestVariant) {
         postConfigure.add {
           variantSourceSet.includesFrom(protobufExtension.sourceSets.getByName("main"))
           variantSourceSet.includesFrom(variantSourceSets.getByName(variant.testedVariant.name))
@@ -324,13 +323,11 @@ class ProtobufPlugin implements Plugin<Project> {
         variantSourceSet.extendsFrom(protobufExtension.sourceSets.getByName(sourceProvider.name))
       }
 
+      protoVariant.isTest = isTestVariant
+      protoVariant.flavors = variant.productFlavors.collect { it.name } as Set<String>
+      protoVariant.buildType = variant.hasProperty('buildType') ? variant.buildType.name : null
       Provider<GenerateProtoTask> generateProtoTask = addGenerateProtoTask(variantSourceSet) {
-        it.setVariant(variant, isTestVariant)
-        it.flavors = variant.productFlavors.collect { it.name }
-        if (variant.hasProperty('buildType')) {
-          it.buildType = variant.buildType.name
-        }
-        it.doneInitializing()
+        it.spec.set(protoVariant.generateProtoTaskSpec)
       }
 
       if (project.android.hasProperty('libraryVariants')) {

@@ -41,8 +41,6 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Nested
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
-import groovy.transform.TypeChecked
-import groovy.transform.TypeCheckingMode
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection
@@ -62,7 +60,6 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.SkipWhenEmpty
-import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskAction
 import javax.inject.Inject
 
@@ -72,7 +69,7 @@ import javax.inject.Inject
 // TODO(zhangkun83): add per-plugin output dir reconfiguraiton.
 @CompileStatic
 @CacheableTask
-public abstract class GenerateProtoTask extends DefaultTask {
+abstract class GenerateProtoTask extends DefaultTask {
   // Windows CreateProcess has command line limit of 32768:
   // https://msdn.microsoft.com/en-us/library/windows/desktop/ms682425(v=vs.85).aspx
   static final int WINDOWS_CMD_LENGTH_LIMIT = 32760
@@ -98,21 +95,6 @@ public abstract class GenerateProtoTask extends DefaultTask {
   // constructor arguments. We use the initializing flag to prevent users from
   // accidentally modifying them.
   private Provider<String> outputBaseDir
-  // Tags for selectors inside protobuf.generateProtoTasks; do not serialize with Gradle configuration caching
-  @SuppressWarnings("UnnecessaryTransientModifier") // It is not necessary for task to implement Serializable
-  transient private SourceSet sourceSet
-  @SuppressWarnings("UnnecessaryTransientModifier") // It is not necessary for task to implement Serializable
-  transient private Object variant
-  private List<String> flavors
-  private String buildType
-  private boolean isTestVariant
-  private final Provider<Boolean> isAndroidProject = providerFactory.provider { Utils.isAndroidProject(project) }
-  private final Provider<Boolean> isTestProvider = providerFactory.provider {
-    if (Utils.isAndroidProject(project)) {
-      return isTestVariant
-    }
-    return Utils.isTest(sourceSet.name)
-  }
 
   @SuppressWarnings("AbstractClassWithPublicConstructor") // required to configure properties convention values
   GenerateProtoTask() {
@@ -211,7 +193,6 @@ public abstract class GenerateProtoTask extends DefaultTask {
   }
 
   void setOutputBaseDir(Provider<String> outputBaseDir) {
-    checkInitializing()
     Preconditions.checkState(this.outputBaseDir == null, 'outputBaseDir is already set')
     this.outputBaseDir = outputBaseDir
   }
@@ -219,43 +200,6 @@ public abstract class GenerateProtoTask extends DefaultTask {
   @OutputDirectory
   String getOutputBaseDir() {
     return outputBaseDir.get()
-  }
-
-  void setSourceSet(SourceSet sourceSet) {
-    checkInitializing()
-    Preconditions.checkState(!isAndroidProject.get(),
-        'sourceSet should not be set in an Android project')
-    this.sourceSet = sourceSet
-  }
-
-  void setVariant(Object variant, boolean isTestVariant) {
-    checkInitializing()
-    Preconditions.checkState(isAndroidProject.get(),
-        'variant should not be set in a Java project')
-    this.variant = variant
-    this.isTestVariant = isTestVariant
-  }
-
-  void setFlavors(List<String> flavors) {
-    checkInitializing()
-    Preconditions.checkState(isAndroidProject.get(),
-        'flavors should not be set in a Java project')
-    this.flavors = Collections.unmodifiableList(new ArrayList<String>(flavors))
-  }
-
-  void setBuildType(String buildType) {
-    checkInitializing()
-    Preconditions.checkState(isAndroidProject.get(),
-        'buildType should not be set in a Java project')
-    this.buildType = buildType
-  }
-
-  @Internal("Inputs tracked in getSourceDirs()")
-  SourceSet getSourceSet() {
-    Preconditions.checkState(!isAndroidProject.get(),
-        'sourceSet should not be used in an Android project')
-    Preconditions.checkNotNull(sourceSet, 'sourceSet is not set')
-    return sourceSet
   }
 
   @SkipWhenEmpty
@@ -270,14 +214,6 @@ public abstract class GenerateProtoTask extends DefaultTask {
   @PathSensitive(PathSensitivity.RELATIVE)
   FileCollection getIncludeDirs() {
     return includeDirs
-  }
-
-  @Internal("Not an actual input to the task, only used to find tasks belonging to a variant")
-  Object getVariant() {
-    Preconditions.checkState(isAndroidProject.get(),
-        'variant should not be used in a Java project')
-    Preconditions.checkNotNull(variant, 'variant is not set')
-    return variant
   }
 
   /**
@@ -315,48 +251,6 @@ public abstract class GenerateProtoTask extends DefaultTask {
 
   private List<ExecutableLocator> getAllExecutableLocators() {
     [toolsLocator.protoc] + requireSpec().plugins.collect { PluginSpec it -> toolsLocator.plugins.getByName(it.name) }
-  }
-
-  @Internal("Not an actual input to the task, only used to find tasks belonging to a variant")
-  Provider<Boolean> getIsAndroidProject() {
-    return isAndroidProject
-  }
-
-  @Internal("Not an actual input to the task, only used to find tasks belonging to a variant")
-  boolean getIsTestVariant() {
-    Preconditions.checkState(isAndroidProject.get(),
-        'isTestVariant should not be used in a Java project')
-    Preconditions.checkNotNull(variant, 'variant is not set')
-    return isTestVariant
-  }
-
-  @Internal("Not an actual input to the task, only used to find tasks belonging to a variant")
-  List<String> getFlavors() {
-    Preconditions.checkState(isAndroidProject.get(),
-        'flavors should not be used in a Java project')
-    Preconditions.checkNotNull(flavors, 'flavors is not set')
-    return flavors
-  }
-
-  @TypeChecked(TypeCheckingMode.SKIP) // Don't depend on AGP
-  @Internal("Not an actual input to the task, only used to find tasks belonging to a variant")
-  String getBuildType() {
-    Preconditions.checkState(isAndroidProject.get(),
-        'buildType should not be used in a Java project')
-    Preconditions.checkState(
-        variant.name == 'test' || buildType,
-        'buildType is not set and task is not for local unit test variant')
-    return buildType
-  }
-
-  void doneInitializing() {
-    Preconditions.checkState(state == State.INIT, "Invalid state: ${state}")
-    state = State.CONFIG
-  }
-
-  void doneConfig() {
-    Preconditions.checkState(state == State.CONFIG, "Invalid state: ${state}")
-    state = State.FINALIZED
   }
 
   @Internal("Tracked as an input via getDescriptorSetOptionsForCaching()")
@@ -397,7 +291,6 @@ public abstract class GenerateProtoTask extends DefaultTask {
    * Add a directory to protoc's include path.
    */
   public void addIncludeDir(FileCollection dir) {
-    checkCanConfig()
     includeDirs.from(dir)
   }
 
@@ -405,7 +298,6 @@ public abstract class GenerateProtoTask extends DefaultTask {
    * Add a collection of proto source files to be compiled.
    */
   public void addSourceDirs(FileCollection dirs) {
-    checkCanConfig()
     sourceDirs.from(dirs)
   }
 
@@ -469,7 +361,6 @@ public abstract class GenerateProtoTask extends DefaultTask {
 
   @TaskAction
   void compile() {
-    Preconditions.checkState(state == State.FINALIZED, 'doneConfig() has not been called')
     GenerateProtoTaskSpec spec = requireSpec()
 
     copyActionFacade.delete { DeleteSpec deleteSpec ->
@@ -546,21 +437,6 @@ public abstract class GenerateProtoTask extends DefaultTask {
 
   private GenerateProtoTaskSpec requireSpec() {
     return spec.get()
-  }
-
-  private static enum State {
-    INIT, CONFIG, FINALIZED
-  }
-
-  private State state = State.INIT
-
-  private void checkInitializing() {
-    Preconditions.checkState(state == State.INIT, 'Should not be called after initilization has finished')
-  }
-
-  private void checkCanConfig() {
-    Preconditions.checkState(state == State.CONFIG || state == State.INIT,
-        'Should not be called after configuration has finished')
   }
 
   private void compileFiles(List<String> cmd) {
