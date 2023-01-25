@@ -28,16 +28,16 @@
  */
 package com.google.protobuf.gradle
 
+import com.google.protobuf.gradle.internal.DefaultGenerateProtoTaskCollection
 import com.google.protobuf.gradle.internal.ProtoSourceSetObjectFactory
 import com.google.protobuf.gradle.internal.ProtoVariantObjectFactory
-import com.google.protobuf.gradle.tasks.GenerateProtoTaskSpec
+import com.google.protobuf.gradle.tasks.GenerateProtoTaskCollection
 import com.google.protobuf.gradle.tasks.ProtoSourceSet
 import com.google.protobuf.gradle.tasks.ProtoVariant
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
-import org.gradle.api.NamedDomainObjectSet
 import org.gradle.api.Project
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
@@ -61,7 +61,7 @@ abstract class ProtobufExtension {
 
   public ProtobufExtension(final Project project) {
     this.project = project
-    this.tasks = new GenerateProtoTaskCollection(project)
+    this.tasks = new DefaultGenerateProtoTaskCollection(project)
     this.tools = new ToolsLocator(project)
 
     this.defaultGeneratedFilesBaseDir = "${project.buildDir}/generated/source/proto"
@@ -72,12 +72,10 @@ abstract class ProtobufExtension {
     this.variants = project.objects.domainObjectContainer(ProtoVariant, new ProtoVariantObjectFactory(project))
   }
 
-  @PackageScope
   NamedDomainObjectContainer<ProtoSourceSet> getSourceSets() {
     return this.sourceSets
   }
 
-  @PackageScope
   NamedDomainObjectContainer<ProtoVariant> getVariants() {
     return variants
   }
@@ -160,86 +158,5 @@ abstract class ProtobufExtension {
    */
   public GenerateProtoTaskCollection getGenerateProtoTasks() {
     return tasks
-  }
-
-  @CompileStatic
-  public class GenerateProtoTaskCollection {
-    private final Project project
-
-    GenerateProtoTaskCollection(final Project project) {
-      this.project = project
-    }
-
-    private NamedDomainObjectSet<ProtoVariant> variants() {
-      return project.extensions.getByType(ProtobufExtension).variants
-    }
-
-    void all(Action<GenerateProtoTaskSpec> action) {
-      variants.all { ProtoVariant variant -> action.execute(variant.generateProtoTaskSpec) }
-    }
-
-    void all(@DelegatesTo(GenerateProtoTaskSpec) Closure<GenerateProtoTaskSpec> closure) {
-      all(ConfigureUtil.configureUsing(closure))
-    }
-
-    void ofSourceSet(String sourceSet, Action<GenerateProtoTaskSpec> action) {
-      variants()
-        .matching { ProtoVariant variant -> !Utils.isAndroidProject(project) && variant.sourceSet == sourceSet }
-        .all { ProtoVariant variant -> action.execute(variant.generateProtoTaskSpec) }
-    }
-
-    void ofSourceSet(String sourceSet, @DelegatesTo(GenerateProtoTaskSpec) Closure<GenerateProtoTaskSpec> closure) {
-      ofSourceSet(sourceSet, ConfigureUtil.configureUsing(closure))
-    }
-
-    void ofFlavor(String flavor, Action<GenerateProtoTaskSpec> action) {
-      variants()
-        .matching { ProtoVariant variant -> Utils.isAndroidProject(project) && variant.flavors.contains(flavor) }
-        .all { ProtoVariant variant -> action.execute(variant.generateProtoTaskSpec) }
-    }
-
-    void ofFlavor(String flavor, @DelegatesTo(GenerateProtoTaskSpec) Closure<GenerateProtoTaskSpec> closure) {
-      ofFlavor(flavor, ConfigureUtil.configureUsing(closure))
-    }
-
-    void ofBuildType(String buildType, Action<GenerateProtoTaskSpec> action) {
-      variants()
-        .matching { ProtoVariant variant -> Utils.isAndroidProject(project) && variant.buildType == buildType }
-        .all { ProtoVariant variant -> action.execute(variant.generateProtoTaskSpec) }
-    }
-
-    void ofBuildType(String buildType, @DelegatesTo(GenerateProtoTaskSpec) Closure<GenerateProtoTaskSpec> closure) {
-      ofBuildType(buildType, ConfigureUtil.configureUsing(closure))
-    }
-
-    void ofVariant(String name, Action<GenerateProtoTaskSpec> action) {
-      variants()
-        .matching { ProtoVariant variant -> Utils.isAndroidProject(project) && variant.name == name }
-        .all { ProtoVariant variant -> action.execute(variant.generateProtoTaskSpec) }
-    }
-
-    void ofVariant(String name, @DelegatesTo(GenerateProtoTaskSpec) Closure<GenerateProtoTaskSpec> closure) {
-      ofVariant(name, ConfigureUtil.configureUsing(closure))
-    }
-
-    void ofNonTest(Action<GenerateProtoTaskSpec> action) {
-      variants()
-        .matching { ProtoVariant variant -> Utils.isAndroidProject(project) && !variant.isTest }
-        .all { ProtoVariant variant -> action.execute(variant.generateProtoTaskSpec) }
-    }
-
-    void ofNonTest(@DelegatesTo(GenerateProtoTaskSpec) Closure<GenerateProtoTaskSpec> closure) {
-      ofNonTest(ConfigureUtil.configureUsing(closure))
-    }
-
-    void ofTest(Action<GenerateProtoTaskSpec> action) {
-      variants()
-        .matching { ProtoVariant variant -> Utils.isAndroidProject(project) && variant.isTest }
-        .all { ProtoVariant variant -> action.execute(variant.generateProtoTaskSpec) }
-    }
-
-    void ofTest(@DelegatesTo(GenerateProtoTaskSpec) Closure<GenerateProtoTaskSpec> closure) {
-      ofTest(ConfigureUtil.configureUsing(closure))
-    }
   }
 }
