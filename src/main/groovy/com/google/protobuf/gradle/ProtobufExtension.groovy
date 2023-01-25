@@ -69,7 +69,7 @@ abstract class ProtobufExtension {
 
     ObjectFactory objects = project.objects
     this.sourceSets = project.objects.domainObjectContainer(ProtoSourceSet, new ProtoSourceSetObjectFactory(objects))
-    this.variants = project.objects.domainObjectContainer(ProtoVariant, new ProtoVariantObjectFactory(project))
+    this.variants = project.objects.domainObjectContainer(ProtoVariant, new ProtoVariantObjectFactory(objects))
   }
 
   NamedDomainObjectContainer<ProtoSourceSet> getSourceSets() {

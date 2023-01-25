@@ -3,11 +3,10 @@ package com.google.protobuf.gradle.internal
 import com.google.protobuf.gradle.tasks.GenerateProtoTaskSpec
 import com.google.protobuf.gradle.tasks.ProtoVariant
 import groovy.transform.CompileStatic
-import org.gradle.api.Project
+import org.gradle.api.model.ObjectFactory
 
 @CompileStatic
 class DefaultProtoVariant implements ProtoVariant {
-  private final Project project
   private final GenerateProtoTaskSpec generateProtoTaskSpec
   private final String name
   private String sourceSet
@@ -15,10 +14,9 @@ class DefaultProtoVariant implements ProtoVariant {
   private boolean isTest
   private Set<String> flavors
 
-  DefaultProtoVariant(String name, Project project) {
-    this.project = project
+  DefaultProtoVariant(String name, ObjectFactory objects) {
     this.name = name
-    this.generateProtoTaskSpec = new DefaultGenerateProtoTaskSpec(project.objects)
+    this.generateProtoTaskSpec = new DefaultGenerateProtoTaskSpec(objects)
     this.flavors = [] as Set<String>
   }
 
