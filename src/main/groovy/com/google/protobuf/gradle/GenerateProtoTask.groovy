@@ -88,7 +88,7 @@ abstract class GenerateProtoTask extends DefaultTask {
 
   @SuppressWarnings("AbstractClassWithPublicConstructor") // required to configure properties convention values
   GenerateProtoTask() {
-    this.spec.convention(new DefaultGenerateProtoTaskSpec(this.project.objects))
+    this.spec.convention(new DefaultGenerateProtoTaskSpec(objectFactory))
   }
 
   // protoc allows you to prefix comma-delimited options to the path in
