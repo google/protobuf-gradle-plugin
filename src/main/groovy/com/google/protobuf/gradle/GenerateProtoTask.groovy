@@ -277,16 +277,6 @@ abstract class GenerateProtoTask extends DefaultTask {
   //        Configuration methods
   //===========================================================================
 
-  @Deprecated // temporary method for refactoring
-  void spec(Action<GenerateProtoTaskSpec> configureAction) {
-    configureAction.execute(this.spec.get())
-  }
-
-  @Deprecated // temporary method for refactoring
-  void spec(@DelegatesTo(GenerateProtoTaskSpec) Closure<GenerateProtoTaskSpec> closure) {
-    ConfigureUtil.configure(closure, this.spec.get())
-  }
-
   /**
    * Add a directory to protoc's include path.
    */
@@ -299,19 +289,6 @@ abstract class GenerateProtoTask extends DefaultTask {
    */
   public void addSourceDirs(FileCollection dirs) {
     sourceDirs.from(dirs)
-  }
-
-  /**
-   * Returns true if the Java source set or Android variant is test related.
-   */
-  @Input
-  public boolean getIsTest() {
-    return isTestProvider.get()
-  }
-
-  @Internal("Already captured with getIsTest()")
-  Provider<Boolean> getIsTestProvider() {
-    return isTestProvider
   }
 
   //===========================================================================

@@ -41,6 +41,7 @@ import org.gradle.api.NamedDomainObjectSet
 import org.gradle.api.Project
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
+import org.gradle.util.ConfigureUtil
 
 /**
  * Adds the protobuf {} block as a property of the project.
@@ -114,12 +115,20 @@ abstract class ProtobufExtension {
     configureAction.execute(tools.protoc)
   }
 
+  public void protoc(@DelegatesTo(ExecutableLocator) Closure<ExecutableLocator> closure) {
+    ConfigureUtil.configure(closure, tools.protoc)
+  }
+
   /**
    * Locate the codegen plugin executables. The closure will be manipulating a
    * NamedDomainObjectContainer<ExecutableLocator>.
    */
   public void plugins(Action<NamedDomainObjectContainer<ExecutableLocator>> configureAction) {
     configureAction.execute(tools.plugins)
+  }
+
+  public void plugins(Closure<NamedDomainObjectContainer<ExecutableLocator>> closure) {
+    ConfigureUtil.configure(closure, tools.plugins)
   }
 
   /**
@@ -135,6 +144,10 @@ abstract class ProtobufExtension {
    */
   void generateProtoTasks(Action<GenerateProtoTaskCollection> action) {
     action.execute(tasks)
+  }
+
+  void generateProtoTasks(@DelegatesTo(GenerateProtoTaskCollection) Closure<GenerateProtoTaskCollection> closure) {
+    ConfigureUtil.configure(closure, tasks)
   }
 
   /**
@@ -166,7 +179,7 @@ abstract class ProtobufExtension {
     }
 
     void all(@DelegatesTo(GenerateProtoTaskSpec) Closure<GenerateProtoTaskSpec> closure) {
-      all(closure as Action<GenerateProtoTaskSpec>)
+      all(ConfigureUtil.configureUsing(closure))
     }
 
     void ofSourceSet(String sourceSet, Action<GenerateProtoTaskSpec> action) {
@@ -176,7 +189,7 @@ abstract class ProtobufExtension {
     }
 
     void ofSourceSet(String sourceSet, @DelegatesTo(GenerateProtoTaskSpec) Closure<GenerateProtoTaskSpec> closure) {
-      ofSourceSet(sourceSet, closure as Action<GenerateProtoTaskSpec>)
+      ofSourceSet(sourceSet, ConfigureUtil.configureUsing(closure))
     }
 
     void ofFlavor(String flavor, Action<GenerateProtoTaskSpec> action) {
@@ -186,7 +199,7 @@ abstract class ProtobufExtension {
     }
 
     void ofFlavor(String flavor, @DelegatesTo(GenerateProtoTaskSpec) Closure<GenerateProtoTaskSpec> closure) {
-      ofFlavor(flavor, closure as Action<GenerateProtoTaskSpec>)
+      ofFlavor(flavor, ConfigureUtil.configureUsing(closure))
     }
 
     void ofBuildType(String buildType, Action<GenerateProtoTaskSpec> action) {
@@ -196,7 +209,7 @@ abstract class ProtobufExtension {
     }
 
     void ofBuildType(String buildType, @DelegatesTo(GenerateProtoTaskSpec) Closure<GenerateProtoTaskSpec> closure) {
-      ofBuildType(buildType, closure as Action<GenerateProtoTaskSpec>)
+      ofBuildType(buildType, ConfigureUtil.configureUsing(closure))
     }
 
     void ofVariant(String name, Action<GenerateProtoTaskSpec> action) {
@@ -206,7 +219,7 @@ abstract class ProtobufExtension {
     }
 
     void ofVariant(String name, @DelegatesTo(GenerateProtoTaskSpec) Closure<GenerateProtoTaskSpec> closure) {
-      ofVariant(name, closure as Action<GenerateProtoTaskSpec>)
+      ofVariant(name, ConfigureUtil.configureUsing(closure))
     }
 
     void ofNonTest(Action<GenerateProtoTaskSpec> action) {
@@ -216,7 +229,7 @@ abstract class ProtobufExtension {
     }
 
     void ofNonTest(@DelegatesTo(GenerateProtoTaskSpec) Closure<GenerateProtoTaskSpec> closure) {
-      ofNonTest(closure as Action<GenerateProtoTaskSpec>)
+      ofNonTest(ConfigureUtil.configureUsing(closure))
     }
 
     void ofTest(Action<GenerateProtoTaskSpec> action) {
@@ -226,7 +239,7 @@ abstract class ProtobufExtension {
     }
 
     void ofTest(@DelegatesTo(GenerateProtoTaskSpec) Closure<GenerateProtoTaskSpec> closure) {
-      ofTest(closure as Action<GenerateProtoTaskSpec>)
+      ofTest(ConfigureUtil.configureUsing(closure))
     }
   }
 }
