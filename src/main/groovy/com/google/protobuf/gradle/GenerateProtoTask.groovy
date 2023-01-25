@@ -31,8 +31,6 @@ package com.google.protobuf.gradle
 
 import static java.nio.charset.StandardCharsets.US_ASCII
 
-import org.gradle.api.Action
-import org.gradle.util.ConfigureUtil
 import com.google.protobuf.gradle.internal.DefaultGenerateProtoTaskSpec
 import com.google.protobuf.gradle.tasks.GenerateProtoTaskSpec
 import com.google.protobuf.gradle.tasks.PluginSpec
