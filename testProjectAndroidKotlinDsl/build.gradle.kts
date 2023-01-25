@@ -105,20 +105,16 @@ protobuf {
     }
   }
   generateProtoTasks {
-    all().forEach { task ->
-      task.spec {
-        plugins {
-          id("javalite") { }
-        }
+    all {
+      plugins {
+        id("javalite") { }
       }
     }
-    ofNonTest().forEach { task ->
-      task.spec {
-        plugins {
-          id("grpc") {
-            // Options added to --grpc_out
-            option("lite")
-          }
+    ofNonTest {
+      plugins {
+        id("grpc") {
+          // Options added to --grpc_out
+          option("lite")
         }
       }
     }

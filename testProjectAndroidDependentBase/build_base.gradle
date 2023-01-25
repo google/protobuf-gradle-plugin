@@ -83,20 +83,16 @@ protobuf {
         }
     }
     generateProtoTasks {
-        all().each {
-            it.spec {
-                plugins {
-                    javalite {}
-                }
+        all {
+            plugins {
+                javalite {}
             }
         }
-        ofNonTest().each {
-            it.spec {
-                plugins {
-                    grpc {
-                        // Options added to --grpc_out
-                        option 'lite'
-                    }
+        ofNonTest {
+            plugins {
+                grpc {
+                    // Options added to --grpc_out
+                    option 'lite'
                 }
             }
         }

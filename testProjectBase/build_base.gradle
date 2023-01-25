@@ -45,15 +45,13 @@ protobuf {
     }
   }
   generateProtoTasks {
-    ofSourceSet('grpc').each { task ->
-      task.spec {
-        plugins {
-          grpc {
-            outputSubDir = 'grpc_output'
-          }
+    ofSourceSet('grpc') {
+      plugins {
+        grpc {
+          outputSubDir = 'grpc_output'
         }
-        generateDescriptorSet = true
       }
+      generateDescriptorSet = true
     }
   }
 }

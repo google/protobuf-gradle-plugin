@@ -46,15 +46,13 @@ protobuf {
     }
   }
   generateProtoTasks {
-    ofSourceSet("main").forEach {
-      it.spec {
-        plugins {
-          // Apply the "grpc" plugin whose spec is defined above, without
-          // options. Note the braces cannot be omitted, otherwise the
-          // plugin will not be added. This is because of the implicit way
-          // NamedDomainObjectContainer binds the methods.
-          id("grpc") { }
-        }
+    ofSourceSet("main") {
+      plugins {
+        // Apply the "grpc" plugin whose spec is defined above, without
+        // options. Note the braces cannot be omitted, otherwise the
+        // plugin will not be added. This is because of the implicit way
+        // NamedDomainObjectContainer binds the methods.
+        id("grpc") { }
       }
     }
   }
