@@ -258,7 +258,7 @@ afterEvaluate {
         'x86RetailappReleaseUnitTest',
     ] as Set == protobuf.generateProtoTasks.ofBuildType('release').collect({ it.name }) as Set
 
-    assert ['x86FreeappDebugAndroidTestProto'] as Set ==
+    assert ['x86FreeappDebugAndroidTest'] as Set ==
             protobuf.generateProtoTasks.ofVariant('x86FreeappDebugAndroidTest').collect({ it.name }) as Set
 
     // "androidTest" sourceSet is not a flavor
