@@ -3,12 +3,21 @@ package com.google.protobuf.gradle.tasks
 import groovy.transform.CompileStatic
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
+import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Nested
+import org.gradle.api.tasks.OutputDirectory
 
 @CompileStatic
 @SuppressWarnings("JUnitPublicNonTestMethod") // it is not a test class
 interface GenerateProtoTaskSpec {
+
+  @OutputDirectory
+  Property<String> getOutputDir()
+
+  @Deprecated
+  void setOutputBaseDir(Provider<String> outputBaseDir)
 
   /**
    * If true, will set the protoc flag

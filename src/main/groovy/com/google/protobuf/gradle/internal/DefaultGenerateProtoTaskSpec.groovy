@@ -8,6 +8,8 @@ import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.NamedDomainObjectFactory
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.util.ConfigureUtil
 
 @CompileStatic
@@ -16,13 +18,26 @@ class DefaultGenerateProtoTaskSpec implements GenerateProtoTaskSpec {
   private final NamedDomainObjectContainer<PluginSpec> plugins
   private final NamedDomainObjectContainer<PluginSpec> builtins
   private final DescriptorSetSpec descriptorSetSpec
+  private final Property<String> outputDir
   private boolean generateDescriptorSet = false
 
   DefaultGenerateProtoTaskSpec(ObjectFactory objects) {
     NamedDomainObjectFactory<PluginSpec> pluginSpecObjectFactory = new PluginSpecObjectFactory(objects)
     this.plugins = objects.domainObjectContainer(PluginSpec, pluginSpecObjectFactory)
     this.builtins = objects.domainObjectContainer(PluginSpec, pluginSpecObjectFactory)
+    this.outputDir = objects.property(String)
     this.descriptorSetSpec = new DefaultDescriptorSetSpec(objects)
+  }
+
+  @Override
+  Property<String> getOutputDir() {
+    return this.outputDir
+  }
+
+  @Override
+  @Deprecated
+  void setOutputBaseDir(Provider<String> outputBaseDir) {
+    this.outputDir.set(outputBaseDir)
   }
 
   @Override

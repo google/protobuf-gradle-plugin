@@ -31,6 +31,7 @@ package com.google.protobuf.gradle
 
 import static java.nio.charset.StandardCharsets.US_ASCII
 
+import com.google.protobuf.gradle.internal.PluginSpecExt
 import com.google.protobuf.gradle.internal.DefaultGenerateProtoTaskSpec
 import com.google.protobuf.gradle.tasks.GenerateProtoTaskSpec
 import com.google.protobuf.gradle.tasks.PluginSpec
@@ -38,13 +39,11 @@ import org.gradle.api.file.DeleteSpec
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Nested
 import groovy.transform.CompileStatic
-import groovy.transform.PackageScope
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.ProjectLayout
-import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
@@ -54,7 +53,6 @@ import org.gradle.api.tasks.IgnoreEmptyDirectories
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.SkipWhenEmpty
@@ -87,12 +85,6 @@ abstract class GenerateProtoTask extends DefaultTask {
   private final ConfigurableFileCollection sourceDirs = objectFactory.fileCollection()
   private final ProjectLayout projectLayout = project.layout
   private final ToolsLocator toolsLocator = project.extensions.findByType(ProtobufExtension).tools
-
-  // These fields are set by the Protobuf plugin only when initializing the
-  // task.  Ideally they should be final fields, but Gradle task cannot have
-  // constructor arguments. We use the initializing flag to prevent users from
-  // accidentally modifying them.
-  private Provider<String> outputBaseDir
 
   @SuppressWarnings("AbstractClassWithPublicConstructor") // required to configure properties convention values
   GenerateProtoTask() {
@@ -190,16 +182,6 @@ abstract class GenerateProtoTask extends DefaultTask {
     return java.path
   }
 
-  void setOutputBaseDir(Provider<String> outputBaseDir) {
-    Preconditions.checkState(this.outputBaseDir == null, 'outputBaseDir is already set')
-    this.outputBaseDir = outputBaseDir
-  }
-
-  @OutputDirectory
-  String getOutputBaseDir() {
-    return outputBaseDir.get()
-  }
-
   @SkipWhenEmpty
   @PathSensitive(PathSensitivity.RELATIVE)
   @IgnoreEmptyDirectories
@@ -259,7 +241,7 @@ abstract class GenerateProtoTask extends DefaultTask {
           "requested descriptor path but descriptor generation is off")
     }
     return spec.descriptorSetOptions.path != null ? spec.descriptorSetOptions.path
-      : "${outputBaseDir.get()}/descriptor_set.desc"
+      : "${spec.outputDir.get()}/descriptor_set.desc"
   }
 
   @Inject
@@ -293,60 +275,19 @@ abstract class GenerateProtoTask extends DefaultTask {
   //    protoc invocation logic
   //===========================================================================
 
-  String getOutputDir(PluginSpec plugin) {
-    return "${outputBaseDir.get()}/${plugin.outputSubDir}"
-  }
-
-  /**
-   * Returns a {@code SourceDirectorySet} representing the generated source
-   * directories.
-   */
-  @Internal
-  @Deprecated
-  SourceDirectorySet getOutputSourceDirectorySet() {
-    String srcSetName = "generate-proto-" + name
-    SourceDirectorySet srcSet
-    srcSet = objectFactory.sourceDirectorySet(srcSetName, srcSetName)
-    srcSet.srcDirs objectFactory.fileCollection().builtBy(this).from(providerFactory.provider {
-      getOutputSourceDirectories()
-    })
-    return srcSet
-  }
-
-  @Internal
-  @PackageScope
-  Collection<File> getOutputSourceDirectories() {
-    GenerateProtoTaskSpec spec = requireSpec()
-
-    Collection<File> srcDirs = []
-    spec.builtins.each { builtin ->
-      File dir = new File(getOutputDir(builtin))
-      if (!dir.name.endsWith(".zip") && !dir.name.endsWith(".jar")) {
-        srcDirs.add(dir)
-      }
-    }
-    spec.plugins.each { plugin ->
-      File dir = new File(getOutputDir(plugin))
-      if (!dir.name.endsWith(".zip") && !dir.name.endsWith(".jar")) {
-        srcDirs.add(dir)
-      }
-    }
-    return srcDirs
-  }
-
   @TaskAction
   void compile() {
     GenerateProtoTaskSpec spec = requireSpec()
 
     copyActionFacade.delete { DeleteSpec deleteSpec ->
-      deleteSpec.delete(outputBaseDir)
+      deleteSpec.delete(spec.outputDir)
     }
     // Sort to ensure generated descriptors have a canonical representation
     // to avoid triggering unnecessary rebuilds downstream
     List<File> protoFiles = sourceDirs.asFileTree.files.sort()
 
     [spec.builtins, spec.plugins]*.forEach { PluginSpec plugin ->
-      String outputPath = getOutputDir(plugin)
+      String outputPath = PluginSpecExt.getOutputDir(plugin, spec.outputDir.get())
       File outputDir = new File(outputPath)
       // protoc is capable of output generated files directly to a JAR file
       // or ZIP archive if the output location ends with .jar/.zip
@@ -370,7 +311,8 @@ abstract class GenerateProtoTask extends DefaultTask {
     // Handle code generation built-ins
     spec.builtins.each { builtin ->
       String outPrefix = makeOptionsPrefix(builtin.options)
-      baseCmd += "--${builtin.name}_out=${outPrefix}${getOutputDir(builtin)}".toString()
+      String outputBuiltinPath = PluginSpecExt.getOutputDir(builtin, spec.outputDir.get())
+      baseCmd += "--${builtin.name}_out=${outPrefix}${outputBuiltinPath}".toString()
     }
 
     Map<String, ExecutableLocator> executableLocations = toolsLocator.plugins.asMap
@@ -384,7 +326,8 @@ abstract class GenerateProtoTask extends DefaultTask {
         logger.warn "protoc plugin '${name}' not defined. Trying to use 'protoc-gen-${name}' from system path"
       }
       String pluginOutPrefix = makeOptionsPrefix(plugin.options)
-      baseCmd += "--${name}_out=${pluginOutPrefix}${getOutputDir(plugin)}".toString()
+      String outputPluginPath = PluginSpecExt.getOutputDir(plugin, spec.outputDir.get())
+      baseCmd += "--${name}_out=${pluginOutPrefix}${outputPluginPath}".toString()
     }
 
     if (spec.generateDescriptorSet) {

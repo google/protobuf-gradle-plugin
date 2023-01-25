@@ -34,7 +34,9 @@ import com.android.build.gradle.api.TestVariant
 import com.android.build.gradle.api.UnitTestVariant
 import com.android.builder.model.SourceProvider
 import com.google.protobuf.gradle.internal.DefaultProtoSourceSet
+import com.google.protobuf.gradle.internal.GenerateProtoTaskSpecExt
 import com.google.protobuf.gradle.internal.ProjectExt
+import com.google.protobuf.gradle.tasks.GenerateProtoTaskSpec
 import com.google.protobuf.gradle.tasks.ProtoSourceSet
 import com.google.protobuf.gradle.tasks.ProtoVariant
 import groovy.transform.CompileStatic
@@ -248,9 +250,7 @@ class ProtobufPlugin implements Plugin<Project> {
       protoVariant.sourceSet = sourceSet.name
       protoVariant.isTest = Utils.isTest(sourceSet.name)
       protoVariant.generateProtoTaskSpec.builtins.maybeCreate("java")
-      Provider<GenerateProtoTask> generateProtoTask = addGenerateProtoTask(protoSourceSet) {
-        it.spec.set(protoVariant.generateProtoTaskSpec)
-      }
+      addGenerateProtoTask(protoVariant, protoSourceSet)
 
       sourceSet.java.srcDirs(protoSourceSet.output)
 
@@ -263,12 +263,13 @@ class ProtobufPlugin implements Plugin<Project> {
       }
 
       postConfigure.add {
+        GenerateProtoTaskSpec spec = protoVariant.generateProtoTaskSpec
+        Collection<File> outputDirs = GenerateProtoTaskSpecExt.getOutputSourceDirectories(spec)
+
         project.plugins.withId("eclipse") {
           // This is required because the intellij/eclipse plugin does not allow adding source directories
           // that do not exist. The intellij/eclipse config files should be valid from the start.
-          generateProtoTask.get().getOutputSourceDirectories().each { File outputDir ->
-            outputDir.mkdirs()
-          }
+          outputDirs.each { File outputDir -> outputDir.mkdirs() }
         }
 
         project.plugins.withId("idea") {
@@ -278,9 +279,7 @@ class ProtobufPlugin implements Plugin<Project> {
           }
           Utils.addToIdeSources(project, isTest, project.files(extractProtosTask).singleFile, true)
           Utils.addToIdeSources(project, isTest, project.files(extractIncludeProtosTask).singleFile, true)
-          generateProtoTask.get().getOutputSourceDirectories().each { File outputDir ->
-            Utils.addToIdeSources(project, isTest, outputDir, true)
-          }
+          outputDirs.each { File outputDir -> Utils.addToIdeSources(project, isTest, outputDir, true) }
         }
       }
     }
@@ -326,9 +325,7 @@ class ProtobufPlugin implements Plugin<Project> {
       protoVariant.isTest = isTestVariant
       protoVariant.flavors = variant.productFlavors.collect { it.name } as Set<String>
       protoVariant.buildType = variant.hasProperty('buildType') ? variant.buildType.name : null
-      Provider<GenerateProtoTask> generateProtoTask = addGenerateProtoTask(variantSourceSet) {
-        it.spec.set(protoVariant.generateProtoTaskSpec)
-      }
+      Provider<GenerateProtoTask> generateProtoTask = addGenerateProtoTask(protoVariant, variantSourceSet)
 
       if (project.android.hasProperty('libraryVariants')) {
           // Include source proto files in the compiled archive, so that proto files from
@@ -340,15 +337,22 @@ class ProtobufPlugin implements Plugin<Project> {
           }
       }
       postConfigure.add {
+        Collection<File> outputDirs =
+          GenerateProtoTaskSpecExt.getOutputSourceDirectories(protoVariant.generateProtoTaskSpec)
+
         // This cannot be called once task execution has started.
-        variant.registerJavaGeneratingTask(generateProtoTask.get(), generateProtoTask.get().outputSourceDirectories)
+        if (ProjectExt.isAgpAbove422(project)) {
+          variant.registerJavaGeneratingTask(generateProtoTask, outputDirs)
+        } else {
+          variant.registerJavaGeneratingTask(generateProtoTask.get(), outputDirs)
+        }
 
         project.plugins.withId("org.jetbrains.kotlin.android") {
           project.afterEvaluate {
             String compileKotlinTaskName = Utils.getKotlinAndroidCompileTaskName(project, variant.name)
             project.tasks.named(compileKotlinTaskName, KotlinCompile) { KotlinCompile task ->
               task.dependsOn(generateProtoTask)
-              task.source(generateProtoTask.get().outputSourceDirectories)
+              task.source(outputDirs)
             }
           }
         }
@@ -366,19 +370,18 @@ class ProtobufPlugin implements Plugin<Project> {
      * for; for Android it's the collection of sourceSets that the variant includes.
      */
     private Provider<GenerateProtoTask> addGenerateProtoTask(
-        ProtoSourceSet protoSourceSet,
-        Action<GenerateProtoTask> configureAction
+        ProtoVariant protoVariant,
+        ProtoSourceSet protoSourceSet
     ) {
       String sourceSetName = protoSourceSet.name
       String taskName = 'generate' + Utils.getSourceSetSubstringForTaskNames(sourceSetName) + 'Proto'
       String defaultGeneratedFilesBaseDir = protobufExtension.defaultGeneratedFilesBaseDir
       Provider<String> generatedFilesBaseDirProvider = protobufExtension.generatedFilesBaseDirProperty
+      protoVariant.generateProtoTaskSpec.outputDir.set("${defaultGeneratedFilesBaseDir}/${sourceSetName}".toString())
       Provider<GenerateProtoTask> task = project.tasks.register(taskName, GenerateProtoTask) {
+        it.spec.set(protoVariant.generateProtoTaskSpec)
         CopyActionFacade copyActionFacade = CopyActionFacade.Loader.create(it.project, it.objectFactory)
         it.description = "Compiles Proto source for '${sourceSetName}'".toString()
-        it.outputBaseDir = project.providers.provider {
-          "${defaultGeneratedFilesBaseDir}/${sourceSetName}".toString()
-        }
         it.addSourceDirs(protoSourceSet.proto)
         it.addIncludeDir(protoSourceSet.proto.sourceDirectories)
         it.addIncludeDir(protoSourceSet.includeProtoDirs)
@@ -390,13 +393,14 @@ class ProtobufPlugin implements Plugin<Project> {
           // Purposefully don't wire this up to outputs, as it can be mixed with other files.
           copyActionFacade.copy { CopySpec spec ->
             spec.includeEmptyDirs = false
-            spec.from(it.outputBaseDir)
+            spec.from(protoVariant.generateProtoTaskSpec.outputDir.get())
             spec.into("${generatedFilesBaseDir}/${sourceSetName}")
           }
         }
-        configureAction.execute(it)
       }
-      protoSourceSet.output.from(task.map { GenerateProtoTask it -> it.outputSourceDirectories })
+      protoSourceSet.output.from(task.map {
+        GenerateProtoTaskSpecExt.getOutputSourceDirectories(protoVariant.generateProtoTaskSpec)
+      })
       return task
     }
 
