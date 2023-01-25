@@ -28,17 +28,20 @@
  */
 package com.google.protobuf.gradle
 
-import com.google.protobuf.gradle.internal.DefaultProtoSourceSet
+import com.google.protobuf.gradle.internal.DefaultGenerateProtoTaskCollection
+import com.google.protobuf.gradle.internal.ProtoSourceSetObjectFactory
+import com.google.protobuf.gradle.internal.ProtoVariantObjectFactory
+import com.google.protobuf.gradle.tasks.GenerateProtoTaskCollection
 import com.google.protobuf.gradle.tasks.ProtoSourceSet
+import com.google.protobuf.gradle.tasks.ProtoVariant
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
-import groovy.transform.TypeChecked
-import groovy.transform.TypeCheckingMode
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.TaskCollection
+import org.gradle.util.ConfigureUtil
 
 /**
  * Adds the protobuf {} block as a property of the project.
@@ -50,27 +53,31 @@ abstract class ProtobufExtension {
   private final Project project
   private final GenerateProtoTaskCollection tasks
   private final ToolsLocator tools
-  private final ArrayList<Action<GenerateProtoTaskCollection>> taskConfigActions
   private final NamedDomainObjectContainer<ProtoSourceSet> sourceSets
+  private final NamedDomainObjectContainer<ProtoVariant> variants
 
   @PackageScope
   final String defaultGeneratedFilesBaseDir
 
   public ProtobufExtension(final Project project) {
     this.project = project
-    this.tasks = new GenerateProtoTaskCollection(project)
+    this.tasks = new DefaultGenerateProtoTaskCollection(project)
     this.tools = new ToolsLocator(project)
-    this.taskConfigActions = []
+
     this.defaultGeneratedFilesBaseDir = "${project.buildDir}/generated/source/proto"
     this.generatedFilesBaseDirProperty.convention(defaultGeneratedFilesBaseDir)
-    this.sourceSets = project.objects.domainObjectContainer(ProtoSourceSet) { String name ->
-      new DefaultProtoSourceSet(name, project.objects)
-    }
+
+    ObjectFactory objects = project.objects
+    this.sourceSets = project.objects.domainObjectContainer(ProtoSourceSet, new ProtoSourceSetObjectFactory(objects))
+    this.variants = project.objects.domainObjectContainer(ProtoVariant, new ProtoVariantObjectFactory(project))
   }
 
-  @PackageScope
   NamedDomainObjectContainer<ProtoSourceSet> getSourceSets() {
     return this.sourceSets
+  }
+
+  NamedDomainObjectContainer<ProtoVariant> getVariants() {
+    return variants
   }
 
   @PackageScope
@@ -94,13 +101,6 @@ abstract class ProtobufExtension {
   @PackageScope
   abstract Property<String> getGeneratedFilesBaseDirProperty()
 
-  @PackageScope
-  void configureTasks() {
-    this.taskConfigActions.each { action ->
-      action.execute(tasks)
-    }
-  }
-
   //===========================================================================
   //         Configuration methods
   //===========================================================================
@@ -113,12 +113,20 @@ abstract class ProtobufExtension {
     configureAction.execute(tools.protoc)
   }
 
+  public void protoc(@DelegatesTo(ExecutableLocator) Closure<ExecutableLocator> closure) {
+    ConfigureUtil.configure(closure, tools.protoc)
+  }
+
   /**
    * Locate the codegen plugin executables. The closure will be manipulating a
    * NamedDomainObjectContainer<ExecutableLocator>.
    */
   public void plugins(Action<NamedDomainObjectContainer<ExecutableLocator>> configureAction) {
     configureAction.execute(tools.plugins)
+  }
+
+  public void plugins(Closure<NamedDomainObjectContainer<ExecutableLocator>> closure) {
+    ConfigureUtil.configure(closure, tools.plugins)
   }
 
   /**
@@ -132,8 +140,12 @@ abstract class ProtobufExtension {
    * change the task in your own afterEvaluate closure, as the change may not
    * be picked up correctly by the wired javaCompile task.
    */
-  public void generateProtoTasks(Action<GenerateProtoTaskCollection> configureAction) {
-    taskConfigActions.add(configureAction)
+  void generateProtoTasks(Action<GenerateProtoTaskCollection> action) {
+    action.execute(tasks)
+  }
+
+  void generateProtoTasks(@DelegatesTo(GenerateProtoTaskCollection) Closure<GenerateProtoTaskCollection> closure) {
+    ConfigureUtil.configure(closure, tasks)
   }
 
   /**
@@ -146,54 +158,5 @@ abstract class ProtobufExtension {
    */
   public GenerateProtoTaskCollection getGenerateProtoTasks() {
     return tasks
-  }
-
-  public class GenerateProtoTaskCollection {
-    private final Project project
-
-    GenerateProtoTaskCollection(final Project project) {
-      this.project = project
-    }
-
-    public TaskCollection<GenerateProtoTask> all() {
-      return project.tasks.withType(GenerateProtoTask)
-    }
-
-    public TaskCollection<GenerateProtoTask> ofSourceSet(String sourceSet) {
-      return all().matching { GenerateProtoTask task ->
-        !Utils.isAndroidProject(project) && task.sourceSet.name == sourceSet
-      }
-    }
-
-    public TaskCollection<GenerateProtoTask> ofFlavor(String flavor) {
-      return all().matching { GenerateProtoTask task ->
-        Utils.isAndroidProject(project) && task.flavors.contains(flavor)
-      }
-    }
-
-    public TaskCollection<GenerateProtoTask> ofBuildType(String buildType) {
-      return all().matching { GenerateProtoTask task ->
-        Utils.isAndroidProject(project) && task.buildType == buildType
-      }
-    }
-
-    @TypeChecked(TypeCheckingMode.SKIP) // Don't depend on AGP
-    public TaskCollection<GenerateProtoTask> ofVariant(String variant) {
-      return all().matching { GenerateProtoTask task ->
-        Utils.isAndroidProject(project) && task.variant.name == variant
-      }
-    }
-
-    public TaskCollection<GenerateProtoTask> ofNonTest() {
-      return all().matching { GenerateProtoTask task ->
-        Utils.isAndroidProject(project) && !task.isTestVariant
-      }
-    }
-
-    public TaskCollection<GenerateProtoTask> ofTest() {
-      return all().matching { GenerateProtoTask task ->
-        Utils.isAndroidProject(project) && task.isTestVariant
-      }
-    }
   }
 }

@@ -65,13 +65,17 @@ protobuf {
         }
     }
     generateProtoTasks {
-        all()*.plugins {
-            javalite { }
-        }
-        ofNonTest()*.plugins {
-            grpc {
-                // Options added to --grpc_out
-                option 'lite'
+        all {
+            plugins {
+                javalite {}
+            }
+            ofNonTest {
+                plugins {
+                    grpc {
+                        // Options added to --grpc_out
+                        option 'lite'
+                    }
+                }
             }
         }
     }

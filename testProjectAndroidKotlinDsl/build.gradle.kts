@@ -1,6 +1,7 @@
 import com.android.build.gradle.api.BaseVariant
 import com.google.protobuf.gradle.id
 import com.google.protobuf.gradle.proto
+import com.google.protobuf.gradle.internal.DefaultGenerateProtoTaskCollection
 
 plugins {
   id("com.android.application")
@@ -105,13 +106,13 @@ protobuf {
     }
   }
   generateProtoTasks {
-    all().forEach { task ->
-      task.plugins {
+    all {
+      plugins {
         id("javalite") { }
       }
     }
-    ofNonTest().forEach { task ->
-      task.plugins {
+    ofNonTest {
+      plugins {
         id("grpc") {
           // Options added to --grpc_out
           option("lite")
@@ -152,138 +153,138 @@ afterEvaluate {
   }
   test {
     doLast {
-      val genProtoTasks = project.protobuf.generateProtoTasks
+      val genProtoTasks = project.protobuf.generateProtoTasks as DefaultGenerateProtoTaskCollection
 
       val genProtoTaskNames = setOf(
-          "generateArmFreeappDebugAndroidTestProto",
-          "generateArmFreeappDebugUnitTestProto",
-          "generateArmFreeappReleaseUnitTestProto",
-          "generateArmFreeappDebugProto",
-          "generateArmFreeappReleaseProto",
-          "generateArmRetailappDebugAndroidTestProto",
-          "generateArmRetailappDebugUnitTestProto",
-          "generateArmRetailappReleaseUnitTestProto",
-          "generateArmRetailappDebugProto",
-          "generateArmRetailappReleaseProto",
-          "generateX86FreeappDebugAndroidTestProto",
-          "generateX86FreeappDebugUnitTestProto",
-          "generateX86FreeappReleaseUnitTestProto",
-          "generateX86FreeappDebugProto",
-          "generateX86FreeappReleaseProto",
-          "generateX86RetailappDebugAndroidTestProto",
-          "generateX86RetailappDebugUnitTestProto",
-          "generateX86RetailappReleaseUnitTestProto",
-          "generateX86RetailappDebugProto",
-          "generateX86RetailappReleaseProto")
+          "armFreeappDebugAndroidTest",
+          "armFreeappDebugUnitTest",
+          "armFreeappReleaseUnitTest",
+          "armFreeappDebug",
+          "armFreeappRelease",
+          "armRetailappDebugAndroidTest",
+          "armRetailappDebugUnitTest",
+          "armRetailappReleaseUnitTest",
+          "armRetailappDebug",
+          "armRetailappRelease",
+          "x86FreeappDebugAndroidTest",
+          "x86FreeappDebugUnitTest",
+          "x86FreeappReleaseUnitTest",
+          "x86FreeappDebug",
+          "x86FreeappRelease",
+          "x86RetailappDebugAndroidTest",
+          "x86RetailappDebugUnitTest",
+          "x86RetailappReleaseUnitTest",
+          "x86RetailappDebug",
+          "x86RetailappRelease")
       assert(genProtoTaskNames == genProtoTasks.all().map { it.name }.toSet())
 
       val genProtoTaskNamesTests = setOf(
-          "generateArmFreeappDebugAndroidTestProto",
-          "generateArmFreeappDebugUnitTestProto",
-          "generateArmFreeappReleaseUnitTestProto",
-          "generateArmRetailappDebugAndroidTestProto",
-          "generateArmRetailappDebugUnitTestProto",
-          "generateArmRetailappReleaseUnitTestProto",
-          "generateX86FreeappDebugAndroidTestProto",
-          "generateX86FreeappDebugUnitTestProto",
-          "generateX86FreeappReleaseUnitTestProto",
-          "generateX86RetailappDebugAndroidTestProto",
-          "generateX86RetailappDebugUnitTestProto",
-          "generateX86RetailappReleaseUnitTestProto")
+          "armFreeappDebugAndroidTest",
+          "armFreeappDebugUnitTest",
+          "armFreeappReleaseUnitTest",
+          "armRetailappDebugAndroidTest",
+          "armRetailappDebugUnitTest",
+          "armRetailappReleaseUnitTest",
+          "x86FreeappDebugAndroidTest",
+          "x86FreeappDebugUnitTest",
+          "x86FreeappReleaseUnitTest",
+          "x86RetailappDebugAndroidTest",
+          "x86RetailappDebugUnitTest",
+          "x86RetailappReleaseUnitTest")
       assert(genProtoTaskNamesTests == genProtoTasks.ofNonTest().map { it.name }.toSet())
 
 
       val genProtoTaskNamesNonTests = setOf(
-          "generateArmFreeappDebugProto",
-          "generateArmFreeappReleaseProto",
-          "generateArmRetailappDebugProto",
-          "generateArmRetailappReleaseProto",
-          "generateX86FreeappDebugProto",
-          "generateX86FreeappReleaseProto",
-          "generateX86RetailappDebugProto",
-          "generateX86RetailappReleaseProto")
+          "armFreeappDebug",
+          "armFreeappRelease",
+          "armRetailappDebug",
+          "armRetailappRelease",
+          "x86FreeappDebug",
+          "x86FreeappRelease",
+          "x86RetailappDebug",
+          "x86RetailappRelease")
       assert(genProtoTaskNamesNonTests == genProtoTasks.ofNonTest().map { it.name }.toSet())
 
       val genProtoTaskNamesFreeApp = setOf(
-          "generateArmFreeappDebugAndroidTestProto",
-          "generateArmFreeappDebugUnitTestProto",
-          "generateArmFreeappReleaseUnitTestProto",
-          "generateArmFreeappDebugProto",
-          "generateArmFreeappReleaseProto",
-          "generateX86FreeappDebugAndroidTestProto",
-          "generateX86FreeappDebugUnitTestProto",
-          "generateX86FreeappReleaseUnitTestProto",
-          "generateX86FreeappDebugProto",
-          "generateX86FreeappReleaseProto")
+          "armFreeappDebugAndroidTest",
+          "armFreeappDebugUnitTest",
+          "armFreeappReleaseUnitTest",
+          "armFreeappDebug",
+          "armFreeappRelease",
+          "x86FreeappDebugAndroidTest",
+          "x86FreeappDebugUnitTest",
+          "x86FreeappReleaseUnitTest",
+          "x86FreeappDebug",
+          "x86FreeappRelease")
       assert(genProtoTaskNamesFreeApp == genProtoTasks.ofFlavor("freeapp").map { it.name }.toSet())
 
       val genProtoTaskNamesRetailApp = setOf(
-          "generateArmRetailappDebugAndroidTestProto",
-          "generateArmRetailappDebugUnitTestProto",
-          "generateArmRetailappReleaseUnitTestProto",
-          "generateArmRetailappDebugProto",
-          "generateArmRetailappReleaseProto",
-          "generateX86RetailappDebugAndroidTestProto",
-          "generateX86RetailappDebugUnitTestProto",
-          "generateX86RetailappReleaseUnitTestProto",
-          "generateX86RetailappDebugProto",
-          "generateX86RetailappReleaseProto")
+          "armRetailappDebugAndroidTest",
+          "armRetailappDebugUnitTest",
+          "armRetailappReleaseUnitTest",
+          "armRetailappDebug",
+          "armRetailappRelease",
+          "x86RetailappDebugAndroidTest",
+          "x86RetailappDebugUnitTest",
+          "x86RetailappReleaseUnitTest",
+          "x86RetailappDebug",
+          "x86RetailappRelease")
       assert(genProtoTaskNamesRetailApp == genProtoTasks.ofFlavor("retailapp").map { it.name }.toSet())
 
       val genProtoTaskNamesX86 = setOf(
-          "generateX86FreeappDebugAndroidTestProto",
-          "generateX86FreeappDebugUnitTestProto",
-          "generateX86FreeappReleaseUnitTestProto",
-          "generateX86FreeappDebugProto",
-          "generateX86FreeappReleaseProto",
-          "generateX86RetailappDebugAndroidTestProto",
-          "generateX86RetailappDebugUnitTestProto",
-          "generateX86RetailappReleaseUnitTestProto",
-          "generateX86RetailappDebugProto",
-          "generateX86RetailappReleaseProto")
+          "x86FreeappDebugAndroidTest",
+          "x86FreeappDebugUnitTest",
+          "x86FreeappReleaseUnitTest",
+          "x86FreeappDebug",
+          "x86FreeappRelease",
+          "x86RetailappDebugAndroidTest",
+          "x86RetailappDebugUnitTest",
+          "x86RetailappReleaseUnitTest",
+          "x86RetailappDebug",
+          "x86RetailappRelease")
       assert(genProtoTaskNamesX86 == genProtoTasks.ofFlavor("x86").map { it.name }.toSet())
 
       val genProtoTaskNamesArm = setOf(
-          "generateArmFreeappDebugAndroidTestProto",
-          "generateArmFreeappDebugUnitTestProto",
-          "generateArmFreeappReleaseUnitTestProto",
-          "generateArmFreeappDebugProto",
-          "generateArmFreeappReleaseProto",
-          "generateArmRetailappDebugAndroidTestProto",
-          "generateArmRetailappDebugUnitTestProto",
-          "generateArmRetailappReleaseUnitTestProto",
-          "generateArmRetailappDebugProto",
-          "generateArmRetailappReleaseProto"
+          "armFreeappDebugAndroidTest",
+          "armFreeappDebugUnitTest",
+          "armFreeappReleaseUnitTest",
+          "armFreeappDebug",
+          "armFreeappRelease",
+          "armRetailappDebugAndroidTest",
+          "armRetailappDebugUnitTest",
+          "armRetailappReleaseUnitTest",
+          "armRetailappDebug",
+          "armRetailappRelease"
       )
       assert(genProtoTaskNamesArm == genProtoTasks.ofFlavor("arm").map { it.name }.toSet())
 
       val genProtoTaskNamesDebug = setOf(
-          "generateArmFreeappDebugAndroidTestProto",
-          "generateArmFreeappDebugUnitTestProto",
-          "generateArmFreeappDebugProto",
-          "generateArmRetailappDebugAndroidTestProto",
-          "generateArmRetailappDebugUnitTestProto",
-          "generateArmRetailappDebugProto",
-          "generateX86FreeappDebugAndroidTestProto",
-          "generateX86FreeappDebugUnitTestProto",
-          "generateX86FreeappDebugProto",
-          "generateX86RetailappDebugAndroidTestProto",
-          "generateX86RetailappDebugUnitTestProto",
-          "generateX86RetailappDebugProto")
+          "armFreeappDebugAndroidTest",
+          "armFreeappDebugUnitTest",
+          "armFreeappDebug",
+          "armRetailappDebugAndroidTest",
+          "armRetailappDebugUnitTest",
+          "armRetailappDebug",
+          "x86FreeappDebugAndroidTest",
+          "x86FreeappDebugUnitTest",
+          "x86FreeappDebug",
+          "x86RetailappDebugAndroidTest",
+          "x86RetailappDebugUnitTest",
+          "x86RetailappDebug")
       assert(genProtoTaskNamesDebug == genProtoTasks.ofBuildType("debug").map { it.name }.toSet())
 
       val genProtoTaskNamesRelease = setOf(
-          "generateArmFreeappReleaseProto",
-          "generateArmFreeappReleaseUnitTestProto",
-          "generateArmRetailappReleaseProto",
-          "generateArmRetailappReleaseUnitTestProto",
-          "generateX86FreeappReleaseProto",
-          "generateX86FreeappReleaseUnitTestProto",
-          "generateX86RetailappReleaseProto",
-          "generateX86RetailappReleaseUnitTestProto")
+          "armFreeappRelease",
+          "armFreeappReleaseUnitTest",
+          "armRetailappRelease",
+          "armRetailappReleaseUnitTest",
+          "x86FreeappRelease",
+          "x86FreeappReleaseUnitTest",
+          "x86RetailappRelease",
+          "x86RetailappReleaseUnitTest")
       assert(genProtoTaskNamesRelease == genProtoTasks.ofBuildType("release").map { it.name }.toSet())
 
-      assert(setOf("generateX86FreeappDebugAndroidTestProto") ==
+      assert(setOf("x86FreeappDebugAndroidTest") ==
                  genProtoTasks.ofVariant("x86FreeappDebugAndroidTest").map { it.name }.toSet())
 
       android.applicationVariants.forEach { variant ->

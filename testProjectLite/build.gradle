@@ -28,11 +28,11 @@ protobuf {
     }
   }
   generateProtoTasks {
-    all().each { task ->
-      task.builtins {
+    all {
+      builtins {
         remove java
       }
-      task.plugins {
+      plugins {
         javalite { }
       }
     }
