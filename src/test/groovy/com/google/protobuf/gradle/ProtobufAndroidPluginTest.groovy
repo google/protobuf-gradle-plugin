@@ -198,7 +198,6 @@ class ProtobufAndroidPluginTest extends Specification {
     ).build()
 
     then: "it succeed"
-    println result.output
     assert result.task(":help").outcome == TaskOutcome.SUCCESS
 
     where:
