@@ -65,4 +65,14 @@ class ProjectExt {
       (android as TestedExtension).getUnitTestVariants().all(action)
     }
   }
+
+  static boolean isAgpAbove422(Project project) {
+    // Different type between agp 4.2.2 and 7.0.0
+    // androidComponents exists since agp 4.2
+    Object androidComponents = project.extensions.findByName("androidComponents")
+
+    // Below 4.2 androidComponents extension does not exists
+    // Below 7.0.0 androidComponents extension does not have pluginVersion field
+    return androidComponents != null && androidComponents.hasProperty("pluginVersion")
+  }
 }

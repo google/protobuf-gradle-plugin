@@ -31,19 +31,19 @@ package com.google.protobuf.gradle
 
 import static java.nio.charset.StandardCharsets.US_ASCII
 
+import com.google.protobuf.gradle.internal.PluginSpecExt
+import com.google.protobuf.gradle.internal.DefaultGenerateProtoTaskSpec
+import com.google.protobuf.gradle.tasks.GenerateProtoTaskSpec
+import com.google.protobuf.gradle.tasks.PluginSpec
+import org.gradle.api.file.DeleteSpec
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Nested
 import groovy.transform.CompileStatic
-import groovy.transform.PackageScope
-import groovy.transform.TypeChecked
-import groovy.transform.TypeCheckingMode
-import org.gradle.api.Action
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
-import org.gradle.api.Named
-import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.ProjectLayout
-import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
@@ -53,17 +53,10 @@ import org.gradle.api.tasks.IgnoreEmptyDirectories
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.Nested
-import org.gradle.api.tasks.Optional
-import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.SkipWhenEmpty
-import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskAction
-
-import javax.annotation.Nullable
 import javax.inject.Inject
 
 /**
@@ -72,7 +65,7 @@ import javax.inject.Inject
 // TODO(zhangkun83): add per-plugin output dir reconfiguraiton.
 @CompileStatic
 @CacheableTask
-public abstract class GenerateProtoTask extends DefaultTask {
+abstract class GenerateProtoTask extends DefaultTask {
   // Windows CreateProcess has command line limit of 32768:
   // https://msdn.microsoft.com/en-us/library/windows/desktop/ms682425(v=vs.85).aspx
   static final int WINDOWS_CMD_LENGTH_LIMIT = 32760
@@ -90,75 +83,13 @@ public abstract class GenerateProtoTask extends DefaultTask {
   private final ConfigurableFileCollection includeDirs = objectFactory.fileCollection()
   // source files are proto files that will be compiled by protoc
   private final ConfigurableFileCollection sourceDirs = objectFactory.fileCollection()
-  private final NamedDomainObjectContainer<PluginOptions> builtins = objectFactory.domainObjectContainer(PluginOptions)
-  private final NamedDomainObjectContainer<PluginOptions> plugins = objectFactory.domainObjectContainer(PluginOptions)
   private final ProjectLayout projectLayout = project.layout
   private final ToolsLocator toolsLocator = project.extensions.findByType(ProtobufExtension).tools
 
-  // These fields are set by the Protobuf plugin only when initializing the
-  // task.  Ideally they should be final fields, but Gradle task cannot have
-  // constructor arguments. We use the initializing flag to prevent users from
-  // accidentally modifying them.
-  private Provider<String> outputBaseDir
-  // Tags for selectors inside protobuf.generateProtoTasks; do not serialize with Gradle configuration caching
-  @SuppressWarnings("UnnecessaryTransientModifier") // It is not necessary for task to implement Serializable
-  transient private SourceSet sourceSet
-  @SuppressWarnings("UnnecessaryTransientModifier") // It is not necessary for task to implement Serializable
-  transient private Object variant
-  private List<String> flavors
-  private String buildType
-  private boolean isTestVariant
-  private final Provider<Boolean> isAndroidProject = providerFactory.provider { Utils.isAndroidProject(project) }
-  private final Provider<Boolean> isTestProvider = providerFactory.provider {
-    if (Utils.isAndroidProject(project)) {
-      return isTestVariant
-    }
-    return Utils.isTest(sourceSet.name)
+  @SuppressWarnings("AbstractClassWithPublicConstructor") // required to configure properties convention values
+  GenerateProtoTask() {
+    this.spec.convention(new DefaultGenerateProtoTaskSpec(objectFactory))
   }
-
-  /**
-   * If true, will set the protoc flag
-   * --descriptor_set_out="${outputBaseDir}/descriptor_set.desc"
-   *
-   * Default: false
-   */
-  @Internal("Handled as input via getDescriptorSetOptionsForCaching()")
-  boolean generateDescriptorSet
-
-  /**
-   * Configuration object for descriptor generation details.
-   */
-  public class DescriptorSetOptions {
-    /**
-     * If set, specifies an alternative location than the default for storing the descriptor
-     * set.
-     *
-     * Default: null
-     */
-    @Nullable
-    @Optional
-    @OutputFile
-    String path
-
-    /**
-     * If true, source information (comments, locations) will be included in the descriptor set.
-     *
-     * Default: false
-     */
-    @Input
-    boolean includeSourceInfo
-
-    /**
-     * If true, imports are included in the descriptor set, such that it is self-containing.
-     *
-     * Default: false
-     */
-    @Input
-    boolean includeImports
-  }
-
-  @Internal("Handled as input via getDescriptorSetOptionsForCaching()")
-  final DescriptorSetOptions descriptorSetOptions = new DescriptorSetOptions()
 
   // protoc allows you to prefix comma-delimited options to the path in
   // the --*_out flags, e.g.,
@@ -251,54 +182,6 @@ public abstract class GenerateProtoTask extends DefaultTask {
     return java.path
   }
 
-  void setOutputBaseDir(Provider<String> outputBaseDir) {
-    checkInitializing()
-    Preconditions.checkState(this.outputBaseDir == null, 'outputBaseDir is already set')
-    this.outputBaseDir = outputBaseDir
-  }
-
-  @OutputDirectory
-  String getOutputBaseDir() {
-    return outputBaseDir.get()
-  }
-
-  void setSourceSet(SourceSet sourceSet) {
-    checkInitializing()
-    Preconditions.checkState(!isAndroidProject.get(),
-        'sourceSet should not be set in an Android project')
-    this.sourceSet = sourceSet
-  }
-
-  void setVariant(Object variant, boolean isTestVariant) {
-    checkInitializing()
-    Preconditions.checkState(isAndroidProject.get(),
-        'variant should not be set in a Java project')
-    this.variant = variant
-    this.isTestVariant = isTestVariant
-  }
-
-  void setFlavors(List<String> flavors) {
-    checkInitializing()
-    Preconditions.checkState(isAndroidProject.get(),
-        'flavors should not be set in a Java project')
-    this.flavors = Collections.unmodifiableList(new ArrayList<String>(flavors))
-  }
-
-  void setBuildType(String buildType) {
-    checkInitializing()
-    Preconditions.checkState(isAndroidProject.get(),
-        'buildType should not be set in a Java project')
-    this.buildType = buildType
-  }
-
-  @Internal("Inputs tracked in getSourceDirs()")
-  SourceSet getSourceSet() {
-    Preconditions.checkState(!isAndroidProject.get(),
-        'sourceSet should not be used in an Android project')
-    Preconditions.checkNotNull(sourceSet, 'sourceSet is not set')
-    return sourceSet
-  }
-
   @SkipWhenEmpty
   @PathSensitive(PathSensitivity.RELATIVE)
   @IgnoreEmptyDirectories
@@ -311,14 +194,6 @@ public abstract class GenerateProtoTask extends DefaultTask {
   @PathSensitive(PathSensitivity.RELATIVE)
   FileCollection getIncludeDirs() {
     return includeDirs
-  }
-
-  @Internal("Not an actual input to the task, only used to find tasks belonging to a variant")
-  Object getVariant() {
-    Preconditions.checkState(isAndroidProject.get(),
-        'variant should not be used in a Java project')
-    Preconditions.checkNotNull(variant, 'variant is not set')
-    return variant
   }
 
   /**
@@ -355,58 +230,18 @@ public abstract class GenerateProtoTask extends DefaultTask {
   }
 
   private List<ExecutableLocator> getAllExecutableLocators() {
-    [toolsLocator.protoc] + plugins.collect { PluginOptions it -> toolsLocator.plugins.getByName(it.name) }
-  }
-
-  @Internal("Not an actual input to the task, only used to find tasks belonging to a variant")
-  Provider<Boolean> getIsAndroidProject() {
-    return isAndroidProject
-  }
-
-  @Internal("Not an actual input to the task, only used to find tasks belonging to a variant")
-  boolean getIsTestVariant() {
-    Preconditions.checkState(isAndroidProject.get(),
-        'isTestVariant should not be used in a Java project')
-    Preconditions.checkNotNull(variant, 'variant is not set')
-    return isTestVariant
-  }
-
-  @Internal("Not an actual input to the task, only used to find tasks belonging to a variant")
-  List<String> getFlavors() {
-    Preconditions.checkState(isAndroidProject.get(),
-        'flavors should not be used in a Java project')
-    Preconditions.checkNotNull(flavors, 'flavors is not set')
-    return flavors
-  }
-
-  @TypeChecked(TypeCheckingMode.SKIP) // Don't depend on AGP
-  @Internal("Not an actual input to the task, only used to find tasks belonging to a variant")
-  String getBuildType() {
-    Preconditions.checkState(isAndroidProject.get(),
-        'buildType should not be used in a Java project')
-    Preconditions.checkState(
-        variant.name == 'test' || buildType,
-        'buildType is not set and task is not for local unit test variant')
-    return buildType
-  }
-
-  void doneInitializing() {
-    Preconditions.checkState(state == State.INIT, "Invalid state: ${state}")
-    state = State.CONFIG
-  }
-
-  void doneConfig() {
-    Preconditions.checkState(state == State.CONFIG, "Invalid state: ${state}")
-    state = State.FINALIZED
+    [toolsLocator.protoc] + requireSpec().plugins.collect { PluginSpec it -> toolsLocator.plugins.getByName(it.name) }
   }
 
   @Internal("Tracked as an input via getDescriptorSetOptionsForCaching()")
   String getDescriptorPath() {
-    if (!generateDescriptorSet) {
+    GenerateProtoTaskSpec spec = requireSpec()
+    if (!spec.generateDescriptorSet) {
       throw new IllegalStateException(
           "requested descriptor path but descriptor generation is off")
     }
-    return descriptorSetOptions.path != null ? descriptorSetOptions.path : "${outputBaseDir.get()}/descriptor_set.desc"
+    return spec.descriptorSetOptions.path != null ? spec.descriptorSetOptions.path
+      : "${spec.outputDir.get()}/descriptor_set.desc"
   }
 
   @Inject
@@ -415,58 +250,17 @@ public abstract class GenerateProtoTask extends DefaultTask {
   @Inject
   abstract ObjectFactory getObjectFactory()
 
+  @Nested
+  abstract Property<GenerateProtoTaskSpec> getSpec()
+
   //===========================================================================
   //        Configuration methods
   //===========================================================================
 
   /**
-   * Configures the protoc builtins in a closure, which will be manipulating a
-   * NamedDomainObjectContainer<PluginOptions>.
-   */
-  public void builtins(Action<NamedDomainObjectContainer<PluginOptions>> configureAction) {
-    checkCanConfig()
-    configureAction.execute(this.builtins)
-  }
-
-  /**
-   * Returns the container of protoc builtins.
-   */
-  @Internal("Tracked as an input via getBuiltinsForCaching()")
-  public NamedDomainObjectContainer<PluginOptions> getBuiltins() {
-    checkCanConfig()
-    return builtins
-  }
-
-  /**
-   * Configures the protoc plugins in a closure, which will be maniuplating a
-   * NamedDomainObjectContainer<PluginOptions>.
-   */
-  public void plugins(Action<NamedDomainObjectContainer<PluginOptions>> configureAction) {
-    checkCanConfig()
-    configureAction.execute(this.plugins)
-  }
-
-  /**
-   * Returns the container of protoc plugins.
-   */
-  @Internal("Tracked as an input via getPluginsForCaching()")
-  public NamedDomainObjectContainer<PluginOptions> getPlugins() {
-    checkCanConfig()
-    return plugins
-  }
-
-  /**
-   * Returns true if the task has a plugin with the given name, false otherwise.
-   */
-  public boolean hasPlugin(String name) {
-    return plugins.findByName(name) != null
-  }
-
-  /**
    * Add a directory to protoc's include path.
    */
   public void addIncludeDir(FileCollection dir) {
-    checkCanConfig()
     includeDirs.from(dir)
   }
 
@@ -474,132 +268,26 @@ public abstract class GenerateProtoTask extends DefaultTask {
    * Add a collection of proto source files to be compiled.
    */
   public void addSourceDirs(FileCollection dirs) {
-    checkCanConfig()
     sourceDirs.from(dirs)
-  }
-
-  /**
-   * Returns true if the Java source set or Android variant is test related.
-   */
-  @Input
-  public boolean getIsTest() {
-    return isTestProvider.get()
-  }
-
-  @Internal("Already captured with getIsTest()")
-  Provider<Boolean> getIsTestProvider() {
-    return isTestProvider
-  }
-
-  /**
-   * The container of command-line options for a protoc plugin or a built-in output.
-   */
-  public static class PluginOptions implements Named {
-    private final List<String> options = []
-    private final String name
-    private String outputSubDir
-
-    public PluginOptions(String name) {
-      this.name = name
-    }
-
-    /**
-     * Adds a plugin option.
-     */
-    public PluginOptions option(String option) {
-      options.add(option)
-      return this
-    }
-
-    @Input
-    public List<String> getOptions() {
-      return options
-    }
-
-    /**
-     * Returns the name of the plugin or builtin.
-     */
-    @Input
-    @Override
-    public String getName() {
-      return name
-    }
-
-    /**
-     * Set the output directory for this plugin, relative to {@link GenerateProtoTask#outputBaseDir}.
-     */
-    void setOutputSubDir(String outputSubDir) {
-      this.outputSubDir = outputSubDir
-    }
-
-    /**
-     * Returns the relative outputDir for this plugin.  If outputDir is not specified, name is used.
-     */
-    @Input
-    public String getOutputSubDir() {
-      if (outputSubDir != null) {
-        return outputSubDir
-      }
-      return name
-    }
   }
 
   //===========================================================================
   //    protoc invocation logic
   //===========================================================================
 
-  String getOutputDir(PluginOptions plugin) {
-    return "${outputBaseDir.get()}/${plugin.outputSubDir}"
-  }
-
-  /**
-   * Returns a {@code SourceDirectorySet} representing the generated source
-   * directories.
-   */
-  @Internal
-  @Deprecated
-  SourceDirectorySet getOutputSourceDirectorySet() {
-    String srcSetName = "generate-proto-" + name
-    SourceDirectorySet srcSet
-    srcSet = objectFactory.sourceDirectorySet(srcSetName, srcSetName)
-    srcSet.srcDirs objectFactory.fileCollection().builtBy(this).from(providerFactory.provider {
-      getOutputSourceDirectories()
-    })
-    return srcSet
-  }
-
-  @Internal
-  @PackageScope
-  Collection<File> getOutputSourceDirectories() {
-    Collection<File> srcDirs = []
-    builtins.each { builtin ->
-      File dir = new File(getOutputDir(builtin))
-      if (!dir.name.endsWith(".zip") && !dir.name.endsWith(".jar")) {
-        srcDirs.add(dir)
-      }
-    }
-    plugins.each { plugin ->
-      File dir = new File(getOutputDir(plugin))
-      if (!dir.name.endsWith(".zip") && !dir.name.endsWith(".jar")) {
-        srcDirs.add(dir)
-      }
-    }
-    return srcDirs
-  }
-
   @TaskAction
   void compile() {
-    Preconditions.checkState(state == State.FINALIZED, 'doneConfig() has not been called')
+    GenerateProtoTaskSpec spec = requireSpec()
 
-    copyActionFacade.delete { spec ->
-      spec.delete(outputBaseDir)
+    copyActionFacade.delete { DeleteSpec deleteSpec ->
+      deleteSpec.delete(spec.outputDir)
     }
     // Sort to ensure generated descriptors have a canonical representation
     // to avoid triggering unnecessary rebuilds downstream
     List<File> protoFiles = sourceDirs.asFileTree.files.sort()
 
-    [builtins, plugins]*.forEach { PluginOptions plugin ->
-      String outputPath = getOutputDir(plugin)
+    [spec.builtins, spec.plugins]*.forEach { PluginSpec plugin ->
+      String outputPath = PluginSpecExt.getOutputDir(plugin, spec.outputDir.get())
       File outputDir = new File(outputPath)
       // protoc is capable of output generated files directly to a JAR file
       // or ZIP archive if the output location ends with .jar/.zip
@@ -621,14 +309,15 @@ public abstract class GenerateProtoTask extends DefaultTask {
     baseCmd.addAll(dirs)
 
     // Handle code generation built-ins
-    builtins.each { builtin ->
+    spec.builtins.each { builtin ->
       String outPrefix = makeOptionsPrefix(builtin.options)
-      baseCmd += "--${builtin.name}_out=${outPrefix}${getOutputDir(builtin)}".toString()
+      String outputBuiltinPath = PluginSpecExt.getOutputDir(builtin, spec.outputDir.get())
+      baseCmd += "--${builtin.name}_out=${outPrefix}${outputBuiltinPath}".toString()
     }
 
     Map<String, ExecutableLocator> executableLocations = toolsLocator.plugins.asMap
     // Handle code generation plugins
-    plugins.each { plugin ->
+    spec.plugins.each { PluginSpec plugin ->
       String name = plugin.name
       ExecutableLocator locator = executableLocations.get(name)
       if (locator != null) {
@@ -637,10 +326,11 @@ public abstract class GenerateProtoTask extends DefaultTask {
         logger.warn "protoc plugin '${name}' not defined. Trying to use 'protoc-gen-${name}' from system path"
       }
       String pluginOutPrefix = makeOptionsPrefix(plugin.options)
-      baseCmd += "--${name}_out=${pluginOutPrefix}${getOutputDir(plugin)}".toString()
+      String outputPluginPath = PluginSpecExt.getOutputDir(plugin, spec.outputDir.get())
+      baseCmd += "--${name}_out=${pluginOutPrefix}${outputPluginPath}".toString()
     }
 
-    if (generateDescriptorSet) {
+    if (spec.generateDescriptorSet) {
       String path = getDescriptorPath()
       // Ensure that the folder for the descriptor exists;
       // the user may have set it to point outside an existing tree
@@ -649,10 +339,10 @@ public abstract class GenerateProtoTask extends DefaultTask {
         folder.mkdirs()
       }
       baseCmd += "--descriptor_set_out=${path}".toString()
-      if (descriptorSetOptions.includeImports) {
+      if (spec.descriptorSetOptions.includeImports) {
         baseCmd += "--include_imports"
       }
-      if (descriptorSetOptions.includeSourceInfo) {
+      if (spec.descriptorSetOptions.includeSourceInfo) {
         baseCmd += "--include_source_info"
       }
     }
@@ -663,44 +353,8 @@ public abstract class GenerateProtoTask extends DefaultTask {
     }
   }
 
-  /**
-   * Used to expose inputs to Gradle, not to be called directly.
-   */
-  @Optional
-  @Nested
-  protected DescriptorSetOptions getDescriptorSetOptionsForCaching() {
-    return generateDescriptorSet ? descriptorSetOptions : null
-  }
-
-  /**
-   * Used to expose inputs to Gradle, not to be called directly.
-   */
-  @Nested
-  protected Collection<PluginOptions> getBuiltinsForCaching() {
-    return builtins
-  }
-
-  /**
-   * Used to expose inputs to Gradle, not to be called directly.
-   */
-  @Nested
-  protected Collection<PluginOptions> getPluginsForCaching() {
-    return plugins
-  }
-
-  private static enum State {
-    INIT, CONFIG, FINALIZED
-  }
-
-  private State state = State.INIT
-
-  private void checkInitializing() {
-    Preconditions.checkState(state == State.INIT, 'Should not be called after initilization has finished')
-  }
-
-  private void checkCanConfig() {
-    Preconditions.checkState(state == State.CONFIG || state == State.INIT,
-        'Should not be called after configuration has finished')
+  private GenerateProtoTaskSpec requireSpec() {
+    return spec.get()
   }
 
   private void compileFiles(List<String> cmd) {

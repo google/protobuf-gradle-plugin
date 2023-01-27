@@ -1,6 +1,7 @@
 import com.google.protobuf.gradle.*
 import org.gradle.api.internal.HasConvention
 import org.gradle.kotlin.dsl.provider.gradleKotlinDslOf
+import com.google.protobuf.gradle.internal.DefaultGenerateProtoTaskCollection
 
 plugins {
     java
@@ -56,13 +57,13 @@ protobuf {
         }
     }
     generateProtoTasks {
-        ofSourceSet("grpc").forEach { task ->
-            task.plugins {
+        ofSourceSet("grpc") {
+            plugins {
                 id("grpc") {
                     outputSubDir = "grpc_output"
                 }
             }
-            task.generateDescriptorSet = true
+            generateDescriptorSet = true
         }
     }
 }
@@ -84,7 +85,7 @@ tasks {
     "test"{
 
         doLast{
-            val generateProtoTasks = project.protobuf.generateProtoTasks
+            val generateProtoTasks = project.protobuf.generateProtoTasks as DefaultGenerateProtoTaskCollection
 
             val generateProtoTaskNames = generateProtoTasks.all().map { it.name }.toSet()
             val generateProtoTaskNamesMain = generateProtoTasks.ofSourceSet("main").map { it.name }.toSet()
