@@ -173,4 +173,35 @@ class ProtobufAndroidPluginTest extends Specification {
     agpVersion << ANDROID_PLUGIN_VERSION.takeRight(1)
     gradleVersion << GRADLE_VERSION.takeRight(1)
   }
+
+  @Unroll
+  void "tests android build should be without eager task creation [android #agpVersion, gradle #gradleVersion]"() {
+    given: "a project with android plugin"
+    File mainProjectDir = ProtobufPluginTestHelper.projectBuilder("singleModuleAndroidProject")
+      .copyDirs('testProjectAndroid', 'testProjectAndroidBare')
+      .withAndroidPlugin(agpVersion)
+      .build()
+    new File(mainProjectDir, "build.gradle") << """
+    |tasks
+    |  // Lifecycle 'clean' task always eager
+    |  // https://github.com/gradle/gradle/issues/20864
+    |  .matching { it.name != "help" && it.name != "clean" }
+    |  .configureEach { throw new IllegalStateException("\$it was eagerly created") }
+    """.stripMargin()
+
+    when: "evaluate project by help task"
+    BuildResult result = ProtobufPluginTestHelper.getAndroidGradleRunner(
+      mainProjectDir,
+      gradleVersion,
+      agpVersion,
+      "help"
+    ).build()
+
+    then: "it succeed"
+    assert result.task(":help").outcome == TaskOutcome.SUCCESS
+
+    where:
+    agpVersion << ANDROID_PLUGIN_VERSION.takeRight(1)
+    gradleVersion << GRADLE_VERSION.takeRight(1)
+  }
 }
