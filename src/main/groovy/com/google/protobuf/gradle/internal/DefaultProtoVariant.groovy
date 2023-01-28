@@ -16,7 +16,7 @@ class DefaultProtoVariant implements ProtoVariant {
 
   DefaultProtoVariant(String name, ObjectFactory objects) {
     this.name = name
-    this.generateProtoTaskSpec = new DefaultGenerateProtoTaskSpec(objects)
+    this.generateProtoTaskSpec = new DefaultGenerateProtoTaskSpec(name, objects)
     this.flavors = [] as Set<String>
   }
 

@@ -19,14 +19,21 @@ class DefaultGenerateProtoTaskSpec implements GenerateProtoTaskSpec {
   private final NamedDomainObjectContainer<PluginSpec> builtins
   private final DescriptorSetSpec descriptorSetSpec
   private final Property<String> outputDir
+  private final String variantName
   private boolean generateDescriptorSet = false
 
-  DefaultGenerateProtoTaskSpec(ObjectFactory objects) {
+  DefaultGenerateProtoTaskSpec(String variantName, ObjectFactory objects) {
     NamedDomainObjectFactory<PluginSpec> pluginSpecObjectFactory = new PluginSpecObjectFactory(objects)
     this.plugins = objects.domainObjectContainer(PluginSpec, pluginSpecObjectFactory)
     this.builtins = objects.domainObjectContainer(PluginSpec, pluginSpecObjectFactory)
     this.outputDir = objects.property(String)
     this.descriptorSetSpec = new DefaultDescriptorSetSpec(objects)
+    this.variantName = variantName
+  }
+
+  @Override
+  String getVariantName() {
+    return this.variantName
   }
 
   @Override
@@ -88,5 +95,15 @@ class DefaultGenerateProtoTaskSpec implements GenerateProtoTaskSpec {
   @Override
   void plugins(Closure<NamedDomainObjectContainer<PluginSpec>> closure) {
     ConfigureUtil.configure(closure, plugins)
+  }
+
+  @Override
+  void generateDescriptorSet(@DelegatesTo(DescriptorSetSpec) Action<DescriptorSetSpec> configureAction) {
+    configureAction.execute(descriptorSetSpec)
+  }
+
+  @Override
+  void generateDescriptorSet(Closure<DescriptorSetSpec> closure) {
+    ConfigureUtil.configure(closure, descriptorSetSpec)
   }
 }

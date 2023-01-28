@@ -19,6 +19,9 @@ interface GenerateProtoTaskSpec {
   @Deprecated
   void setOutputBaseDir(Provider<String> outputBaseDir)
 
+  @Input
+  String getVariantName()
+
   /**
    * If true, will set the protoc flag
    * --descriptor_set_out="${outputBaseDir}/descriptor_set.desc"
@@ -63,14 +66,26 @@ interface GenerateProtoTaskSpec {
   void builtins(Closure<NamedDomainObjectContainer<PluginSpec>> closure)
 
   /**
-   * Configures the protoc plugins in a closure, which will be maniuplating a
+   * Configures the protoc plugins in a closure, which will be manipulating a
    * NamedDomainObjectContainer<PluginOptions>.
    */
   void plugins(Action<NamedDomainObjectContainer<PluginSpec>> configureAction)
 
   /**
-   * Configures the protoc plugins in a closure, which will be maniuplating a
+   * Configures the protoc plugins in a closure, which will be manipulating a
    * NamedDomainObjectContainer<PluginOptions>.
    */
   void plugins(Closure<NamedDomainObjectContainer<PluginSpec>> closure)
+
+  /**
+   * Configures the protoc descriptor set in a closure, which will be manipulating a
+   * DescriptorSetSpec.
+   */
+  void generateDescriptorSet(@DelegatesTo(DescriptorSetSpec) Action<DescriptorSetSpec> configureAction)
+
+  /**
+   * Configures the protoc descriptor set in a closure, which will be manipulating a
+   * DescriptorSetSpec.
+   */
+  void generateDescriptorSet(Closure<DescriptorSetSpec> closure)
 }
