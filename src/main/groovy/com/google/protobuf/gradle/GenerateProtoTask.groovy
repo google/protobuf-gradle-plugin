@@ -355,7 +355,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
   }
 
   private List<ExecutableLocator> getAllExecutableLocators() {
-    [toolsLocator.protoc] + plugins.collect { PluginOptions it -> toolsLocator.plugins.getByName(it.name) }
+    [toolsLocator.protoc] + plugins.findResults { PluginOptions it -> toolsLocator.plugins.findByName(it.name) }
   }
 
   @Internal("Not an actual input to the task, only used to find tasks belonging to a variant")
