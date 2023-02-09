@@ -69,6 +69,18 @@ class ProtobufJavaPluginTest extends Specification {
     assert project.tasks.extractMain2Proto instanceof ProtobufExtract
   }
 
+  void "test buildDir is late bound"() {
+    given: "a basic project with java and com.google.protobuf"
+    Project project = setupBasicProject()
+
+    when: "project evaluated"
+    project.evaluate()
+    project.buildDir = "expect-the-unexpected"
+
+    then: "generate tasks added"
+    assert project.tasks.generateProto.outputBaseDir.contains("/expect-the-unexpected/")
+  }
+
   @Unroll
   void "testProject should be successfully executed (java-only project) [gradle #gradleVersion]"() {
     given: "project from testProject"

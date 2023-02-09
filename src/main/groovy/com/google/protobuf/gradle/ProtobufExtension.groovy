@@ -38,6 +38,7 @@ import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskCollection
 
 /**
@@ -54,14 +55,16 @@ abstract class ProtobufExtension {
   private final NamedDomainObjectContainer<ProtoSourceSet> sourceSets
 
   @PackageScope
-  final String defaultGeneratedFilesBaseDir
+  final Provider<String> defaultGeneratedFilesBaseDir
 
   public ProtobufExtension(final Project project) {
     this.project = project
     this.tasks = new GenerateProtoTaskCollection(project)
     this.tools = new ToolsLocator(project)
     this.taskConfigActions = []
-    this.defaultGeneratedFilesBaseDir = "${project.buildDir}/generated/source/proto"
+    this.defaultGeneratedFilesBaseDir = project.layout.buildDirectory.dir("generated/source/proto").map {
+      it.asFile.path
+    }
     this.generatedFilesBaseDirProperty.convention(defaultGeneratedFilesBaseDir)
     this.sourceSets = project.objects.domainObjectContainer(ProtoSourceSet) { String name ->
       new DefaultProtoSourceSet(name, project.objects)
