@@ -645,9 +645,15 @@ public abstract class GenerateProtoTask extends DefaultTask {
         logger.warn "protoc plugin '${name}' not defined. Trying to use 'protoc-gen-${name}' from system path"
       }
       String options = assembleOptions(plugin.options)
-      if (!options.isBlank())
-        options += ":"
-      baseCmd += "--${name}_out=${options}${getOutputDir(plugin)}".toString()
+      if (toolsLocator.protoc.version == VersionNumber.UNKNOWN ||
+              VersionNumber.parse("3.2.0") >= toolsLocator.protoc.version) {
+        if (!options.isBlank())
+          options += ":"
+        baseCmd += "--${name}_out=${options}${getOutputDir(plugin)}".toString()
+      } else {
+      baseCmd += "--${name}_out=${getOutputDir(plugin)}".toString()
+      baseCmd += "--${name}_opt=$options".toString()
+    }
     }
 
     if (generateDescriptorSet) {
