@@ -34,6 +34,10 @@ import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.Dependency
+import org.gradle.util.VersionNumber
+
+import java.nio.file.Files
+import java.nio.file.Paths
 
 /**
  * Holds locations of all external executables, i.e., protoc and plugins.
@@ -82,6 +86,7 @@ class ToolsLocator {
     } else if (protoc.path == null) {
       protoc.path = 'protoc'
     }
+    protoc.version = determineProtocVersion(protoc)
     for (ExecutableLocator pluginLocator in plugins) {
       if (pluginLocator.artifact != null) {
         resolveLocator(project, pluginLocator)
@@ -110,5 +115,18 @@ class ToolsLocator {
     ]
     Dependency dep = project.dependencies.add(config.name, notation)
     locator.resolve(config.fileCollection(dep), "$groupId:$artifact:$version".toString())
+  }
+
+  private VersionNumber determineProtocVersion(ExecutableLocator executableLocator) {
+    if (executableLocator.artifact != null) {
+      String[] parts = executableLocator.simplifiedArtifactName.split(":")
+      return VersionNumber.parse(parts[2])
+    } else if (executableLocator.path != null && Files.isExecutable(Paths.get(executableLocator.path))) {
+      Process process = new ProcessBuilder(executableLocator.path, "--version").start()
+      BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))
+      String version = reader.readLine().replace("libprotoc ", "")
+      return VersionNumber.parse(version)
+    }
+    return VersionNumber.UNKNOWN
   }
 }
