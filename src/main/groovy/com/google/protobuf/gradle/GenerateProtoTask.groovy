@@ -481,7 +481,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
   /**
    * Returns true if the Java source set or Android variant is test related.
    */
-  @Input
+  @Internal("Not an actual input to the task, only used to find tasks of interest")
   public boolean getIsTest() {
     return isTestProvider.get()
   }
