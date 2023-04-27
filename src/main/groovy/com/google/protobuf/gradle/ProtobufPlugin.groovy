@@ -251,7 +251,7 @@ class ProtobufPlugin implements Plugin<Project> {
       Provider<GenerateProtoTask> generateProtoTask = addGenerateProtoTask(protoSourceSet) {
         it.sourceSet = sourceSet
         it.doneInitializing()
-        it.builtins.maybeCreate("java")
+        it.spec.get().builtins.maybeCreate("java")
       }
 
       sourceSet.java.srcDirs(protoSourceSet.output)

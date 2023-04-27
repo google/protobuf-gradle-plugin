@@ -83,13 +83,21 @@ protobuf {
         }
     }
     generateProtoTasks {
-        all()*.plugins {
-            javalite { }
+        all().each {
+            it.spec {
+                plugins {
+                    javalite {}
+                }
+            }
         }
-        ofNonTest()*.plugins {
-            grpc {
-                // Options added to --grpc_out
-                option 'lite'
+        ofNonTest().each {
+            it.spec {
+                plugins {
+                    grpc {
+                        // Options added to --grpc_out
+                        option 'lite'
+                    }
+                }
             }
         }
     }
