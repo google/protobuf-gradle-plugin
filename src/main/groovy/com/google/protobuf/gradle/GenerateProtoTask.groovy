@@ -571,7 +571,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
   @Internal
   @PackageScope
   Collection<File> getOutputSourceDirectories() {
-    Collection<File> srcDirs = []
+    Collection<File> srcDirs = new HashSet<>()
     builtins.each { builtin ->
       File dir = new File(getOutputDir(builtin))
       if (!dir.name.endsWith(".zip") && !dir.name.endsWith(".jar")) {
