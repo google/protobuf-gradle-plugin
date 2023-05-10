@@ -571,7 +571,8 @@ public abstract class GenerateProtoTask extends DefaultTask {
   @Internal
   @PackageScope
   Collection<File> getOutputSourceDirectories() {
-    Collection<File> srcDirs = []
+    // insertion point requires the same output source directories as the java plugin. Using a set to avoid duplication.
+    Collection<File> srcDirs = [] as Set
     builtins.each { builtin ->
       File dir = new File(getOutputDir(builtin))
       if (!dir.name.endsWith(".zip") && !dir.name.endsWith(".jar")) {
