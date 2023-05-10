@@ -176,7 +176,8 @@ protobuf {
   // Locate the codegen plugins
   plugins {
     // Locate a plugin with name 'grpc'. This step is optional.
-    // If you don't locate it, protoc will try to use "protoc-gen-grpc" from
+    // If you leave it empty, it uses the current directory.
+    // If you don't specify it, protoc will try to use "protoc-gen-grpc" from
     // system search path.
     grpc {
       artifact = 'io.grpc:protoc-gen-grpc-java:1.0.0-pre2'
