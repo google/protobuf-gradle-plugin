@@ -571,6 +571,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
   @Internal
   @PackageScope
   Collection<File> getOutputSourceDirectories() {
+    // insertion point requires the same output source directories as the java plugin. Using a set to avoid duplication.
     Collection<File> srcDirs = new HashSet<>()
     builtins.each { builtin ->
       File dir = new File(getOutputDir(builtin))
