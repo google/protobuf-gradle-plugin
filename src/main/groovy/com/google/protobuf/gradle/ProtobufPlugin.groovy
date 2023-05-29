@@ -53,6 +53,7 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.internal.artifacts.ArtifactAttributes
 import org.gradle.api.plugins.AppliedPlugin
+import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
 import org.gradle.language.jvm.tasks.ProcessResources
@@ -191,12 +192,14 @@ class ProtobufPlugin implements Plugin<Project> {
       String compileProtoConfigName = Utils.getConfigName(protoSourceSet.name, 'compileProtoPath')
       Configuration compileConfig =
               project.configurations.getByName(Utils.getConfigName(protoSourceSet.name, 'compileOnly'))
-      Configuration implementationConfig =
-              project.configurations.getByName(Utils.getConfigName(protoSourceSet.name, 'implementation'))
+      Configuration compileClasspathConfig =
+              project.configurations.getByName(Utils.getConfigName(protoSourceSet.name, JavaPlugin.COMPILE_CLASSPATH_CONFIGURATION_NAME))
+        Configuration testCompileClasspathConfig =
+                project.configurations.getByName(Utils.getConfigName(protoSourceSet.name, JavaPlugin.TEST_COMPILE_CLASSPATH_CONFIGURATION_NAME))
       return project.configurations.create(compileProtoConfigName) { Configuration it ->
           it.visible = false
           it.transitive = true
-          it.extendsFrom = [compileConfig, implementationConfig]
+          it.extendsFrom = [compileConfig, compileClasspathConfig, testCompileClasspathConfig]
           it.canBeConsumed = false
           it.getAttributes()
                 // Variant attributes are not inherited. Setting it too loosely can
