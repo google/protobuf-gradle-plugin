@@ -35,6 +35,7 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.FileTree
 import org.gradle.api.logging.Logger
 import org.gradle.api.model.ObjectFactory
@@ -113,43 +114,45 @@ abstract class ProtobufExtract extends DefaultTask {
     // Provider.map seems broken for excluded tasks. Add inputFiles with all contents excluded for
     // the dependency it provides, but then provide the files we actually care about in our own
     // provider. https://github.com/google/protobuf-gradle-plugin/issues/550
+    PatternSet protoFilter = new PatternSet().include("**/*.proto")
     return objectFactory.fileCollection()
         .from(inputFiles.filter { false })
-        .from(providerFactory.provider { unused ->
-      Set<File> files = inputFiles.files
-      PatternSet protoFilter = new PatternSet().include("**/*.proto")
-      Set<Object> protoInputs = [] as Set
-      for (File file : files) {
-        if (file.isDirectory()) {
-          protoInputs.add(file)
-        } else if (file.path.endsWith('.proto')) {
-          if (!warningLogged) {
-            warningLogged = true
-            logger.warn "proto file '${file.path}' directly specified in configuration. " +
-                    "It's likely you specified files('path/to/foo.proto') or " +
-                    "fileTree('path/to/directory') in protobuf or compile configuration. " +
-                    "This makes you vulnerable to " +
-                    "https://github.com/google/protobuf-gradle-plugin/issues/248. " +
-                    "Please use files('path/to/directory') instead."
-          }
-          protoInputs.add(file)
-        } else if (file.path.endsWith('.jar') || file.path.endsWith('.zip')) {
-          protoInputs.add(archiveFacade.zipTree(file.path).matching(protoFilter))
-        } else if (file.path.endsWith('.aar')) {
-          FileCollection zipTree = archiveFacade.zipTree(file.path).filter { File it -> it.path.endsWith('.jar') }
-          zipTree.each { entry ->
-            protoInputs.add(archiveFacade.zipTree(entry).matching(protoFilter))
-          }
-        } else if (file.path.endsWith('.tar')
-                || file.path.endsWith('.tar.gz')
-                || file.path.endsWith('.tar.bz2')
-                || file.path.endsWith('.tgz')) {
-          protoInputs.add(archiveFacade.tarTree(file.path).matching(protoFilter))
-        } else {
-          logger.debug "Skipping unsupported file type (${file.path}); handles only jar, tar, tar.gz, tar.bz2 & tgz"
-        }
-      }
-      return protoInputs
+        .from(
+          inputFiles.getElements().map { elements ->
+            Set<Object> protoInputs = [] as Set
+            for (FileSystemLocation e : elements) {
+              File file = e.asFile
+              if (file.isDirectory()) {
+                protoInputs.add(file)
+              } else if (file.path.endsWith('.proto')) {
+                if (!warningLogged) {
+                  warningLogged = true
+                  logger.warn "proto file '${file.path}' directly specified in configuration. " +
+                          "It's likely you specified files('path/to/foo.proto') or " +
+                          "fileTree('path/to/directory') in protobuf or compile configuration. " +
+                          "This makes you vulnerable to " +
+                          "https://github.com/google/protobuf-gradle-plugin/issues/248. " +
+                          "Please use files('path/to/directory') instead."
+                }
+                protoInputs.add(file)
+              } else if (file.path.endsWith('.jar') || file.path.endsWith('.zip')) {
+                protoInputs.add(archiveFacade.zipTree(file.path).matching(protoFilter))
+              } else if (file.path.endsWith('.aar')) {
+                FileCollection zipTree = archiveFacade.zipTree(file.path).filter { File it -> it.path.endsWith('.jar') }
+                zipTree.each { entry ->
+                  protoInputs.add(archiveFacade.zipTree(entry).matching(protoFilter))
+                }
+              } else if (file.path.endsWith('.tar')
+                      || file.path.endsWith('.tar.gz')
+                      || file.path.endsWith('.tar.bz2')
+                      || file.path.endsWith('.tgz')) {
+                protoInputs.add(archiveFacade.tarTree(file.path).matching(protoFilter))
+              } else {
+                logger.debug "Skipping unsupported file type (${file.path});" +
+                        "handles only jar, tar, tar.gz, tar.bz2 & tgz"
+              }
+            }
+            return protoInputs
     })
   }
 }
