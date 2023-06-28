@@ -17,6 +17,8 @@ class ProtobufJavaPluginTest extends Specification {
   // Current supported version is Gradle 5+.
   private static final List<String> GRADLE_VERSIONS = ["5.6", "6.0", "6.7.1", "7.4.2", "7.6"]
   private static final List<String> KOTLIN_VERSIONS = ["1.3.72", "1.4.32", "1.5.32", "1.6.21", "1.7.21"]
+  // Currently this is separate as some test projects are incompatible with Gradle 8.1
+  private static final List<String> GRADLE_WITH_FILE_SYSTEM_SNAPSHOTTING_FOR_CC = ["8.1"]
 
   void "testApplying java and com.google.protobuf adds corresponding task to project"() {
     given: "a basic project with java and com.google.protobuf"
@@ -283,6 +285,47 @@ class ProtobufJavaPluginTest extends Specification {
 
     where:
     gradleVersion << GRADLE_VERSIONS
+  }
+
+  @Unroll
+  void "testProjectDependent proto extraction with configuration cache [gradle #gradleVersion]"() {
+    given: "project from testProject & testProjectDependent"
+    File testProjectStaging = ProtobufPluginTestHelper.projectBuilder('testProject')
+            .copyDirs('testProjectBase', 'testProject')
+            .build()
+    File testProjectDependentStaging = ProtobufPluginTestHelper.projectBuilder('testProjectDependent')
+            .copyDirs('testProjectDependent')
+            .build()
+
+    File mainProjectDir = ProtobufPluginTestHelper.projectBuilder('testProjectDependentMain')
+            .copySubProjects(testProjectStaging, testProjectDependentStaging)
+            .build()
+
+    when: "extractIncludeProto is invoked"
+    BuildResult result = ProtobufPluginTestHelper.getGradleRunner(
+            mainProjectDir,
+            gradleVersion,
+            ":testProjectDependent:extractIncludeProto",
+            "--configuration-cache",
+    ).build()
+
+    then: "it succeed"
+    result.task(":testProjectDependent:extractIncludeProto").outcome == TaskOutcome.SUCCESS
+
+    when: "dependency sources are modified and extractIncludeProto is invoked again"
+    new File(testProjectStaging, "src/main/java/Bar.java").write("public class Bar {}")
+    result = ProtobufPluginTestHelper.getGradleRunner(
+            mainProjectDir,
+            gradleVersion,
+            ":testProjectDependent:extractIncludeProto",
+            "--configuration-cache",
+    ).build()
+
+    then: "there is a configuration cache hit"
+    result.output.contains("Reusing configuration cache")
+
+    where:
+    gradleVersion << GRADLE_WITH_FILE_SYSTEM_SNAPSHOTTING_FOR_CC
   }
 
   @Unroll
