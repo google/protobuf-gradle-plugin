@@ -62,6 +62,7 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskAction
+import org.gradle.util.VersionNumber
 
 import javax.annotation.Nullable
 import javax.inject.Inject
@@ -165,7 +166,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
   // - Without options: --java_out=/path/to/output
   // - With options: --java_out=option1,option2:/path/to/output
   // This method generates the prefix out of the given options.
-  static String makeOptionsPrefix(List<String> options) {
+  static String assembleOptions(List<String> options) {
     StringBuilder prefix = new StringBuilder()
     if (!options.isEmpty()) {
       options.each { option ->
@@ -174,7 +175,6 @@ public abstract class GenerateProtoTask extends DefaultTask {
         }
         prefix.append(option)
       }
-      prefix.append(':')
     }
     return prefix.toString()
   }
@@ -623,8 +623,16 @@ public abstract class GenerateProtoTask extends DefaultTask {
 
     // Handle code generation built-ins
     builtins.each { builtin ->
-      String outPrefix = makeOptionsPrefix(builtin.options)
-      baseCmd += "--${builtin.name}_out=${outPrefix}${getOutputDir(builtin)}".toString()
+      String options = assembleOptions(builtin.options)
+      if (toolsLocator.protoc.version == VersionNumber.UNKNOWN ||
+              VersionNumber.parse("3.2.0") >= toolsLocator.protoc.version) {
+        if (!options.isBlank())
+          options += ":"
+        baseCmd += "--${name}_out=${options}${getOutputDir(builtin)}".toString()
+      } else {
+        baseCmd += "--${builtin.name}_out=${getOutputDir(builtin)}".toString()
+        baseCmd += "--${builtin.name}_opt=$options".toString()
+      }
     }
 
     Map<String, ExecutableLocator> executableLocations = toolsLocator.plugins.asMap
@@ -637,8 +645,16 @@ public abstract class GenerateProtoTask extends DefaultTask {
       } else {
         logger.warn "protoc plugin '${name}' not defined. Trying to use 'protoc-gen-${name}' from system path"
       }
-      String pluginOutPrefix = makeOptionsPrefix(plugin.options)
-      baseCmd += "--${name}_out=${pluginOutPrefix}${getOutputDir(plugin)}".toString()
+      String options = assembleOptions(plugin.options)
+      if (toolsLocator.protoc.version == VersionNumber.UNKNOWN ||
+              VersionNumber.parse("3.2.0") >= toolsLocator.protoc.version) {
+        if (!options.isBlank())
+          options += ":"
+        baseCmd += "--${name}_out=${options}${getOutputDir(plugin)}".toString()
+      } else {
+      baseCmd += "--${name}_out=${getOutputDir(plugin)}".toString()
+      baseCmd += "--${name}_opt=$options".toString()
+    }
     }
 
     if (generateDescriptorSet) {

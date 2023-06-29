@@ -32,6 +32,7 @@ import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 import org.gradle.api.Named
 import org.gradle.api.file.FileCollection
+import org.gradle.util.VersionNumber
 
 /**
  * Locates an executable that can either be found locally or downloaded from
@@ -49,6 +50,8 @@ class ExecutableLocator implements Named {
 
   private FileCollection artifactFiles
   private String simplifiedArtifactName
+
+  private VersionNumber version = VersionNumber.UNKNOWN
 
   ExecutableLocator(String name) {
     this.name = name
@@ -76,12 +79,20 @@ class ExecutableLocator implements Named {
     this.artifact = null
   }
 
+  void setVersion(VersionNumber version) {
+    this.version = version
+  }
+
   String getArtifact() {
     return artifact
   }
 
   String getPath() {
     return path
+  }
+
+  VersionNumber getVersion() {
+    return version
   }
 
   @PackageScope
