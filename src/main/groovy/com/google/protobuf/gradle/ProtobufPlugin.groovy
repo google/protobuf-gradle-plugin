@@ -57,6 +57,7 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
 import org.gradle.language.jvm.tasks.ProcessResources
 import org.gradle.util.GradleVersion
+import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 /**
@@ -347,11 +348,23 @@ class ProtobufPlugin implements Plugin<Project> {
         variant.registerJavaGeneratingTask(generateProtoTask.get(), generateProtoTask.get().outputSourceDirectories)
 
         project.plugins.withId("org.jetbrains.kotlin.android") {
-          project.afterEvaluate {
-            String compileKotlinTaskName = Utils.getKotlinAndroidCompileTaskName(project, variant.name)
-            project.tasks.named(compileKotlinTaskName, KotlinCompile) { KotlinCompile task ->
-              task.dependsOn(generateProtoTask)
-              task.source(generateProtoTask.get().outputSourceDirectories)
+          // Checking if Kotlin plugin is a recent one - 1.7.20+
+          if (it.respondsTo("getPluginVersion")) {
+            def kotlinExtension = project.extensions.getByType(KotlinAndroidProjectExtension.class)
+            kotlinExtension.target.compilations.named(variant.name) {
+              defaultSourceSet.kotlin.srcDir(
+                project.objects.fileCollection().from(
+                  generateProtoTask.map { it.outputSourceDirectories }
+                )
+              )
+            }
+          } else {
+            project.afterEvaluate {
+              String compileKotlinTaskName = Utils.getKotlinAndroidCompileTaskName(project, variant.name)
+              project.tasks.named(compileKotlinTaskName, KotlinCompile) { KotlinCompile task ->
+                task.dependsOn(generateProtoTask)
+                task.source(generateProtoTask.get().outputSourceDirectories)
+              }
             }
           }
         }
