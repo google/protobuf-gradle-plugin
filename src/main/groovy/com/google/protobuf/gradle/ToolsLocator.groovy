@@ -33,7 +33,6 @@ import groovy.transform.CompileStatic
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
-import org.gradle.api.artifacts.Dependency
 
 /**
  * Holds locations of all external executables, i.e., protoc and plugins.
@@ -108,7 +107,7 @@ class ToolsLocator {
       classifier:classifier ?: osdetector.classifier,
       ext:extension ?: 'exe',
     ]
-    Dependency dep = project.dependencies.add(config.name, notation)
-    locator.resolve(config.fileCollection(dep), "$groupId:$artifact:$version".toString())
+    project.dependencies.add(config.name, notation)
+    locator.resolve(config, "$groupId:$artifact:$version".toString())
   }
 }
