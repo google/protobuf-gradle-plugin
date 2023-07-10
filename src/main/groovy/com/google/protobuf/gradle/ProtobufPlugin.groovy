@@ -350,13 +350,13 @@ class ProtobufPlugin implements Plugin<Project> {
         project.plugins.withId("org.jetbrains.kotlin.android") {
           // Checking if Kotlin plugin is a recent one - 1.7.20+
           if (it.respondsTo("getPluginVersion")) {
-            def kotlinExtension = project.extensions.getByType(KotlinAndroidProjectExtension.class)
+            KotlinAndroidProjectExtension kotlinExtension = project.extensions.getByType(KotlinAndroidProjectExtension)
             kotlinExtension.target.compilations.named(variant.name) {
-              defaultSourceSet.kotlin.srcDir(
-                project.objects.fileCollection().from(
-                  generateProtoTask.map { it.outputSourceDirectories }
-                )
-              )
+              it.defaultSourceSet.kotlin.srcDir { generateProtoTask.get().outputSourceDirectories }
+
+              project.tasks.named(it.compileKotlinTaskName) {
+                it.dependsOn(generateProtoTask)
+              }
             }
           } else {
             project.afterEvaluate {
