@@ -352,11 +352,7 @@ class ProtobufPlugin implements Plugin<Project> {
           if (it.respondsTo("getPluginVersion")) {
             KotlinAndroidProjectExtension kotlinExtension = project.extensions.getByType(KotlinAndroidProjectExtension)
             kotlinExtension.target.compilations.named(variant.name) {
-              it.defaultSourceSet.kotlin.srcDir { generateProtoTask.get().outputSourceDirectories }
-
-              project.tasks.named(it.compileKotlinTaskName) {
-                it.dependsOn(generateProtoTask)
-              }
+              it.defaultSourceSet.kotlin.srcDirs(variantSourceSet.output)
             }
           } else {
             project.afterEvaluate {
