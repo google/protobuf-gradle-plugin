@@ -13,7 +13,7 @@ plugins {
 }
 
 group = 'com.google.protobuf'
-version = '0.10.0-SNAPSHOT'
+version = '0.9.5-SNAPSHOT'
 
 ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
 
