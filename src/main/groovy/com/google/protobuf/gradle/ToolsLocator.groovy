@@ -96,6 +96,7 @@ class ToolsLocator {
       conf.visible = false
       conf.transitive = false
     }
+    def mainClass = locator.mainClass
     String groupId, artifact, version, classifier, extension
     OsDetector osdetector = project.extensions.getByName("osdetector") as OsDetector
     List<String> parts = artifactParts(locator.artifact)
@@ -104,8 +105,8 @@ class ToolsLocator {
       group:groupId,
       name:artifact,
       version:version,
-      classifier:classifier ?: osdetector.classifier,
-      ext:extension ?: 'exe',
+      classifier:classifier ?: mainClass ? null : osdetector.classifier,
+      ext:extension ?: mainClass ? 'jar' : 'exe',
     ]
     project.dependencies.add(config.name, notation)
     locator.resolve(config, "$groupId:$artifact:$version".toString())

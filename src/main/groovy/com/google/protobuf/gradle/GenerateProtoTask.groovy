@@ -721,11 +721,11 @@ public abstract class GenerateProtoTask extends DefaultTask {
 
   protected String computeExecutablePath(ExecutableLocator locator) {
     if (locator.path != null) {
-      return locator.path.endsWith(JAR_SUFFIX) ? createJarTrampolineScript(locator.path) : locator.path
+      return locator.path.endsWith(JAR_SUFFIX) ? createJarTrampolineScript(locator.path, locator.mainClass) : locator.path
     }
     File file = locator.artifactFiles.singleFile
     if (file.name.endsWith(JAR_SUFFIX)) {
-      return createJarTrampolineScript(file.getAbsolutePath())
+      return createJarTrampolineScript(file.getAbsolutePath(), locator.mainClass)
     }
 
     if (!file.canExecute() && !file.setExecutable(true)) {
@@ -742,7 +742,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
    * @param jarAbsolutePath Absolute path to the .jar file.
    * @return The absolute path to the trampoline executable script.
    */
-  private String createJarTrampolineScript(String jarAbsolutePath) {
+  private String createJarTrampolineScript(String jarAbsolutePath, String mainClass) {
     assert jarAbsolutePath.endsWith(JAR_SUFFIX)
     boolean isWindows = isWindows()
     String jarFileName = new File(jarAbsolutePath).getName()
@@ -758,8 +758,8 @@ public abstract class GenerateProtoTask extends DefaultTask {
       // Rewrite the trampoline file unconditionally (even if it already exists) in case the dependency or versioning
       // changes we don't need to detect the delta (and the file content is cheap to re-generate).
       String trampoline = isWindows ?
-              "@ECHO OFF\r\n\"${escapePathWindows(javaExe)}\" -jar \"${escapePathWindows(jarAbsolutePath)}\" %*\r\n" :
-              "#!/bin/sh\nexec '${escapePathUnix(javaExe)}' -jar '${escapePathUnix(jarAbsolutePath)}' \"\$@\"\n"
+              "@ECHO OFF\r\n\"${escapePathWindows(javaExe)}\" ${mainClass ? "-cp" : "-jar"} \"${escapePathWindows(jarAbsolutePath)}\" ${mainClass} %*\r\n" :
+              "#!/bin/sh\nexec '${escapePathUnix(javaExe)}'  ${mainClass ? "-cp" : "-jar"} '${escapePathUnix(jarAbsolutePath)}' ${mainClass} \"\$@\"\n"
       scriptExecutableFile.write(trampoline, US_ASCII.name())
       setExecutableOrFail(scriptExecutableFile)
       logger.info("Resolved artifact jar: ${jarAbsolutePath}. Created trampoline file: ${scriptExecutableFile}")
