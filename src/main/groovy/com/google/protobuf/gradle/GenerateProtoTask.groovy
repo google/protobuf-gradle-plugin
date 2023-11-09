@@ -758,8 +758,8 @@ public abstract class GenerateProtoTask extends DefaultTask {
       // Rewrite the trampoline file unconditionally (even if it already exists) in case the dependency or versioning
       // changes we don't need to detect the delta (and the file content is cheap to re-generate).
       String trampoline = isWindows ?
-              "@ECHO OFF\r\n\"${escapePathWindows(javaExe)}\" ${mainClass ? "-cp" : "-jar"} \"${escapePathWindows(jarAbsolutePath)}\" ${mainClass} %*\r\n" :
-              "#!/bin/sh\nexec '${escapePathUnix(javaExe)}'  ${mainClass ? "-cp" : "-jar"} '${escapePathUnix(jarAbsolutePath)}' ${mainClass} \"\$@\"\n"
+              "@ECHO OFF\r\n\"${escapePathWindows(javaExe)}\" \"${mainClass ? "-cp" : "-jar"}\" \"${escapePathWindows(jarAbsolutePath)}\" \"${mainClass}\" %*\r\n" :
+              "#!/bin/sh\nexec '${escapePathUnix(javaExe)}'  '${mainClass ? "-cp" : "-jar"}' '${escapePathUnix(jarAbsolutePath)}' '${mainClass}' \"\$@\"\n"
       scriptExecutableFile.write(trampoline, US_ASCII.name())
       setExecutableOrFail(scriptExecutableFile)
       logger.info("Resolved artifact jar: ${jarAbsolutePath}. Created trampoline file: ${scriptExecutableFile}")
