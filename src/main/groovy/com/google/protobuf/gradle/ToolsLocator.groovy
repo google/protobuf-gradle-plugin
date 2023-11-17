@@ -100,27 +100,13 @@ class ToolsLocator {
     OsDetector osdetector = project.extensions.getByName("osdetector") as OsDetector
     List<String> parts = artifactParts(locator.artifact)
     (groupId, artifact, version, classifier, extension) = [parts[0], parts[1], parts[2], parts[3], parts[4]]
-
-    String mainClass = locator.mainClass
-    Map<String, String> notation;
-    if (mainClass == null) {
-      notation = [
-              group:groupId,
-              name:artifact,
-              version:version,
-              classifier:classifier ?: osdetector.classifier,
-              ext:extension ?: 'exe',
-      ]
-    }else {
-      notation = [
-              group:groupId,
-              name:artifact,
-              version:version,
-              classifier:classifier ?: null,
-              ext:extension ?: 'jar',
-      ]
-    }
-
+    Map<String, String> notation = [
+            group:groupId,
+            name:artifact,
+            version:version,
+            classifier:classifier ?: osdetector.classifier,
+            ext:extension ?: 'exe',
+    ]
     project.dependencies.add(config.name, notation)
     locator.resolve(config, "$groupId:$artifact:$version".toString())
   }
