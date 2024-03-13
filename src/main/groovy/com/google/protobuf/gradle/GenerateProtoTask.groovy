@@ -46,6 +46,7 @@ import org.gradle.api.file.ProjectLayout
 import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.tasks.CacheableTask
@@ -94,6 +95,10 @@ public abstract class GenerateProtoTask extends DefaultTask {
   private final NamedDomainObjectContainer<PluginOptions> plugins = objectFactory.domainObjectContainer(PluginOptions)
   private final ProjectLayout projectLayout = project.layout
   private final ToolsLocator toolsLocator = project.extensions.findByType(ProtobufExtension).tools
+
+  @Input
+  final Property<String> javaExecutablePath = objectFactory.property(String)
+          .convention(project.extensions.findByType(ProtobufExtension).javaExecutablePath)
 
   // These fields are set by the Protobuf plugin only when initializing the
   // task.  Ideally they should be final fields, but Gradle task cannot have
@@ -210,15 +215,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
   }
 
   static int getCmdLengthLimit(String os) {
-    return isWindows(os) ? WINDOWS_CMD_LENGTH_LIMIT : DEFAULT_CMD_LENGTH_LIMIT
-  }
-
-  static boolean isWindows(String os) {
-    return os != null && os.toLowerCase(Locale.ROOT).indexOf("win") > -1
-  }
-
-  static boolean isWindows() {
-    return isWindows(System.getProperty("os.name"))
+    return Utils.isWindows(os) ? WINDOWS_CMD_LENGTH_LIMIT : DEFAULT_CMD_LENGTH_LIMIT
   }
 
   static String escapePathUnix(String path) {
@@ -241,14 +238,6 @@ public abstract class GenerateProtoTask extends DefaultTask {
       outputFile.delete()
       throw new IOException("unable to set file as executable: " + outputFile.getCanonicalPath())
     }
-  }
-
-  static String computeJavaExePath(boolean isWindows) throws IOException {
-    File java = new File(System.getProperty("java.home"), isWindows ? "bin/java.exe" : "bin/java")
-    if (!java.exists()) {
-      throw new IOException("Could not find java executable at " + java.path)
-    }
-    return java.path
   }
 
   void setOutputBaseDir(Provider<String> outputBaseDir) {
@@ -744,7 +733,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
    */
   private String createJarTrampolineScript(String jarAbsolutePath) {
     assert jarAbsolutePath.endsWith(JAR_SUFFIX)
-    boolean isWindows = isWindows()
+    boolean isWindows = Utils.isWindows()
     String jarFileName = new File(jarAbsolutePath).getName()
     if (jarFileName.length() <= JAR_SUFFIX.length()) {
       throw new GradleException(".jar protoc plugin path '${jarAbsolutePath}' has no file name")
@@ -754,7 +743,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
             (isWindows ? "bat" : "sh"))
     try {
       mkdirsForFile(scriptExecutableFile)
-      String javaExe = computeJavaExePath(isWindows)
+      String javaExe = javaExecutablePath.get()
       // Rewrite the trampoline file unconditionally (even if it already exists) in case the dependency or versioning
       // changes we don't need to detect the delta (and the file content is cheap to re-generate).
       String trampoline = isWindows ?
@@ -762,7 +751,8 @@ public abstract class GenerateProtoTask extends DefaultTask {
               "#!/bin/sh\nexec '${escapePathUnix(javaExe)}' -jar '${escapePathUnix(jarAbsolutePath)}' \"\$@\"\n"
       scriptExecutableFile.write(trampoline, US_ASCII.name())
       setExecutableOrFail(scriptExecutableFile)
-      logger.info("Resolved artifact jar: ${jarAbsolutePath}. Created trampoline file: ${scriptExecutableFile}")
+      logger.info("Resolved artifact jar: ${jarAbsolutePath}. " +
+              "Created trampoline file: ${scriptExecutableFile} with java executable ${javaExe}")
       return scriptExecutableFile.path
     } catch (IOException e) {
       throw new GradleException("Unable to generate trampoline for .jar protoc plugin", e)

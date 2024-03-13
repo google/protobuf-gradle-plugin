@@ -134,4 +134,12 @@ class Utils {
       }
     }
   }
+
+  static boolean isWindows(String os) {
+    return os != null && os.toLowerCase(Locale.ROOT).indexOf("win") > -1
+  }
+
+  static boolean isWindows() {
+    return isWindows(System.getProperty("os.name"))
+  }
 }
