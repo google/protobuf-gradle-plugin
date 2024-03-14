@@ -57,6 +57,9 @@ abstract class ProtobufExtension {
   @PackageScope
   final Provider<String> defaultGeneratedFilesBaseDir
 
+  @PackageScope
+  final Provider<String> defaultJavaExecutablePath
+
   public ProtobufExtension(final Project project) {
     this.project = project
     this.tasks = new GenerateProtoTaskCollection(project)
@@ -66,9 +69,21 @@ abstract class ProtobufExtension {
       it.asFile.path
     }
     this.generatedFilesBaseDirProperty.convention(defaultGeneratedFilesBaseDir)
+    this.defaultJavaExecutablePath = project.provider {
+      computeJavaExePath()
+    }
+    this.javaExecutablePath.convention(defaultJavaExecutablePath)
     this.sourceSets = project.objects.domainObjectContainer(ProtoSourceSet) { String name ->
       new DefaultProtoSourceSet(name, project.objects)
     }
+  }
+
+  static String computeJavaExePath() throws IOException {
+    File java = new File(System.getProperty("java.home"), Utils.isWindows() ? "bin/java.exe" : "bin/java")
+    if (!java.exists()) {
+      throw new IOException("Could not find java executable at " + java.path)
+    }
+    return java.path
   }
 
   @PackageScope
@@ -96,6 +111,13 @@ abstract class ProtobufExtension {
    */
   @PackageScope
   abstract Property<String> getGeneratedFilesBaseDirProperty()
+
+  /**
+   * The location of the java executable used to run java based
+   * code generation plugins. The default is the java executable
+   * running gradle.
+   */
+  abstract Property<String> getJavaExecutablePath()
 
   @PackageScope
   void configureTasks() {
