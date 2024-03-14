@@ -621,6 +621,96 @@ class ProtobufJavaPluginTest extends Specification {
     limit == GenerateProtoTask.DEFAULT_CMD_LENGTH_LIMIT
   }
 
+  void "test custom java executable in extension"() {
+    given: "a basic project"
+    Project project = setupBasicProject()
+
+    when: "a java executable is specified on the protobuf extension"
+    project.extensions.getByType(ProtobufExtension).javaExecutablePath.set("/custom-java.exe")
+
+    then: "all tasks get the custom executable"
+    assert project.extensions.getByType(ProtobufExtension).javaExecutablePath.get() == "/custom-java.exe"
+    assert ((GenerateProtoTask)project.tasks.generateProto).javaExecutablePath.get() == "/custom-java.exe"
+    assert ((GenerateProtoTask)project.tasks.generateTestProto).javaExecutablePath.get() == "/custom-java.exe"
+  }
+
+  void "test custom java executable in task"() {
+    given: "a basic project"
+    Project project = setupBasicProject()
+
+    when: "a java executable is specified on the generate proto task"
+    ((GenerateProtoTask)project.tasks.generateProto).javaExecutablePath.set("/custom-java.exe")
+
+    then: "generate proto task uses configured executable"
+    assert ((GenerateProtoTask)project.tasks.generateProto).javaExecutablePath.get() == "/custom-java.exe"
+
+    and: "extension and test task use default executable"
+    assert project.extensions.getByType(ProtobufExtension).javaExecutablePath
+            .get() == ProtobufExtension.computeJavaExePath()
+    assert ((GenerateProtoTask)project.tasks.generateTestProto).javaExecutablePath
+            .get() == ProtobufExtension.computeJavaExePath()
+  }
+
+  void "test custom java executable in extension and task"() {
+    given: "a basic project"
+    Project project = setupBasicProject()
+
+    when: "a java executable is specified on the protobuf extension and generate proto task"
+    project.extensions.getByType(ProtobufExtension).javaExecutablePath.set("/ext-java.exe")
+    ((GenerateProtoTask)project.tasks.generateProto).javaExecutablePath.set("/task-java.exe")
+
+    then: "extension and test task use executable specified on the extension"
+    assert project.extensions.getByType(ProtobufExtension).javaExecutablePath.get() == "/ext-java.exe"
+    assert ((GenerateProtoTask)project.tasks.generateTestProto).javaExecutablePath.get() == "/ext-java.exe"
+
+    and: "generate proto task uses executable specified on task"
+    assert ((GenerateProtoTask)project.tasks.generateProto).javaExecutablePath.get() == "/task-java.exe"
+  }
+
+  @Unroll
+  void "test proto generation fails when java executable is invalid [gradle #gradleVersion]"() {
+    given: "project from testProject"
+    File projectDir = ProtobufPluginTestHelper.projectBuilder('testProjectConfigureJavaExecutable')
+            .copyDirs('testProjectConfigureJavaExecutable')
+            .build()
+
+    when: "build is invoked using grpc plugin"
+    BuildResult result = ProtobufPluginTestHelper.getGradleRunner(
+            projectDir,
+            gradleVersion,
+            "build"
+    ).build()
+
+    then: "it succeeds"
+    assert result.task(":build").outcome == TaskOutcome.SUCCESS
+    assert result.task(":generateProto").outcome == TaskOutcome.SUCCESS
+
+    // Since we don't know if there are multiple JDKs installed, and it would
+    // be challenging to determine which one was actually executed, we're
+    // going to test that the executable change works by setting to something
+    // invalid and ensuring that the build fails for the right reason.
+    when: "protobuf java executor is invalid and build runs again"
+    new File(projectDir, "build.gradle")
+            .append("""
+              protobuf {
+                javaExecutablePath.set("/nothing")
+              }""")
+    result = ProtobufPluginTestHelper.getGradleRunner(
+            projectDir,
+            gradleVersion,
+            "build"
+    ).buildAndFail()
+
+    then: "generateProto FAILED"
+    result.task(":generateProto").outcome == TaskOutcome.FAILED
+
+    and: "the failure was caused by a missing executable"
+    result.output.contains("exec: /nothing: not found")
+
+    where:
+    gradleVersion << GRADLE_VERSIONS
+  }
+
   private Project setupBasicProject() {
     Project project = ProjectBuilder.builder().build()
     project.apply plugin:'java'

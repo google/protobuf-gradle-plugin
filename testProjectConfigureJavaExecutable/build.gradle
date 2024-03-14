@@ -1,0 +1,25 @@
+plugins {
+  id 'java'
+  id 'com.google.protobuf'
+}
+repositories { mavenCentral() }
+dependencies {
+  implementation 'com.google.protobuf:protobuf-java:3.0.0'
+}
+protobuf {
+  protoc {
+    artifact = 'com.google.protobuf:protoc:3.0.0'
+  }
+  plugins {
+    grpc { artifact = 'io.grpc:protoc-gen-grpc-java:1.0.3' }
+    grpcKotlin { artifact = 'io.grpc:protoc-gen-grpc-kotlin:1.4.1:jdk8@jar' }
+  }
+  generateProtoTasks {
+    all().configureEach { task ->
+      task.plugins {
+        grpc {}
+        grpcKotlin {}
+      }
+    }
+  }
+}
