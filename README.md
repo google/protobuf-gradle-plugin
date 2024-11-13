@@ -410,7 +410,7 @@ protobuf {
 
 Generated files are under `task.outputBaseDir` with a subdirectory per
 builtin and plugin. This produces a folder structure of
-``$buildDir/generated/source/proto/$sourceSet/$builtinPluginName``.
+``$buildDir/generated/sources/proto/$sourceSet/$builtinPluginName``.
 
 The subdirectory name, which is by default ``$builtinPluginName``, can be
 changed by setting the ``outputSubDir`` property in the ``builtins`` or

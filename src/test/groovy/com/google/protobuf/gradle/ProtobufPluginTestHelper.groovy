@@ -15,7 +15,7 @@ final class ProtobufPluginTestHelper {
 
   static void verifyProjectDir(File projectDir) {
     ['grpc', 'main', 'test'].each {
-      File generatedSrcDir = new File(projectDir.path, "build/generated/source/proto/$it")
+      File generatedSrcDir = new File(projectDir.path, "build/generated/sources/proto/$it")
       List<File> fileList = []
       generatedSrcDir.eachFileRecurse { file ->
         if (file.path.endsWith('.java')) {

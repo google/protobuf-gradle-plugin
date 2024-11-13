@@ -65,7 +65,7 @@ abstract class ProtobufExtension {
     this.tasks = new GenerateProtoTaskCollection(project)
     this.tools = new ToolsLocator(project)
     this.taskConfigActions = []
-    this.defaultGeneratedFilesBaseDir = project.layout.buildDirectory.dir("generated/source/proto").map {
+    this.defaultGeneratedFilesBaseDir = project.layout.buildDirectory.dir("generated/sources/proto").map {
       it.asFile.path
     }
     this.generatedFilesBaseDirProperty.convention(defaultGeneratedFilesBaseDir)
@@ -107,7 +107,7 @@ abstract class ProtobufExtension {
 
   /**
    * The base directory of generated files. The default is
-   * "${project.buildDir}/generated/source/proto".
+   * "${project.buildDir}/generated/sources/proto".
    */
   @PackageScope
   abstract Property<String> getGeneratedFilesBaseDirProperty()
