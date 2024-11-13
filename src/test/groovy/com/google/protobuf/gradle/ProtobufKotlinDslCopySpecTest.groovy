@@ -39,7 +39,7 @@ class ProtobufKotlinDslCopySpecTest extends Specification {
   }
 
   private static void verifyProjectDir(File projectDir) {
-    File generatedSrcDir = new File(projectDir.path, "build/generated/source/proto/main/java")
+    File generatedSrcDir = new File(projectDir.path, "build/generated/sources/proto/main/java")
     List<File> fileList = []
     generatedSrcDir.eachFileRecurse { file ->
       if (file.path.endsWith('.java')) {

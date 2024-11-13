@@ -97,9 +97,9 @@ test.doLast {
 
   // Check generateDescriptorSet option has been honored
   ['main', 'test'].each { sourceSet ->
-    assertFileExists(false, "$buildDir/generated/source/proto/$sourceSet/descriptor_set.desc")
+    assertFileExists(false, "$buildDir/generated/sources/proto/$sourceSet/descriptor_set.desc")
   }
-  assertFileExists(true, "$buildDir/generated/source/proto/grpc/descriptor_set.desc")
+  assertFileExists(true, "$buildDir/generated/sources/proto/grpc/descriptor_set.desc")
 }
 
 rootProject.ext {
@@ -108,10 +108,10 @@ rootProject.ext {
   // not include any other dirs under the generated code base dir.
   assertJavaCompileHasProtoGeneratedDir = {
       Project project, String sourceSet, JavaCompile compileJavaTask, Collection<String> codegenPlugins ->
-    def baseDir = "${project.buildDir}/generated/source/proto/$sourceSet" as File
+    def baseDir = "${project.buildDir}/generated/sources/proto/$sourceSet" as File
     // The expected direct subdirectories under baseDir
     def expectedDirs = codegenPlugins.collect { codegenPlugin ->
-      "${project.buildDir}/generated/source/proto/$sourceSet/$codegenPlugin" as File
+      "${project.buildDir}/generated/sources/proto/$sourceSet/$codegenPlugin" as File
     } as Set
 
     def actualDirs = new HashSet()
