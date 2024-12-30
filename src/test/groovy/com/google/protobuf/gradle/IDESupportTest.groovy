@@ -87,28 +87,28 @@ class IDESupportTest extends Specification {
       'file://$MODULE_DIR$/build/extracted-protos/main',
       'file://$MODULE_DIR$/build/extracted-include-protos/main',
       'file://$MODULE_DIR$/build/extracted-protos/grpc',
-      'file://$MODULE_DIR$/build/generated/source/proto/grpc/java',
-      'file://$MODULE_DIR$/build/generated/source/proto/grpc/grpc_output',
-      'file://$MODULE_DIR$/build/generated/source/proto/main/java',
+      'file://$MODULE_DIR$/build/generated/sources/proto/grpc/java',
+      'file://$MODULE_DIR$/build/generated/sources/proto/grpc/grpc_output',
+      'file://$MODULE_DIR$/build/generated/sources/proto/main/java',
     ]
     Set<String> expectedTestSourceDir = [
       'file://$MODULE_DIR$/src/test/java',
       'file://$MODULE_DIR$/src/test/proto',
       'file://$MODULE_DIR$/build/extracted-protos/test',
       'file://$MODULE_DIR$/build/extracted-include-protos/test',
-      'file://$MODULE_DIR$/build/generated/source/proto/test/java',
+      'file://$MODULE_DIR$/build/generated/sources/proto/test/java',
     ]
     Set<String> expectedGeneratedDirs = [
       'file://$MODULE_DIR$/build/extracted-include-protos/grpc',
       'file://$MODULE_DIR$/build/extracted-protos/main',
       'file://$MODULE_DIR$/build/extracted-include-protos/main',
       'file://$MODULE_DIR$/build/extracted-protos/grpc',
-      'file://$MODULE_DIR$/build/generated/source/proto/grpc/java',
-      'file://$MODULE_DIR$/build/generated/source/proto/grpc/grpc_output',
-      'file://$MODULE_DIR$/build/generated/source/proto/main/java',
+      'file://$MODULE_DIR$/build/generated/sources/proto/grpc/java',
+      'file://$MODULE_DIR$/build/generated/sources/proto/grpc/grpc_output',
+      'file://$MODULE_DIR$/build/generated/sources/proto/main/java',
       'file://$MODULE_DIR$/build/extracted-protos/test',
       'file://$MODULE_DIR$/build/extracted-include-protos/test',
-      'file://$MODULE_DIR$/build/generated/source/proto/test/java',
+      'file://$MODULE_DIR$/build/generated/sources/proto/test/java',
     ]
     assert Objects.equals(expectedSourceDir, sourceDir)
     assert Objects.equals(expectedTestSourceDir, testSourceDir)
@@ -143,7 +143,7 @@ class IDESupportTest extends Specification {
     srcEntries.each {
       String path = it.@path
       sourceDir.add(path)
-      if (path.startsWith("build/generated/source/proto")) {
+      if (path.startsWith("build/generated/sources/proto")) {
         if (path.contains("test")) {
           // test source path has one more attribute: ["test"="true"]
           assert it.attributes.attribute.size() == 3
@@ -156,10 +156,10 @@ class IDESupportTest extends Specification {
     Set<String> expectedSourceDir = [
       'src/main/java',
       'src/test/java',
-      'build/generated/source/proto/grpc/java',
-      'build/generated/source/proto/grpc/grpc_output',
-      'build/generated/source/proto/main/java',
-      'build/generated/source/proto/test/java',
+      'build/generated/sources/proto/grpc/java',
+      'build/generated/sources/proto/grpc/grpc_output',
+      'build/generated/sources/proto/main/java',
+      'build/generated/sources/proto/test/java',
     ]
     assert Objects.equals(expectedSourceDir, sourceDir)
 

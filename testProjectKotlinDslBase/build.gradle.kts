@@ -97,9 +97,9 @@ tasks {
             assertJavaCompileHasProtoGeneratedDir("grpc", listOf("java", "grpc_output"))
 
             listOf("main", "test").forEach { sourceSet ->
-                assertFileExists(false, "$buildDir/generated/source/proto/$sourceSet/descriptor_set.desc")
+                assertFileExists(false, "$buildDir/generated/sources/proto/$sourceSet/descriptor_set.desc")
             }
-            assertFileExists(true, "$buildDir/generated/source/proto/grpc/descriptor_set.desc")
+            assertFileExists(true, "$buildDir/generated/sources/proto/grpc/descriptor_set.desc")
         }
     }
 }
@@ -123,10 +123,10 @@ fun assertJavaCompileHasProtoGeneratedDir(
     compileJavaTask: JavaCompile,
     codegenPlugins: Collection<String>
 ) {
-    val baseDir = File("${project.buildDir}/generated/source/proto/$sourceSet")
+    val baseDir = File("${project.buildDir}/generated/sources/proto/$sourceSet")
     // The expected direct subdirectories under baseDir
     val expectedDirs = codegenPlugins.map { codegenPlugin ->
-        File("${project.buildDir}/generated/source/proto/$sourceSet/$codegenPlugin")
+        File("${project.buildDir}/generated/sources/proto/$sourceSet/$codegenPlugin")
     }.toSet()
 
     val actualDirs = mutableSetOf<File>()

@@ -310,10 +310,10 @@ fun assertJavaCompileHasProtoGeneratedDir(
     compileJavaTask: JavaCompile,
     codegenPlugins: Collection<String>
 ) {
-  val baseDir = File("${project.buildDir}/generated/source/proto/$variant")
+  val baseDir = File("${project.buildDir}/generated/sources/protos/$variant")
   // The expected direct subdirectories under baseDir
   val expectedDirs = codegenPlugins.map { codegenPlugin ->
-    File("${project.buildDir}/generated/source/proto/$variant/$codegenPlugin")
+    File("${project.buildDir}/generated/sources/proto/$variant/$codegenPlugin")
   }.toSet()
 
   val actualDirs = mutableSetOf<File>()

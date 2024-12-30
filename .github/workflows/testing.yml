@@ -14,15 +14,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-java@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
         with:
           java-version: '11'
           distribution: 'temurin'
-      - uses: gradle/gradle-build-action@v2
-        with:
-          arguments: clean assemble --stacktrace
-        
+      - uses: gradle/actions/setup-gradle@v3
+      - name: Gradle Assemble
+        run: ./gradlew clean assemble --stacktrace
+
   test:
     needs: build
     strategy:
@@ -32,28 +32,28 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-java@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
         with:
           java-version: '11'
           distribution: 'temurin'
-      - uses: gradle/gradle-build-action@v2
-        with:
-          arguments: test --tests ${{ matrix.tests }} --stacktrace
+      - uses: gradle/actions/setup-gradle@v3
+      - name: Gradle Test
+        run: ./gradlew test --tests ${{ matrix.tests }} --stacktrace
 
   codenarc:
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-java@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
         with:
           java-version: '11'
           distribution: 'temurin'
-      - uses: gradle/gradle-build-action@v2
-        with:
-          arguments: codenarcMain codenarcTest --continue
+      - uses: gradle/actions/setup-gradle@v3
+      - name: Gradle Codenarc
+        run: ./gradlew codenarcMain codenarcTest --continue
       - name: echo codenarcMain reports
         if: failure()
         run: test -f build/reports/codenarc/main.txt && cat build/reports/codenarc/main.txt
