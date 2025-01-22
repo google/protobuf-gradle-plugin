@@ -50,6 +50,7 @@ import javax.inject.Inject;
 interface CopyActionFacade {
     WorkResult copy(Action<? super CopySpec> var1);
     WorkResult delete(Action<? super DeleteSpec> action);
+    WorkResult sync(Action<? super CopySpec> var1);
 
     @CompileStatic
     final class Loader {
@@ -79,6 +80,11 @@ interface CopyActionFacade {
         public WorkResult delete(Action<? super DeleteSpec> action) {
             return project.delete(action);
         }
+
+        @Override
+        public WorkResult sync(Action<? super CopySpec> action) {
+            return project.sync(action);
+        }
     }
 
     @CompileStatic
@@ -94,6 +100,11 @@ interface CopyActionFacade {
         @Override
         public WorkResult delete(Action<? super DeleteSpec> action) {
             return getFileSystemOperations().delete(action);
+        }
+
+        @Override
+        public WorkResult sync(Action<? super CopySpec> action) {
+            return getFileSystemOperations().sync(action);
         }
     }
 }
