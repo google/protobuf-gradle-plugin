@@ -84,10 +84,7 @@ abstract class ProtobufExtract extends DefaultTask {
 
   @TaskAction
   public void extract() {
-    copyActionFacade.delete { spec ->
-      spec.delete(destDir)
-    }
-    copyActionFacade.copy { spec ->
+    copyActionFacade.sync { spec ->
       spec.includeEmptyDirs = false
       spec.from(inputProtoFiles)
       spec.into(destDir)
