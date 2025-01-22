@@ -199,7 +199,7 @@ tasks.named('test') {
   // To fix this problem, don't use the withPluginClasspath method.
   // Provide a plugin under test with the maven local repository.
   systemProperty("protobufPluginVersion", version)
-  systemProperty("testRepoUrl", testRepoUrl.absolutePath)
+  systemProperty("testRepoUrl", testRepoUrl.toURI().toURL())
   dependsOn(
     "publishProtobufPluginPluginMarkerMavenPublicationToTestRepository",
     "publishPluginMavenPublicationToTestRepository"
