@@ -17,11 +17,11 @@ For more information about the Protobuf Compiler, please refer to
 [Google Developers Site](https://developers.google.com/protocol-buffers/docs/reference/java-generated?csw=1).
 
 ## Latest Version
-The latest version is ``0.9.4``. It requires at least __Gradle 5.6__ and __Java 8__.
+The latest version is ``0.9.5``. It requires at least __Gradle 5.6__ and __Java 8__.
 To use it with Groovy DSL:
 ```gradle
 plugins {
-  id "com.google.protobuf" version "0.9.4"
+  id "com.google.protobuf" version "0.9.5"
 }
 ```
 
