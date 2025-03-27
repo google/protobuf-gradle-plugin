@@ -44,7 +44,7 @@ And in `build.gradle`:
 
 ```gradle
 plugins {
-  id "com.google.protobuf" version "0.9.5-SNAPSHOT"
+  id "com.google.protobuf" version "0.9.6-SNAPSHOT"
 }
 ```
 
