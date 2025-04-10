@@ -192,10 +192,11 @@ class ProtobufPlugin implements Plugin<Project> {
      */
     private Configuration createCompileProtoPathConfiguration(ProtoSourceSet protoSourceSet) {
       String compileProtoConfigName = Utils.getConfigName(protoSourceSet.name, 'compileProtoPath')
+      SourceSet sourceSet = project.sourceSets.getByName(protoSourceSet.name)
       Configuration compileConfig =
-              project.configurations.getByName(Utils.getConfigName(protoSourceSet.name, 'compileOnly'))
+              project.configurations.getByName(sourceSet.getCompileOnlyConfigurationName())
       Configuration implementationConfig =
-              project.configurations.getByName(Utils.getConfigName(protoSourceSet.name, 'implementation'))
+              project.configurations.getByName(sourceSet.getImplementationConfigurationName())
       return project.configurations.create(compileProtoConfigName) { Configuration it ->
           it.visible = false
           it.transitive = true
