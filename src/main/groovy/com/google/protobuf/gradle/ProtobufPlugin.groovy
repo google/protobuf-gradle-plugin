@@ -54,6 +54,7 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.internal.artifacts.ArtifactAttributes
 import org.gradle.api.plugins.AppliedPlugin
+import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
 import org.gradle.language.jvm.tasks.ProcessResources
@@ -192,7 +193,8 @@ class ProtobufPlugin implements Plugin<Project> {
      */
     private Configuration createCompileProtoPathConfiguration(ProtoSourceSet protoSourceSet) {
       String compileProtoConfigName = Utils.getConfigName(protoSourceSet.name, 'compileProtoPath')
-      SourceSet sourceSet = project.sourceSets.getByName(protoSourceSet.name)
+      JavaPluginExtension javaExtension = project.getExtensions().getByType(JavaPluginExtension.class);
+      SourceSet sourceSet = javaExtension.getSourceSets().getByName(protoSourceSet.name)
       Configuration compileConfig =
               project.configurations.getByName(sourceSet.getCompileOnlyConfigurationName())
       Configuration implementationConfig =
