@@ -54,6 +54,7 @@ import org.gradle.api.file.CopySpec
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.plugins.AppliedPlugin
+import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.SourceSet
 import org.gradle.language.jvm.tasks.ProcessResources
@@ -192,10 +193,12 @@ class ProtobufPlugin implements Plugin<Project> {
      */
     private Configuration createCompileProtoPathConfiguration(ProtoSourceSet protoSourceSet) {
       String compileProtoConfigName = Utils.getConfigName(protoSourceSet.name, 'compileProtoPath')
+      JavaPluginExtension javaExtension = project.getExtensions().getByType(JavaPluginExtension.class);
+      SourceSet sourceSet = javaExtension.getSourceSets().getByName(protoSourceSet.name)
       Configuration compileConfig =
-              project.configurations.getByName(Utils.getConfigName(protoSourceSet.name, 'compileOnly'))
+              project.configurations.getByName(sourceSet.getCompileOnlyConfigurationName())
       Configuration implementationConfig =
-              project.configurations.getByName(Utils.getConfigName(protoSourceSet.name, 'implementation'))
+              project.configurations.getByName(sourceSet.getImplementationConfigurationName())
       return project.configurations.create(compileProtoConfigName) { Configuration it ->
           it.visible = false
           it.transitive = true
