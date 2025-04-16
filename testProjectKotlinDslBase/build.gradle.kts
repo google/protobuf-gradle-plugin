@@ -1,6 +1,4 @@
-import com.google.protobuf.gradle.*
-import org.gradle.api.internal.HasConvention
-import org.gradle.kotlin.dsl.provider.gradleKotlinDslOf
+import com.google.protobuf.gradle.id
 
 plugins {
     java
