@@ -102,9 +102,13 @@ abstract class ProtobufExtract extends DefaultTask {
   protected abstract ObjectFactory getObjectFactory()
 
   private ArchiveActionFacade instantiateArchiveActionFacade() {
-    if (GradleVersion.current() >= GradleVersion.version("6.0")) {
+    if (GradleVersion.current() >= GradleVersion.version("6.6")) {
       // Use object factory to instantiate as that will inject the necessary service.
       return objectFactory.newInstance(ArchiveActionFacade.ServiceBased)
+    }
+    if (GradleVersion.current() >= GradleVersion.version("6.0")) {
+      // Use object factory to instantiate as that will inject the necessary service.
+      return objectFactory.newInstance(ArchiveActionFacade.InternalServiceBased)
     }
     return new ArchiveActionFacade.ProjectBased(project)
   }
