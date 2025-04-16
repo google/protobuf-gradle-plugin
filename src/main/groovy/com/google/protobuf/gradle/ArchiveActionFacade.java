@@ -30,6 +30,7 @@ package com.google.protobuf.gradle;
 
 import groovy.transform.CompileStatic;
 import org.gradle.api.Project;
+import org.gradle.api.file.ArchiveOperations;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.internal.file.FileOperations;
 
@@ -63,9 +64,8 @@ public interface ArchiveActionFacade {
     }
 
     @CompileStatic
-    abstract class ServiceBased implements ArchiveActionFacade {
+    abstract class InternalServiceBased implements ArchiveActionFacade {
 
-        // TODO Use public ArchiveOperations from Gradle 6.6 instead
         @Inject
         public abstract FileOperations getFileOperations();
 
@@ -77,6 +77,23 @@ public interface ArchiveActionFacade {
         @Override
         public FileTree tarTree(Object path) {
             return getFileOperations().tarTree(path);
+        }
+    }
+
+    @CompileStatic
+    abstract class ServiceBased implements ArchiveActionFacade {
+
+        @Inject
+        public abstract ArchiveOperations getArchiveOperations();
+
+        @Override
+        public FileTree zipTree(Object path) {
+            return getArchiveOperations().zipTree(path);
+        }
+
+        @Override
+        public FileTree tarTree(Object path) {
+            return getArchiveOperations().tarTree(path);
         }
     }
 }
