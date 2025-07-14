@@ -296,8 +296,8 @@ task.plugins {
 ```gradle
 protobuf {
   generateProtoTasks {
-    all().configureEach { task ->
-      task.builtins {
+    all().configureEach {
+      builtins {
         // Generates Python code
         python { }
 
@@ -343,8 +343,8 @@ protobuf {
     }
   }
   generateProtoTasks {
-    all().configureEach { task ->
-      task.builtins {
+    all().configureEach {
+      builtins {
         // In most cases you don't need the full Java output
         // if you use the lite output.
         remove java
@@ -371,8 +371,8 @@ protobuf {
     artifact = 'com.google.protobuf:protoc:3.8.0'
   }
   generateProtoTasks {
-    all().configureEach { task ->
-      task.builtins {
+    all().configureEach {
+      builtins {
         java {
           option "lite"
         }
