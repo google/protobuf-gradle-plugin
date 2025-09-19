@@ -433,10 +433,10 @@ changed by setting the ``outputSubDir`` property in the ``builtins`` or
 If a Java project contains proto files, they will be packaged in the jar files
 along with the compiled classes.
 
-Protos in dependencies (e.g. upstream jars) can be put in either in the ``compile``
+Protos in dependencies (e.g. upstream jars) can be put in either in the ``implementation``
 configuration or the ``protobuf`` configuration.
 
-If the dependency is put in the ``compile`` configuration, the proto files are
+If the dependency is put in the ``implementation`` configuration, the proto files are
 extracted to an ``extracted-include-protos`` directory and added to the ``--proto_path``
 flag of the protoc command line, so that they can be imported by the proto files
 of the current project. The imported proto files will not be compiled since
