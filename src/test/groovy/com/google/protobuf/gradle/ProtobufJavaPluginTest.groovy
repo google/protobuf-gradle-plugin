@@ -80,7 +80,7 @@ class ProtobufJavaPluginTest extends Specification {
     project.buildDir = "expect-the-unexpected"
 
     then: "generate tasks added"
-    assert project.tasks.generateProto.outputBaseDir.contains("/expect-the-unexpected/")
+    assert project.tasks.generateProto.outputBaseDir.get().asFile.path.contains("expect-the-unexpected")
   }
 
   @Unroll

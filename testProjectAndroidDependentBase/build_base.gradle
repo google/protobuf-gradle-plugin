@@ -117,7 +117,8 @@ dependencies {
 
 def assertJavaCompileHasProtoGeneratedDir(Object variant, Collection<String> codegenPlugins) {
   def buildDirFile = project.layout.buildDirectory.get().asFile
-  def baseDir = new File(buildDirFile, "generated/sources/proto/${variant.name}")
+  String taskName = "generate${variant.name.capitalize()}Proto"
+  def baseDir = new File(buildDirFile, "generated/java/${taskName}")
   rootProject.assertJavaCompileHasProtoGeneratedDir(baseDir, variant.javaCompileProvider.get().source , codegenPlugins)
 }
 
