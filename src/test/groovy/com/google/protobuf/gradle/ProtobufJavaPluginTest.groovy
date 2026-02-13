@@ -14,9 +14,9 @@ import spock.lang.Unroll
  */
 @CompileDynamic
 class ProtobufJavaPluginTest extends Specification {
-  // Current supported version is Gradle 5+.
-  private static final List<String> GRADLE_VERSIONS = ["5.6", "6.0", "6.7.1", "7.4.2", "7.6"]
-  private static final List<String> KOTLIN_VERSIONS = ["1.3.72", "1.4.32", "1.5.32", "1.6.21", "1.7.21"]
+  // Current supported version is Gradle 7.6+.
+  private static final List<String> GRADLE_VERSIONS = ["7.6.2", "8.7", "8.9", "8.13"]
+  private static final List<String> KOTLIN_VERSIONS = ["1.7.20", "1.7.20", "1.8.20", "1.9.20"]
   // Currently this is separate as some test projects are incompatible with Gradle 8.1
   private static final List<String> GRADLE_WITH_FILE_SYSTEM_SNAPSHOTTING_FOR_CC = ["8.1"]
 
@@ -705,7 +705,7 @@ class ProtobufJavaPluginTest extends Specification {
     result.task(":generateProto").outcome == TaskOutcome.FAILED
 
     and: "the failure was caused by a missing executable"
-    result.output.contains("exec: /nothing: not found")
+    result.output.contains("/nothing: No such file or directory") || result.output.contains("/nothing: not found")
 
     where:
     gradleVersion << GRADLE_VERSIONS

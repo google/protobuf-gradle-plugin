@@ -14,7 +14,7 @@ repositories {
 
 android {
   compileSdkVersion(26)
-
+  namespace = "io.grpc.helloworldexample"
   defaultConfig {
     applicationId = "io.grpc.helloworldexample"
     minSdkVersion(7)

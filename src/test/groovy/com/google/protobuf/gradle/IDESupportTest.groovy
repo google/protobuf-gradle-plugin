@@ -40,8 +40,8 @@ import spock.lang.Unroll
  */
 @CompileDynamic
 class IDESupportTest extends Specification {
-  // Current supported version is Gradle 5+.
-  private static final List<String> GRADLE_VERSIONS = ["5.6", "6.0", "6.7.1", "7.4.2"]
+  // Current supported version is Gradle 7.6+.
+  private static final List<String> GRADLE_VERSIONS = ["7.6", "8.0", "8.4", "8.9", "8.13"]
 
   @Unroll
   void "testProject proto and generated output directories should be added to intellij [gradle #gradleVersion]"() {
@@ -61,21 +61,21 @@ class IDESupportTest extends Specification {
     then: "it succeed"
     result.task(":idea").outcome == TaskOutcome.SUCCESS
     Node imlRoot = new XmlParser().parse(projectDir.toPath().resolve("testProject.iml").toFile())
-    Collection rootMgr = imlRoot.component.findAll { it.'@name' == 'NewModuleRootManager' }
+    Collection rootMgr = imlRoot.component.findAll { Node component -> component.'@name' == 'NewModuleRootManager' }
     assert rootMgr.size() == 1
     assert rootMgr.content.sourceFolder.size() == 1
 
     Set<String> sourceDir = [] as Set
     Set<String> testSourceDir = [] as Set
     Set<String> generatedDirs = [] as Set
-    rootMgr.content.sourceFolder[0].each {
-      if (Boolean.parseBoolean(it.@isTestSource)) {
-        testSourceDir.add(it.@url)
+    rootMgr.content.sourceFolder[0].each { Node folder ->
+      if (Boolean.parseBoolean(folder.@isTestSource)) {
+        testSourceDir.add(folder.@url)
       } else {
-        sourceDir.add(it.@url)
+        sourceDir.add(folder.@url)
       }
-      if (Boolean.parseBoolean(it.@generated)) {
-        generatedDirs.add(it.@url)
+      if (Boolean.parseBoolean(folder.@generated)) {
+        generatedDirs.add(folder.@url)
       }
     }
 
@@ -136,19 +136,19 @@ class IDESupportTest extends Specification {
     then: "it succeed"
     result.task(":eclipse").outcome == TaskOutcome.SUCCESS
     Node classpathFile = new XmlParser().parse(projectDir.toPath().resolve(".classpath").toFile())
-    Collection srcEntries = classpathFile.classpathentry.findAll { it.'@kind' == 'src' }
+    Collection srcEntries = classpathFile.classpathentry.findAll { Node entry -> entry.'@kind' == 'src' }
     assert srcEntries.size() == 6
 
     Set<String> sourceDir = [] as Set
-    srcEntries.each {
-      String path = it.@path
+    srcEntries.each { Node entry ->
+      String path = entry.@path
       sourceDir.add(path)
       if (path.startsWith("build/generated/sources/proto")) {
         if (path.contains("test")) {
           // test source path has one more attribute: ["test"="true"]
-          assert it.attributes.attribute.size() == 3
+          assert entry.attributes.attribute.size() == 3
         } else {
-          assert it.attributes.attribute.size() == 2
+          assert entry.attributes.attribute.size() == 2
         }
       }
     }

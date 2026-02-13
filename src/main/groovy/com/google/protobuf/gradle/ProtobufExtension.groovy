@@ -37,6 +37,7 @@ import groovy.transform.TypeCheckingMode
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
+import org.gradle.api.file.Directory
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskCollection
@@ -66,7 +67,7 @@ abstract class ProtobufExtension {
     this.tools = new ToolsLocator(project)
     this.taskConfigActions = []
     this.defaultGeneratedFilesBaseDir = project.layout.buildDirectory.dir("generated/sources/proto").map {
-      it.asFile.path
+      Directory dir -> dir.asFile.path
     }
     this.generatedFilesBaseDirProperty.convention(defaultGeneratedFilesBaseDir)
     this.defaultJavaExecutablePath = project.provider {

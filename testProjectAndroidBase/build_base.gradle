@@ -11,9 +11,9 @@ buildscript {
 }
 
 android {
-    compileSdkVersion 26
-    buildToolsVersion "26.0.1"
-
+    compileSdkVersion 30
+    buildToolsVersion "30.0.3"
+    namespace "io.grpc.helloworldexample"
     defaultConfig {
         applicationId "io.grpc.helloworldexample"
         minSdkVersion 7
@@ -47,8 +47,8 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
 
     packagingOptions {
@@ -115,7 +115,30 @@ dependencies {
 }
 
 def assertJavaCompileHasProtoGeneratedDir(Object variant, Collection<String> codegenPlugins) {
-  rootProject.assertJavaCompileHasProtoGeneratedDir(project, variant.name, variant.javaCompileProvider.get(), codegenPlugins)
+  def buildDirFile = project.layout.buildDirectory.get().asFile
+  def sourceSet = variant.name
+  def sourceFiles = variant.javaCompileProvider.get().source
+  def baseDir = "${buildDirFile}/generated/sources/proto/$sourceSet" as File
+  // The expected direct subdirectories under baseDir
+  def expectedDirs = codegenPlugins.collect { codegenPlugin ->
+      "${buildDirFile}/generated/sources/proto/$sourceSet/$codegenPlugin" as File
+  } as Set
+  def actualDirs = new HashSet()
+  sourceFiles.visit { fileVisitDetails ->
+      // If the visited file is or is under a direct subdirectory of baseDir, add
+     // that subdirectory to actualDirs.
+      def file = fileVisitDetails.file
+      while (true) {
+          if (file.parentFile == baseDir) {
+              actualDirs.add file
+          }
+          if (file.parentFile == null) {
+              break
+          }
+          file = file.parentFile
+      }
+  }
+  assert expectedDirs == actualDirs
 }
 
 afterEvaluate {
@@ -271,4 +294,9 @@ afterEvaluate {
       assertJavaCompileHasProtoGeneratedDir(variant, ['javalite'])
     }
   }
+}
+
+def kotlinExt =  extensions.findByName("kotlin")
+if (kotlinExt != null) {
+    kotlinExt.jvmToolchain(11)
 }
