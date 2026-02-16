@@ -1,0 +1,249 @@
+repositories {
+    maven { url 'https://maven.google.com' }
+    maven { url "https://plugins.gradle.org/m2/" }
+}
+
+buildscript {
+    repositories {
+        maven { url 'https://maven.google.com' }
+        maven { url "https://plugins.gradle.org/m2/" }
+    }
+}
+
+android {
+    namespace "io.grpc.helloworldexample"
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "io.grpc.helloworldexample"
+        minSdk 21
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    flavorDimensions += ['abi', 'version']
+
+    productFlavors {
+        create("freeapp") { dimension = "version" }
+        create("retailapp") { dimension = "version" }
+        create("x86") { dimension = "abi" }
+        create("arm") { dimension = "abi" }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    packaging {
+        resources {
+            excludes += [
+                    'io/grpc/testing/integration/empty.proto',
+                    'io/grpc/testing/integration/test.proto',
+                    'io/grpc/testing/integration/messages.proto',
+                    'tmp/stuff.proto'
+            ]
+        }
+    }
+
+    lint {
+        warning 'InvalidPackage'
+        abortOnError false
+    }
+}
+
+protobuf {
+    protoc {
+        artifact = 'com.google.protobuf:protoc:3.25.1'
+    }
+    plugins {
+        grpc {
+            artifact = 'io.grpc:protoc-gen-grpc-java:1.60.0'
+        }
+    }
+    generateProtoTasks {
+        all().each { task ->
+            task.builtins {
+                java {
+                    option 'lite'
+                }
+            }
+        }
+        ofNonTest()*.plugins {
+            grpc {
+                // Options added to --grpc_out
+                option 'lite'
+            }
+        }
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    implementation 'javax.annotation:javax.annotation-api:1.3.2'
+    implementation 'com.google.protobuf:protobuf-javalite:3.25.1'
+    implementation 'io.grpc:grpc-okhttp:1.60.0'
+    implementation 'io.grpc:grpc-protobuf-lite:1.60.0'
+    implementation 'io.grpc:grpc-stub:1.60.0'
+    implementation('io.grpc:grpc-protobuf-lite:1.60.0') {
+        // Otherwise Android compile will complain "Multiple dex files define ..."
+        exclude group: 'com.google.protobuf', module: 'protobuf-lite'
+    }
+
+    implementation(project(':testProjectLite')) {
+        exclude group: 'com.google.protobuf', module: 'protobuf-lite'
+    }
+    protobuf files('lib/protos.jar')
+
+    testImplementation 'junit:junit:4.13.2'
+}
+
+androidComponents {
+    beforeVariants(selector().all()) { builder ->
+        builder.enableUnitTest = true
+    }
+}
+
+tasks.register("verifyProtobufSetup") {
+    doLast {
+        assert [
+                'generateArmFreeappDebugAndroidTestProto',
+                'generateArmFreeappDebugUnitTestProto',
+                'generateArmFreeappReleaseUnitTestProto',
+                'generateArmFreeappDebugProto',
+                'generateArmFreeappReleaseProto',
+                'generateArmRetailappDebugAndroidTestProto',
+                'generateArmRetailappDebugUnitTestProto',
+                'generateArmRetailappReleaseUnitTestProto',
+                'generateArmRetailappDebugProto',
+                'generateArmRetailappReleaseProto',
+                'generateX86FreeappDebugAndroidTestProto',
+                'generateX86FreeappDebugUnitTestProto',
+                'generateX86FreeappReleaseUnitTestProto',
+                'generateX86FreeappDebugProto',
+                'generateX86FreeappReleaseProto',
+                'generateX86RetailappDebugAndroidTestProto',
+                'generateX86RetailappDebugUnitTestProto',
+                'generateX86RetailappReleaseUnitTestProto',
+                'generateX86RetailappDebugProto',
+                'generateX86RetailappReleaseProto',
+        ] as Set == protobuf.generateProtoTasks.all().collect({ it.name }) as Set
+
+        assert [
+                'generateArmFreeappDebugAndroidTestProto',
+                'generateArmFreeappDebugUnitTestProto',
+                'generateArmFreeappReleaseUnitTestProto',
+                'generateArmRetailappDebugAndroidTestProto',
+                'generateArmRetailappDebugUnitTestProto',
+                'generateArmRetailappReleaseUnitTestProto',
+                'generateX86FreeappDebugAndroidTestProto',
+                'generateX86FreeappDebugUnitTestProto',
+                'generateX86FreeappReleaseUnitTestProto',
+                'generateX86RetailappDebugAndroidTestProto',
+                'generateX86RetailappDebugUnitTestProto',
+                'generateX86RetailappReleaseUnitTestProto',
+        ] as Set == protobuf.generateProtoTasks.ofTest().collect({ it.name }) as Set
+
+        assert [
+                'generateArmFreeappDebugProto',
+                'generateArmFreeappReleaseProto',
+                'generateArmRetailappDebugProto',
+                'generateArmRetailappReleaseProto',
+                'generateX86FreeappDebugProto',
+                'generateX86FreeappReleaseProto',
+                'generateX86RetailappDebugProto',
+                'generateX86RetailappReleaseProto',
+        ] as Set == protobuf.generateProtoTasks.ofNonTest().collect({ it.name }) as Set
+
+        assert [
+                'generateArmFreeappDebugAndroidTestProto',
+                'generateArmFreeappDebugUnitTestProto',
+                'generateArmFreeappReleaseUnitTestProto',
+                'generateArmFreeappDebugProto',
+                'generateArmFreeappReleaseProto',
+                'generateX86FreeappDebugAndroidTestProto',
+                'generateX86FreeappDebugUnitTestProto',
+                'generateX86FreeappReleaseUnitTestProto',
+                'generateX86FreeappDebugProto',
+                'generateX86FreeappReleaseProto',
+        ] as Set == protobuf.generateProtoTasks.ofFlavor('freeapp').collect({ it.name }) as Set
+
+        assert [
+                'generateArmRetailappDebugAndroidTestProto',
+                'generateArmRetailappDebugUnitTestProto',
+                'generateArmRetailappReleaseUnitTestProto',
+                'generateArmRetailappDebugProto',
+                'generateArmRetailappReleaseProto',
+                'generateX86RetailappDebugAndroidTestProto',
+                'generateX86RetailappDebugUnitTestProto',
+                'generateX86RetailappReleaseUnitTestProto',
+                'generateX86RetailappDebugProto',
+                'generateX86RetailappReleaseProto',
+        ] as Set == protobuf.generateProtoTasks.ofFlavor('retailapp').collect({ it.name }) as Set
+
+        assert [
+                'generateX86FreeappDebugAndroidTestProto',
+                'generateX86FreeappDebugUnitTestProto',
+                'generateX86FreeappReleaseUnitTestProto',
+                'generateX86FreeappDebugProto',
+                'generateX86FreeappReleaseProto',
+                'generateX86RetailappDebugAndroidTestProto',
+                'generateX86RetailappDebugUnitTestProto',
+                'generateX86RetailappReleaseUnitTestProto',
+                'generateX86RetailappDebugProto',
+                'generateX86RetailappReleaseProto',
+        ] as Set == protobuf.generateProtoTasks.ofFlavor('x86').collect({ it.name }) as Set
+
+        assert [
+                'generateArmFreeappDebugAndroidTestProto',
+                'generateArmFreeappDebugUnitTestProto',
+                'generateArmFreeappReleaseUnitTestProto',
+                'generateArmFreeappDebugProto',
+                'generateArmFreeappReleaseProto',
+                'generateArmRetailappDebugAndroidTestProto',
+                'generateArmRetailappDebugUnitTestProto',
+                'generateArmRetailappReleaseUnitTestProto',
+                'generateArmRetailappDebugProto',
+                'generateArmRetailappReleaseProto',
+        ] as Set == protobuf.generateProtoTasks.ofFlavor('arm').collect({ it.name }) as Set
+
+        assert [
+                'generateArmFreeappDebugAndroidTestProto',
+                'generateArmFreeappDebugUnitTestProto',
+                'generateArmFreeappDebugProto',
+                'generateArmRetailappDebugAndroidTestProto',
+                'generateArmRetailappDebugUnitTestProto',
+                'generateArmRetailappDebugProto',
+                'generateX86FreeappDebugAndroidTestProto',
+                'generateX86FreeappDebugUnitTestProto',
+                'generateX86FreeappDebugProto',
+                'generateX86RetailappDebugAndroidTestProto',
+                'generateX86RetailappDebugUnitTestProto',
+                'generateX86RetailappDebugProto'
+        ] as Set == protobuf.generateProtoTasks.ofBuildType('debug').collect({ it.name }) as Set
+
+        assert [
+                'generateArmFreeappReleaseProto',
+                'generateArmFreeappReleaseUnitTestProto',
+                'generateArmRetailappReleaseProto',
+                'generateArmRetailappReleaseUnitTestProto',
+                'generateX86FreeappReleaseProto',
+                'generateX86FreeappReleaseUnitTestProto',
+                'generateX86RetailappReleaseProto',
+                'generateX86RetailappReleaseUnitTestProto',
+        ] as Set == protobuf.generateProtoTasks.ofBuildType('release').collect({ it.name }) as Set
+
+        assert ['generateX86FreeappDebugAndroidTestProto'] as Set ==
+                protobuf.generateProtoTasks.ofVariant('x86FreeappDebugAndroidTest').collect({ it.name }) as Set
+
+        assert [] as Set == protobuf.generateProtoTasks.ofFlavor('androidTest').collect({ it.name }) as Set
+        assert [] as Set == protobuf.generateProtoTasks.ofFlavor('unitTest').collect({ it.name }) as Set
+    }
+}
+
+tasks.named("check") { dependsOn("verifyProtobufSetup") }
