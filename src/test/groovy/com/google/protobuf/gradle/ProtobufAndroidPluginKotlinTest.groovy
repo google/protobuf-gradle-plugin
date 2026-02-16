@@ -8,9 +8,6 @@ import spock.lang.Unroll
 
 @CompileDynamic
 class ProtobufAndroidPluginKotlinTest extends Specification {
-  private static final List<String> GRADLE_VERSION = ["7.6.2", "8.7", "8.9", "8.13"]
-  private static final List<String> ANDROID_PLUGIN_VERSION = ["7.4.2", "8.5.0", "8.7.0", "8.13.0"]
-  private static final List<String> KOTLIN_VERSION = ["1.7.20", "1.7.20", "1.8.20", "1.9.20"]
 
   /**
    * This test may take a significant amount of Gradle daemon Metaspace memory in some
@@ -22,8 +19,13 @@ class ProtobufAndroidPluginKotlinTest extends Specification {
     File testProjectStaging = ProtobufPluginTestHelper.projectBuilder('testProject')
             .copyDirs('testProjectBase', 'testProject')
             .build()
+
+    ArrayList<String> androidSources = ['testProjectAndroidBase', 'testProjectAndroidKotlin']
+    if (agpVersion.startsWith("9.")) {
+        androidSources += 'testProjectAndroidBase9'
+    }
     File testProjectAndroidStaging = ProtobufPluginTestHelper.projectBuilder('testProjectAndroid')
-            .copyDirs('testProjectAndroidBase', 'testProjectAndroidKotlin')
+            .copyDirs(*androidSources)
             .build()
     File testProjectLiteStaging = ProtobufPluginTestHelper.projectBuilder('testProjectLite')
             .copyDirs('testProjectLite')
@@ -45,8 +47,12 @@ class ProtobufAndroidPluginKotlinTest extends Specification {
     result.task(":testProjectAndroid:build").outcome == TaskOutcome.SUCCESS
 
     where:
-    agpVersion << ANDROID_PLUGIN_VERSION
-    gradleVersion << GRADLE_VERSION
-    kotlinVersion << KOTLIN_VERSION
-    }
+    agpVersion | gradleVersion | kotlinVersion
+    "7.4.2"    | "7.6.2"       | "1.7.20"
+    "8.5.0"    | "8.7"         | "1.7.20"
+    "8.7.0"    | "8.9"         | "1.8.20"
+    "8.13.0"   | "8.13"        | "1.9.20"
+    "9.0.1"    | "9.1.0"       | "2.2.20"
+    "9.1.0-alpha05"    | "9.3.1"       | "2.3.0"
+  }
 }
