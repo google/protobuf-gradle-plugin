@@ -345,7 +345,7 @@ class ProtobufPlugin implements Plugin<Project> {
           // Include source proto files in the compiled archive, so that proto files from
           // dependent projects can import them.
           variant.getProcessJavaResourcesProvider().configure { javaResources ->
-              javaResources.from(variantSourceSet.proto) {
+            javaResources.from(variantSourceSet.proto) {
               include '**/*.proto'
             }
           }
@@ -436,10 +436,10 @@ class ProtobufPlugin implements Plugin<Project> {
       String sourceSetName = protoSourceSet.name
       String taskName = getExtractProtosTaskName(sourceSetName)
       Provider<ProtobufExtract> task = project.tasks.register(taskName, ProtobufExtract) { ProtobufExtract task ->
-          task.description = "Extracts proto files/dependencies specified by 'protobuf' configuration"
-          task.destDir.set(getExtractedProtosDir(sourceSetName) as File)
-          task.inputFiles.from(protobufConfig)
-          task.dummyTaskDependency.from(dummyTask)
+        task.description = "Extracts proto files/dependencies specified by 'protobuf' configuration"
+        task.destDir.set(getExtractedProtosDir(sourceSetName) as File)
+        task.inputFiles.from(protobufConfig)
+        task.dummyTaskDependency.from(dummyTask)
       }
       protoSourceSet.proto.srcDir(task)
       return task
@@ -463,10 +463,10 @@ class ProtobufPlugin implements Plugin<Project> {
     ) {
       String taskName = 'extractInclude' + Utils.getSourceSetSubstringForTaskNames(protoSourceSet.name) + 'Proto'
       Provider<ProtobufExtract> task = project.tasks.register(taskName, ProtobufExtract) { ProtobufExtract task ->
-          task.description = "Extracts proto files from compile dependencies for includes"
-          task.destDir.set(getExtractedIncludeProtosDir(protoSourceSet.name) as File)
-          task.inputFiles.from(archives)
-          task.dummyTaskDependency.from(dummyTask)
+        task.description = "Extracts proto files from compile dependencies for includes"
+        task.destDir.set(getExtractedIncludeProtosDir(protoSourceSet.name) as File)
+        task.inputFiles.from(archives)
+        task.dummyTaskDependency.from(dummyTask)
       }
       protoSourceSet.includeProtoDirs.from(task)
       return task

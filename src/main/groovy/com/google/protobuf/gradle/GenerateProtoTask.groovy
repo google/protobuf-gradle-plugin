@@ -324,7 +324,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
   @Input
   Provider<List<String>> getReleaseArtifacts() {
     return providerFactory.provider {
-        releaseExecutableLocators.collect { ExecutableLocator locator -> locator.simplifiedArtifactName }
+      releaseExecutableLocators.collect { ExecutableLocator locator -> locator.simplifiedArtifactName }
     }
   }
 
@@ -334,22 +334,22 @@ public abstract class GenerateProtoTask extends DefaultTask {
   FileCollection getExecutables() {
     Provider<List> executables = providerFactory.provider {
       List<ExecutableLocator> release = releaseExecutableLocators
-        allExecutableLocators.findAll { ExecutableLocator locator -> !release.contains(locator) }
-              .collect { ExecutableLocator locator -> locator.path != null ? locator.path : locator.artifactFiles }
+      allExecutableLocators.findAll { ExecutableLocator locator -> !release.contains(locator) }
+        .collect { ExecutableLocator locator -> locator.path != null ? locator.path : locator.artifactFiles }
     }
     return objectFactory.fileCollection().from(executables)
   }
 
   private List<ExecutableLocator> getReleaseExecutableLocators() {
-      return allExecutableLocators.findAll { ExecutableLocator locator ->
-          locator.path == null && !locator.simplifiedArtifactName.endsWith("-SNAPSHOT")
-      }
+    return allExecutableLocators.findAll { ExecutableLocator locator ->
+      locator.path == null && !locator.simplifiedArtifactName.endsWith("-SNAPSHOT")
+    }
   }
 
   private List<ExecutableLocator> getAllExecutableLocators() {
-      return [toolsLocator.protoc] + plugins.findResults { PluginOptions plugin ->
-          toolsLocator.plugins.findByName(plugin.name)
-      }
+    return [toolsLocator.protoc] + plugins.findResults { PluginOptions plugin ->
+      toolsLocator.plugins.findByName(plugin.name)
+    }
   }
 
   @Internal("Not an actual input to the task, only used to find tasks belonging to a variant")
@@ -607,7 +607,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
     // The source directory designated from sourceSet may not actually exist on disk.
     // "include" it only when it exists, so that Gradle and protoc won't complain.
     List<String> dirs = includeDirs.filter { File file -> file.exists() }*.path
-            .collect { String dir -> "-I${dir}".toString() }
+        .collect { String dir -> "-I${dir}".toString() }
     logger.debug "ProtobufCompile using directories ${dirs}"
     logger.debug "ProtobufCompile using files ${protoFiles}"
 

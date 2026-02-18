@@ -12,8 +12,8 @@ import spock.lang.Unroll
  */
 @CompileDynamic
 class ProtobufAndroidPluginTest extends Specification {
-   private static final List<String> GRADLE_VERSION = ["7.6.2", "8.9", "8.13"]
-   private static final List<String> ANDROID_PLUGIN_VERSION = ["7.4.2", "8.7.0", "8.13.0"]
+  private static final List<String> GRADLE_VERSION = ["7.6.2", "8.9", "8.13"]
+  private static final List<String> ANDROID_PLUGIN_VERSION = ["7.4.2", "8.7.0", "8.13.0"]
 
   @Unroll
   void "testProjectAndroid should be successfully executed [android #agpVersion, gradle #gradleVersion]"() {

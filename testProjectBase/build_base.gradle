@@ -97,7 +97,7 @@ test.doLast {
     def baseDir = "${buildDirFile}/generated/sources/proto/$sourceSet" as File
     // The expected direct subdirectories under baseDir
     def expectedDirs = codegenPlugins.collect { codegenPlugin ->
-        "${buildDirFile}/generated/sources/proto/$sourceSet/$codegenPlugin" as File
+      "${buildDirFile}/generated/sources/proto/$sourceSet/$codegenPlugin" as File
     } as Set
     def actualDirs = new HashSet()
     sourceFiles.visit { fileVisitDetails ->
