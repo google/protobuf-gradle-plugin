@@ -78,11 +78,34 @@ def nonTestProtoTaskNames = protobufConfig.generateProtoTasks.ofNonTest().collec
 def flavorProtoTaskNames = protobufConfig.generateProtoTasks.ofFlavor('flavor-name').collect({ it.name }) as Set
 def buildTypeProtoTaskNames = protobufConfig.generateProtoTasks.ofBuildType('buildType-name').collect({ it.name }) as Set
 def variantProtoTaskNames = protobufConfig.generateProtoTasks.ofVariant('variant-name').collect({ it.name }) as Set
-def buildDirFile = project.layout.buildDirectory.get().asFile
+def buildDirProvider = project.layout.buildDirectory
 
 def mainSourceFiles = tasks.named(sourceSets.main.getCompileTaskName("java")).map { it.source }
 def testSourceFiles = tasks.named(sourceSets.test.getCompileTaskName("java")).map { it.source }
 def grpcSourceFiles = tasks.named(sourceSets.grpc.getCompileTaskName("java")).map { it.source }
+
+class ProtoVerifier {
+  static void verify(File baseDir, FileTree sourceFiles, Collection<String> codegenPlugins) {
+    // The expected direct subdirectories under baseDir
+    def expectedDirs = codegenPlugins.collect { codegenPlugin ->
+      new File(baseDir, codegenPlugin)
+    } as Set
+    def actualDirs = new HashSet()
+    sourceFiles.visit { fileVisitDetails ->
+      // If the visited file is or is under a direct subdirectory of baseDir, add
+      // that subdirectory to actualDirs.
+      def file = fileVisitDetails.file
+      while (file != null) {
+        if (file.parentFile == baseDir) {
+          actualDirs.add file
+          break
+        }
+        file = file.parentFile
+      }
+    }
+    assert expectedDirs == actualDirs
+  }
+}
 
 test.doLast {
   assert ['generateProto', 'generateGrpcProto', 'generateTestProto'] as Set == allProtoTaskNames
@@ -93,33 +116,10 @@ test.doLast {
   assert [] as Set == buildTypeProtoTaskNames
   assert [] as Set == variantProtoTaskNames
 
-  def assertJavaCompileHasProtoGeneratedDir = { String sourceSet, FileCollection sourceFiles, Collection<String> codegenPlugins ->
-    def baseDir = "${buildDirFile}/generated/sources/proto/$sourceSet" as File
-    // The expected direct subdirectories under baseDir
-    def expectedDirs = codegenPlugins.collect { codegenPlugin ->
-      "${buildDirFile}/generated/sources/proto/$sourceSet/$codegenPlugin" as File
-    } as Set
-    def actualDirs = new HashSet()
-    sourceFiles.visit { fileVisitDetails ->
-      // If the visited file is or is under a direct subdirectory of baseDir, add
-      // that subdirectory to actualDirs.
-      def file = fileVisitDetails.file
-        while (true) {
-          if (file.parentFile == baseDir) {
-            actualDirs.add file
-          }
-          if (file.parentFile == null) {
-            break
-          }
-          file = file.parentFile
-        }
-    }
-    assert expectedDirs == actualDirs
-    }
-
-  assertJavaCompileHasProtoGeneratedDir('main', mainSourceFiles.get(), ['java'])
-  assertJavaCompileHasProtoGeneratedDir('test', testSourceFiles.get(), ['java'])
-  assertJavaCompileHasProtoGeneratedDir('grpc', grpcSourceFiles.get(), ['java', 'grpc_output'])
+  def buildDir = buildDirProvider.get().asFile
+  ProtoVerifier.verify(new File(buildDir, 'generated/sources/proto/main'), mainSourceFiles.get(), ['java'])
+  ProtoVerifier.verify(new File(buildDir, 'generated/sources/proto/test'), testSourceFiles.get(), ['java'])
+  ProtoVerifier.verify(new File(buildDir, 'generated/sources/proto/grpc'), grpcSourceFiles.get(), ['java', 'grpc_output'])
 
    def assertFileExists = { boolean exists, String path ->
       if (exists) {
@@ -130,7 +130,16 @@ test.doLast {
    }
   // Check generateDescriptorSet option has been honored
   ['main', 'test'].each { sourceSet ->
-     assertFileExists(false, new File(buildDirFile, "generated/sources/proto/$sourceSet/descriptor_set.desc").absolutePath)
+     assertFileExists(false, new File(buildDir, "generated/sources/proto/$sourceSet/descriptor_set.desc").absolutePath)
   }
-  assertFileExists(true, new File(buildDirFile, "generated/sources/proto/grpc/descriptor_set.desc").absolutePath)
+  assertFileExists(true, new File(buildDir, "generated/sources/proto/grpc/descriptor_set.desc").absolutePath)
+}
+
+rootProject.ext {
+  // Shared test utility. Checks a JavaCompile task for the given sourceSet
+  // includes the generated source dirs for the given codegenPlugins, and does
+  // not include any other dirs under the generated code base dir.
+  assertJavaCompileHasProtoGeneratedDir = { File baseDir, FileCollection sourceFiles, Collection<String> codegenPlugins ->
+    ProtoVerifier.verify(baseDir, sourceFiles.asFileTree, codegenPlugins)
+  }
 }

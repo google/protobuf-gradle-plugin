@@ -117,29 +117,8 @@ dependencies {
 
 def assertJavaCompileHasProtoGeneratedDir(Object variant, Collection<String> codegenPlugins) {
   def buildDirFile = project.layout.buildDirectory.get().asFile
-  def sourceSet = variant.name
-  def sourceFiles = variant.javaCompileProvider.get().source
-  def baseDir = "${buildDirFile}/generated/sources/proto/$sourceSet" as File
-  // The expected direct subdirectories under baseDir
-  def expectedDirs = codegenPlugins.collect { codegenPlugin ->
-      "${buildDirFile}/generated/sources/proto/$sourceSet/$codegenPlugin" as File
-  } as Set
-  def actualDirs = new HashSet()
-  sourceFiles.visit { fileVisitDetails ->
-      // If the visited file is or is under a direct subdirectory of baseDir, add
-      // that subdirectory to actualDirs.
-      def file = fileVisitDetails.file
-      while (true) {
-          if (file.parentFile == baseDir) {
-              actualDirs.add file
-          }
-          if (file.parentFile == null) {
-              break
-          }
-          file = file.parentFile
-      }
-  }
-  assert expectedDirs == actualDirs
+  def baseDir = new File(buildDirFile, "generated/sources/proto/${variant.name}")
+  rootProject.assertJavaCompileHasProtoGeneratedDir(baseDir, variant.javaCompileProvider.get().source , codegenPlugins)
 }
 
 afterEvaluate {
