@@ -5,8 +5,14 @@
 // 'kotlin-android' plugin must be applied after 'com.android.application'.
 plugins {
   id 'com.android.application'
-  id 'kotlin-android'
   id 'com.google.protobuf'
+}
+
+// AGP 9 enabled built-in-Kotlin by default, rendering kotlin-android plugin redundant
+def agpVersion = rootProject.ext.androidPluginVersion
+def agpMajor = agpVersion.tokenize('.')[0].toInteger()
+if (agpMajor < 9) {
+  apply plugin: 'kotlin-android'
 }
 
 apply from: 'build_base.gradle'

@@ -31,6 +31,8 @@ package com.google.protobuf.gradle
 
 import static java.nio.charset.StandardCharsets.US_ASCII
 
+import org.gradle.api.file.DirectoryProperty
+
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 import groovy.transform.TypeChecked
@@ -84,87 +86,6 @@ public abstract class GenerateProtoTask extends DefaultTask {
   // Two quotes and a space.
   static final int CMD_ARGUMENT_EXTRA_LENGTH = 3
   private static final String JAR_SUFFIX = ".jar"
-
-  private final CopyActionFacade copyActionFacade = CopyActionFacade.Loader.create(project, objectFactory)
-  // include dirs are passed to the '-I' option of protoc.  They contain protos
-  // that may be "imported" from the source protos, but will not be compiled.
-  private final ConfigurableFileCollection includeDirs = objectFactory.fileCollection()
-  // source files are proto files that will be compiled by protoc
-  private final ConfigurableFileCollection sourceDirs = objectFactory.fileCollection()
-  private final NamedDomainObjectContainer<PluginOptions> builtins = objectFactory.domainObjectContainer(PluginOptions)
-  private final NamedDomainObjectContainer<PluginOptions> plugins = objectFactory.domainObjectContainer(PluginOptions)
-  private final ProjectLayout projectLayout = project.layout
-  private final ToolsLocator toolsLocator = project.extensions.findByType(ProtobufExtension).tools
-
-  @Input
-  final Property<String> javaExecutablePath = objectFactory.property(String)
-          .convention(project.extensions.findByType(ProtobufExtension).javaExecutablePath)
-
-  // These fields are set by the Protobuf plugin only when initializing the
-  // task.  Ideally they should be final fields, but Gradle task cannot have
-  // constructor arguments. We use the initializing flag to prevent users from
-  // accidentally modifying them.
-  private Provider<String> outputBaseDir
-  // Tags for selectors inside protobuf.generateProtoTasks; do not serialize with Gradle configuration caching
-  @SuppressWarnings("UnnecessaryTransientModifier") // It is not necessary for task to implement Serializable
-  transient private SourceSet sourceSet
-
-  @SuppressWarnings("UnnecessaryTransientModifier") // It is not necessary for task to implement Serializable
-  transient private Object variant
-  private List<String> flavors
-  private String buildType
-  private boolean isTestVariant
-  private final Provider<Boolean> isAndroidProject = providerFactory.provider { Utils.isAndroidProject(project) }
-  private final Provider<Boolean> isTestProvider = providerFactory.provider {
-    if (Utils.isAndroidProject(project)) {
-      return isTestVariant
-    }
-    return Utils.isTest(sourceSet.name)
-  }
-
-  /**
-   * If true, will set the protoc flag
-   * --descriptor_set_out="${outputBaseDir}/descriptor_set.desc"
-   *
-   * Default: false
-   */
-  @Internal("Handled as input via getDescriptorSetOptionsForCaching()")
-  boolean generateDescriptorSet
-
-  /**
-   * Configuration object for descriptor generation details.
-   */
-  public class DescriptorSetOptions {
-    /**
-     * If set, specifies an alternative location than the default for storing the descriptor
-     * set.
-     *
-     * Default: null
-     */
-    @Nullable
-    @Optional
-    @OutputFile
-    String path
-
-    /**
-     * If true, source information (comments, locations) will be included in the descriptor set.
-     *
-     * Default: false
-     */
-    @Input
-    boolean includeSourceInfo
-
-    /**
-     * If true, imports are included in the descriptor set, such that it is self-containing.
-     *
-     * Default: false
-     */
-    @Input
-    boolean includeImports
-  }
-
-  @Internal("Handled as input via getDescriptorSetOptionsForCaching()")
-  final DescriptorSetOptions descriptorSetOptions = new DescriptorSetOptions()
 
   // protoc allows you to prefix comma-delimited options to the path in
   // the --*_out flags, e.g.,
@@ -241,16 +162,84 @@ public abstract class GenerateProtoTask extends DefaultTask {
     }
   }
 
-  void setOutputBaseDir(Provider<String> outputBaseDir) {
-    checkInitializing()
-    Preconditions.checkState(this.outputBaseDir == null, 'outputBaseDir is already set')
-    this.outputBaseDir = outputBaseDir
-  }
+  private final CopyActionFacade copyActionFacade = CopyActionFacade.Loader.create(project, objectFactory)
+  // include dirs are passed to the '-I' option of protoc.  They contain protos
+  // that may be "imported" from the source protos, but will not be compiled.
+  private final ConfigurableFileCollection includeDirs = objectFactory.fileCollection()
+  // source files are proto files that will be compiled by protoc
+  private final ConfigurableFileCollection sourceDirs = objectFactory.fileCollection()
+  private final NamedDomainObjectContainer<PluginOptions> builtins = objectFactory.domainObjectContainer(PluginOptions)
+  private final NamedDomainObjectContainer<PluginOptions> plugins = objectFactory.domainObjectContainer(PluginOptions)
+  private final ProjectLayout projectLayout = project.layout
+  private final ToolsLocator toolsLocator = project.extensions.findByType(ProtobufExtension).tools
+
+  @Input
+  final Property<String> javaExecutablePath = objectFactory.property(String)
+          .convention(project.extensions.findByType(ProtobufExtension).javaExecutablePath)
 
   @OutputDirectory
-  String getOutputBaseDir() {
-    return outputBaseDir.get()
+  abstract DirectoryProperty getOutputBaseDir()
+
+  // Tags for selectors inside protobuf.generateProtoTasks; do not serialize with Gradle configuration caching
+  @SuppressWarnings("UnnecessaryTransientModifier") // It is not necessary for task to implement Serializable
+  transient private SourceSet sourceSet
+
+  @SuppressWarnings("UnnecessaryTransientModifier") // It is not necessary for task to implement Serializable
+  transient private Object variant
+  private List<String> flavors
+  private String buildType
+  private boolean isTestVariant
+  private final Provider<Boolean> isAndroidProject = providerFactory.provider { Utils.isAndroidProject(project) }
+  private final Provider<Boolean> isTestProvider = providerFactory.provider {
+    if (Utils.isAndroidProject(project)) {
+      return isTestVariant
+    }
+    return Utils.isTest(sourceSet.name)
   }
+
+  /**
+   * If true, will set the protoc flag
+   * --descriptor_set_out="${outputBaseDir}/descriptor_set.desc"
+   *
+   * Default: false
+   */
+  @Internal("Handled as input via getDescriptorSetOptionsForCaching()")
+  boolean generateDescriptorSet
+
+  /**
+   * Configuration object for descriptor generation details.
+   */
+  public class DescriptorSetOptions {
+    /**
+     * If set, specifies an alternative location than the default for storing the descriptor
+     * set.
+     *
+     * Default: null
+     */
+    @Nullable
+    @Optional
+    @OutputFile
+    String path
+
+    /**
+     * If true, source information (comments, locations) will be included in the descriptor set.
+     *
+     * Default: false
+     */
+    @Input
+    boolean includeSourceInfo
+
+    /**
+     * If true, imports are included in the descriptor set, such that it is self-containing.
+     *
+     * Default: false
+     */
+    @Input
+    boolean includeImports
+  }
+
+  @Internal("Handled as input via getDescriptorSetOptionsForCaching()")
+  final DescriptorSetOptions descriptorSetOptions = new DescriptorSetOptions()
 
   void setSourceSet(SourceSet sourceSet) {
     checkInitializing()
@@ -400,7 +389,8 @@ public abstract class GenerateProtoTask extends DefaultTask {
       throw new IllegalStateException(
           "requested descriptor path but descriptor generation is off")
     }
-    return descriptorSetOptions.path != null ? descriptorSetOptions.path : "${outputBaseDir.get()}/descriptor_set.desc"
+    return descriptorSetOptions.path != null ? descriptorSetOptions.path
+            : "${outputBaseDir.get().asFile.path}/descriptor_set.desc"
   }
 
   @Inject
@@ -543,7 +533,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
   //===========================================================================
 
   String getOutputDir(PluginOptions plugin) {
-    return "${outputBaseDir.get()}/${plugin.outputSubDir}"
+    return "${outputBaseDir.get().asFile.path}/${plugin.outputSubDir}"
   }
 
   /**
