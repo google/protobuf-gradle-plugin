@@ -11,9 +11,9 @@ buildscript {
 }
 
 android {
-    compileSdkVersion 26
-    buildToolsVersion "26.0.1"
-
+    compileSdkVersion 30
+    buildToolsVersion "30.0.3"
+    namespace "io.grpc.helloworldexample"
     defaultConfig {
         applicationId "io.grpc.helloworldexample"
         minSdkVersion 7
@@ -47,8 +47,8 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
 
     packagingOptions {
@@ -115,7 +115,9 @@ dependencies {
 }
 
 def assertJavaCompileHasProtoGeneratedDir(Object variant, Collection<String> codegenPlugins) {
-  rootProject.assertJavaCompileHasProtoGeneratedDir(project, variant.name, variant.javaCompileProvider.get(), codegenPlugins)
+  def buildDirFile = project.layout.buildDirectory.get().asFile
+  def baseDir = new File(buildDirFile, "generated/sources/proto/${variant.name}")
+  rootProject.assertJavaCompileHasProtoGeneratedDir(baseDir, variant.javaCompileProvider.get().source , codegenPlugins)
 }
 
 afterEvaluate {
@@ -271,4 +273,9 @@ afterEvaluate {
       assertJavaCompileHasProtoGeneratedDir(variant, ['javalite'])
     }
   }
+}
+
+def kotlinExt =  extensions.findByName("kotlin")
+if (kotlinExt != null) {
+    kotlinExt.jvmToolchain(11)
 }

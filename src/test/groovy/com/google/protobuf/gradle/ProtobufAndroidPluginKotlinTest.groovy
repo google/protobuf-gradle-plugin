@@ -8,9 +8,9 @@ import spock.lang.Unroll
 
 @CompileDynamic
 class ProtobufAndroidPluginKotlinTest extends Specification {
-  private static final List<String> GRADLE_VERSION = ["5.6", "6.5.1", "7.4.2", "7.6.2", "7.6.2"]
-  private static final List<String> ANDROID_PLUGIN_VERSION = ["3.5.0", "4.1.0", "7.2.1", "7.3.1", "7.4.2"]
-  private static final List<String> KOTLIN_VERSION = ["1.3.20", "1.3.20", "1.3.40", "1.7.20", "1.9.0"]
+  private static final List<String> GRADLE_VERSION = ["7.6.2", "8.7", "8.9", "8.13"]
+  private static final List<String> ANDROID_PLUGIN_VERSION = ["7.4.2", "8.5.0", "8.7.0", "8.13.0"]
+  private static final List<String> KOTLIN_VERSION = ["1.7.20", "1.7.20", "1.8.20", "1.9.20"]
 
   /**
    * This test may take a significant amount of Gradle daemon Metaspace memory in some

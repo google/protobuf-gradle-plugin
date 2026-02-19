@@ -20,6 +20,7 @@ repositories {
 android {
     compileSdkVersion 26
     buildToolsVersion "26.0.1"
+    namespace "io.grpc.helloworldexample.library"
 
     defaultConfig {
         minSdkVersion 7

@@ -1,7 +1,7 @@
 android {
   compileSdkVersion 26
   buildToolsVersion "26.0.1"
-
+  namespace "io.dont.build.me"
   defaultConfig {
     applicationId "io.dont.build.me"
     minSdkVersion 7

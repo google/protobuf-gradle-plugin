@@ -3,13 +3,12 @@ plugins {
     id 'idea'
     id 'eclipse'
     id 'groovy'
-    id 'maven'
     id 'maven-publish'
     id 'signing'
 
     id "com.github.ben-manes.versions" version "0.12.0"
     id "com.gradle.plugin-publish" version "0.11.0"
-    id "org.gradle.kotlin.kotlin-dsl" version "1.4.9"
+    id "org.gradle.kotlin.kotlin-dsl" version "2.4.1"
 }
 
 group = 'com.google.protobuf'
@@ -34,7 +33,7 @@ dependencies {
   implementation 'com.google.gradle:osdetector-gradle-plugin:1.7.3'
 
   testImplementation 'junit:junit:4.12'
-  testImplementation('org.spockframework:spock-core:1.0-groovy-2.4') {
+  testImplementation('org.spockframework:spock-core:2.3-groovy-3.0') {
     exclude module: 'groovy-all'
   }
   testImplementation 'commons-io:commons-io:2.5'
@@ -52,7 +51,7 @@ tasks.register('groovydocJar', Jar) {
 }
 
 codenarc {
-    toolVersion = "1.4"
+    toolVersion = "3.4.0"
     if (System.env.CI == 'true') {
       // Normally html output is more user friendly,
       // but we want a console printable file for CI logs
@@ -60,8 +59,8 @@ codenarc {
     }
 }
 
-sourceCompatibility = JavaVersion.VERSION_1_8
-targetCompatibility = JavaVersion.VERSION_1_8
+sourceCompatibility = JavaVersion.VERSION_11
+targetCompatibility = JavaVersion.VERSION_11
 
 tasks.withType(GenerateModuleMetadata) {
   enabled = false
@@ -184,6 +183,8 @@ tasks.named('test') {
   inputs.files fileTree("$projectDir/testProjectKotlinDslBase")
   inputs.files fileTree("$projectDir/testProjectKotlinDslCopySpec")
   inputs.files fileTree("$projectDir/testProjectLite")
+
+  useJUnitPlatform()
 
   testLogging {
     events = ["standard_out", "standard_error", "started", "passed", "failed", "skipped"]

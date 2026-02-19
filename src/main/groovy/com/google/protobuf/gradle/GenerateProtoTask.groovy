@@ -108,6 +108,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
   // Tags for selectors inside protobuf.generateProtoTasks; do not serialize with Gradle configuration caching
   @SuppressWarnings("UnnecessaryTransientModifier") // It is not necessary for task to implement Serializable
   transient private SourceSet sourceSet
+
   @SuppressWarnings("UnnecessaryTransientModifier") // It is not necessary for task to implement Serializable
   transient private Object variant
   private List<String> flavors
@@ -187,7 +188,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
   static List<List<String>> generateCmds(List<String> baseCmd, List<File> protoFiles, int cmdLengthLimit) {
     List<List<String>> cmds = []
     if (!protoFiles.isEmpty()) {
-      int baseCmdLength = baseCmd.sum { it.length() + CMD_ARGUMENT_EXTRA_LENGTH } as int
+      int baseCmdLength = baseCmd.sum { String arg -> arg.length() + CMD_ARGUMENT_EXTRA_LENGTH } as int
       List<String> currentArgs = []
       int currentArgsLength = 0
       for (File proto: protoFiles) {
@@ -322,8 +323,8 @@ public abstract class GenerateProtoTask extends DefaultTask {
    */
   @Input
   Provider<List<String>> getReleaseArtifacts() {
-    providerFactory.provider {
-      releaseExecutableLocators.collect { it.simplifiedArtifactName }
+    return providerFactory.provider {
+      releaseExecutableLocators.collect { ExecutableLocator locator -> locator.simplifiedArtifactName }
     }
   }
 
@@ -333,18 +334,22 @@ public abstract class GenerateProtoTask extends DefaultTask {
   FileCollection getExecutables() {
     Provider<List> executables = providerFactory.provider {
       List<ExecutableLocator> release = releaseExecutableLocators
-      allExecutableLocators.findAll { !release.contains(it) }
-        .collect { it.path != null ? it.path : it.artifactFiles }
+      allExecutableLocators.findAll { ExecutableLocator locator -> !release.contains(locator) }
+        .collect { ExecutableLocator locator -> locator.path != null ? locator.path : locator.artifactFiles }
     }
-    objectFactory.fileCollection().from(executables)
+    return objectFactory.fileCollection().from(executables)
   }
 
   private List<ExecutableLocator> getReleaseExecutableLocators() {
-    allExecutableLocators.findAll { it.path == null && !it.simplifiedArtifactName.endsWith ("-SNAPSHOT") }
+    return allExecutableLocators.findAll { ExecutableLocator locator ->
+      locator.path == null && !locator.simplifiedArtifactName.endsWith("-SNAPSHOT")
+    }
   }
 
   private List<ExecutableLocator> getAllExecutableLocators() {
-    [toolsLocator.protoc] + plugins.findResults { PluginOptions it -> toolsLocator.plugins.findByName(it.name) }
+    return [toolsLocator.protoc] + plugins.findResults { PluginOptions plugin ->
+      toolsLocator.plugins.findByName(plugin.name)
+    }
   }
 
   @Internal("Not an actual input to the task, only used to find tasks belonging to a variant")
@@ -601,8 +606,8 @@ public abstract class GenerateProtoTask extends DefaultTask {
 
     // The source directory designated from sourceSet may not actually exist on disk.
     // "include" it only when it exists, so that Gradle and protoc won't complain.
-    List<String> dirs = includeDirs.filter { File it -> it.exists() }*.path
-        .collect { "-I${it}".toString() }
+    List<String> dirs = includeDirs.filter { File file -> file.exists() }*.path
+        .collect { String dir -> "-I${dir}".toString() }
     logger.debug "ProtobufCompile using directories ${dirs}"
     logger.debug "ProtobufCompile using files ${protoFiles}"
 
