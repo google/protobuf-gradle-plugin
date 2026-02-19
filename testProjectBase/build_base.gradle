@@ -121,13 +121,13 @@ test.doLast {
   ProtoVerifier.verify(new File(buildDir, 'generated/sources/proto/test'), testSourceFiles.get(), ['java'])
   ProtoVerifier.verify(new File(buildDir, 'generated/sources/proto/grpc'), grpcSourceFiles.get(), ['java', 'grpc_output'])
 
-   def assertFileExists = { boolean exists, String path ->
-      if (exists) {
-          assert (path as File).exists()
-      } else {
-          assert !(path as File).exists()
-      }
-   }
+  def assertFileExists = { boolean exists, String path ->
+    if (exists) {
+      assert (path as File).exists()
+    } else {
+      assert !(path as File).exists()
+    }
+  }
   // Check generateDescriptorSet option has been honored
   ['main', 'test'].each { sourceSet ->
      assertFileExists(false, new File(buildDir, "generated/sources/proto/$sourceSet/descriptor_set.desc").absolutePath)
