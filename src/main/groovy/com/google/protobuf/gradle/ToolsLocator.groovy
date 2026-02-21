@@ -102,6 +102,7 @@ class ToolsLocator {
     (groupId, artifact, version, classifier, extension) = [parts[0], parts[1], parts[2], parts[3], parts[4]]
     classifier = classifier ?: osdetector.classifier
     extension = extension ?: "exe"
+    version = version ?: ""
     String notation = "$groupId:$artifact:$version:$classifier@${extension}"
     project.dependencies.add(config.name, notation)
     locator.resolve(config, "$groupId:$artifact:$version".toString())
