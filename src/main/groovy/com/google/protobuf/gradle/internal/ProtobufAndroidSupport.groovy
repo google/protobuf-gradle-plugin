@@ -26,7 +26,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.google.protobuf.gradle
+package com.google.protobuf.gradle.internal
 
 import com.android.build.api.dsl.LibraryExtension
 import com.android.build.api.variant.AndroidComponentsExtension
@@ -34,7 +34,6 @@ import com.android.build.api.variant.Component
 import com.android.build.api.variant.GeneratesTestApk
 import com.android.build.api.variant.TestComponent
 import com.android.build.api.variant.Variant
-import com.google.protobuf.gradle.internal.DefaultProtoSourceSet
 import com.google.protobuf.gradle.tasks.ProtoSourceSet
 import groovy.transform.CompileStatic
 import groovy.transform.TypeChecked
@@ -47,6 +46,9 @@ import org.gradle.api.artifacts.type.ArtifactTypeDefinition
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Provider
+
+import com.google.protobuf.gradle.ProtobufPlugin
+import com.google.protobuf.gradle.GenerateProtoTask
 
 @CompileStatic
 class ProtobufAndroidSupport {
@@ -129,6 +131,7 @@ class ProtobufAndroidSupport {
           task.setVariant(variant, isTest)
           task.flavors = flavors
           task.buildType = buildType
+          task.outputBaseDir.set(project.layout.buildDirectory.dir("generated/java/${task.name}"))
           task.doneInitializing()
         }
 

@@ -30,6 +30,7 @@
 package com.google.protobuf.gradle
 
 import com.google.protobuf.gradle.tasks.ProtoSourceSet
+import com.google.protobuf.gradle.internal.ProtobufAndroidSupport
 import groovy.transform.CompileStatic
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
@@ -54,7 +55,6 @@ import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskAction
-import org.gradle.language.jvm.tasks.ProcessResources
 import org.gradle.util.GradleVersion
 import javax.inject.Inject
 
@@ -246,12 +246,15 @@ class ProtobufPlugin implements Plugin<Project> {
 
       // Include source proto files in the compiled archive, so that proto files from
       // dependent projects can import them.
-      project.tasks.named(sourceSet.getTaskName('process', 'resources'), ProcessResources).configure {
-        ProcessResources task ->
-        task.from(protoSourceSet.proto) { CopySpec cs ->
-          cs.include '**/*.proto'
-        }
+      String syncTaskName = sourceSet.getTaskName('process', 'protoResources')
+      Provider<ProtoSyncTask> syncTask = project.tasks.register(syncTaskName, ProtoSyncTask) { ProtoSyncTask task ->
+        task.description = "Copies .proto files into the resources for packaging."
+        task.source.from(protoSourceSet.proto)
+        task.destinationDirectory.set(
+            project.layout.buildDirectory.dir("generated/proto-resources/${sourceSet.name}")
+        )
       }
+      sourceSet.resources.srcDir(syncTask.flatMap { task -> task.destinationDirectory })
 
       postConfigure.add {
         project.plugins.withId("eclipse") {
