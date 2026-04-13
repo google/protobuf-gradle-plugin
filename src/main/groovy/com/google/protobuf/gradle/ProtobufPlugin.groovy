@@ -391,6 +391,7 @@ class ProtobufPlugin implements Plugin<Project> {
       return "${project.buildDir}/extracted-protos/${sourceSetName}"
     }
 
+    @PackageScope
     abstract static class ProtoSyncTask extends DefaultTask {
       @Inject abstract FileSystemOperations getFileSystem()
 
