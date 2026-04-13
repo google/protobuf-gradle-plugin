@@ -29,9 +29,10 @@
  */
 package com.google.protobuf.gradle
 
-import com.google.protobuf.gradle.tasks.ProtoSourceSet
 import com.google.protobuf.gradle.internal.ProtobufAndroidSupport
+import com.google.protobuf.gradle.tasks.ProtoSourceSet
 import groovy.transform.CompileStatic
+import groovy.transform.PackageScope
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.Action
@@ -50,6 +51,7 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileSystemOperations
 import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.plugins.AppliedPlugin
+import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
@@ -75,7 +77,7 @@ class ProtobufPlugin implements Plugin<Project> {
     ]
 
     private Project project
-    ProtobufExtension protobufExtension
+    @PackageScope ProtobufExtension protobufExtension
     private boolean wasApplied = false
 
     void apply(final Project project) {
@@ -119,7 +121,6 @@ class ProtobufPlugin implements Plugin<Project> {
         }
     }
 
-    @TypeChecked(TypeCheckingMode.SKIP) // Don't depend on AGP
     private void doApply() {
         boolean isAndroid = Utils.isAndroidProject(project)
         // Java projects will extract included protos from a 'compileProtoPath'
@@ -131,7 +132,7 @@ class ProtobufPlugin implements Plugin<Project> {
         if (isAndroid) {
           ProtobufAndroidSupport.configure(project, this, dummyTask)
         } else {
-          project.sourceSets.configureEach { sourceSet ->
+          project.extensions.getByType(JavaPluginExtension).sourceSets.configureEach { sourceSet ->
             ProtoSourceSet protoSourceSet = protobufExtension.sourceSets.create(sourceSet.name)
             addSourceSetExtension(sourceSet, protoSourceSet)
             Configuration protobufConfig = createProtobufConfiguration(protoSourceSet)
@@ -148,7 +149,7 @@ class ProtobufPlugin implements Plugin<Project> {
           postConfigure.each { config -> config.call() }
           // protoc and codegen plugin configuration may change through the protobuf{}
           // block. Only at this point the configuration has been finalized.
-          project.protobuf.tools.resolve(project)
+          this.protobufExtension.tools.resolve(project)
         }
     }
 
@@ -157,6 +158,7 @@ class ProtobufPlugin implements Plugin<Project> {
      * configure dependencies for it. The extract-protos task of each source set will
      * extract protobuf files from dependencies in this configuration.
      */
+    @PackageScope
     Configuration createProtobufConfiguration(ProtoSourceSet protoSourceSet) {
       String protobufConfigName = Utils.getConfigName(protoSourceSet.name, 'protobuf')
       return project.configurations.create(protobufConfigName) { Configuration config ->
@@ -208,6 +210,7 @@ class ProtobufPlugin implements Plugin<Project> {
      * Adds the proto extension to the SourceSet, e.g., it creates
      * sourceSets.main.proto and sourceSets.test.proto.
      */
+    @PackageScope
     @TypeChecked(TypeCheckingMode.SKIP) // Don't depend on AGP
     SourceDirectorySet addSourceSetExtension(Object sourceSet, ProtoSourceSet protoSourceSet) {
       String name = sourceSet.name
@@ -289,6 +292,7 @@ class ProtobufPlugin implements Plugin<Project> {
      * compiled. For Java it's the sourceSet that sourceSetOrVariantName stands
      * for; for Android it's the collection of sourceSets that the variant includes.
      */
+    @PackageScope
     Provider<GenerateProtoTask> addGenerateProtoTask(
         ProtoSourceSet protoSourceSet,
         Action<GenerateProtoTask> configureAction
@@ -304,7 +308,7 @@ class ProtobufPlugin implements Plugin<Project> {
         protoTask.addSourceDirs(protoSourceSet.proto)
         protoTask.addIncludeDir(protoSourceSet.proto.sourceDirectories)
         protoTask.addIncludeDir(protoSourceSet.includeProtoDirs)
-        protoTask.outputBaseDir.convention(
+        protoTask.outputBaseDirProperty.convention(
             project.layout.buildDirectory.dir("generated/sources/proto/${sourceSetName}")
         )
         protoTask.doLast {
@@ -315,7 +319,7 @@ class ProtobufPlugin implements Plugin<Project> {
           // Purposefully don't wire this up to outputs, as it can be mixed with other files.
           copyActionFacade.copy { CopySpec spec ->
             spec.includeEmptyDirs = false
-            spec.from(protoTask.outputBaseDir)
+            spec.from(protoTask.outputBaseDirProperty)
             spec.into("${generatedFilesBaseDir}/${sourceSetName}")
           }
         }
@@ -333,6 +337,7 @@ class ProtobufPlugin implements Plugin<Project> {
      * variant may have multiple sourceSets, each of these sourceSets will have
      * its own extraction task.
      */
+    @PackageScope
     Provider<ProtobufExtract> setupExtractProtosTask(
       ProtoSourceSet protoSourceSet,
       Configuration protobufConfig,
@@ -361,6 +366,7 @@ class ProtobufPlugin implements Plugin<Project> {
      *
      * <p>This task is per-sourceSet for both Java and per variant for Android.
      */
+    @PackageScope
     Provider<ProtobufExtract> setupExtractIncludeProtosTask(
         ProtoSourceSet protoSourceSet,
         FileCollection archives,

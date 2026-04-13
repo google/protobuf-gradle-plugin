@@ -92,10 +92,6 @@ abstract class ProtobufExtension {
     return this.sourceSets
   }
 
-  ProtoSourceSet getMainSourceSet() {
-    return sourceSets.findByName("main")
-  }
-
   @PackageScope
   ToolsLocator getTools() {
     return tools

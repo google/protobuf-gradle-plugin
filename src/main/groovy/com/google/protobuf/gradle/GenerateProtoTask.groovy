@@ -177,8 +177,20 @@ public abstract class GenerateProtoTask extends DefaultTask {
   final Property<String> javaExecutablePath = objectFactory.property(String)
           .convention(project.extensions.findByType(ProtobufExtension).javaExecutablePath)
 
+  // kept for compatibility reasons
+  void setOutputBaseDir(Provider<String> outputBaseDir) {
+    outputBaseDirProperty.set(outputBaseDir.map {  path ->
+      project.layout.projectDirectory.dir(path)
+    })
+  }
+
+  @Internal // kept for compatibility reasons
+  String getOutputBaseDir() {
+    return outputBaseDirProperty.asFile.get().path
+  }
+
   @OutputDirectory
-  abstract DirectoryProperty getOutputBaseDir()
+  abstract DirectoryProperty getOutputBaseDirProperty()
 
   // Tags for selectors inside protobuf.generateProtoTasks; do not serialize with Gradle configuration caching
   @SuppressWarnings("UnnecessaryTransientModifier") // It is not necessary for task to implement Serializable
@@ -390,7 +402,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
           "requested descriptor path but descriptor generation is off")
     }
     return descriptorSetOptions.path != null ? descriptorSetOptions.path
-            : "${outputBaseDir.get().asFile.path}/descriptor_set.desc"
+            : "${outputBaseDirProperty.get().asFile.path}/descriptor_set.desc"
   }
 
   @Inject
@@ -533,7 +545,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
   //===========================================================================
 
   String getOutputDir(PluginOptions plugin) {
-    return "${outputBaseDir.get().asFile.path}/${plugin.outputSubDir}"
+    return "${outputBaseDirProperty.get().asFile.path}/${plugin.outputSubDir}"
   }
 
   /**
@@ -577,7 +589,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
     Preconditions.checkState(state == State.FINALIZED, 'doneConfig() has not been called')
 
     copyActionFacade.delete { spec ->
-      spec.delete(outputBaseDir)
+      spec.delete(outputBaseDirProperty)
     }
     // Sort to ensure generated descriptors have a canonical representation
     // to avoid triggering unnecessary rebuilds downstream
