@@ -34,6 +34,7 @@ import com.android.build.api.variant.Component
 import com.android.build.api.variant.GeneratesTestApk
 import com.android.build.api.variant.TestComponent
 import com.android.build.api.variant.Variant
+import com.google.protobuf.gradle.internal.DefaultProtoSourceSet
 import com.google.protobuf.gradle.tasks.ProtoSourceSet
 import groovy.transform.CompileStatic
 import groovy.transform.TypeChecked
