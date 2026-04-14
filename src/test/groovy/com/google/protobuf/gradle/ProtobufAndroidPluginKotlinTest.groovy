@@ -16,7 +16,7 @@ class ProtobufAndroidPluginKotlinTest extends Specification {
   @Unroll
   void "testProjectAndroidKotlin [android #agpVersion, gradle #gradleVersion, kotlin #kotlinVersion]"() {
     given: "project from testProject, testProjectLite & testProjectAndroid"
-    File testProjectStaging = ProtobufPluginTestHelper.projectBuilder('testProject')
+    File testProjectStaging = ProtobufPluginTestHelper.projectBuilder(this, 'testProject')
             .copyDirs('testProjectBase', 'testProject')
             .build()
 
@@ -24,13 +24,13 @@ class ProtobufAndroidPluginKotlinTest extends Specification {
     if (agpVersion.startsWith("9.")) {
         androidSources += 'testProjectAndroidBase9'
     }
-    File testProjectAndroidStaging = ProtobufPluginTestHelper.projectBuilder('testProjectAndroid')
+    File testProjectAndroidStaging = ProtobufPluginTestHelper.projectBuilder(this, 'testProjectAndroid')
             .copyDirs(*androidSources)
             .build()
-    File testProjectLiteStaging = ProtobufPluginTestHelper.projectBuilder('testProjectLite')
+    File testProjectLiteStaging = ProtobufPluginTestHelper.projectBuilder(this, 'testProjectLite')
             .copyDirs('testProjectLite')
             .build()
-    File mainProjectDir = ProtobufPluginTestHelper.projectBuilder('testProjectAndroidMain')
+    File mainProjectDir = ProtobufPluginTestHelper.projectBuilder(this, 'testProjectAndroidMain')
             .copySubProjects(testProjectStaging, testProjectLiteStaging, testProjectAndroidStaging)
             .withAndroidPlugin(agpVersion)
             .withKotlin(kotlinVersion)

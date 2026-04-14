@@ -18,7 +18,7 @@ class ProtobufKotlinDslPluginTest extends Specification {
   @Unroll
   void "testProjectKotlinDsl should be successfully executed (java-only project) [gradle #gradleVersion]"() {
     given: "project from testProjectKotlinDslBase"
-    File projectDir = ProtobufPluginTestHelper.projectBuilder('testProjectKotlinDsl')
+    File projectDir = ProtobufPluginTestHelper.projectBuilder(this, 'testProjectKotlinDsl')
         .copyDirs('testProjectKotlinDslBase')
         .build()
 
@@ -46,13 +46,14 @@ class ProtobufKotlinDslPluginTest extends Specification {
   @Unroll
   void "testProjectAndroidKotlinDsl should be successfully executed [android #agpVersion, gradle #gradleVersion]"() {
     given: "project from testProjectKotlinDsl"
-    File testProjectAndroidKotlinDslStaging = ProtobufPluginTestHelper.projectBuilder('testProjectAndroidKotlinDsl')
+    File testProjectAndroidKotlinDslStaging = ProtobufPluginTestHelper
+            .projectBuilder(this, 'testProjectAndroidKotlinDsl')
             .copyDirs('testProjectAndroidKotlinDsl')
             .build()
-    File testProjectLiteStaging = ProtobufPluginTestHelper.projectBuilder('testProjectLite')
+    File testProjectLiteStaging = ProtobufPluginTestHelper.projectBuilder(this, 'testProjectLite')
             .copyDirs('testProjectLite')
             .build()
-    File mainProjectDir = ProtobufPluginTestHelper.projectBuilder('testProjectAndroidDslMain')
+    File mainProjectDir = ProtobufPluginTestHelper.projectBuilder(this, 'testProjectAndroidDslMain')
             .copySubProjects(testProjectAndroidKotlinDslStaging, testProjectLiteStaging)
             .withAndroidPlugin(agpVersion)
             .build()

@@ -29,7 +29,7 @@ class AndroidProjectDetectionTest extends Specification {
   @Unroll
   void "test succeeds on android project [android #agpVersion, gradle #gradleVersion]"() {
     given: "a project with android plugin"
-    File mainProjectDir = ProtobufPluginTestHelper.projectBuilder("singleModuleAndroidProject")
+    File mainProjectDir = ProtobufPluginTestHelper.projectBuilder(this, "singleModuleAndroidProject")
        .copyDirs('testProjectAndroid', 'testProjectAndroidBare')
        .withAndroidPlugin(agpVersion)
        .build()
@@ -57,12 +57,12 @@ class AndroidProjectDetectionTest extends Specification {
   @Unroll
   void "test fails on sub project of android project [android #agpVersion, gradle #gradleVersion]"() {
     given: "an android root project and java sub project"
-    File subProjectStaging = ProtobufPluginTestHelper.projectBuilder('subModuleTestProjectLite')
+    File subProjectStaging = ProtobufPluginTestHelper.projectBuilder(this, 'subModuleTestProjectLite')
        .copyDirs('testProjectLite')
        .build()
     appendUtilIsAndroidProjectCheckTask(new File(subProjectStaging, "build.gradle"), false)
 
-    File mainProjectDir = ProtobufPluginTestHelper.projectBuilder("rootModuleAndroidProject")
+    File mainProjectDir = ProtobufPluginTestHelper.projectBuilder(this, "rootModuleAndroidProject")
        .copyDirs('testProjectAndroid', 'testProjectAndroidBare')
        .copySubProjects(subProjectStaging)
        .withAndroidPlugin(agpVersion)
