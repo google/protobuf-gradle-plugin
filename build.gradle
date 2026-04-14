@@ -185,6 +185,8 @@ tasks.named('test') {
 
   useJUnitPlatform()
 
+  maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
+
   testLogging {
     events = ["standard_out", "standard_error", "started", "passed", "failed", "skipped"]
   }

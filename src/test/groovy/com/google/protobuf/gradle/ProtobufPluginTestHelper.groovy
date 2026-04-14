@@ -118,9 +118,8 @@ final class ProtobufPluginTestHelper {
     }
 
     File build() {
-      File projectDir = new File(System.getProperty('user.dir'), 'build/tests/' + testProjectName)
-      FileUtils.deleteDirectory(projectDir)
-      FileUtils.forceMkdir(projectDir)
+      File projectDir = new File(File.createTempDir(), testProjectName)
+      projectDir.mkdirs()
       sourceDirs.each { String dir ->
         FileUtils.copyDirectory(new File(System.getProperty("user.dir"), dir), projectDir)
       }
