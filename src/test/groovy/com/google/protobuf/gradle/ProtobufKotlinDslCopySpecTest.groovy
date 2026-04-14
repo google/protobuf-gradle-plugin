@@ -16,7 +16,7 @@ class ProtobufKotlinDslCopySpecTest extends Specification {
   @Unroll
   void "testProjectKotlinDslCopySpec should declare explicit copy spec [gradle #gradleVersion]"() {
     given: "project from testProjectKotlinDslCopySpec"
-    File projectDir = ProtobufPluginTestHelper.projectBuilder('testProjectKotlinDslCopySpec')
+    File projectDir = ProtobufPluginTestHelper.projectBuilder(this, 'testProjectKotlinDslCopySpec')
             .copyDirs('testProjectKotlinDslCopySpec')
             .build()
 
