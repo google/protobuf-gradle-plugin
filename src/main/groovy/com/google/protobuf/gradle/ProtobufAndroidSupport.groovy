@@ -26,7 +26,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.google.protobuf.gradle.internal
+package com.google.protobuf.gradle
 
 import com.android.build.api.dsl.LibraryExtension
 import com.android.build.api.variant.AndroidComponentsExtension
@@ -46,9 +46,6 @@ import org.gradle.api.artifacts.type.ArtifactTypeDefinition
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Provider
-
-import com.google.protobuf.gradle.ProtobufPlugin
-import com.google.protobuf.gradle.GenerateProtoTask
 
 @CompileStatic
 class ProtobufAndroidSupport {

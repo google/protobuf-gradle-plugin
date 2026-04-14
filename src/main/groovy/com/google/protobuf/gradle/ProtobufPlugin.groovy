@@ -29,7 +29,6 @@
  */
 package com.google.protobuf.gradle
 
-import com.google.protobuf.gradle.internal.ProtobufAndroidSupport
 import com.google.protobuf.gradle.tasks.ProtoSourceSet
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
