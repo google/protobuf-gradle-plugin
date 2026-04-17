@@ -37,7 +37,7 @@ import groovy.transform.TypeCheckingMode
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
-import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskCollection
@@ -56,9 +56,6 @@ abstract class ProtobufExtension {
   private final NamedDomainObjectContainer<ProtoSourceSet> sourceSets
 
   @PackageScope
-  final Provider<String> defaultGeneratedFilesBaseDir
-
-  @PackageScope
   final Provider<String> defaultJavaExecutablePath
 
   public ProtobufExtension(final Project project) {
@@ -66,10 +63,8 @@ abstract class ProtobufExtension {
     this.tasks = new GenerateProtoTaskCollection(project)
     this.tools = new ToolsLocator(project)
     this.taskConfigActions = []
-    this.defaultGeneratedFilesBaseDir = project.layout.buildDirectory.dir("generated/sources/proto").map {
-      Directory dir -> dir.asFile.path
-    }
-    this.generatedFilesBaseDirProperty.convention(defaultGeneratedFilesBaseDir)
+    this.generatedFilesBaseDirProperty.convention(
+        project.layout.buildDirectory.dir("generated/sources/proto"))
     this.defaultJavaExecutablePath = project.provider {
       computeJavaExePath()
     }
@@ -98,12 +93,7 @@ abstract class ProtobufExtension {
   }
 
   String getGeneratedFilesBaseDir() {
-    return generatedFilesBaseDirProperty.get()
-  }
-
-  @Deprecated
-  void setGeneratedFilesBaseDir(String generatedFilesBaseDir) {
-    generatedFilesBaseDirProperty.set(generatedFilesBaseDir)
+    return generatedFilesBaseDirProperty.get().asFile.path
   }
 
   /**
@@ -111,7 +101,7 @@ abstract class ProtobufExtension {
    * "${project.buildDir}/generated/sources/proto".
    */
   @PackageScope
-  abstract Property<String> getGeneratedFilesBaseDirProperty()
+  abstract DirectoryProperty getGeneratedFilesBaseDirProperty()
 
   /**
    * The location of the java executable used to run java based

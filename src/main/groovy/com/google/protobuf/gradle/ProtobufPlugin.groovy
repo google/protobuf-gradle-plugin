@@ -298,30 +298,15 @@ class ProtobufPlugin implements Plugin<Project> {
     ) {
       String sourceSetName = protoSourceSet.name
       String taskName = 'generate' + Utils.getSourceSetSubstringForTaskNames(sourceSetName) + 'Proto'
-      Provider<String> defaultGeneratedFilesBaseDir = protobufExtension.defaultGeneratedFilesBaseDir
-      Provider<String> generatedFilesBaseDirProvider = protobufExtension.generatedFilesBaseDirProperty
+      DirectoryProperty generatedFilesBaseDirProperty = protobufExtension.generatedFilesBaseDirProperty
       Provider<GenerateProtoTask> task = project.tasks.register(taskName, GenerateProtoTask) {
         GenerateProtoTask protoTask ->
-        CopyActionFacade copyActionFacade = CopyActionFacade.Loader.create(protoTask.project, protoTask.objectFactory)
         protoTask.description = "Compiles Proto source for '${sourceSetName}'".toString()
         protoTask.addSourceDirs(protoSourceSet.proto)
         protoTask.addIncludeDir(protoSourceSet.proto.sourceDirectories)
         protoTask.addIncludeDir(protoSourceSet.includeProtoDirs)
         protoTask.outputBaseDirProperty.convention(
-            project.layout.buildDirectory.dir("generated/sources/proto/${sourceSetName}")
-        )
-        protoTask.doLast {
-          String generatedFilesBaseDir = generatedFilesBaseDirProvider.get()
-          if (generatedFilesBaseDir == defaultGeneratedFilesBaseDir.get()) {
-            return
-          }
-          // Purposefully don't wire this up to outputs, as it can be mixed with other files.
-          copyActionFacade.copy { CopySpec spec ->
-            spec.includeEmptyDirs = false
-            spec.from(protoTask.outputBaseDirProperty)
-            spec.into("${generatedFilesBaseDir}/${sourceSetName}")
-          }
-        }
+            generatedFilesBaseDirProperty.dir(sourceSetName))
         configureAction.execute(protoTask)
       }
       protoSourceSet.output.from(task.map { GenerateProtoTask t -> t.outputSourceDirectories })
