@@ -37,6 +37,7 @@ import com.android.build.api.variant.Variant
 import com.google.protobuf.gradle.internal.DefaultProtoSourceSet
 import com.google.protobuf.gradle.tasks.ProtoSourceSet
 import groovy.transform.CompileStatic
+import groovy.transform.PackageScope
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.gradle.api.NamedDomainObjectContainer
@@ -48,6 +49,7 @@ import org.gradle.api.attributes.Attribute
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Provider
 
+@PackageScope
 @CompileStatic
 class ProtobufAndroidSupport {
 
