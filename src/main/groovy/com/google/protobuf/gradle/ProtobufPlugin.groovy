@@ -163,7 +163,9 @@ class ProtobufPlugin implements Plugin<Project> {
     Configuration createProtobufConfiguration(ProtoSourceSet protoSourceSet) {
       String protobufConfigName = Utils.getConfigName(protoSourceSet.name, 'protobuf')
       return project.configurations.create(protobufConfigName) { Configuration config ->
-        config.visible = false
+        if (GradleVersion.current() < GradleVersion.version("9.0.0")) {
+          config.visible = false
+        }
         config.transitive = true
       }
     }
@@ -184,7 +186,9 @@ class ProtobufPlugin implements Plugin<Project> {
       Configuration implementationConfig =
               project.configurations.getByName(Utils.getConfigName(protoSourceSet.name, 'implementation'))
       return project.configurations.create(compileProtoConfigName) { Configuration config ->
-          config.visible = false
+          if (GradleVersion.current() < GradleVersion.version("9.0.0")) {
+            config.visible = false
+          }
           config.transitive = true
           config.extendsFrom = [compileConfig, implementationConfig]
           config.canBeConsumed = false
