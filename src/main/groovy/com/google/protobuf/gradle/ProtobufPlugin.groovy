@@ -175,13 +175,13 @@ class ProtobufPlugin implements Plugin<Project> {
      */
     private Configuration createProtobufConfiguration(ProtoSourceSet protoSourceSet) {
       String protobufConfigName = Utils.getConfigName(protoSourceSet.name, 'protobuf')
-      return project.configurations.create(protobufConfigName) { Configuration it ->
+      return project.configurations.create(protobufConfigName) { Configuration conf ->
         // `Configuration.setVisible(boolean)` is deprecated as of Gradle 9.8 (and inert since),
         // so only call it on older Gradle versions to stay warning-clean on 9.8+.
         if (GradleVersion.current() < GradleVersion.version('9.8')) {
-          it.visible = false
+          conf.visible = false
         }
-        it.transitive = true
+        conf.transitive = true
       }
     }
 
@@ -200,16 +200,16 @@ class ProtobufPlugin implements Plugin<Project> {
               project.configurations.getByName(Utils.getConfigName(protoSourceSet.name, 'compileOnly'))
       Configuration implementationConfig =
               project.configurations.getByName(Utils.getConfigName(protoSourceSet.name, 'implementation'))
-      return project.configurations.create(compileProtoConfigName) { Configuration it ->
+      return project.configurations.create(compileProtoConfigName) { Configuration conf ->
           // `Configuration.setVisible(boolean)` is deprecated as of Gradle 9.8 (and inert since),
           // so only call it on older Gradle versions to stay warning-clean on 9.8+.
           if (GradleVersion.current() < GradleVersion.version('9.8')) {
-            it.visible = false
+            conf.visible = false
           }
-          it.transitive = true
-          it.extendsFrom = [compileConfig, implementationConfig]
-          it.canBeConsumed = false
-          it.getAttributes()
+          conf.transitive = true
+          conf.extendsFrom = [compileConfig, implementationConfig]
+          conf.canBeConsumed = false
+          conf.getAttributes()
                 // Variant attributes are not inherited. Setting it too loosely can
                 // result in ambiguous variant selection errors.
                 // CompileProtoPath only need proto files from dependency's resources.
