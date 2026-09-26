@@ -164,8 +164,7 @@ class ProtobufPlugin implements Plugin<Project> {
     Configuration createProtobufConfiguration(ProtoSourceSet protoSourceSet) {
       String protobufConfigName = Utils.getConfigName(protoSourceSet.name, 'protobuf')
       return project.configurations.create(protobufConfigName) { Configuration config ->
-        // `Configuration.setVisible(boolean)` is deprecated as of Gradle 9.8 (and inert since),
-        // It has been a noop since 9.0.  
+        // `Configuration.setVisible(boolean)` is deprecated as of Gradle 9.8 (and inert since 9.0),
         if (GradleVersion.current() < GradleVersion.version('9.0')) {
           conf.visible = false
         }
@@ -189,8 +188,7 @@ class ProtobufPlugin implements Plugin<Project> {
       Configuration implementationConfig =
               project.configurations.getByName(Utils.getConfigName(protoSourceSet.name, 'implementation'))
       return project.configurations.create(compileProtoConfigName) { Configuration config ->
-          // `Configuration.setVisible(boolean)` is deprecated as of Gradle 9.8 (and inert since),
-          // It has been a noop since 9.0.
+          // `Configuration.setVisible(boolean)` is deprecated as of Gradle 9.8 (and inert since 9.0),
           if (GradleVersion.current() < GradleVersion.version('9.0')) {
             conf.visible = false
           }  
