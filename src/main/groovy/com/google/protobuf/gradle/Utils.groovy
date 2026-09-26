@@ -124,8 +124,8 @@ class Utils {
       if (isGenerated) {
         model.module.generatedSourceDirs += f
       }
-      project.tasks.withType(GenerateIdeaModule).each {
-        it.doFirst {
+      project.tasks.withType(GenerateIdeaModule).each { GenerateIdeaModule task ->
+        task.doFirst {
           // This is required because the intellij plugin does not allow adding source directories
           // that do not exist. The intellij config files should be valid from the start even if a
           // user runs './gradlew idea' before running './gradlew generateProto'.

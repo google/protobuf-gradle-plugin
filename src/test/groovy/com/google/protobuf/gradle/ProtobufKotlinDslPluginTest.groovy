@@ -12,13 +12,13 @@ import spock.lang.Unroll
  */
 @CompileDynamic
 class ProtobufKotlinDslPluginTest extends Specification {
-  private static final List<String> GRADLE_VERSIONS = ["5.6", "6.1.1", "6.5.1", "7.4.2"]
-  private static final List<String> ANDROID_PLUGIN_VERSION = ["3.5.0", "4.0.0", "4.1.0", "7.2.1"]
+  private static final List<String> GRADLE_VERSIONS = ["7.6.2", "8.7", "8.9", "8.13"]
+  private static final List<String> ANDROID_PLUGIN_VERSION = ["7.4.2", "8.5.0", "8.7.0", "8.13.0"]
 
   @Unroll
   void "testProjectKotlinDsl should be successfully executed (java-only project) [gradle #gradleVersion]"() {
     given: "project from testProjectKotlinDslBase"
-    File projectDir = ProtobufPluginTestHelper.projectBuilder('testProjectKotlinDsl')
+    File projectDir = ProtobufPluginTestHelper.projectBuilder(this, 'testProjectKotlinDsl')
         .copyDirs('testProjectKotlinDslBase')
         .build()
 
@@ -46,13 +46,14 @@ class ProtobufKotlinDslPluginTest extends Specification {
   @Unroll
   void "testProjectAndroidKotlinDsl should be successfully executed [android #agpVersion, gradle #gradleVersion]"() {
     given: "project from testProjectKotlinDsl"
-    File testProjectAndroidKotlinDslStaging = ProtobufPluginTestHelper.projectBuilder('testProjectAndroidKotlinDsl')
+    File testProjectAndroidKotlinDslStaging = ProtobufPluginTestHelper
+            .projectBuilder(this, 'testProjectAndroidKotlinDsl')
             .copyDirs('testProjectAndroidKotlinDsl')
             .build()
-    File testProjectLiteStaging = ProtobufPluginTestHelper.projectBuilder('testProjectLite')
+    File testProjectLiteStaging = ProtobufPluginTestHelper.projectBuilder(this, 'testProjectLite')
             .copyDirs('testProjectLite')
             .build()
-    File mainProjectDir = ProtobufPluginTestHelper.projectBuilder('testProjectAndroidDslMain')
+    File mainProjectDir = ProtobufPluginTestHelper.projectBuilder(this, 'testProjectAndroidDslMain')
             .copySubProjects(testProjectAndroidKotlinDslStaging, testProjectLiteStaging)
             .withAndroidPlugin(agpVersion)
             .build()

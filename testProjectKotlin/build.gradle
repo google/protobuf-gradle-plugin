@@ -9,3 +9,7 @@ apply from: 'build_base.gradle'
 dependencies {
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
 }
+
+kotlin {
+    jvmToolchain(8)
+}

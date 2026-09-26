@@ -14,9 +14,9 @@ import spock.lang.Unroll
  */
 @CompileDynamic
 class ProtobufJavaPluginTest extends Specification {
-  // Current supported version is Gradle 5+.
-  private static final List<String> GRADLE_VERSIONS = ["5.6", "6.0", "6.7.1", "7.4.2", "7.6"]
-  private static final List<String> KOTLIN_VERSIONS = ["1.3.72", "1.4.32", "1.5.32", "1.6.21", "1.7.21"]
+  // Current supported version is Gradle 7.6+.
+  private static final List<String> GRADLE_VERSIONS = ["7.6.2", "8.7", "8.9", "8.13"]
+  private static final List<String> KOTLIN_VERSIONS = ["1.7.20", "1.7.20", "1.8.20", "1.9.20"]
   // Currently this is separate as some test projects are incompatible with Gradle 8.1
   private static final List<String> GRADLE_WITH_FILE_SYSTEM_SNAPSHOTTING_FOR_CC = ["8.1"]
 
@@ -80,13 +80,13 @@ class ProtobufJavaPluginTest extends Specification {
     project.buildDir = "expect-the-unexpected"
 
     then: "generate tasks added"
-    assert project.tasks.generateProto.outputBaseDir.contains("/expect-the-unexpected/")
+    assert project.tasks.generateProto.outputBaseDirProperty.get().asFile.path.contains("expect-the-unexpected")
   }
 
   @Unroll
   void "testProject should be successfully executed (java-only project) [gradle #gradleVersion]"() {
     given: "project from testProject"
-    File projectDir = ProtobufPluginTestHelper.projectBuilder('testProject')
+    File projectDir = ProtobufPluginTestHelper.projectBuilder(this, 'testProject')
         .copyDirs('testProjectBase', 'testProject')
         .build()
 
@@ -108,7 +108,7 @@ class ProtobufJavaPluginTest extends Specification {
   @Unroll
   void "test generateTestProto should not execute :compileJava task (java-only project) [gradle #gradleVersion]"() {
     given: "project from testProject"
-    File projectDir = ProtobufPluginTestHelper.projectBuilder('testProject')
+    File projectDir = ProtobufPluginTestHelper.projectBuilder(this, 'testProject')
       .copyDirs('testProjectBase', 'testProject')
       .build()
 
@@ -131,7 +131,7 @@ class ProtobufJavaPluginTest extends Specification {
   @Unroll
   void "testProject should be successfully executed (configuration cache) [gradle #gradleVersion]"() {
     given: "project from testProject"
-    File projectDir = ProtobufPluginTestHelper.projectBuilder('testProject')
+    File projectDir = ProtobufPluginTestHelper.projectBuilder(this, 'testProject')
       .copyDirs('testProjectBase', 'testProject')
       .build()
     // Limit max number of problems to catch regressions
@@ -172,7 +172,7 @@ class ProtobufJavaPluginTest extends Specification {
   @Unroll
   void "testProjectBuildTimeProto should be successfully executed [gradle #gradleVersion]"() {
     given: "project from testProjectGeneratedProto"
-    File projectDir = ProtobufPluginTestHelper.projectBuilder('testProjectBuildTimeProto')
+    File projectDir = ProtobufPluginTestHelper.projectBuilder(this, 'testProjectBuildTimeProto')
             .copyDirs('testProjectBuildTimeProto')
             .build()
 
@@ -193,7 +193,7 @@ class ProtobufJavaPluginTest extends Specification {
   @Unroll
   void "testProjectKotlin (kotlin-only project) [gradle #gradleVersion, kotlin #kotlinVersion]"() {
     given: "project from testProjectKotlin overlaid on testProject"
-    File projectDir = ProtobufPluginTestHelper.projectBuilder('testProjectKotlin')
+    File projectDir = ProtobufPluginTestHelper.projectBuilder(this, 'testProjectKotlin')
         .copyDirs('testProjectBase', 'testProjectKotlin')
         .withKotlin(kotlinVersion)
         .build()
@@ -217,7 +217,7 @@ class ProtobufJavaPluginTest extends Specification {
   @Unroll
   void "testProjectJavaAndKotlin (java+kotlin project) [gradle #gradleVersion, kotlin #kotlinVersion]"() {
     given: "project from testProjecJavaAndKotlin overlaid on testProjectKotlin, testProject"
-    File projectDir = ProtobufPluginTestHelper.projectBuilder('testProjectJavaAndKotlin')
+    File projectDir = ProtobufPluginTestHelper.projectBuilder(this, 'testProjectJavaAndKotlin')
         .copyDirs('testProjectBase', 'testProject', 'testProjectKotlin', 'testProjectJavaAndKotlin')
         .withKotlin(kotlinVersion)
         .build()
@@ -241,7 +241,7 @@ class ProtobufJavaPluginTest extends Specification {
   @Unroll
   void "testProjectLite should be successfully executed [gradle #gradleVersion]"() {
     given: "project from testProjectLite"
-    File projectDir = ProtobufPluginTestHelper.projectBuilder('testProjectLite')
+    File projectDir = ProtobufPluginTestHelper.projectBuilder(this, 'testProjectLite')
         .copyDirs('testProjectBase', 'testProjectLite')
         .build()
 
@@ -262,14 +262,14 @@ class ProtobufJavaPluginTest extends Specification {
   @Unroll
   void "testProjectDependent should be successfully executed [gradle #gradleVersion]"() {
     given: "project from testProject & testProjectDependent"
-    File testProjectStaging = ProtobufPluginTestHelper.projectBuilder('testProject')
+    File testProjectStaging = ProtobufPluginTestHelper.projectBuilder(this, 'testProject')
         .copyDirs('testProjectBase', 'testProject')
         .build()
-    File testProjectDependentStaging = ProtobufPluginTestHelper.projectBuilder('testProjectDependent')
+    File testProjectDependentStaging = ProtobufPluginTestHelper.projectBuilder(this, 'testProjectDependent')
         .copyDirs('testProjectDependent')
         .build()
 
-    File mainProjectDir = ProtobufPluginTestHelper.projectBuilder('testProjectDependentMain')
+    File mainProjectDir = ProtobufPluginTestHelper.projectBuilder(this, 'testProjectDependentMain')
         .copySubProjects(testProjectStaging, testProjectDependentStaging)
         .build()
 
@@ -290,14 +290,14 @@ class ProtobufJavaPluginTest extends Specification {
   @Unroll
   void "testProjectDependent proto extraction with configuration cache [gradle #gradleVersion]"() {
     given: "project from testProject & testProjectDependent"
-    File testProjectStaging = ProtobufPluginTestHelper.projectBuilder('testProject')
+    File testProjectStaging = ProtobufPluginTestHelper.projectBuilder(this, 'testProject')
             .copyDirs('testProjectBase', 'testProject')
             .build()
-    File testProjectDependentStaging = ProtobufPluginTestHelper.projectBuilder('testProjectDependent')
+    File testProjectDependentStaging = ProtobufPluginTestHelper.projectBuilder(this, 'testProjectDependent')
             .copyDirs('testProjectDependent')
             .build()
 
-    File mainProjectDir = ProtobufPluginTestHelper.projectBuilder('testProjectDependentMain')
+    File mainProjectDir = ProtobufPluginTestHelper.projectBuilder(this, 'testProjectDependentMain')
             .copySubProjects(testProjectStaging, testProjectDependentStaging)
             .build()
 
@@ -331,7 +331,7 @@ class ProtobufJavaPluginTest extends Specification {
   @Unroll
   void "testProjectJavaLibrary should be successfully executed (java-only as a library) [gradle #gradleVersion]"() {
     given: "project from testProjectJavaLibrary"
-    File projectDir = ProtobufPluginTestHelper.projectBuilder('testProjectJavaLibrary')
+    File projectDir = ProtobufPluginTestHelper.projectBuilder(this, 'testProjectJavaLibrary')
             .copyDirs('testProjectBase', 'testProjectJavaLibrary')
             .build()
 
@@ -353,14 +353,14 @@ class ProtobufJavaPluginTest extends Specification {
   @Unroll
   void "testProjectDependentApp should be successfully executed [gradle #gradleVersion]"() {
     given: "project from testProject & testProjectDependent"
-    File testProjectStaging = ProtobufPluginTestHelper.projectBuilder('testProjectJavaLibrary')
+    File testProjectStaging = ProtobufPluginTestHelper.projectBuilder(this, 'testProjectJavaLibrary')
             .copyDirs('testProjectBase', 'testProjectJavaLibrary')
             .build()
-    File testProjectDependentStaging = ProtobufPluginTestHelper.projectBuilder('testProjectDependentApp')
+    File testProjectDependentStaging = ProtobufPluginTestHelper.projectBuilder(this, 'testProjectDependentApp')
             .copyDirs('testProjectDependentApp')
             .build()
 
-    File mainProjectDir = ProtobufPluginTestHelper.projectBuilder('testProjectDependentAppMain')
+    File mainProjectDir = ProtobufPluginTestHelper.projectBuilder(this, 'testProjectDependentAppMain')
             .copySubProjects(testProjectStaging, testProjectDependentStaging)
             .build()
 
@@ -381,7 +381,7 @@ class ProtobufJavaPluginTest extends Specification {
   @Unroll
   void "testProjectCustomProtoDir should be successfully executed [gradle #gradleVersion]"() {
     given: "project from testProjectCustomProtoDir"
-    File projectDir = ProtobufPluginTestHelper.projectBuilder('testProjectCustomProtoDir')
+    File projectDir = ProtobufPluginTestHelper.projectBuilder(this, 'testProjectCustomProtoDir')
         .copyDirs('testProjectCustomProtoDir')
         .build()
 
@@ -402,7 +402,7 @@ class ProtobufJavaPluginTest extends Specification {
   @Unroll
   void "test proto generation is not up-to-date on dependency changes [gradle #gradleVersion]"() {
     given: "project from testProject"
-    File projectDir = ProtobufPluginTestHelper.projectBuilder('testProject')
+    File projectDir = ProtobufPluginTestHelper.projectBuilder(this, 'testProject')
             .copyDirs('testProjectBase', 'testProject')
             .build()
 
@@ -459,7 +459,7 @@ class ProtobufJavaPluginTest extends Specification {
   @Unroll
   void "test proto generation is not up-to-date on path changes [gradle #gradleVersion]"() {
     given: "project from testProject"
-    File projectDir = ProtobufPluginTestHelper.projectBuilder('testProject')
+    File projectDir = ProtobufPluginTestHelper.projectBuilder(this, 'testProject')
             .copyDirs('testProjectBase', 'testProject')
             .build()
 
@@ -507,7 +507,7 @@ class ProtobufJavaPluginTest extends Specification {
   @Unroll
   void "test proto extraction is up-to-date for testProject when changing java sources [gradle #gradleVersion]"() {
     given: "project from testProject"
-    File projectDir = ProtobufPluginTestHelper.projectBuilder('testProject')
+    File projectDir = ProtobufPluginTestHelper.projectBuilder(this, 'testProject')
             .copyDirs('testProjectBase', 'testProject')
             .build()
 
@@ -670,7 +670,7 @@ class ProtobufJavaPluginTest extends Specification {
   @Unroll
   void "test proto generation fails when java executable is invalid [gradle #gradleVersion]"() {
     given: "project from testProject"
-    File projectDir = ProtobufPluginTestHelper.projectBuilder('testProjectConfigureJavaExecutable')
+    File projectDir = ProtobufPluginTestHelper.projectBuilder(this, 'testProjectConfigureJavaExecutable')
             .copyDirs('testProjectConfigureJavaExecutable')
             .build()
 
@@ -705,7 +705,7 @@ class ProtobufJavaPluginTest extends Specification {
     result.task(":generateProto").outcome == TaskOutcome.FAILED
 
     and: "the failure was caused by a missing executable"
-    result.output.contains("exec: /nothing: not found")
+    result.output.contains("/nothing: No such file or directory") || result.output.contains("/nothing: not found")
 
     where:
     gradleVersion << GRADLE_VERSIONS

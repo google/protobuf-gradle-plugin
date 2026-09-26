@@ -12,22 +12,22 @@ import spock.lang.Unroll
  */
 @CompileDynamic
 class ProtobufAndroidPluginTest extends Specification {
-  private static final List<String> GRADLE_VERSION = ["5.6", "6.5.1", "6.8", "7.4.2"]
-  private static final List<String> ANDROID_PLUGIN_VERSION = ["3.5.0", "4.1.0", "4.2.0-alpha10", "7.2.1"]
+  private static final List<String> GRADLE_VERSION = ["7.6.2", "8.9", "8.13"]
+  private static final List<String> ANDROID_PLUGIN_VERSION = ["7.4.2", "8.7.0", "8.13.0"]
 
   @Unroll
   void "testProjectAndroid should be successfully executed [android #agpVersion, gradle #gradleVersion]"() {
     given: "project from testProject, testProjectLite & testProjectAndroid"
-    File testProjectStaging = ProtobufPluginTestHelper.projectBuilder('testProject')
+    File testProjectStaging = ProtobufPluginTestHelper.projectBuilder(this, 'testProject')
         .copyDirs('testProjectBase', 'testProject')
         .build()
-    File testProjectAndroidStaging = ProtobufPluginTestHelper.projectBuilder('testProjectAndroid')
+    File testProjectAndroidStaging = ProtobufPluginTestHelper.projectBuilder(this, 'testProjectAndroid')
         .copyDirs('testProjectAndroidBase', 'testProjectAndroid')
         .build()
-    File testProjectLiteStaging = ProtobufPluginTestHelper.projectBuilder('testProjectLite')
+    File testProjectLiteStaging = ProtobufPluginTestHelper.projectBuilder(this, 'testProjectLite')
         .copyDirs('testProjectLite')
         .build()
-    File mainProjectDir = ProtobufPluginTestHelper.projectBuilder('testProjectAndroidMain')
+    File mainProjectDir = ProtobufPluginTestHelper.projectBuilder(this, 'testProjectAndroidMain')
         .copySubProjects(testProjectStaging, testProjectLiteStaging, testProjectAndroidStaging)
         .withAndroidPlugin(agpVersion)
         .build()
@@ -50,16 +50,16 @@ class ProtobufAndroidPluginTest extends Specification {
   @Unroll
   void "testProjectAndroid succeeds with configuration cache [android #agpVersion, gradle #gradleVersion]"() {
     given: "project from testProject, testProjectLite & testProjectAndroid"
-    File testProjectStaging = ProtobufPluginTestHelper.projectBuilder('testProject')
+    File testProjectStaging = ProtobufPluginTestHelper.projectBuilder(this, 'testProject')
             .copyDirs('testProjectBase', 'testProject')
             .build()
-    File testProjectAndroidStaging = ProtobufPluginTestHelper.projectBuilder('testProjectAndroid')
+    File testProjectAndroidStaging = ProtobufPluginTestHelper.projectBuilder(this, 'testProjectAndroid')
             .copyDirs('testProjectAndroidBase', 'testProjectAndroid')
             .build()
-    File testProjectLiteStaging = ProtobufPluginTestHelper.projectBuilder('testProjectLite')
+    File testProjectLiteStaging = ProtobufPluginTestHelper.projectBuilder(this, 'testProjectLite')
             .copyDirs('testProjectLite')
             .build()
-    File mainProjectDir = ProtobufPluginTestHelper.projectBuilder('testProjectAndroidMain')
+    File mainProjectDir = ProtobufPluginTestHelper.projectBuilder(this, 'testProjectAndroidMain')
             .copySubProjects(testProjectStaging, testProjectLiteStaging, testProjectAndroidStaging)
             .withAndroidPlugin(agpVersion)
             .build()
@@ -108,18 +108,18 @@ class ProtobufAndroidPluginTest extends Specification {
   }
 
   @Unroll
-  void "testProjectAndroidDependent [android #agpVersion, gradle #gradleVersion, kotlin #kotlinVersion]"() {
+  void "testProjectAndroidDependent [android #agpVersion, gradle #gradleVersion]"() {
     given: "project from testProjectAndroidLibrary, testProjectAndroid"
-    File testProjectStaging = ProtobufPluginTestHelper.projectBuilder('testProject')
+    File testProjectStaging = ProtobufPluginTestHelper.projectBuilder(this, 'testProject')
             .copyDirs('testProjectBase', 'testProject')
             .build()
-    File testProjectLibraryStaging = ProtobufPluginTestHelper.projectBuilder('testProjectAndroidLibrary')
+    File testProjectLibraryStaging = ProtobufPluginTestHelper.projectBuilder(this, 'testProjectAndroidLibrary')
             .copyDirs('testProjectAndroidLibrary')
             .build()
-    File testProjectAndroidStaging = ProtobufPluginTestHelper.projectBuilder('testProjectAndroid')
+    File testProjectAndroidStaging = ProtobufPluginTestHelper.projectBuilder(this, 'testProjectAndroid')
             .copyDirs('testProjectAndroidDependentBase', 'testProjectAndroid')
             .build()
-    File mainProjectDir = ProtobufPluginTestHelper.projectBuilder('testProjectAndroidDependentMain')
+    File mainProjectDir = ProtobufPluginTestHelper.projectBuilder(this, 'testProjectAndroidDependentMain')
             .copySubProjects(testProjectStaging, testProjectLibraryStaging, testProjectAndroidStaging)
             .withAndroidPlugin(agpVersion)
             .build()
@@ -142,16 +142,16 @@ class ProtobufAndroidPluginTest extends Specification {
   @Unroll
   void "testProjectAndroid tests build without warnings [android #agpVersion, gradle #gradleVersion]"() {
     given: "project from testProject, testProjectLite & testProjectAndroid"
-    File testProjectStaging = ProtobufPluginTestHelper.projectBuilder('testProject')
+    File testProjectStaging = ProtobufPluginTestHelper.projectBuilder(this, 'testProject')
             .copyDirs('testProjectBase', 'testProject')
             .build()
-    File testProjectAndroidStaging = ProtobufPluginTestHelper.projectBuilder('testProjectAndroid')
+    File testProjectAndroidStaging = ProtobufPluginTestHelper.projectBuilder(this, 'testProjectAndroid')
             .copyDirs('testProjectAndroidBase', 'testProjectAndroid')
             .build()
-    File testProjectLiteStaging = ProtobufPluginTestHelper.projectBuilder('testProjectLite')
+    File testProjectLiteStaging = ProtobufPluginTestHelper.projectBuilder(this, 'testProjectLite')
             .copyDirs('testProjectLite')
             .build()
-    File mainProjectDir = ProtobufPluginTestHelper.projectBuilder('testProjectAndroidMain')
+    File mainProjectDir = ProtobufPluginTestHelper.projectBuilder(this, 'testProjectAndroidMain')
             .copySubProjects(testProjectStaging, testProjectLiteStaging, testProjectAndroidStaging)
             .withAndroidPlugin(agpVersion)
             .build()

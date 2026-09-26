@@ -11,8 +11,8 @@ import spock.lang.Unroll
  */
 @CompileDynamic
 class AndroidProjectDetectionTest extends Specification {
-  private static final List<String> GRADLE_VERSION = ["5.6", "7.4.2"]
-  private static final List<String> ANDROID_PLUGIN_VERSION = ["3.5.0", "7.2.1"]
+  private static final List<String> GRADLE_VERSION = ["7.6.2", "8.7", "8.13"]
+  private static final List<String> ANDROID_PLUGIN_VERSION = ["7.4.2", "8.5.0", "8.13.0"]
 
   static void appendUtilIsAndroidProjectCheckTask(File buildFile, boolean assertResult) {
     buildFile << """
@@ -29,7 +29,7 @@ class AndroidProjectDetectionTest extends Specification {
   @Unroll
   void "test succeeds on android project [android #agpVersion, gradle #gradleVersion]"() {
     given: "a project with android plugin"
-    File mainProjectDir = ProtobufPluginTestHelper.projectBuilder("singleModuleAndroidProject")
+    File mainProjectDir = ProtobufPluginTestHelper.projectBuilder(this, "singleModuleAndroidProject")
        .copyDirs('testProjectAndroid', 'testProjectAndroidBare')
        .withAndroidPlugin(agpVersion)
        .build()
@@ -57,12 +57,12 @@ class AndroidProjectDetectionTest extends Specification {
   @Unroll
   void "test fails on sub project of android project [android #agpVersion, gradle #gradleVersion]"() {
     given: "an android root project and java sub project"
-    File subProjectStaging = ProtobufPluginTestHelper.projectBuilder('subModuleTestProjectLite')
+    File subProjectStaging = ProtobufPluginTestHelper.projectBuilder(this, 'subModuleTestProjectLite')
        .copyDirs('testProjectLite')
        .build()
     appendUtilIsAndroidProjectCheckTask(new File(subProjectStaging, "build.gradle"), false)
 
-    File mainProjectDir = ProtobufPluginTestHelper.projectBuilder("rootModuleAndroidProject")
+    File mainProjectDir = ProtobufPluginTestHelper.projectBuilder(this, "rootModuleAndroidProject")
        .copyDirs('testProjectAndroid', 'testProjectAndroidBare')
        .copySubProjects(subProjectStaging)
        .withAndroidPlugin(agpVersion)

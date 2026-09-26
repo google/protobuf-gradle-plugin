@@ -17,11 +17,11 @@ For more information about the Protobuf Compiler, please refer to
 [Google Developers Site](https://developers.google.com/protocol-buffers/docs/reference/java-generated?csw=1).
 
 ## Latest Version
-The latest version is ``0.9.5``. It requires at least __Gradle 5.6__ and __Java 8__.
+The latest version is ``0.10.0``. It requires at least __Gradle 7.6__ and __Java 11__.
 To use it with Groovy DSL:
 ```gradle
 plugins {
-  id "com.google.protobuf" version "0.9.5"
+  id "com.google.protobuf" version "0.10.0"
 }
 ```
 
@@ -44,7 +44,7 @@ And in `build.gradle`:
 
 ```gradle
 plugins {
-  id "com.google.protobuf" version "0.9.6-SNAPSHOT"
+  id "com.google.protobuf" version "0.10.1-SNAPSHOT"
 }
 ```
 
@@ -433,10 +433,10 @@ changed by setting the ``outputSubDir`` property in the ``builtins`` or
 If a Java project contains proto files, they will be packaged in the jar files
 along with the compiled classes.
 
-Protos in dependencies (e.g. upstream jars) can be put in either in the ``compile``
+Protos in dependencies (e.g. upstream jars) can be put in either in the ``implementation``
 configuration or the ``protobuf`` configuration.
 
-If the dependency is put in the ``compile`` configuration, the proto files are
+If the dependency is put in the ``implementation`` configuration, the proto files are
 extracted to an ``extracted-include-protos`` directory and added to the ``--proto_path``
 flag of the protoc command line, so that they can be imported by the proto files
 of the current project. The imported proto files will not be compiled since

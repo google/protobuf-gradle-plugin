@@ -14,7 +14,7 @@ repositories {
 
 android {
   compileSdkVersion(26)
-
+  namespace = "io.grpc.helloworldexample"
   defaultConfig {
     applicationId = "io.grpc.helloworldexample"
     minSdkVersion(7)
@@ -310,10 +310,11 @@ fun assertJavaCompileHasProtoGeneratedDir(
     compileJavaTask: JavaCompile,
     codegenPlugins: Collection<String>
 ) {
-  val baseDir = File("${project.buildDir}/generated/sources/protos/$variant")
+  val taskName = "generate${variant.capitalize()}Proto"
+  val baseDir = File("${project.buildDir}/generated/java/${taskName}")
   // The expected direct subdirectories under baseDir
   val expectedDirs = codegenPlugins.map { codegenPlugin ->
-    File("${project.buildDir}/generated/sources/proto/$variant/$codegenPlugin")
+    File(baseDir, codegenPlugin)
   }.toSet()
 
   val actualDirs = mutableSetOf<File>()

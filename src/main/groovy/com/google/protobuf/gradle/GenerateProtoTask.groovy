@@ -31,6 +31,8 @@ package com.google.protobuf.gradle
 
 import static java.nio.charset.StandardCharsets.US_ASCII
 
+import org.gradle.api.file.DirectoryProperty
+
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 import groovy.transform.TypeChecked
@@ -85,6 +87,81 @@ public abstract class GenerateProtoTask extends DefaultTask {
   static final int CMD_ARGUMENT_EXTRA_LENGTH = 3
   private static final String JAR_SUFFIX = ".jar"
 
+  // protoc allows you to prefix comma-delimited options to the path in
+  // the --*_out flags, e.g.,
+  // - Without options: --java_out=/path/to/output
+  // - With options: --java_out=option1,option2:/path/to/output
+  // This method generates the prefix out of the given options.
+  static String makeOptionsPrefix(List<String> options) {
+    StringBuilder prefix = new StringBuilder()
+    if (!options.isEmpty()) {
+      options.each { option ->
+        if (prefix.length() > 0) {
+          prefix.append(',')
+        }
+        prefix.append(option)
+      }
+      prefix.append(':')
+    }
+    return prefix.toString()
+  }
+
+  static List<List<String>> generateCmds(List<String> baseCmd, List<File> protoFiles, int cmdLengthLimit) {
+    List<List<String>> cmds = []
+    if (!protoFiles.isEmpty()) {
+      int baseCmdLength = baseCmd.sum { String arg -> arg.length() + CMD_ARGUMENT_EXTRA_LENGTH } as int
+      List<String> currentArgs = []
+      int currentArgsLength = 0
+      for (File proto: protoFiles) {
+        String protoFileName = proto
+        int currentFileLength = protoFileName.length() + CMD_ARGUMENT_EXTRA_LENGTH
+        // Check if appending the next proto string will overflow the cmd length limit
+        if (baseCmdLength + currentArgsLength + currentFileLength > cmdLengthLimit) {
+          // Add the current cmd before overflow
+          cmds.add(baseCmd + currentArgs)
+          currentArgs.clear()
+          currentArgsLength = 0
+        }
+        // Append the proto file to the args
+        currentArgs.add(protoFileName)
+        currentArgsLength += currentFileLength
+      }
+      // Add the last cmd for execution
+      cmds.add(baseCmd + currentArgs)
+    }
+    return cmds
+  }
+
+  static int getCmdLengthLimit() {
+    return getCmdLengthLimit(System.getProperty("os.name"))
+  }
+
+  static int getCmdLengthLimit(String os) {
+    return Utils.isWindows(os) ? WINDOWS_CMD_LENGTH_LIMIT : DEFAULT_CMD_LENGTH_LIMIT
+  }
+
+  static String escapePathUnix(String path) {
+    return path.replace("'", "'\\''")
+  }
+
+  static String escapePathWindows(String path) {
+    String escapedPath = path.replace("%", "%%")
+    return escapedPath.endsWith("\\") ? escapedPath + "\\" : escapedPath
+  }
+
+  static void mkdirsForFile(File outputFile) throws IOException {
+    if (!outputFile.getParentFile().isDirectory() && !outputFile.getParentFile().mkdirs()) {
+      throw new IOException("unable to make directories for file: " + outputFile.getCanonicalPath())
+    }
+  }
+
+  static void setExecutableOrFail(File outputFile) throws IOException {
+    if (!outputFile.setExecutable(true)) {
+      outputFile.delete()
+      throw new IOException("unable to set file as executable: " + outputFile.getCanonicalPath())
+    }
+  }
+
   private final CopyActionFacade copyActionFacade = CopyActionFacade.Loader.create(project, objectFactory)
   // include dirs are passed to the '-I' option of protoc.  They contain protos
   // that may be "imported" from the source protos, but will not be compiled.
@@ -100,14 +177,25 @@ public abstract class GenerateProtoTask extends DefaultTask {
   final Property<String> javaExecutablePath = objectFactory.property(String)
           .convention(project.extensions.findByType(ProtobufExtension).javaExecutablePath)
 
-  // These fields are set by the Protobuf plugin only when initializing the
-  // task.  Ideally they should be final fields, but Gradle task cannot have
-  // constructor arguments. We use the initializing flag to prevent users from
-  // accidentally modifying them.
-  private Provider<String> outputBaseDir
+  // kept for compatibility reasons
+  void setOutputBaseDir(Provider<String> outputBaseDir) {
+    outputBaseDirProperty.set(outputBaseDir.map {  path ->
+      project.layout.projectDirectory.dir(path)
+    })
+  }
+
+  @Internal // kept for compatibility reasons
+  String getOutputBaseDir() {
+    return outputBaseDirProperty.asFile.get().path
+  }
+
+  @OutputDirectory
+  abstract DirectoryProperty getOutputBaseDirProperty()
+
   // Tags for selectors inside protobuf.generateProtoTasks; do not serialize with Gradle configuration caching
   @SuppressWarnings("UnnecessaryTransientModifier") // It is not necessary for task to implement Serializable
   transient private SourceSet sourceSet
+
   @SuppressWarnings("UnnecessaryTransientModifier") // It is not necessary for task to implement Serializable
   transient private Object variant
   private List<String> flavors
@@ -164,92 +252,6 @@ public abstract class GenerateProtoTask extends DefaultTask {
 
   @Internal("Handled as input via getDescriptorSetOptionsForCaching()")
   final DescriptorSetOptions descriptorSetOptions = new DescriptorSetOptions()
-
-  // protoc allows you to prefix comma-delimited options to the path in
-  // the --*_out flags, e.g.,
-  // - Without options: --java_out=/path/to/output
-  // - With options: --java_out=option1,option2:/path/to/output
-  // This method generates the prefix out of the given options.
-  static String makeOptionsPrefix(List<String> options) {
-    StringBuilder prefix = new StringBuilder()
-    if (!options.isEmpty()) {
-      options.each { option ->
-        if (prefix.length() > 0) {
-          prefix.append(',')
-        }
-        prefix.append(option)
-      }
-      prefix.append(':')
-    }
-    return prefix.toString()
-  }
-
-  static List<List<String>> generateCmds(List<String> baseCmd, List<File> protoFiles, int cmdLengthLimit) {
-    List<List<String>> cmds = []
-    if (!protoFiles.isEmpty()) {
-      int baseCmdLength = baseCmd.sum { it.length() + CMD_ARGUMENT_EXTRA_LENGTH } as int
-      List<String> currentArgs = []
-      int currentArgsLength = 0
-      for (File proto: protoFiles) {
-        String protoFileName = proto
-        int currentFileLength = protoFileName.length() + CMD_ARGUMENT_EXTRA_LENGTH
-        // Check if appending the next proto string will overflow the cmd length limit
-        if (baseCmdLength + currentArgsLength + currentFileLength > cmdLengthLimit) {
-          // Add the current cmd before overflow
-          cmds.add(baseCmd + currentArgs)
-          currentArgs.clear()
-          currentArgsLength = 0
-        }
-        // Append the proto file to the args
-        currentArgs.add(protoFileName)
-        currentArgsLength += currentFileLength
-      }
-      // Add the last cmd for execution
-      cmds.add(baseCmd + currentArgs)
-    }
-    return cmds
-  }
-
-  static int getCmdLengthLimit() {
-    return getCmdLengthLimit(System.getProperty("os.name"))
-  }
-
-  static int getCmdLengthLimit(String os) {
-    return Utils.isWindows(os) ? WINDOWS_CMD_LENGTH_LIMIT : DEFAULT_CMD_LENGTH_LIMIT
-  }
-
-  static String escapePathUnix(String path) {
-    return path.replace("'", "'\\''")
-  }
-
-  static String escapePathWindows(String path) {
-    String escapedPath = path.replace("%", "%%")
-    return escapedPath.endsWith("\\") ? escapedPath + "\\" : escapedPath
-  }
-
-  static void mkdirsForFile(File outputFile) throws IOException {
-    if (!outputFile.getParentFile().isDirectory() && !outputFile.getParentFile().mkdirs()) {
-      throw new IOException("unable to make directories for file: " + outputFile.getCanonicalPath())
-    }
-  }
-
-  static void setExecutableOrFail(File outputFile) throws IOException {
-    if (!outputFile.setExecutable(true)) {
-      outputFile.delete()
-      throw new IOException("unable to set file as executable: " + outputFile.getCanonicalPath())
-    }
-  }
-
-  void setOutputBaseDir(Provider<String> outputBaseDir) {
-    checkInitializing()
-    Preconditions.checkState(this.outputBaseDir == null, 'outputBaseDir is already set')
-    this.outputBaseDir = outputBaseDir
-  }
-
-  @OutputDirectory
-  String getOutputBaseDir() {
-    return outputBaseDir.get()
-  }
 
   void setSourceSet(SourceSet sourceSet) {
     checkInitializing()
@@ -322,8 +324,8 @@ public abstract class GenerateProtoTask extends DefaultTask {
    */
   @Input
   Provider<List<String>> getReleaseArtifacts() {
-    providerFactory.provider {
-      releaseExecutableLocators.collect { it.simplifiedArtifactName }
+    return providerFactory.provider {
+      releaseExecutableLocators.collect { ExecutableLocator locator -> locator.simplifiedArtifactName }
     }
   }
 
@@ -333,18 +335,22 @@ public abstract class GenerateProtoTask extends DefaultTask {
   FileCollection getExecutables() {
     Provider<List> executables = providerFactory.provider {
       List<ExecutableLocator> release = releaseExecutableLocators
-      allExecutableLocators.findAll { !release.contains(it) }
-        .collect { it.path != null ? it.path : it.artifactFiles }
+      allExecutableLocators.findAll { ExecutableLocator locator -> !release.contains(locator) }
+        .collect { ExecutableLocator locator -> locator.path != null ? locator.path : locator.artifactFiles }
     }
-    objectFactory.fileCollection().from(executables)
+    return objectFactory.fileCollection().from(executables)
   }
 
   private List<ExecutableLocator> getReleaseExecutableLocators() {
-    allExecutableLocators.findAll { it.path == null && !it.simplifiedArtifactName.endsWith ("-SNAPSHOT") }
+    return allExecutableLocators.findAll { ExecutableLocator locator ->
+      locator.path == null && !locator.simplifiedArtifactName.endsWith("-SNAPSHOT")
+    }
   }
 
   private List<ExecutableLocator> getAllExecutableLocators() {
-    [toolsLocator.protoc] + plugins.findResults { PluginOptions it -> toolsLocator.plugins.findByName(it.name) }
+    return [toolsLocator.protoc] + plugins.findResults { PluginOptions plugin ->
+      toolsLocator.plugins.findByName(plugin.name)
+    }
   }
 
   @Internal("Not an actual input to the task, only used to find tasks belonging to a variant")
@@ -395,7 +401,8 @@ public abstract class GenerateProtoTask extends DefaultTask {
       throw new IllegalStateException(
           "requested descriptor path but descriptor generation is off")
     }
-    return descriptorSetOptions.path != null ? descriptorSetOptions.path : "${outputBaseDir.get()}/descriptor_set.desc"
+    return descriptorSetOptions.path != null ? descriptorSetOptions.path
+            : "${outputBaseDirProperty.get().asFile.path}/descriptor_set.desc"
   }
 
   @Inject
@@ -538,7 +545,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
   //===========================================================================
 
   String getOutputDir(PluginOptions plugin) {
-    return "${outputBaseDir.get()}/${plugin.outputSubDir}"
+    return "${outputBaseDirProperty.get().asFile.path}/${plugin.outputSubDir}"
   }
 
   /**
@@ -582,7 +589,7 @@ public abstract class GenerateProtoTask extends DefaultTask {
     Preconditions.checkState(state == State.FINALIZED, 'doneConfig() has not been called')
 
     copyActionFacade.delete { spec ->
-      spec.delete(outputBaseDir)
+      spec.delete(outputBaseDirProperty)
     }
     // Sort to ensure generated descriptors have a canonical representation
     // to avoid triggering unnecessary rebuilds downstream
@@ -601,8 +608,8 @@ public abstract class GenerateProtoTask extends DefaultTask {
 
     // The source directory designated from sourceSet may not actually exist on disk.
     // "include" it only when it exists, so that Gradle and protoc won't complain.
-    List<String> dirs = includeDirs.filter { File it -> it.exists() }*.path
-        .collect { "-I${it}".toString() }
+    List<String> dirs = includeDirs.filter { File file -> file.exists() }*.path
+        .collect { String dir -> "-I${dir}".toString() }
     logger.debug "ProtobufCompile using directories ${dirs}"
     logger.debug "ProtobufCompile using files ${protoFiles}"
 

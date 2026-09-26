@@ -147,7 +147,9 @@ abstract class ProtobufExtract extends DefaultTask {
               } else if (file.path.endsWith('.jar') || file.path.endsWith('.zip')) {
                 protoInputs.add(archiveFacade.zipTree(file.path).matching(protoFilter))
               } else if (file.path.endsWith('.aar')) {
-                FileCollection zipTree = archiveFacade.zipTree(file.path).filter { File it -> it.path.endsWith('.jar') }
+                FileCollection zipTree = archiveFacade.zipTree(file.path).filter {
+                    File entry -> entry.path.endsWith('.jar')
+                }
                 zipTree.each { entry ->
                   protoInputs.add(archiveFacade.zipTree(entry).matching(protoFilter))
                 }
