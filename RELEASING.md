@@ -36,27 +36,27 @@ Releasing
 ----------
 1. Make release commit:
 - Edit `build.gradle`: 
-  - remove “-SNAPSHOT” from `version`. Assuming the version is `$RELEASE_VERSION`.
+  - remove "-SNAPSHOT" from `version`. Assuming the version is `$RELEASE_VERSION`.
 - Edit `README.md`:
-  - The “latest version” shown should be a version prior to `$RELEASE_VERSION`. Will refer it 
+  - The "latest version" shown should be a version prior to `$RELEASE_VERSION`. Will refer it 
   as `$PREV_VERSION`.
   - Replace all `$PREV_VERSION` to `$RELEASE_VERSION`.
   - Update Gradle and/or Java version requirement if necessary
 - Run `./gradlew clean build`.
-- Run `git commit -a -m “$RELEASE_VERSION release”`.
-- Run `git tag -a v$RELEASE_VERSION -m “The $RELEASE_VERSION release”`.
+- Run `git commit -a -m "$RELEASE_VERSION release"`.
+- Run `git tag -a v$RELEASE_VERSION -m "The $RELEASE_VERSION release"`.
 
 2. Make commit for next version:
 - Refer to the next version as `$NEXT_VERSION`
 - Edit `build.gradle`: change version from `$RELEASE_VERSION` to `$NEXT_VERSION-SNAPSHOT`.
 - Edit `README.md`: replace `$RELEASE_VERSION-SNAPSHOT` with `$NEXT_VERSION-SNAPSHOT`.
-- Run `git commit -a -m “Start $NEXT_VERSION development cycle”`
+- Run `git commit -a -m "Start $NEXT_VERSION development cycle"`
 
 3. Publish artifacts:
 - Run `git checkout v$RELEASE_VERSION`.
 - Release on Maven Central:
   - Run `./gradlew publish`.
-  - Go to the [OSSRH site](https://oss.sonatype.org), under “Staging Repositories”, close and release the 
+  - Go to the [OSSRH site](https://oss.sonatype.org), under "Staging Repositories", close and release the 
   artifact.
 - Release on Gradle Plugin Portal:
   - Run `./gradlew publishPlugins`.
