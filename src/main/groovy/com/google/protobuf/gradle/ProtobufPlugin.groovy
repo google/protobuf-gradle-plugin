@@ -191,7 +191,7 @@ class ProtobufPlugin implements Plugin<Project> {
           // `Configuration.setVisible(boolean)` is deprecated as of Gradle 9.8 (and inert since 9.0),
           if (GradleVersion.current() < GradleVersion.version('9.0')) {
             config.visible = false
-          }  
+          }
           config.transitive = true
           config.extendsFrom = [compileConfig, implementationConfig]
           config.canBeConsumed = false
