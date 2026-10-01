@@ -1,13 +1,13 @@
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class FooTest {
-  @org.junit.Test
+  @org.junit.jupiter.api.Test
   public void testMainProtos() {
     assertEquals(11, Foo.getDefaultInstances().size());
   }
 
-  @org.junit.Test
+  @org.junit.jupiter.api.Test
   public void testTestProtos() {
     // from src/test/proto/test.proto
     Test.MsgTest.getDefaultInstance();
@@ -15,10 +15,10 @@ public class FooTest {
     test.Stuff.BlahTest.getDefaultInstance();
   }
 
-  @org.junit.Test
+  @org.junit.jupiter.api.Test
   public void testGrpc() {
     // from src/grpc/proto/
-    assertTrue(com.google.protobuf.GeneratedMessageV3.class.isAssignableFrom(
+    assertTrue(com.google.protobuf.GeneratedMessage.class.isAssignableFrom(
         io.grpc.testing.integration.Messages.SimpleRequest.class));
     assertTrue(Object.class.isAssignableFrom(io.grpc.testing.integration.TestServiceGrpc.class));
   }

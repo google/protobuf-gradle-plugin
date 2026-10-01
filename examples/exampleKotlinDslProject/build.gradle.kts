@@ -10,10 +10,18 @@ repositories {
   mavenCentral()
 }
 
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      useJUnitJupiter("6.0.2")
+    }
+  }
+}
+
 dependencies {
-  implementation("com.google.protobuf:protobuf-java:3.6.1")
-  implementation("io.grpc:grpc-stub:1.15.1")
-  implementation("io.grpc:grpc-protobuf:1.15.1")
+  implementation("com.google.protobuf:protobuf-java:4.33.4")
+  implementation("io.grpc:grpc-stub:1.78.0")
+  implementation("io.grpc:grpc-protobuf:1.78.0")
 
   if (JavaVersion.current().isJava9Compatible()) {
     // Workaround for @javax.annotation.Generated
@@ -26,7 +34,8 @@ dependencies {
   protobuf(files("lib/protos.tar.gz"))
   protobuf(files("ext/"))
 
-  testImplementation("junit:junit:4.12")
+  testImplementation("org.junit.jupiter:junit-jupiter-api:6.0.2")
+
   // Extra proto source files for test besides the ones residing under
   // "src/test".
   testProtobuf(files("lib/protos-test.tar.gz"))
@@ -35,14 +44,14 @@ dependencies {
 protobuf {
   protoc {
     // The artifact spec for the Protobuf Compiler
-    artifact = "com.google.protobuf:protoc:3.6.1"
+    artifact = "com.google.protobuf:protoc:4.33.4"
   }
   plugins {
     // Optional: an artifact spec for a protoc plugin, with "grpc" as
     // the identifier, which can be referred to in the "plugins"
     // container of the "generateProtoTasks" closure.
     id("grpc") {
-      artifact = "io.grpc:protoc-gen-grpc-java:1.15.1"
+      artifact = "io.grpc:protoc-gen-grpc-java:1.78.0"
     }
   }
   generateProtoTasks {
@@ -55,5 +64,11 @@ protobuf {
         id("grpc") { }
       }
     }
+  }
+}
+
+java {
+  toolchain {
+    languageVersion.set(JavaLanguageVersion.of(21))
   }
 }
