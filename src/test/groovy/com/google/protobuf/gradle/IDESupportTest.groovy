@@ -144,11 +144,15 @@ class IDESupportTest extends Specification {
       String path = entry.@path
       sourceDir.add(path)
       if (path.startsWith("build/generated/sources/proto")) {
+        // generated source path has one more attribute: ["optional"="true"]
+        assert entry.attributes.attribute.any { Node attribute ->
+          attribute.'@name' == 'optional' && attribute.'@value' == 'true'
+        }
         if (path.contains("test")) {
           // test source path has one more attribute: ["test"="true"]
-          assert entry.attributes.attribute.size() == 3
+          assert entry.attributes.attribute.size() == 4
         } else {
-          assert entry.attributes.attribute.size() == 2
+          assert entry.attributes.attribute.size() == 3
         }
       }
     }
@@ -162,6 +166,38 @@ class IDESupportTest extends Specification {
       'build/generated/sources/proto/test/java',
     ]
     assert Objects.equals(expectedSourceDir, sourceDir)
+
+    where:
+    gradleVersion << GRADLE_VERSIONS
+  }
+
+  @Unroll
+  void "testProject stale generated output directories should be optional in Eclipse [gradle #gradleVersion]"() {
+    given: "project from testProject with a source set without protos"
+    File projectDir = ProtobufPluginTestHelper.projectBuilder(this, 'testEclipseStaleOutputs')
+      .copyDirs('testProjectBase', 'testProject')
+      .build()
+    new File(projectDir, 'build.gradle') << "\nsourceSets.create('empty')\n"
+    File generatedDir = new File(projectDir, 'build/generated/sources/proto/empty')
+
+    when: "eclipse is invoked and the generate task has no sources"
+    BuildResult result = GradleRunner.create()
+      .withProjectDir(projectDir)
+      .withArguments('eclipse', 'generateEmptyProto')
+      .withPluginClasspath()
+      .withGradleVersion(gradleVersion)
+      .build()
+
+    then: "the directory is removed as a stale output and its classpath entry is optional"
+    result.task(":generateEmptyProto").outcome == TaskOutcome.NO_SOURCE
+    !generatedDir.exists()
+    Node classpathFile = new XmlParser().parse(projectDir.toPath().resolve(".classpath").toFile())
+    Node emptyEntry = classpathFile.classpathentry.find { Node entry ->
+      entry.'@path' == 'build/generated/sources/proto/empty/java'
+    } as Node
+    emptyEntry.attributes.attribute.any { Node attribute ->
+      attribute.'@name' == 'optional' && attribute.'@value' == 'true'
+    }
 
     where:
     gradleVersion << GRADLE_VERSIONS
