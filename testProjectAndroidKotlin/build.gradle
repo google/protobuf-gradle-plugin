@@ -18,5 +18,5 @@ if (agpMajor < 9) {
 apply from: 'build_base.gradle'
 
 dependencies {
-  implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
+  implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.kotlinVersion}"
 }

@@ -150,6 +150,9 @@ final class ProtobufPluginTestHelper {
       |  id "org.gradle.toolchains.foojay-resolver-convention"
       |}
       |rootProject.name = "$testProjectName"
+      |if (org.gradle.util.GradleVersion.current() >= org.gradle.util.GradleVersion.version('9.6')) {
+      |  enableFeaturePreview('NO_IMPLICIT_LOOKUP_IN_PARENT_PROJECTS')
+      |}
       """.stripMargin()
 
       if (subProjects) {
