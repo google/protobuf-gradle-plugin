@@ -104,12 +104,18 @@ publishing {
       name = "test"
     }
     maven {
-      String releaseUrl = "https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/"
+      name = "exitGate"
+      String exitGateUrl = rootProject.hasProperty("ossExitGateUrl")
+          ? rootProject.ossExitGateUrl
+          : "https://us-maven.pkg.dev/oss-exit-gate-prod/protobuf-gradle--mavencentral"
       String snapshotUrl = "https://central.sonatype.com/repository/maven-snapshots/"
-      url = version.endsWith('SNAPSHOT') ? snapshotUrl : releaseUrl
+      url = version.endsWith('SNAPSHOT') ? snapshotUrl : exitGateUrl
 
       credentials {
-        if (rootProject.hasProperty("ossrhUsername") && rootProject.hasProperty("ossrhPassword")) {
+        if (rootProject.hasProperty("ossExitGateToken")) {
+          username = "oauth2accesstoken"
+          password = rootProject.ossExitGateToken
+        } else if (rootProject.hasProperty("ossrhUsername") && rootProject.hasProperty("ossrhPassword")) {
           username = rootProject.ossrhUsername
           password = rootProject.ossrhPassword
         }
@@ -191,15 +197,6 @@ tasks.named('test') {
     events = ["standard_out", "standard_error", "started", "passed", "failed", "skipped"]
   }
 
-  // Hack for gradle runner test classloader.
-  //
-  // GradleRunner.withPluginClasspath method loads a plugin under test to the classloader_1.
-  // When the test project is executed, it will load plugins to a project classloader_2.
-  // The classloader_1 doesn't known about classloader_2. When the plugin under test will use classes which
-  // was loaded to project with the classloader_2, ClassNotFoundException will be thrown.
-  //
-  // To fix this problem, don't use the withPluginClasspath method.
-  // Provide a plugin under test with the maven local repository.
   systemProperty("protobufPluginVersion", version)
   systemProperty("testRepoUrl", testRepoUrl.toURI().toURL())
   dependsOn(
