@@ -197,6 +197,7 @@ tasks.named('test') {
     events = ["standard_out", "standard_error", "started", "passed", "failed", "skipped"]
   }
 
+  // Hack for gradle runner test classloader.
   systemProperty("protobufPluginVersion", version)
   systemProperty("testRepoUrl", testRepoUrl.toURI().toURL())
   dependsOn(
