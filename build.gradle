@@ -198,6 +198,14 @@ tasks.named('test') {
   }
 
   // Hack for gradle runner test classloader.
+  //
+  // GradleRunner.withPluginClasspath method loads a plugin under test to the classloader_1.
+  // When the test project is executed, it will load plugins to a project classloader_2.
+  // The classloader_1 doesn't known about classloader_2. When the plugin under test will use classes which
+  // was loaded to project with the classloader_2, ClassNotFoundException will be thrown.
+  //
+  // To fix this problem, don't use the withPluginClasspath method.
+  // Provide a plugin under test with the maven local repository.
   systemProperty("protobufPluginVersion", version)
   systemProperty("testRepoUrl", testRepoUrl.toURI().toURL())
   dependsOn(
