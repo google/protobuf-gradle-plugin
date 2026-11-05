@@ -168,6 +168,7 @@ class ProtobufPlugin implements Plugin<Project> {
         if (GradleVersion.current() < GradleVersion.version('9.0')) {
           config.visible = false
         }
+        config.canBeConsumed = false
         config.transitive = true
       }
     }
