@@ -7,7 +7,6 @@ import org.gradle.api.artifacts.ExternalModuleDependency
 import org.gradle.api.artifacts.ModuleDependency
 import org.gradle.api.artifacts.dsl.DependencyHandler
 import org.gradle.kotlin.dsl.add
-import org.gradle.kotlin.dsl.create
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
@@ -43,25 +42,13 @@ class ProtobufDependencyHelper(
         configuration: String? = null,
         classifier: String? = null,
         ext: String? = null
-    ): ExternalModuleDependency =
-        dependencyHandler.run {
-            create(group, name, version, configuration, classifier, ext)
-                .also { add(configurationName, it) }
+    ): ExternalModuleDependency {
+        val notation =
+            "$group:$name${version?.let { ":$it" } ?: ""}${classifier?.let { ":$it" } ?: ""}${ext?.let { "@$it" } ?: ""}"
+        return invoke(notation) {
+            configuration?.let { this.targetConfiguration = it }
         }
-
-    operator fun invoke(
-        group: String,
-        name: String,
-        version: String? = null,
-        configuration: String? = null,
-        classifier: String? = null,
-        ext: String? = null,
-        dependencyConfiguration: ExternalModuleDependency.() -> Unit
-    ): ExternalModuleDependency =
-        dependencyHandler.run {
-            val dep = create(group, name, version, configuration, classifier, ext)
-            add(configurationName, dep, dependencyConfiguration)
-        }
+    }
 
     operator fun <T : ModuleDependency> invoke(
         dependency: T,

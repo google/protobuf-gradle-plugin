@@ -109,10 +109,8 @@ publishing {
       url = version.endsWith('SNAPSHOT') ? snapshotUrl : releaseUrl
 
       credentials {
-        if (rootProject.hasProperty("ossrhUsername") && rootProject.hasProperty("ossrhPassword")) {
-          username = rootProject.ossrhUsername
-          password = rootProject.ossrhPassword
-        }
+        username = providers.gradleProperty("ossrhUsername").orNull
+        password = providers.gradleProperty("ossrhPassword").orNull
       }
     }
   }
@@ -121,7 +119,7 @@ publishing {
 // The Gradle plugin portal doesn't allow signature files.
 if (!gradle.startParameter.taskNames.intersect(['publishPlugins'])) {
   signing {
-       required { isReleaseVersion }
+       required = project.ext.isReleaseVersion
        sign publishing.publications.pluginMaven
   }
 }
