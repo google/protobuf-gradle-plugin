@@ -104,12 +104,18 @@ publishing {
       name = "test"
     }
     maven {
-      String releaseUrl = "https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/"
+      name = "exitGate"
+      String exitGateUrl = rootProject.hasProperty("ossExitGateUrl")
+          ? rootProject.ossExitGateUrl
+          : "https://us-maven.pkg.dev/oss-exit-gate-prod/protobuf-gradle--mavencentral"
       String snapshotUrl = "https://central.sonatype.com/repository/maven-snapshots/"
-      url = version.endsWith('SNAPSHOT') ? snapshotUrl : releaseUrl
+      url = version.endsWith('SNAPSHOT') ? snapshotUrl : exitGateUrl
 
       credentials {
-        if (rootProject.hasProperty("ossrhUsername") && rootProject.hasProperty("ossrhPassword")) {
+        if (rootProject.hasProperty("ossExitGateToken")) {
+          username = "oauth2accesstoken"
+          password = rootProject.ossExitGateToken
+        } else if (rootProject.hasProperty("ossrhUsername") && rootProject.hasProperty("ossrhPassword")) {
           username = rootProject.ossrhUsername
           password = rootProject.ossrhPassword
         }
