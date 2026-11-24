@@ -44,7 +44,7 @@ class ProtobufDependencyHelper(
         ext: String? = null
     ): ExternalModuleDependency {
         val notation =
-            "$group:$name${version?.let { ":$it" } ?: ""}${classifier?.let { ":$it" } ?: ""}${ext?.let { "@$it" } ?: ""}"
+            "$group:$name:${version ?: ""}${classifier?.let { ":$it" } ?: ""}${ext?.let { "@$it" } ?: ""}"
         return invoke(notation) {
             configuration?.let { this.targetConfiguration = it }
         }
