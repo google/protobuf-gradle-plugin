@@ -42,11 +42,23 @@ class ProtobufDependencyHelper(
         configuration: String? = null,
         classifier: String? = null,
         ext: String? = null
+    ): ExternalModuleDependency =
+        invoke(group, name, version, configuration, classifier, ext) {}
+
+    operator fun invoke(
+        group: String,
+        name: String,
+        version: String? = null,
+        configuration: String? = null,
+        classifier: String? = null,
+        ext: String? = null,
+        dependencyConfiguration: ExternalModuleDependency.() -> Unit
     ): ExternalModuleDependency {
         val notation =
             "$group:$name:${version ?: ""}${classifier?.let { ":$it" } ?: ""}${ext?.let { "@$it" } ?: ""}"
         return invoke(notation) {
             configuration?.let { this.targetConfiguration = it }
+            dependencyConfiguration()
         }
     }
 

@@ -1,6 +1,8 @@
 package com.google.protobuf.gradle
 
 import groovy.transform.CompileDynamic
+import kotlin.Unit
+import kotlin.jvm.functions.Function1
 import org.gradle.api.Project
 import org.gradle.api.artifacts.DependencyArtifact
 import org.gradle.api.artifacts.ExternalModuleDependency
@@ -59,6 +61,63 @@ class ProtobufKotlinDslPluginTest extends Specification {
     null    | null          | 'proto'    | null
     null    | null          | 'proto'    | 'tar.gz'
     null    | null          | null       | 'tar.gz'
+  }
+
+  void "test ProtobufDependencyHelper notation with dependencyConfiguration"() {
+    given: "a project with java and com.google.protobuf"
+    Project project = ProjectBuilder.builder().build()
+    project.apply plugin:'java'
+    project.apply plugin:'com.google.protobuf'
+    ProtobufDependencyHelper helper = ProtobufDependencyConfigurationKt.getProtobuf(project.dependencies)
+    String observedTargetConfig = null
+
+    when: "adding dependencies using named coordinates and dependencyConfiguration"
+    ExternalModuleDependency dep = helper.invoke(
+        'com.example', 'my-protos', '1.0.0', 'proto', null, null,
+        { ExternalModuleDependency d ->
+          observedTargetConfig = d.targetConfiguration
+          d.transitive = false
+          Unit.INSTANCE
+        } as Function1<ExternalModuleDependency, Unit>)
+    ExternalModuleDependency overriddenDep = helper.invoke(
+        'com.example', 'overridden-protos', null, 'initial', null, null,
+        { ExternalModuleDependency d ->
+          d.targetConfiguration = 'overridden'
+          Unit.INSTANCE
+        } as Function1<ExternalModuleDependency, Unit>)
+    ExternalModuleDependency artifactDep = helper.invoke(
+        'com.example', 'other-protos', null, null, 'proto', 'tar.gz',
+        { ExternalModuleDependency d ->
+          d.transitive = true
+          Unit.INSTANCE
+        } as Function1<ExternalModuleDependency, Unit>)
+
+    then: "coordinates, targetConfiguration, and dependencyConfiguration are all applied"
+    dep.group == 'com.example'
+    dep.name == 'my-protos'
+    dep.version == '1.0.0'
+    observedTargetConfig == 'proto'
+    dep.targetConfiguration == 'proto'
+    !dep.transitive
+    dep.artifacts.isEmpty()
+    project.configurations.getByName('protobuf').dependencies.contains(dep)
+
+    overriddenDep.group == 'com.example'
+    overriddenDep.name == 'overridden-protos'
+    overriddenDep.version == null
+    overriddenDep.targetConfiguration == 'overridden'
+    overriddenDep.artifacts.isEmpty()
+    project.configurations.getByName('protobuf').dependencies.contains(overriddenDep)
+
+    artifactDep.group == 'com.example'
+    artifactDep.name == 'other-protos'
+    artifactDep.version == null
+    artifactDep.targetConfiguration == null
+    artifactDep.transitive
+    artifactDep.artifacts.size() == 1
+    artifactDep.artifacts.first().classifier == 'proto'
+    artifactDep.artifacts.first().extension == 'tar.gz'
+    project.configurations.getByName('protobuf').dependencies.contains(artifactDep)
   }
 
   @Unroll
