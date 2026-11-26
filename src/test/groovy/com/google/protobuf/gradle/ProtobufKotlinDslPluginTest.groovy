@@ -3,6 +3,7 @@ package com.google.protobuf.gradle
 import groovy.transform.CompileDynamic
 import kotlin.Unit
 import kotlin.jvm.functions.Function1
+import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.artifacts.DependencyArtifact
 import org.gradle.api.artifacts.ExternalModuleDependency
@@ -10,6 +11,7 @@ import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
+import org.gradle.util.GradleVersion
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -118,6 +120,68 @@ class ProtobufKotlinDslPluginTest extends Specification {
     artifactDep.artifacts.first().classifier == 'proto'
     artifactDep.artifacts.first().extension == 'tar.gz'
     project.configurations.getByName('protobuf').dependencies.contains(artifactDep)
+  }
+
+  @Unroll
+  void "test ProtobufDependencyHelper multi-string notation throws on Gradle 10+ [#gradleVersion]"() {
+    given: "a project with java and com.google.protobuf"
+    Project project = ProjectBuilder.builder().build()
+    project.apply plugin:'java'
+    project.apply plugin:'com.google.protobuf'
+    ProtobufDependencyHelper helper =
+        new ProtobufDependencyHelper('protobuf', project.dependencies, GradleVersion.version(gradleVersion))
+
+    when: "adding a dependency using 6-argument multi-string notation"
+    helper.invoke('com.example', 'my-protos', '1.0.0', null, null, null)
+
+    then: "GradleException is thrown"
+    GradleException ex = thrown()
+    ex.message.contains('Gradle 10+')
+
+    when: "adding a dependency using 7-argument multi-string notation with configuration closure"
+    boolean configured = false
+    helper.invoke('com.example', 'my-protos', '1.0.0', null, null, null, { ExternalModuleDependency d ->
+      configured = true
+      Unit.INSTANCE
+    } as Function1<ExternalModuleDependency, Unit>)
+
+    then: "GradleException is thrown without executing configuration closure"
+    GradleException ex2 = thrown()
+    ex2.message.contains('Gradle 10+')
+    !configured
+
+    when: "adding a dependency using single-string notation"
+    ExternalModuleDependency singleDep = helper.invoke('com.example:my-protos:1.0.0', { ExternalModuleDependency d ->
+      d.transitive = false
+      Unit.INSTANCE
+    } as Function1<ExternalModuleDependency, Unit>)
+
+    then: "single-string notation remains supported"
+    singleDep.group == 'com.example'
+    singleDep.name == 'my-protos'
+    singleDep.version == '1.0.0'
+    !singleDep.transitive
+
+    where:
+    gradleVersion << ['10.0-milestone-1', '10.0-rc-1', '10.0', '10.1']
+  }
+
+  void "test ProtobufDependencyHelper multi-string notation succeeds on Gradle 9.x"() {
+    given: "a project with java and com.google.protobuf"
+    Project project = ProjectBuilder.builder().build()
+    project.apply plugin:'java'
+    project.apply plugin:'com.google.protobuf'
+    ProtobufDependencyHelper helper =
+        new ProtobufDependencyHelper('protobuf', project.dependencies, GradleVersion.version('9.9'))
+
+    when: "adding a dependency using multi-string notation"
+    ExternalModuleDependency dep = helper.invoke('com.example', 'my-protos', '1.0.0', null, null, null)
+
+    then: "dependency is added"
+    dep.group == 'com.example'
+    dep.name == 'my-protos'
+    dep.version == '1.0.0'
+    project.configurations.getByName('protobuf').dependencies.contains(dep)
   }
 
   @Unroll

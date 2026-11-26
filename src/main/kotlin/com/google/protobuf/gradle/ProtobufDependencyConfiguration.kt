@@ -1,5 +1,6 @@
 package com.google.protobuf.gradle
 
+import org.gradle.api.GradleException
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ConfigurationContainer
 import org.gradle.api.artifacts.Dependency
@@ -7,6 +8,7 @@ import org.gradle.api.artifacts.ExternalModuleDependency
 import org.gradle.api.artifacts.ModuleDependency
 import org.gradle.api.artifacts.dsl.DependencyHandler
 import org.gradle.kotlin.dsl.add
+import org.gradle.util.GradleVersion
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
@@ -21,10 +23,16 @@ val ConfigurationContainer.testProtobuf: Configuration
 
 val DependencyHandler.testProtobuf by  ProtobufDependencyHelper
 
-class ProtobufDependencyHelper(
+class ProtobufDependencyHelper internal constructor(
     private val configurationName: String,
-    private val dependencyHandler: DependencyHandler
+    private val dependencyHandler: DependencyHandler,
+    private val gradleVersion: GradleVersion
 ) {
+
+    constructor(
+        configurationName: String,
+        dependencyHandler: DependencyHandler
+    ) : this(configurationName, dependencyHandler, GradleVersion.current())
 
     operator fun invoke(dependencyNotation: Any): Dependency? =
         dependencyHandler.add(configurationName, dependencyNotation)
@@ -35,6 +43,11 @@ class ProtobufDependencyHelper(
     ): ExternalModuleDependency =
         dependencyHandler.add(configurationName, dependencyNotation, dependencyConfiguration)
 
+    @Deprecated(
+        message = "Declaring dependencies using multi-string notation is deprecated and not supported in Gradle 10+. " +
+            "Use single-string notation instead."
+    )
+    @Suppress("DEPRECATION")
     operator fun invoke(
         group: String,
         name: String,
@@ -45,6 +58,10 @@ class ProtobufDependencyHelper(
     ): ExternalModuleDependency =
         invoke(group, name, version, configuration, classifier, ext) {}
 
+    @Deprecated(
+        message = "Declaring dependencies using multi-string notation is deprecated and not supported in Gradle 10+. " +
+            "Use single-string notation instead."
+    )
     operator fun invoke(
         group: String,
         name: String,
@@ -54,6 +71,12 @@ class ProtobufDependencyHelper(
         ext: String? = null,
         dependencyConfiguration: ExternalModuleDependency.() -> Unit
     ): ExternalModuleDependency {
+        if (gradleVersion.baseVersion >= GRADLE_10) {
+            throw GradleException(
+                "Declaring dependencies using multi-string notation is not supported in Gradle 10+. " +
+                    "Use single-string notation instead (e.g. $configurationName(\"$group:$name:...\"))."
+            )
+        }
         val notation =
             "$group:$name:${version ?: ""}${classifier?.let { ":$it" } ?: ""}${ext?.let { "@$it" } ?: ""}"
         return invoke(notation) {
@@ -69,6 +92,7 @@ class ProtobufDependencyHelper(
         dependencyHandler.add(configurationName, dependency, dependencyConfiguration)
 
     companion object : ReadOnlyProperty<DependencyHandler, ProtobufDependencyHelper> {
+        private val GRADLE_10 = GradleVersion.version("10.0")
 
         override fun getValue(thisRef: DependencyHandler, property: KProperty<*>): ProtobufDependencyHelper =
             ProtobufDependencyHelper(property.name, thisRef)
