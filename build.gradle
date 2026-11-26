@@ -105,19 +105,19 @@ publishing {
     }
     maven {
       name = "exitGate"
-      String exitGateUrl = rootProject.hasProperty("ossExitGateUrl")
-          ? rootProject.ossExitGateUrl
-          : "https://us-maven.pkg.dev/oss-exit-gate-prod/protobuf-gradle--mavencentral"
+      String exitGateUrl = providers.gradleProperty("ossExitGateUrl")
+          .getOrElse("https://us-maven.pkg.dev/oss-exit-gate-prod/protobuf-gradle--mavencentral")
       String snapshotUrl = "https://central.sonatype.com/repository/maven-snapshots/"
       url = version.endsWith('SNAPSHOT') ? snapshotUrl : exitGateUrl
 
       credentials {
-        if (rootProject.hasProperty("ossExitGateToken")) {
+        String exitGateToken = providers.gradleProperty("ossExitGateToken").orNull
+        if (exitGateToken != null) {
           username = "oauth2accesstoken"
-          password = rootProject.ossExitGateToken
-        } else if (rootProject.hasProperty("ossrhUsername") && rootProject.hasProperty("ossrhPassword")) {
-          username = rootProject.ossrhUsername
-          password = rootProject.ossrhPassword
+          password = exitGateToken
+        } else {
+          username = providers.gradleProperty("ossrhUsername").orNull
+          password = providers.gradleProperty("ossrhPassword").orNull
         }
       }
     }
@@ -127,7 +127,7 @@ publishing {
 // The Gradle plugin portal doesn't allow signature files.
 if (!gradle.startParameter.taskNames.intersect(['publishPlugins'])) {
   signing {
-       required { isReleaseVersion }
+       required = project.ext.isReleaseVersion
        sign publishing.publications.pluginMaven
   }
 }

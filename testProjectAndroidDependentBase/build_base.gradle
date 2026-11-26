@@ -119,7 +119,7 @@ def assertJavaCompileHasProtoGeneratedDir(Object variant, Collection<String> cod
   def buildDirFile = project.layout.buildDirectory.get().asFile
   String taskName = "generate${variant.name.capitalize()}Proto"
   def baseDir = new File(buildDirFile, "generated/java/${taskName}")
-  rootProject.assertJavaCompileHasProtoGeneratedDir(baseDir, variant.javaCompileProvider.get().source , codegenPlugins)
+  rootProject.ext.assertJavaCompileHasProtoGeneratedDir(baseDir, variant.javaCompileProvider.get().source , codegenPlugins)
 }
 
 afterEvaluate {
