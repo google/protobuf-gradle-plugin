@@ -58,6 +58,10 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.plugins.ide.eclipse.model.Classpath
+import org.gradle.plugins.ide.eclipse.model.ClasspathEntry
+import org.gradle.plugins.ide.eclipse.model.EclipseModel
+import org.gradle.plugins.ide.eclipse.model.SourceFolder
 import org.gradle.util.GradleVersion
 import org.gradle.work.DisableCachingByDefault
 import javax.inject.Inject
@@ -274,8 +278,21 @@ class ProtobufPlugin implements Plugin<Project> {
         project.plugins.withId("eclipse") {
           // This is required because the intellij/eclipse plugin does not allow adding source directories
           // that do not exist. The intellij/eclipse config files should be valid from the start.
-          generateProtoTask.get().getOutputSourceDirectories().each { File outputDir ->
+          Collection<File> outputDirs = generateProtoTask.get().getOutputSourceDirectories()
+          outputDirs.each { File outputDir ->
             outputDir.mkdirs()
+          }
+          // Gradle deletes these directories as stale outputs when the generate task of the
+          // source set has no sources, so Eclipse must not treat them as required source folders.
+          project.extensions.getByType(EclipseModel).classpath.file.whenMerged { Classpath classpath ->
+            classpath.entries.each { ClasspathEntry entry ->
+              if (entry instanceof SourceFolder) {
+                SourceFolder folder = (SourceFolder) entry
+                if (outputDirs.contains(project.file(folder.path))) {
+                  folder.entryAttributes['optional'] = 'true'
+                }
+              }
+            }
           }
         }
 
